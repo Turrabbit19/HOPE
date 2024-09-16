@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.56.2",
     "antd": "^5.20.3",
     "axios": "^1.7.5",
     "node-sass": "^9.0.0",

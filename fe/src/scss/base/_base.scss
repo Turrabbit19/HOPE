@@ -16,9 +16,7 @@ html {
 
 body {
     font-size: 1.6rem;
-    font-family: "Gordita", sans-serif;
-    color: var(--text-color);
-    background: var(--body-bg);
+    font-family: monospace, sans-serif;
 }
 
 a {
@@ -52,10 +50,6 @@ select {
 
 input {
     background: transparent;
-}
-
-.icon {
-    filter: var(--icon-color);
 }
 
 .container {

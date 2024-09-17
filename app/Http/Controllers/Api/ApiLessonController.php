@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Plan;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Lessons;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-
-class ApiPlanController extends Controller
+use Illuminate\Support\Facades\Validator;
+class ApiLessonController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,10 +15,10 @@ class ApiPlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::all();
-            return response()->json(['data' => $plans], 200);
+           $lessons = Lessons::all();
+            return response()->json(['data' =>$lessons], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -29,10 +27,10 @@ class ApiPlanController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
+        $validator = validator::make($request->all(), [
             'subject_id ' => 'required|exists:subjects,id',
-            'status' => 'required|varchar'
+            'name' => 'required|string|max:50',
+            'description' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -41,9 +39,9 @@ class ApiPlanController extends Controller
 
         try {
             $data = $validator->validated();
-           $plan = Plan::create($data);
+           $lesson = Lessons::create($data);
             
-            return response()->json(['data' => $plan, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -55,12 +53,12 @@ class ApiPlanController extends Controller
     public function show(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            return response()->json(['data' => $plan], 200);
+            $lesson = Lessons::findOrFail($id);
+            return response()->json(['data' => $lesson], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -70,9 +68,9 @@ class ApiPlanController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'subject_id ' => 'required|exists:subjects,id',
-            'status' => 'required|varchar'
+           'subject_id ' => 'required|exists:subjects,id',
+            'name' => 'required|string|max:50',
+            'description' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -80,17 +78,12 @@ class ApiPlanController extends Controller
         }
 
         try {
-            $plan = Plan::findOrFail($id);
+            $data = $validator->validated();
+          $lesson = Lessons::create($data);
             
-            $data = $request->all();
-            $data['updated_at'] = Carbon::now();
-            $plan->update($data);
-
-            return response()->json(['data' => $plan, 'message' => 'Cập nhật thành công'], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['data' =>$lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -100,8 +93,8 @@ class ApiPlanController extends Controller
     public function destroy(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            $plan->delete();
+            $lesson = Lessons::findOrFail($id);
+            $lesson->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

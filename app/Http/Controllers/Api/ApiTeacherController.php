@@ -26,7 +26,7 @@ class ApiTeacherController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'major_id' => 'required|exists:majors,id',
-            'teacher_id' => 'required|string|max:19|unique:students',
+            'teacher_code' => 'required|string|max:19|unique:teachers',
         ]);
 
         if ($validator->fails()) {
@@ -60,7 +60,7 @@ class ApiTeacherController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'major_id' => 'required|exists:majors,id',
-            'teacher_id' => 'required|string|max:19|unique:students',
+            'teacher_code' => 'required|string|max:19|unique:teachers',
         ]);
 
         if ($validator->fails()) {

@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
    License: none (public domain)
@@ -133,6 +134,9 @@ table {
   border-spacing: 0;
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 *,
 ::after,
 ::before {
@@ -164,6 +168,13 @@ button {
   padding: 0;
   cursor: pointer;
   color: inherit;
+}
+
+.line-camp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 button,
@@ -216,13 +227,12 @@ strong {
 }
 
 .container {
-  width: 1370px;
+  width: 1470px;
 }
 
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin-top: calc(var(--grid-gutter-y) * -1);
   margin-left: calc(var(--grid-gutter-x) * 0.5 * -1);
   margin-right: calc(var(--grid-gutter-x) * 0.5 * -1);
 }
@@ -1333,6 +1343,184 @@ strong {
   50% {
     translate: -4px;
   }
+}
+.logo {
+  display: flex;
+}
+.logo__img {
+  max-width: 100px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 16px;
+  background: #eeeef5;
+  font-size: 1.6rem;
+  font-weight: 500;
+  user-select: none;
+  border-radius: 4px;
+}
+.btn--text {
+  color: #9e9da8;
+  background: transparent;
+}
+.btn--primary {
+  background: #1167b4;
+}
+.btn--outline {
+  background: transparent;
+  border: 1px solid #1167b4;
+}
+.btn--rounded {
+  border-radius: 99px;
+}
+.btn[disabled], .btn--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.btn:hover {
+  opacity: 0.8;
+}
+
+.teaching__card {
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  padding: 8px 16px;
+}
+.teaching__card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 0 -16px;
+  padding-bottom: 8px;
+  padding-left: 16px;
+}
+.teaching__card-body {
+  padding-top: 8px;
+}
+.teaching__card-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 310px;
+  padding: 0px 16px;
+  gap: 32px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+.teaching__card-status {
+  display: flex;
+  height: 22px;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 4px;
+  border-radius: 999px;
+  background: rgba(68, 204, 21, 0.1);
+}
+.teaching__card-status img {
+  height: 18px;
+  width: 18px;
+}
+.teaching__card-status:hover {
+  cursor: pointer;
+}
+.teaching__card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 0 -16px;
+}
+
+.next__page-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.teaching__add-form-group input,
+.teaching__add-form-group textarea {
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: 100%;
+  border: 1px solid #9e9e9e;
+  color: #2000a6;
+}
+.teaching__add-form-group input::placeholder,
+.teaching__add-form-group textarea::placeholder {
+  color: #9e9e9e;
+}
+
+/* Ẩn input file thực */
+#file-input {
+  display: none;
+}
+
+label[for=file-input] {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.upload-image {
+  object-fit: cover;
+  transition: border-color 0.3s ease;
+}
+
+label[for=file-input]:hover .upload-image {
+  border-color: #888;
+}
+
+#image-preview {
+  margin-top: 10px;
+  max-width: 200px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  display: inline-block;
+}
+
+#preview-img {
+  max-width: 100%;
+  height: auto;
+}
+
+.header_wrapper {
+  background: rgb(255, 255, 255);
+  border-bottom: 1px solid #888888;
+  box-shadow: 1px 1px 3px #888888;
+  margin-bottom: 32px;
+}
+
+.header {
+  display: flex;
+  padding: 24px 0;
+  justify-content: space-between;
+  align-items: center;
+}
+.header__right, .header__left {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+}
+.header__btn-select {
+  margin-top: 3px;
+}
+.header__user-avatar {
+  display: block;
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #eee;
 }
 
 /*# sourceMappingURL=index.css.map */

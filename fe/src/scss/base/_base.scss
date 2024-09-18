@@ -1,5 +1,8 @@
 @use "../abstracts";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 *,
 ::after,
 ::before {
@@ -31,6 +34,16 @@ button {
     padding: 0;
     cursor: pointer;
     color: inherit;
+}
+
+.line-camp {
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
 }
 
 button,

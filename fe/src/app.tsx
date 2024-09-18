@@ -1,15 +1,9 @@
 import React from "react";
-import { useRoutes } from "react-router-dom";
-import HeaderAdmin from "./pages/admin/components/header";
+import { RouterProvider } from "react-router-dom";
+import Router from "./routes"; // File routes của bạn đã cấu hình
 
-const app = () => {
-    const routes = useRoutes([
-        {
-            path: "admin",
-            element: <HeaderAdmin />,
-        },
-    ]);
-    return routes;
-};
+function App() {
+    return <RouterProvider router={Router} />;
+}
 
-export default app;
+export default App;

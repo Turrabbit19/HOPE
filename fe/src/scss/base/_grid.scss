@@ -43,13 +43,12 @@ $gutters: (
 
 .container {
     @extend .container-fluid;
-    width: 1370px;
+    width: 1470px;
 }
 
 .row {
     display: flex;
     flex-wrap: wrap;
-    margin-top: calc(var(--grid-gutter-y) * -1);
     margin-left: calc(var(--grid-gutter-x) * 0.5 * -1);
     margin-right: calc(var(--grid-gutter-x) * 0.5 * -1);
 

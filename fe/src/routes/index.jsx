@@ -8,6 +8,9 @@ import NotFound from "../components/NotFound";
 import AddSt from "../pages/admin/addSt";
 import Loading from "../components/loading";
 import ScrollToTopButton from "../components/scrollToTopButton";
+import ListCourse from "../pages/admin/courses/list";
+import AddCourse from "../pages/admin/courses/add";
+import BreadCrumb from "./breadcrumb";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -27,7 +30,7 @@ const Router = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <LayoutAdmin />
-        <ScrollToTopButton/>
+        <ScrollToTopButton />
       </Suspense>
     ),
 
@@ -40,10 +43,30 @@ const Router = createBrowserRouter([
           </Suspense>
         ),
       },
-      
+
       {
         path: "add-student",
         element: <AddSt />,
+      },
+      {
+        path: "course",
+        element: (
+          <>
+            <BreadCrumb />
+            <ListCourse />
+          </>
+        ),
+        children: [
+          {
+            path: "add",
+            element: (
+              <>
+                <BreadCrumb />
+                <AddCourse />
+              </>
+            ),
+          },
+        ],
       },
     ],
   },
@@ -52,17 +75,17 @@ const Router = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <LayoutStudent />
-        <ScrollToTopButton/>
+        <ScrollToTopButton />
       </Suspense>
     ),
     children: [
       {
         path: "information",
         element: (
-          <Suspense fallback={<Loading/>}>
+          <Suspense fallback={<Loading />}>
             <StudentInformation />
           </Suspense>
-        )
+        ),
       },
       {
         path: "schedule",
@@ -72,7 +95,7 @@ const Router = createBrowserRouter([
           </Suspense>
         ),
       },
-    ]
+    ],
   },
   {
     path: "*",

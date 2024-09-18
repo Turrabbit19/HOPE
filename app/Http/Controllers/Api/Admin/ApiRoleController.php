@@ -1,35 +1,30 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Student;
+use App\Models\Role;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class ApiStudentController extends Controller
+class ApiRoleController extends Controller
 {
     public function index()
     {
         try {
-            $students = Student::paginate(9)->all();
-            return response()->json(['data' => $students], 200);
+            $roles = Role::all();
+            return response()->json(['data' => $roles], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
         }
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'course_id' => 'required|exists:courses,id',
-            'major_id' => 'required|exists:majors,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'student_code' => 'required|string|max:19|unique:students',
-            'status' => 'required|integer',
+            'name' => 'required|string|max:50|unique:roles'
         ]);
 
         if ($validator->fails()) {
@@ -38,9 +33,9 @@ class ApiStudentController extends Controller
 
         try {
             $data = $validator->validated();
-            $student = Student::create($data);
+            $role = Role::create($data);
             
-            return response()->json(['data' => $student, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $role, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -49,24 +44,19 @@ class ApiStudentController extends Controller
     public function show(string $id)
     {
         try {
-            $student = Student::findOrFail($id);
-            return response()->json(['data' => $student], 200);
+            $role = Role::findOrFail($id);
+            return response()->json(['data' => $role], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
         }
     }
 
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'course_id' => 'required|exists:courses,id',
-            'major_id' => 'required|exists:majors,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'student_code' => 'required|string|max:19|unique:students',
-            'status' => 'required|integer',
+            'name' => 'required|string|max:50|unique:roles'
         ]);
 
         if ($validator->fails()) {
@@ -74,13 +64,13 @@ class ApiStudentController extends Controller
         }
 
         try {
-            $student = Student::findOrFail($id);
+            $role = Role::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $student->update($data);
+            $role->update($data);
 
-            return response()->json(['data' => $student, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $role, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
@@ -91,8 +81,8 @@ class ApiStudentController extends Controller
     public function destroy(string $id)
     {
         try {
-            $student = Student::findOrFail($id);
-            $student->delete();
+            $role = Role::findOrFail($id);
+            $role->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

@@ -1,38 +1,35 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Plan;
+use App\Models\Subject;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
-class ApiPlanController extends Controller
+class ApiSubjectController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
-            $plans = Plan::all();
-            return response()->json(['data' => $plans], 200);
+            $subjects = Subject::all();
+            return response()->json(['data' => $subjects], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'subject_id ' => 'required|exists:subjects,id',
+            'subject_code' => 'required|string|max:50|unique:subjects,subject_code', 
+            'semester_id' => 'required|exists:semesters,id', 
+            'major_id' => 'required|exists:majors,id', 
+            'name' => 'required|string|max:100', 
+            'description' => 'nullable|string|max:255', 
+            'credit' => 'required|integer|min:1|max:19',
         ]);
 
         if ($validator->fails()) {
@@ -41,38 +38,35 @@ class ApiPlanController extends Controller
 
         try {
             $data = $validator->validated();
-            $plan = Plan::create($data);
+            $subject = Subject::create($data);
             
-            return response()->json(['data' => $plan, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            return response()->json(['data' => $plan], 200);
+            $subject = Subject::findOrFail($id);
+            return response()->json(['data' => $subject], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'subject_id ' => 'required|exists:subjects,id',
+            'subject_code' => 'required|string|max:50|unique:subjects,subject_code', 
+            'semester_id' => 'required|exists:semesters,id', 
+            'major_id' => 'required|exists:majors,id', 
+            'name' => 'required|string|max:100', 
+            'description' => 'nullable|string|max:255', 
+            'credit' => 'required|integer|min:1|max:19',
         ]);
 
         if ($validator->fails()) {
@@ -80,13 +74,13 @@ class ApiPlanController extends Controller
         }
 
         try {
-            $plan = Plan::findOrFail($id);
+            $subject = Subject::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $plan->update($data);
+            $subject->update($data);
 
-            return response()->json(['data' => $plan, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
@@ -94,14 +88,11 @@ class ApiPlanController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            $plan->delete();
+            $subject = Subject::findOrFail($id);
+            $subject->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

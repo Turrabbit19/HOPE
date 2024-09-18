@@ -1,35 +1,34 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subject;
+use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class ApiSubjectController extends Controller
+class ApiSemesterController extends Controller
 {
     public function index()
     {
         try {
-            $subjects = Subject::all();
-            return response()->json(['data' => $subjects], 200);
+            $semesters = Semester::all();
+            return response()->json(['data' => $semesters], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'subject_code' => 'required|string|max:50|unique:subjects,subject_code', 
-            'semester_id' => 'required|exists:semesters,id', 
-            'major_id' => 'required|exists:majors,id', 
-            'name' => 'required|string|max:100', 
-            'description' => 'nullable|string|max:255', 
-            'credit' => 'required|integer|min:1|max:19',
+            'name' => 'required|string|max:255|unique:semesters', 
+            'number' => 'required|integer|min:1', 
+            'course_id' => 'required|exists:courses,id', 
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date', 
         ]);
 
         if ($validator->fails()) {
@@ -38,9 +37,9 @@ class ApiSubjectController extends Controller
 
         try {
             $data = $validator->validated();
-            $subject = Subject::create($data);
+            $semester = Semester::create($data);
             
-            return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -49,24 +48,23 @@ class ApiSubjectController extends Controller
     public function show(string $id)
     {
         try {
-            $subject = Subject::findOrFail($id);
-            return response()->json(['data' => $subject], 200);
+            $semester = Semester::findOrFail($id);
+            return response()->json(['data' => $semester], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }
     }
 
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'subject_code' => 'required|string|max:50|unique:subjects,subject_code', 
-            'semester_id' => 'required|exists:semesters,id', 
-            'major_id' => 'required|exists:majors,id', 
-            'name' => 'required|string|max:100', 
-            'description' => 'nullable|string|max:255', 
-            'credit' => 'required|integer|min:1|max:19',
+            'name' => 'required|string|max:255|unique:semesters', 
+            'number' => 'required|integer|min:1', 
+            'course_id' => 'required|exists:courses,id', 
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date', 
         ]);
 
         if ($validator->fails()) {
@@ -74,13 +72,13 @@ class ApiSubjectController extends Controller
         }
 
         try {
-            $subject = Subject::findOrFail($id);
+            $semester = Semester::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $subject->update($data);
+            $semester->update($data);
 
-            return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $semester, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
@@ -91,8 +89,8 @@ class ApiSubjectController extends Controller
     public function destroy(string $id)
     {
         try {
-            $subject = Subject::findOrFail($id);
-            $subject->delete();
+            $semester = Semester::findOrFail($id);
+            $semester->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

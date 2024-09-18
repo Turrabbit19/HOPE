@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Lesson;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\Shift;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-class ApiLessonController extends Controller
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+
+class ApiShiftController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,10 +17,10 @@ class ApiLessonController extends Controller
     public function index()
     {
         try {
-           $lessons = Lesson::all();
-            return response()->json(['data' =>$lessons], 200);
+            $shifts = Shift::all();
+            return response()->json(['data' => $shifts], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -28,10 +29,10 @@ class ApiLessonController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = validator::make($request->all(), [
-            'subject_id ' => 'required|exists:subjects,id',
-            'name' => 'required|string|max:50',
-            'description' => 'required'
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100|unique:shifts', 
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
         ]);
 
         if ($validator->fails()) {
@@ -40,9 +41,9 @@ class ApiLessonController extends Controller
 
         try {
             $data = $validator->validated();
-            $lesson = Lesson::create($data);
+            $shift = Shift::create($data);
             
-            return response()->json(['data' => $lesson, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $shift, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -54,12 +55,12 @@ class ApiLessonController extends Controller
     public function show(string $id)
     {
         try {
-            $lesson = Lesson::findOrFail($id);
-            return response()->json(['data' => $lesson], 200);
+            $shift = Shift::findOrFail($id);
+            return response()->json(['data' => $shift], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -69,9 +70,9 @@ class ApiLessonController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'subject_id ' => 'required|exists:subjects,id',
-            'name' => 'required|string|max:50',
-            'description' => 'required'
+            'name' => 'required|string|max:100|unique:shifts', 
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
         ]);
 
         if ($validator->fails()) {
@@ -79,15 +80,17 @@ class ApiLessonController extends Controller
         }
 
         try {
-            $lesson = Lesson::findOrFail($id);
+            $shift = Shift::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $lesson->update($data);
-            
-            return response()->json(['data' =>$lesson, 'message' => 'Tạo mới thành công'], 201);
+            $shift->update($data);
+
+            return response()->json(['data' => $shift, 'message' => 'Cập nhật thành công'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -97,8 +100,8 @@ class ApiLessonController extends Controller
     public function destroy(string $id)
     {
         try {
-            $lesson = Lesson::findOrFail($id);
-            $lesson->delete();
+            $shift = Shift::findOrFail($id);
+            $shift->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

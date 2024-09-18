@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
-use Carbon\Carbon;
-use App\Models\Section;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Lesson;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-
-class ApiSectionController extends Controller
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+class ApiLessonController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,10 +16,10 @@ class ApiSectionController extends Controller
     public function index()
     {
         try {
-            $sections = Section::all();
-            return response()->json(['data' => $sections], 200);
+           $lessons = Lesson::all();
+            return response()->json(['data' =>$lessons], 200);
         } catch (\Exception $e) {
-            return response()->json(['error'=>'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -29,8 +28,10 @@ class ApiSectionController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:sections',   
+        $validator = validator::make($request->all(), [
+            'subject_id ' => 'required|exists:subjects,id',
+            'name' => 'required|string|max:50',
+            'description' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -39,9 +40,9 @@ class ApiSectionController extends Controller
 
         try {
             $data = $validator->validated();
-            $section = Section::create($data);
+            $lesson = Lesson::create($data);
             
-            return response()->json(['data' => $section, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -53,12 +54,12 @@ class ApiSectionController extends Controller
     public function show(string $id)
     {
         try {
-            $section = Section::findOrFail($id);
-            return response()->json(['data' => $section], 200);
+            $lesson = Lesson::findOrFail($id);
+            return response()->json(['data' => $lesson], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -67,8 +68,10 @@ class ApiSectionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:sections',   
+        $validator = Validator::make($request->all(), [
+            'subject_id ' => 'required|exists:subjects,id',
+            'name' => 'required|string|max:50',
+            'description' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -76,17 +79,15 @@ class ApiSectionController extends Controller
         }
 
         try {
-            $section = Section::findOrFail($id);
+            $lesson = Lesson::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $section->update($data);
-
-            return response()->json(['data' => $section, 'message' => 'Cập nhật thành công'], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            $lesson->update($data);
+            
+            return response()->json(['data' =>$lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -96,8 +97,8 @@ class ApiSectionController extends Controller
     public function destroy(string $id)
     {
         try {
-            $section = Section::findOrFail($id);
-            $section->delete();
+            $lesson = Lesson::findOrFail($id);
+            $lesson->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

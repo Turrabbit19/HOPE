@@ -1,32 +1,39 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class ApiCourseController extends Controller
+class ApiNotificationController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         try {
-            $course = Course::all();
-            return response()->json(['data' => $course], 200);
+            $notifications = Notification::all();
+            return response()->json(['data' => $notifications], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:courses',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'section_id' => 'required|exists:sections,id',   
+            'name' => 'required|string|max:255|unique:notifications',   
+            'description' => 'required|string',  
+            'time' => 'required|date_format:Y-m-d H:i:s',
         ]);
 
         if ($validator->fails()) {
@@ -35,32 +42,39 @@ class ApiCourseController extends Controller
 
         try {
             $data = $validator->validated();
-            $course = Course::create($data);
+            $notification = Notification::create($data);
             
-            return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(string $id)
     {
         try {
-            $course = Course::findOrFail($id);
-            return response()->json(['data' => $course], 200);
+            $notification = Notification::findOrFail($id);
+            return response()->json(['data' => $notification], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:courses',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'section_id' => 'required|exists:sections,id',   
+            'name' => 'required|string|max:255|unique:notifications',   
+            'description' => 'required|string',  
+            'time' => 'required|date_format:Y-m-d H:i:s',
         ]);
 
         if ($validator->fails()) {
@@ -68,13 +82,13 @@ class ApiCourseController extends Controller
         }
 
         try {
-            $course = Course::findOrFail($id);
+            $notification = Notification::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $course->update($data);
+            $notification->update($data);
 
-            return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $notification, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
@@ -82,11 +96,14 @@ class ApiCourseController extends Controller
         }
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(string $id)
     {
         try {
-            $course = Course::findOrFail($id);
-            $course->delete();
+            $notification = Notification::findOrFail($id);
+            $notification->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

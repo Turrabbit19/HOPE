@@ -1,32 +1,36 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Teacher;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Section;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class ApiTeacherController extends Controller
+class ApiSectionController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         try {
-            $teachers = Teacher::all();
-            return response()->json(['data' => $teachers], 200);
+            $sections = Section::all();
+            return response()->json(['data' => $sections], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+            return response()->json(['error'=>'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'major_id' => 'required|exists:majors,id',
-            'teacher_code' => 'required|string|max:19|unique:teachers',
+            'name' => 'required|string|max:100|unique:sections',   
         ]);
 
         if ($validator->fails()) {
@@ -35,32 +39,36 @@ class ApiTeacherController extends Controller
 
         try {
             $data = $validator->validated();
-            $teacher = Teacher::create($data);
+            $section = Section::create($data);
             
-            return response()->json(['data' => $teacher, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $section, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(string $id)
     {
         try {
-           $teacher = Teacher::findOrFail($id);
-            return response()->json(['data' =>$teacher], 200);
+            $section = Section::findOrFail($id);
+            return response()->json(['data' => $section], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, string $id)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'major_id' => 'required|exists:majors,id',
-            'teacher_code' => 'required|string|max:19|unique:teachers',
+         $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100|unique:sections',   
         ]);
 
         if ($validator->fails()) {
@@ -68,13 +76,13 @@ class ApiTeacherController extends Controller
         }
 
         try {
-            $teacher = Teacher::findOrFail($id);
+            $section = Section::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $teacher->update($data);
+            $section->update($data);
 
-            return response()->json(['data' => $teacher, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $section, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
@@ -82,11 +90,14 @@ class ApiTeacherController extends Controller
         }
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(string $id)
     {
         try {
-            $teacher = Teacher::findOrFail($id);
-            $teacher->delete();
+            $section = Section::findOrFail($id);
+            $section->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

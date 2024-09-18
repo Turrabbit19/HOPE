@@ -14,7 +14,7 @@ class ApiStudentController extends Controller
     public function index()
     {
         try {
-            $students = Student::all();
+            $students = Student::paginate(9)->all();
             return response()->json(['data' => $students], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);

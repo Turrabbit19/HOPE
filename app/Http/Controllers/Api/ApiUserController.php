@@ -14,7 +14,7 @@ class ApiUserController extends Controller
     public function index()
     {
         try {
-            $users = User::all();
+            $users = User::paginate(9)->all();
             return response()->json(['data' => $users], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);

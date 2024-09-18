@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lessons;
+use App\Models\Lesson;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -15,7 +16,7 @@ class ApiLessonController extends Controller
     public function index()
     {
         try {
-           $lessons = Lessons::all();
+           $lessons = Lesson::all();
             return response()->json(['data' =>$lessons], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
@@ -39,7 +40,7 @@ class ApiLessonController extends Controller
 
         try {
             $data = $validator->validated();
-           $lesson = Lessons::create($data);
+            $lesson = Lesson::create($data);
             
             return response()->json(['data' => $lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -53,7 +54,7 @@ class ApiLessonController extends Controller
     public function show(string $id)
     {
         try {
-            $lesson = Lessons::findOrFail($id);
+            $lesson = Lesson::findOrFail($id);
             return response()->json(['data' => $lesson], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
@@ -68,7 +69,7 @@ class ApiLessonController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-           'subject_id ' => 'required|exists:subjects,id',
+            'subject_id ' => 'required|exists:subjects,id',
             'name' => 'required|string|max:50',
             'description' => 'required'
         ]);
@@ -78,8 +79,11 @@ class ApiLessonController extends Controller
         }
 
         try {
-            $data = $validator->validated();
-          $lesson = Lessons::create($data);
+            $lesson = Lesson::findOrFail($id);
+            
+            $data = $request->all();
+            $data['updated_at'] = Carbon::now();
+            $lesson->update($data);
             
             return response()->json(['data' =>$lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -93,7 +97,7 @@ class ApiLessonController extends Controller
     public function destroy(string $id)
     {
         try {
-            $lesson = Lessons::findOrFail($id);
+            $lesson = Lesson::findOrFail($id);
             $lesson->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {

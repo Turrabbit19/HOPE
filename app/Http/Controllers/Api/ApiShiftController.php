@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Plan;
-use Carbon\Carbon;
+use App\Models\Shift;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 
-class ApiPlanController extends Controller
+class ApiShiftController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,10 +17,10 @@ class ApiPlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::all();
-            return response()->json(['data' => $plans], 200);
+            $shifts = Shift::all();
+            return response()->json(['data' => $shifts], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -30,9 +30,9 @@ class ApiPlanController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'subject_id ' => 'required|exists:subjects,id',
+            'name' => 'required|string|max:100|unique:shifts', 
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
         ]);
 
         if ($validator->fails()) {
@@ -41,9 +41,9 @@ class ApiPlanController extends Controller
 
         try {
             $data = $validator->validated();
-            $plan = Plan::create($data);
+            $shift = Shift::create($data);
             
-            return response()->json(['data' => $plan, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $shift, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -55,12 +55,12 @@ class ApiPlanController extends Controller
     public function show(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            return response()->json(['data' => $plan], 200);
+            $shift = Shift::findOrFail($id);
+            return response()->json(['data' => $shift], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -70,9 +70,9 @@ class ApiPlanController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'subject_id ' => 'required|exists:subjects,id',
+            'name' => 'required|string|max:100|unique:shifts', 
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
         ]);
 
         if ($validator->fails()) {
@@ -80,13 +80,13 @@ class ApiPlanController extends Controller
         }
 
         try {
-            $plan = Plan::findOrFail($id);
+            $shift = Shift::findOrFail($id);
             
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
-            $plan->update($data);
+            $shift->update($data);
 
-            return response()->json(['data' => $plan, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $shift, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
@@ -100,8 +100,8 @@ class ApiPlanController extends Controller
     public function destroy(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            $plan->delete();
+            $shift = Shift::findOrFail($id);
+            $shift->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

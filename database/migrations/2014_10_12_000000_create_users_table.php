@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->text('avatar');
-            $table->string('name'); // Họ và tên
+            $table->text('avatar')->nullable();
+            $table->string('name'); 
             $table->string('email')->unique(); 
             $table->string('phone')->unique();
             $table->date('dob');
@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('address');
             $table->timestamp('email_verified_at')->nullable();
             $table->text('password');
+            $table->foreignIdFor(Role::class)->constrained()->onDelete('cascade');
             $table->rememberToken();
             $table->timestamps();
         });

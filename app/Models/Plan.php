@@ -12,16 +12,20 @@ class Plan extends Model
 
     protected $fillable = [
         'course_id',
+        'semester_id',
         'subject_id',
-        'status'
     ];
 
     public function course()
     {
         return $this->belongsTo(Course::class);
     }
-    public function subject()
+    public function semesters()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsToMany(Semester::class);
+    }
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class);
     }
 }

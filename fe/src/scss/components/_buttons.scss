@@ -21,7 +21,13 @@
     }
 
     &--primary {
+        color: #fff;
         background: #1167b4;
+    }
+
+    &--cancel {
+        color: #fff;
+        background: #795548;
     }
 
     &--outline {

@@ -104,13 +104,16 @@ const Teach = () => {
                                 </div>
 
                                 <div className="teaching__card-bottom">
-                                    <button className="flex items-center gap-3 text-[#1167B4] font-bold">
+                                    <Link
+                                        to={`list`}
+                                        className="flex items-center gap-3 text-[#1167B4] font-bold"
+                                    >
                                         <img
                                             src="/assets/svg/setting.svg"
                                             alt=""
                                         />
                                         Quản Lý Chương Trình Dạy
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -177,13 +180,16 @@ const Teach = () => {
                                 </div>
 
                                 <div className="teaching__card-bottom">
-                                    <button className="flex items-center gap-3 text-[#1167B4] font-bold">
+                                    <Link
+                                        to={`list`}
+                                        className="flex items-center gap-3 text-[#1167B4] font-bold"
+                                    >
                                         <img
                                             src="/assets/svg/setting.svg"
                                             alt=""
                                         />
                                         Quản Lý Chương Trình Dạy
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -250,13 +256,16 @@ const Teach = () => {
                                 </div>
 
                                 <div className="teaching__card-bottom">
-                                    <button className="flex items-center gap-3 text-[#1167B4] font-bold">
+                                    <Link
+                                        to={`list`}
+                                        className="flex items-center gap-3 text-[#1167B4] font-bold"
+                                    >
                                         <img
                                             src="/assets/svg/setting.svg"
                                             alt=""
                                         />
                                         Quản Lý Chương Trình Dạy
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>

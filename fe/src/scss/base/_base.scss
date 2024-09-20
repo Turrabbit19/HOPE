@@ -64,6 +64,15 @@ select {
 input {
     background: transparent;
 }
+img.svg-red {
+    filter: invert(43%) sepia(87%) saturate(6148%) hue-rotate(354deg)
+        brightness(102%) contrast(101%);
+}
+
+img.svg-green {
+    filter: invert(64%) sepia(49%) saturate(426%) hue-rotate(69deg)
+        brightness(101%) contrast(99%);
+}
 
 .container {
     @include abstracts.screen(sm) {

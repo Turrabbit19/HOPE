@@ -15,7 +15,8 @@ class ApiCourseController extends Controller
     {
         try {
             $course = Course::all();
-            return response()->json(['data' => $course], 200);
+            $courseName = $course->pluck('name');
+            return response()->json(['name' => $courseName], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
@@ -36,7 +37,7 @@ class ApiCourseController extends Controller
         try {
             $data = $validator->validated();
             $course = Course::create($data);
-            
+
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -54,6 +55,13 @@ class ApiCourseController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
     }
+    // public function getName(){
+    //     try{
+    //         $course = Course::all()
+    //     }catch(\Exception $e){
+    //         return response()->json(['error' => 'Không thể truy vấn tới bản Courses', 'message' => $e->getMessage()], 500);
+    //     }
+    // }
 
     public function update(Request $request, string $id)
     {
@@ -69,7 +77,7 @@ class ApiCourseController extends Controller
 
         try {
             $course = Course::findOrFail($id);
-            
+
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
             $course->update($data);

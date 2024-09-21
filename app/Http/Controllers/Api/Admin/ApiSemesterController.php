@@ -24,7 +24,7 @@ class ApiSemesterController extends Controller
     public function getAll()
     {
         try {
-            $semesters = Semester::select('id', 'number', 'course_id', 'start_date', 'end_date');
+            $semesters = Semester::select('id', 'number', 'course_id', 'start_date', 'end_date')->get();
             return response()->json(['data' => $semesters], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);

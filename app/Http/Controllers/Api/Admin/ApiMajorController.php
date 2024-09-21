@@ -14,7 +14,7 @@ class ApiMajorController extends Controller
     public function index()
     {
         try {
-            $majors = Major::select('id', 'name');
+            $majors = Major::select('id', 'name')->get();
             return response()->json(['data' => $majors], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);

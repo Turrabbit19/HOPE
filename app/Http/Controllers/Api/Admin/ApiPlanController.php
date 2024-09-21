@@ -27,7 +27,7 @@ class ApiPlanController extends Controller
     public function getAll()
     {
         try {
-            $plans = Plan::select('id', 'course_id', 'semester_id', 'subject_id');
+            $plans = Plan::select('id', 'course_id', 'semester_id', 'subject_id')->get();
             return response()->json(['data' => $plans], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);

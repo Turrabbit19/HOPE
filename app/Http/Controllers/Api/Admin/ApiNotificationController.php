@@ -27,7 +27,7 @@ class ApiNotificationController extends Controller
     public function getAll()
     {
         try {
-            $notifications = Notification::select('id', 'section_id', 'description', 'time');
+            $notifications = Notification::select('id', 'section_id', 'description', 'time')->get();
             return response()->json(['data' => $notifications], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);

@@ -24,7 +24,7 @@ class ApiStudentController extends Controller
     public function getAll()
     {
         try {
-            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status');
+            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status')->get();
             return response()->json(['data' => $students], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);

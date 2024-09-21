@@ -24,7 +24,7 @@ class ApiUserController extends Controller
     public function getAll()
     {
         try {
-            $users = User::select('id', 'avatar', 'name', 'email', 'phone', 'dob', 'gender', 'ethnicity', 'address', 'role_id');
+            $users = User::select('id', 'avatar', 'name', 'email', 'phone', 'dob', 'gender', 'ethnicity', 'address', 'role_id')->get();
             return response()->json(['data' => $users], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);

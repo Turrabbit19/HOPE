@@ -17,7 +17,7 @@ class ApiShiftController extends Controller
     public function index()
     {
         try {
-            $shifts = Shift::select('id', 'name', 'start_time', 'end_time');
+            $shifts = Shift::select('id', 'name', 'start_time', 'end_time')->get();
             return response()->json(['data' => $shifts], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);

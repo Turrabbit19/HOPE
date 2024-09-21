@@ -24,7 +24,7 @@ class ApiSubjectController extends Controller
     public function getAll()
     {
         try {
-            $subjects = Subject::select('id', 'subject_code', 'semester_id', 'major_id', 'name', 'description', 'credit');
+            $subjects = Subject::select('id', 'subject_code', 'semester_id', 'major_id', 'name', 'description', 'credit')->get();
             return response()->json(['data' => $subjects], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);

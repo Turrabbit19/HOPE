@@ -26,7 +26,7 @@ class ApiLessonController extends Controller
     public function getAll()
     {
         try {
-           $lessons = Lesson::select('id', 'subject_id', 'name', 'description');
+           $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->get();
             return response()->json(['data' =>$lessons], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);

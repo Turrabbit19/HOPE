@@ -24,7 +24,7 @@ class ApiTeacherController extends Controller
     public function getAll()
     {
         try {
-            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code');
+            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code')->get();
             return response()->json(['data' => $teachers], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);

@@ -5,12 +5,14 @@ import NotFound from "../components/NotFound";
 // import LayoutAdmin from "../components/layout/layoutAdmin";
 // import List from "../pages/admin/list";
 // import Schedule from "../pages/admin/schedul";
-import AddSt from "../pages/admin/addSt";
 import Loading from "../components/loading";
 import ScrollToTopButton from "../components/scrollToTopButton";
 import ListCourse from "../pages/admin/courses/list";
 import AddCourse from "../pages/admin/courses/add";
 import BreadCrumb from "./breadcrumb";
+import MajorManagement from "../pages/admin/major";
+import Role from "../pages/admin/roles";
+import UserManager from "../pages/admin/userManager";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -43,11 +45,6 @@ const Router = createBrowserRouter([
           </Suspense>
         ),
       },
-
-      {
-        path: "add-student",
-        element: <AddSt />,
-      },
       {
         path: "course",
         element: (
@@ -67,6 +64,33 @@ const Router = createBrowserRouter([
             ),
           },
         ],
+      },
+      {
+        path: "majors",
+        element: (
+          <>
+            <BreadCrumb />
+            <MajorManagement />
+          </>
+        ),
+      },
+      {
+        path: "roles",
+        element: (
+          <>
+            <BreadCrumb />
+            <Role />
+          </>
+        ),
+      },
+      {
+        path: "user-manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <UserManager />
+          </>
+        ),
       },
     ],
   },

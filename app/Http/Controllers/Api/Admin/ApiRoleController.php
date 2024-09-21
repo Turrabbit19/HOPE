@@ -14,7 +14,7 @@ class ApiRoleController extends Controller
     public function index()
     {
         try {
-            $roles = Role::paginate(5)->map(function($roles){
+            $roles = Role::all()->map(function($roles){
                 return [
                     'name' => $roles->name  
                 ];

@@ -17,8 +17,12 @@ class ApiSectionController extends Controller
     public function index()
     {
         try {
-            $sections = Section::all();
-            return response()->json(['data' => $sections], 200);
+            $sections = Section::paginate(5)->map(function($sections){
+                return [
+                    'name' => $sections->name
+                ];
+            });;
+            return response()->json(['sections' => $sections], 200);
         } catch (\Exception $e) {
             return response()->json(['error'=>'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
         }

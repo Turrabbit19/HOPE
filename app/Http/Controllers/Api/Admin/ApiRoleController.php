@@ -14,8 +14,12 @@ class ApiRoleController extends Controller
     public function index()
     {
         try {
-            $roles = Role::all();
-            return response()->json(['data' => $roles], 200);
+            $roles = Role::paginate(5)->map(function($roles){
+                return [
+                    'name' => $roles->name  
+                ];
+            });
+            return response()->json(['roles' => $roles], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
         }

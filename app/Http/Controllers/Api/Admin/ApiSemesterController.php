@@ -14,8 +14,15 @@ class ApiSemesterController extends Controller
     public function index()
     {
         try {
-            $semesters = Semester::all();
-            return response()->json(['data' => $semesters], 200);
+            $semesters = Semester::join('courses', 'semesters.course_id', '=', 'courses.id')
+            ->select(
+                'semesters.name AS semester_name',
+                'semesters.number',
+                'courses.name AS course_name',
+                'semesters.start_date',
+                'semesters.end_date'
+            )->get();
+            return response()->json(['semesters' => $semesters], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }

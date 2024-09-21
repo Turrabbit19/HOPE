@@ -16,6 +16,7 @@ class ApiCourseController extends Controller
         try {
             $course = Course::all();
             $courseName = $course->pluck('name');
+            dd($course);
             return response()->json(['name' => $courseName], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);

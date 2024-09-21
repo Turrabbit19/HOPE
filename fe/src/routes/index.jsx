@@ -7,12 +7,12 @@ import NotFound from "../components/NotFound";
 // import Schedule from "../pages/admin/schedul";
 import Loading from "../components/loading";
 import ScrollToTopButton from "../components/scrollToTopButton";
-import ListCourse from "../pages/admin/courses/list";
-import AddCourse from "../pages/admin/courses/add";
 import BreadCrumb from "./breadcrumb";
 import MajorManagement from "../pages/admin/major";
 import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
+import CoursesManager from "../pages/admin/courses";
+import SemesterManage from "../pages/admin/semesters";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -45,26 +45,7 @@ const Router = createBrowserRouter([
           </Suspense>
         ),
       },
-      {
-        path: "course",
-        element: (
-          <>
-            <BreadCrumb />
-            <ListCourse />
-          </>
-        ),
-        children: [
-          {
-            path: "add",
-            element: (
-              <>
-                <BreadCrumb />
-                <AddCourse />
-              </>
-            ),
-          },
-        ],
-      },
+
       {
         path: "majors",
         element: (
@@ -89,6 +70,24 @@ const Router = createBrowserRouter([
           <>
             <BreadCrumb />
             <UserManager />
+          </>
+        ),
+      },
+      {
+        path: "courses",
+        element: (
+          <>
+            <BreadCrumb />
+            <CoursesManager />
+          </>
+        ),
+      },
+      {
+        path: "semesters",
+        element: (
+          <>
+            <BreadCrumb />
+            <SemesterManage />
           </>
         ),
       },

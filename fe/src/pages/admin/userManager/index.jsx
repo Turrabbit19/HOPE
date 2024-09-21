@@ -1,8 +1,11 @@
 import React from 'react'
+import TeacherManager from './teacher'
 
 const UserManager = () => {
   return (
-    <div>UserManager</div>
+    <>
+      <TeacherManager/>
+    </>
   )
 }
 

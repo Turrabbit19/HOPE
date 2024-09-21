@@ -1,6 +1,6 @@
 import React from 'react'
 
-const AddCourse = () => {
+const SemesterManage = () => {
   return (
     <>
         
@@ -8,4 +8,4 @@ const AddCourse = () => {
   )
 }
 
-export default AddCourse
+export default SemesterManage

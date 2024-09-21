@@ -31,6 +31,7 @@ const MajorManagement = () => {
   }, []);
 
   const onHandleSubmit = async (values) => {
+    console.log(values);
     if (data.includes(values.name)) {
       message.error("Ngành học này đã có, vui lòng đặt tên khác");
       return;
@@ -41,9 +42,7 @@ const MajorManagement = () => {
       await instance.post("admin/majors", values);
       message.success("Thêm ngành học thành công");
       form.resetFields();
-      setTimeout(() => {
-        navigate("");
-      }, 1500);
+      setData([...data, values]);
     } catch (error) {
       message.error("Thêm ngành học thất bại");
     } finally {
@@ -51,7 +50,7 @@ const MajorManagement = () => {
     }
   };
 
-  const onHandleDelete = async (name,status) => {
+  const onHandleDelete = async (name, status) => {
     // console.log(name);
     try {
       setLoading(true);
@@ -100,6 +99,7 @@ const MajorManagement = () => {
         layout="horizontal"
         style={{ maxWidth: 600, marginBottom: "20px" }}
         className=""
+        initialValues={{status: 1}}
       >
         <Form.Item
           label="Tên ngành học"
@@ -111,6 +111,9 @@ const MajorManagement = () => {
           ]}
         >
           <Input />
+        </Form.Item>
+        <Form.Item className="hidden" name="status">
+          <Input value={1} />
         </Form.Item>
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
           <Button type="primary" htmlType="submit" loading={loading}>
@@ -159,7 +162,7 @@ const MajorManagement = () => {
       >
         <Button
           type="dashed"
-          onClick={() => onHandleDelete(selectedMajor , 0)}
+          onClick={() => onHandleDelete(selectedMajor, 0)}
           loading={loading}
         >
           Xóa

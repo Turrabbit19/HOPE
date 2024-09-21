@@ -23,6 +23,24 @@ const AsideAdmin = () => {
         label: <Link to={item.link}>{item.name}</Link>,
       })),
     },
+    {
+      key: "sub2",
+      label: (
+        <Link to="/admin/majors">Quản lý ngành học</Link>
+      )
+    },
+    {
+      key: "sub3",
+      label: (
+        <Link to="/admin/courses">Quản lý khóa học</Link>
+      )
+    },
+    {
+      key: "sub4",
+      label: (
+        <Link to="/admin/semesters">Quản lý kỳ học</Link>
+      )
+    }
   ];
 
   const {

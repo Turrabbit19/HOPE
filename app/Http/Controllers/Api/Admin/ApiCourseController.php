@@ -14,7 +14,7 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
-            $course = Course::all();
+            $course = Course::select('id', 'name', 'start_date', 'end_date');
             return response()->json(['data' => $course], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
@@ -58,7 +58,7 @@ class ApiCourseController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:courses',
+            'name' => 'required|string|max:50|unique:courses,name,' . $id,
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
         ]);

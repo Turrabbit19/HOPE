@@ -17,7 +17,7 @@ class ApiSectionController extends Controller
     public function index()
     {
         try {
-            $sections = Section::all();
+            $sections = Section::select('id', 'name');
             return response()->json(['data' => $sections], 200);
         } catch (\Exception $e) {
             return response()->json(['error'=>'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
@@ -68,7 +68,7 @@ class ApiSectionController extends Controller
     public function update(Request $request, string $id)
     {
          $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:sections',   
+            'name' => 'required|string|max:100|unique:sections,name,' . $id,   
         ]);
 
         if ($validator->fails()) {

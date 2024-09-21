@@ -14,7 +14,7 @@ class ApiMajorController extends Controller
     public function index()
     {
         try {
-            $majors = Major::all();
+            $majors = Major::select('id', 'name');
             return response()->json(['data' => $majors], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
@@ -56,7 +56,7 @@ class ApiMajorController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:majors'
+            'name' => 'required|string|max:50|unique:majors,name,' . $id,
         ]);
 
         if ($validator->fails()) {

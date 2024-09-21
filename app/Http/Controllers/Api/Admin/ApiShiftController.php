@@ -17,7 +17,7 @@ class ApiShiftController extends Controller
     public function index()
     {
         try {
-            $shifts = Shift::all();
+            $shifts = Shift::select('id', 'name', 'start_time', 'end_time');
             return response()->json(['data' => $shifts], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
@@ -70,7 +70,7 @@ class ApiShiftController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:shifts', 
+            'name' => 'required|string|max:100|unique:shifts,name,' . $id,
             'start_time' => 'required|date_format:H:i:s',
             'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
         ]);

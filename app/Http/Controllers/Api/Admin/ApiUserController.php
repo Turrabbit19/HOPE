@@ -14,7 +14,17 @@ class ApiUserController extends Controller
     public function index()
     {
         try {
-            $users = User::paginate(9)->all();
+            $users = User::select('id', 'avatar', 'name', 'email', 'phone', 'dob', 'gender', 'ethnicity', 'address', 'role_id')->paginate(9);
+            return response()->json(['data' => $users], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $users = User::select('id', 'avatar', 'name', 'email', 'phone', 'dob', 'gender', 'ethnicity', 'address', 'role_id');
             return response()->json(['data' => $users], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
@@ -67,8 +77,8 @@ class ApiUserController extends Controller
         $validator = Validator::make($request->all(), [
             'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120', 
             'name' => 'required|string|max:100',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:11|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'phone' => 'required|string|max:11|unique:users,phone,' . $id,
             'dob' => 'required|date|before:today',
             'gender' => 'required|boolean',
             'ethnicity' => 'required|string|max:100',

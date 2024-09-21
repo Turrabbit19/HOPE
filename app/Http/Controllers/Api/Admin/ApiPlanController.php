@@ -17,7 +17,17 @@ class ApiPlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::all();
+            $plans = Plan::select('id', 'course_id', 'semester_id', 'subject_id')->paginate(9);
+            return response()->json(['data' => $plans], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $plans = Plan::select('id', 'course_id', 'semester_id', 'subject_id');
             return response()->json(['data' => $plans], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
@@ -32,7 +42,7 @@ class ApiPlanController extends Controller
         $validator = Validator::make($request->all(), [
             'course_id' => 'required|exists:courses,id',
             'semester_id' => 'required|exists:semesters,id',
-            'subject_id ' => 'required|exists:subjects,id',
+            'subject_id' => 'required|exists:subjects,id',
         ]);
 
         if ($validator->fails()) {
@@ -72,7 +82,7 @@ class ApiPlanController extends Controller
         $validator = Validator::make($request->all(), [
             'course_id' => 'required|exists:courses,id',
             'semester_id' => 'required|exists:semesters,id',
-            'subject_id ' => 'required|exists:subjects,id',
+            'subject_id' => 'required|exists:subjects,id',
         ]);
 
         if ($validator->fails()) {

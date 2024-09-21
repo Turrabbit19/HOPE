@@ -14,7 +14,17 @@ class ApiStudentController extends Controller
     public function index()
     {
         try {
-            $students = Student::paginate(9)->all();
+            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status')->paginate(9);
+            return response()->json(['data' => $students], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status');
             return response()->json(['data' => $students], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
@@ -65,7 +75,7 @@ class ApiStudentController extends Controller
             'course_id' => 'required|exists:courses,id',
             'major_id' => 'required|exists:majors,id',
             'semester_id' => 'required|exists:semesters,id',
-            'student_code' => 'required|string|max:19|unique:students',
+            'student_code' => 'required|string|max:19|unique:students,student_code,' . $id,
             'status' => 'required|integer',
         ]);
 

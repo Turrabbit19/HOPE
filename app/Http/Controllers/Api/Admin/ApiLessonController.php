@@ -16,7 +16,17 @@ class ApiLessonController extends Controller
     public function index()
     {
         try {
-           $lessons = Lesson::all();
+           $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->paginate(9);
+            return response()->json(['data' =>$lessons], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+           $lessons = Lesson::select('id', 'subject_id', 'name', 'description');
             return response()->json(['data' =>$lessons], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
@@ -29,7 +39,7 @@ class ApiLessonController extends Controller
     public function store(Request $request)
     {
         $validator = validator::make($request->all(), [
-            'subject_id ' => 'required|exists:subjects,id',
+            'subject_id' => 'required|exists:subjects,id',
             'name' => 'required|string|max:50',
             'description' => 'required'
         ]);
@@ -69,7 +79,7 @@ class ApiLessonController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'subject_id ' => 'required|exists:subjects,id',
+            'subject_id' => 'required|exists:subjects,id',
             'name' => 'required|string|max:50',
             'description' => 'required'
         ]);

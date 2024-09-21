@@ -14,7 +14,17 @@ class ApiTeacherController extends Controller
     public function index()
     {
         try {
-            $teachers = Teacher::all();
+            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code')->paginate(9);
+            return response()->json(['data' => $teachers], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code');
             return response()->json(['data' => $teachers], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
@@ -60,7 +70,7 @@ class ApiTeacherController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'major_id' => 'required|exists:majors,id',
-            'teacher_code' => 'required|string|max:19|unique:teachers',
+            'teacher_code' => 'required|string|max:19|unique:teachers,teacher_code,' . $id
         ]);
 
         if ($validator->fails()) {

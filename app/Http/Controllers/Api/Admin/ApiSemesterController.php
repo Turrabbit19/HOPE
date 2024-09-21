@@ -14,7 +14,17 @@ class ApiSemesterController extends Controller
     public function index()
     {
         try {
-            $semesters = Semester::all();
+            $semesters = Semester::select('id', 'number', 'course_id', 'start_date', 'end_date')->paginate(9);
+            return response()->json(['data' => $semesters], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $semesters = Semester::select('id', 'number', 'course_id', 'start_date', 'end_date');
             return response()->json(['data' => $semesters], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
@@ -60,7 +70,7 @@ class ApiSemesterController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:semesters', 
+            'name' => 'required|string|max:255|unique:semesters,name,' . $id,
             'number' => 'required|integer|min:1', 
             'course_id' => 'required|exists:courses,id', 
             'start_date' => 'required|date',

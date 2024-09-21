@@ -17,7 +17,17 @@ class ApiNotificationController extends Controller
     public function index()
     {
         try {
-            $notifications = Notification::all();
+            $notifications = Notification::select('id', 'section_id', 'description', 'time')->paginate(9);
+            return response()->json(['data' => $notifications], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $notifications = Notification::select('id', 'section_id', 'description', 'time');
             return response()->json(['data' => $notifications], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
@@ -72,7 +82,7 @@ class ApiNotificationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'section_id' => 'required|exists:sections,id',   
-            'name' => 'required|string|max:255|unique:notifications',   
+            'name' => 'required|string|max:255|unique:notifications,name,' . $id,   
             'description' => 'required|string',  
             'time' => 'required|date_format:Y-m-d H:i:s',
         ]);

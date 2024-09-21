@@ -14,7 +14,7 @@ class ApiRoomController extends Controller
     public function index()
     {
         try {
-            $rooms = Room::all();
+            $rooms = Room::select('id', 'name', 'slot', 'status');
             return response()->json(['data' => $rooms], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
@@ -58,7 +58,7 @@ class ApiRoomController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:rooms',
+            'name' => 'required|string|max:50|unique:rooms,name,' . $id,
             'slot' => 'required|integer|min:1', 
             'status' => 'required|boolean',
         ]);

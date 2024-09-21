@@ -15,4 +15,9 @@ class Course extends Model
         'start_date',
         'end_date'
     ];
+
+    public function semester()
+    {
+        return $this->hasMany(Semester::class);
+    }
 }

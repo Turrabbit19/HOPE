@@ -79,9 +79,9 @@ class ApiLessonController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'subject_id' => 'required|exists:subjects,id',
-            'name' => 'required|string|max:50',
-            'description' => 'required'
+            'subject_id' => 'sometimes|exists:subjects,id',
+            'name' => 'sometimes|string|max:50',
+            'description' => 'sometimes'
         ]);
 
         if ($validator->fails()) {
@@ -91,7 +91,7 @@ class ApiLessonController extends Controller
         try {
             $lesson = Lesson::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $lesson->update($data);
             

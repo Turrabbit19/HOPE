@@ -75,16 +75,16 @@ class ApiUserController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120', 
-            'name' => 'required|string|max:100',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'required|string|max:11|unique:users,phone,' . $id,
-            'dob' => 'required|date|before:today',
-            'gender' => 'required|boolean',
-            'ethnicity' => 'required|string|max:100',
-            'address' => 'required|string|max:255',
-            'password' => 'required|string|min:8',
-            'role_id' => 'required|exists:roles,id',
+            'avatar' => 'sometimes|file|mimes:jpeg,png,jpg|max:5120', 
+            'name' => 'sometimes|string|max:100',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
+            'phone' => 'sometimes|string|max:11|unique:users,phone,' . $id,
+            'dob' => 'sometimes|date|before:today',
+            'gender' => 'sometimes|boolean',
+            'ethnicity' => 'sometimes|string|max:100',
+            'address' => 'sometimes|string|max:255',
+            'password' => 'sometimes|string|min:8',
+            'role_id' => 'sometimes|exists:roles,id',
         ]);
 
         if ($validator->fails()) {
@@ -94,7 +94,7 @@ class ApiUserController extends Controller
         try {
             $user = User::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $user->update($data);
 

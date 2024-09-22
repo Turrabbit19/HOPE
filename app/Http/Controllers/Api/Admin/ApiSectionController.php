@@ -68,7 +68,7 @@ class ApiSectionController extends Controller
     public function update(Request $request, string $id)
     {
          $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:sections,name,' . $id,   
+            'name' => 'sometimes|string|max:100|unique:sections,name,' . $id,   
         ]);
 
         if ($validator->fails()) {
@@ -78,7 +78,7 @@ class ApiSectionController extends Controller
         try {
             $section = Section::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $section->update($data);
 

@@ -80,9 +80,9 @@ class ApiPlanController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'course_id' => 'sometimes|exists:courses,id',
+            'semester_id' => 'sometimes|exists:semesters,id',
+            'subject_id' => 'sometimes|exists:subjects,id',
         ]);
 
         if ($validator->fails()) {
@@ -92,7 +92,7 @@ class ApiPlanController extends Controller
         try {
             $plan = Plan::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $plan->update($data);
 

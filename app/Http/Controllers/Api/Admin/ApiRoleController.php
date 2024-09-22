@@ -56,7 +56,7 @@ class ApiRoleController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:roles,name,' . $id,
+            'name' => 'sometimes|string|max:50|unique:roles,name,' . $id,
         ]);
 
         if ($validator->fails()) {
@@ -66,7 +66,7 @@ class ApiRoleController extends Controller
         try {
             $role = Role::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $role->update($data);
 

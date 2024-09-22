@@ -58,9 +58,9 @@ class ApiCourseController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:courses,name,' . $id,
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'name' => 'sometimes|string|max:50|unique:courses,name,' . $id,
+            'start_date' => 'sometimes|date',
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
         ]);
 
         if ($validator->fails()) {
@@ -70,7 +70,7 @@ class ApiCourseController extends Controller
         try {
             $course = Course::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $course->update($data);
 

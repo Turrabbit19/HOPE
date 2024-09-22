@@ -68,9 +68,9 @@ class ApiTeacherController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'major_id' => 'required|exists:majors,id',
-            'teacher_code' => 'required|string|max:19|unique:teachers,teacher_code,' . $id
+            'user_id' => 'sometimes|exists:users,id',
+            'major_id' => 'sometimes|exists:majors,id',
+            'teacher_code' => 'sometimes|string|max:19|unique:teachers,teacher_code,' . $id
         ]);
 
         if ($validator->fails()) {
@@ -80,7 +80,7 @@ class ApiTeacherController extends Controller
         try {
             $teacher = Teacher::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $teacher->update($data);
 

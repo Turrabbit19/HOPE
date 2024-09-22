@@ -70,9 +70,9 @@ class ApiShiftController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:shifts,name,' . $id,
-            'start_time' => 'required|date_format:H:i:s',
-            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
+            'name' => 'sometimes|string|max:100|unique:shifts,name,' . $id,
+            'start_time' => 'sometimes|date_format:H:i:s',
+            'end_time' =>  'sometimes|date_format:H:i:s|after_or_equal:start_time', 
         ]);
 
         if ($validator->fails()) {
@@ -82,7 +82,7 @@ class ApiShiftController extends Controller
         try {
             $shift = Shift::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $shift->update($data);
 

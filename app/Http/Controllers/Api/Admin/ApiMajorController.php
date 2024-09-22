@@ -56,7 +56,7 @@ class ApiMajorController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:majors,name,' . $id,
+            'name' => 'sometimes|string|max:50|unique:majors,name,' . $id,
         ]);
 
         if ($validator->fails()) {
@@ -66,7 +66,7 @@ class ApiMajorController extends Controller
         try {
             $major = Major::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $major->update($data);
 

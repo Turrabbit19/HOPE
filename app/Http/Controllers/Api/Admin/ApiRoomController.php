@@ -58,9 +58,9 @@ class ApiRoomController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:rooms,name,' . $id,
-            'slot' => 'required|integer|min:1', 
-            'status' => 'required|boolean',
+            'name' => 'sometimes|string|max:50|unique:rooms,name,' . $id,
+            'slot' => 'sometimes|integer|min:1', 
+            'status' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -70,7 +70,7 @@ class ApiRoomController extends Controller
         try {
             $room = Room::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $room->update($data);
 

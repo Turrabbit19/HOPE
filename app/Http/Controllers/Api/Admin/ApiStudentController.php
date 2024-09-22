@@ -71,12 +71,12 @@ class ApiStudentController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'course_id' => 'required|exists:courses,id',
-            'major_id' => 'required|exists:majors,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'student_code' => 'required|string|max:19|unique:students,student_code,' . $id,
-            'status' => 'required|integer',
+            'user_id' => 'sometimes|exists:users,id',
+            'course_id' => 'sometimes|exists:courses,id',
+            'major_id' => 'sometimes|exists:majors,id',
+            'semester_id' => 'sometimes|exists:semesters,id',
+            'student_code' => 'sometimes|string|max:19|unique:students,student_code,' . $id,
+            'status' => 'sometimes|integer',
         ]);
 
         if ($validator->fails()) {
@@ -86,7 +86,7 @@ class ApiStudentController extends Controller
         try {
             $student = Student::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $student->update($data);
 

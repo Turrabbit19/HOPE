@@ -9,10 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Semester extends Model
 {
     use HasFactory, SoftDeletes;
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_id');
+    }
 
     protected $fillable = [
         'name',
-        'number',
+        // 'number',
         'course_id',
         'start_date',
         'end_date',

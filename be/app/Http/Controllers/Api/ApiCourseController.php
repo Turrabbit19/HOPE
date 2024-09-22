@@ -14,7 +14,7 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
-            $course = Course::select('name', 'start_date', 'end_date')->get();
+            $course = Course::select('name', 'start_date', 'end_date', 'id')->get();
 
             return response()->json(['data' => $course], 200);
         } catch (\Exception $e) {

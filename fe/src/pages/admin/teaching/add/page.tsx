@@ -1,20 +1,18 @@
 import React, { useState } from "react";
 
 const TeachAdd = () => {
-    // State để lưu URL preview của hình ảnh
     const [preview, setPreview] = useState<string | null>(null);
-    const [fileName, setFileName] = useState<string | null>(null); // State để lưu tên file
+    const [fileName, setFileName] = useState<string | null>(null);
 
-    // Hàm xử lý khi người dùng chọn file
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]; // Lấy file đầu tiên được chọn
+        const file = event.target.files?.[0];
         if (file) {
-            setFileName(file.name); // Đặt tên file vào state
+            setFileName(file.name);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreview(reader.result as string); // Đặt URL của hình ảnh vào state
+                setPreview(reader.result as string);
             };
-            reader.readAsDataURL(file); // Đọc file dưới dạng Data URL
+            reader.readAsDataURL(file);
         }
     };
 

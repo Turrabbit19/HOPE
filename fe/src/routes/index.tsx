@@ -4,7 +4,6 @@ import LayoutAdmin from "../pages/admin/layout";
 import Teach from "../pages/admin/teaching/page";
 import TeachAdd from "../pages/admin/teaching/add/page";
 import ListCourse from "../pages/admin/teaching/listCourse/page";
-import Popup from "../pages/admin/teaching/popup/page";
 
 const Router = createBrowserRouter([
     {
@@ -22,10 +21,6 @@ const Router = createBrowserRouter([
             {
                 path: "teaching/list",
                 element: <ListCourse />,
-            },
-            {
-                path: "popup",
-                element: <Popup />,
             },
         ],
     },

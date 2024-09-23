@@ -72,6 +72,7 @@ const Teach = () => {
                                         </div>
                                         <div className="teaching__card-status">
                                             <img
+                                                className="svg-green"
                                                 src="/assets/svg/status.svg"
                                                 alt=""
                                             />
@@ -148,6 +149,7 @@ const Teach = () => {
                                         </div>
                                         <div className="teaching__card-status">
                                             <img
+                                                className="svg-green"
                                                 src="/assets/svg/status.svg"
                                                 alt=""
                                             />
@@ -224,6 +226,7 @@ const Teach = () => {
                                         </div>
                                         <div className="teaching__card-status">
                                             <img
+                                                className="svg-green"
                                                 src="/assets/svg/status.svg"
                                                 alt=""
                                             />

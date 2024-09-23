@@ -13,6 +13,10 @@ class Semester extends Model
     {
         return $this->belongsTo(Course::class, 'course_id');
     }
+    public function subject()
+    {
+        return $this->hasMany(Subject::class );
+    }
 
     protected $fillable = [
         'name',

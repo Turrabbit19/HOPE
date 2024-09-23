@@ -105,7 +105,7 @@ const SemesterManage = () => {
         setSemesters(
           semesters.map((item) =>
             item.id == currentName
-              ? item : outGoingData
+              ? outGoingData : item
           )
         );
         form.resetFields();
@@ -136,6 +136,8 @@ const SemesterManage = () => {
     } catch (error) {
       console.log(error.message);
       message.error("Xóa thất bại");
+    }finally {
+      setLoading(false);
     }
   };
   const handleEdit = async (id) => {
@@ -313,7 +315,7 @@ const SemesterManage = () => {
           </Row>
           <Row gutter={16}>
             <Col span={20}>
-              <Button htmlType="submit">
+              <Button htmlType="submit" loading={loading}>
                 {update ? "Cập nhật" : "Thêm mới"}
               </Button>
             </Col>

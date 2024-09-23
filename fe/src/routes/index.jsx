@@ -13,6 +13,7 @@ import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
 import CoursesManager from "../pages/admin/courses";
 import SemesterManage from "../pages/admin/semesters";
+import SubjectManager from "../pages/admin/subjects";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -96,7 +97,7 @@ const Router = createBrowserRouter([
         element: (
           <>
             <BreadCrumb />
-            <SemesterManage />
+            <SubjectManager/>
           </>
         ),
       },

@@ -22,6 +22,7 @@ class ApiMajorController extends Controller
                 return [
                     'name' => $major->name,
                     'status' => $major->status,
+                    'id' => $major->id
                 ];
             });
             return response()->json(['majors' => $majorsData], 200);

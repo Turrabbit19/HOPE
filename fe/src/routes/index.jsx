@@ -91,6 +91,15 @@ const Router = createBrowserRouter([
           </>
         ),
       },
+      {
+        path: "subjects",
+        element: (
+          <>
+            <BreadCrumb />
+            <SemesterManage />
+          </>
+        ),
+      },
     ],
   },
   {

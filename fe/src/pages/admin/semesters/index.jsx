@@ -53,7 +53,7 @@ const SemesterManage = () => {
         ]);
         setSemesters(semesters.data.data);
         setCourses(courses.data.data);
-        // console.log(courses.data.data);
+        // console.log(semesters.data.data);
       } catch (error) {
         console.log(error.message);
       } finally {
@@ -71,8 +71,10 @@ const SemesterManage = () => {
     const now = formatDate(`${year}/${month}/${day}`);
     const course = courses.find((course) => course.id === item.course_id);
     // console.log(item.course_id);
+    // console.log(item.id);
     return {
-      key: index + 1,
+      key: item.id,
+      id: item.id,
       name: item.name,
       start_date: item.start_date,
       end_date: item.end_date,
@@ -94,23 +96,25 @@ const SemesterManage = () => {
     };
     console.log(outGoingData);
     console.log(currentName);
+    console.log(semesters);
     //   const outGoingDataClone = [...outGoingData, course_name]
     try {
       if (update) {
         await instance.put(`admin/semesters/${currentName}`, outGoingData);
         message.success("Cập nhật kỳ học thành công");
+        setSemesters(
+          semesters.map((item) =>
+            item.id == currentName
+              ? item : outGoingData
+          )
+        );
+        form.resetFields();
       } else {
         await instance.post("admin/semesters", outGoingData);
         message.success("Thêm khóa học thành công");
+        setSemesters([...semesters, outGoingData]);
+        form.resetFields();
       }
-      form.resetFields();
-      setSemesters(
-        update
-          ? semesters.map(
-              (item) => (item.name = currentName ? item : outGoingData)
-            )
-          : [...semesters, outGoingData]
-      );
     } catch (error) {
       if (error.response && error.response.status == 409) {
         message.error("Tên kỳ học đã tồn tại, vui lòng đặt tên khác");
@@ -134,12 +138,12 @@ const SemesterManage = () => {
       message.error("Xóa thất bại");
     }
   };
-  const handleEdit = async (name) => {
+  const handleEdit = async (id) => {
     setOpen(true);
     setUpdate(true);
     // console.log(name);
     try {
-      const { data } = await instance.get("admin/semesters/" + name);
+      const { data } = await instance.get("admin/semesters/" + id);
       //   console.log(formatDate(data.data.dateTime[0].$d));
       // console.log(dayjs(data.data.start_date));
       // console.log(data.data);
@@ -153,7 +157,7 @@ const SemesterManage = () => {
         dateTime: [dayjs(data.data.start_date), dayjs(data.data.end_date)],
         course_id: data.data.course_id,
       });
-      setCurrentName(name);
+      setCurrentName(id);
       //   console.log(initialValues);
     } catch (error) {
       console.log(error);
@@ -187,7 +191,7 @@ const SemesterManage = () => {
       dataIndex: "action",
       render: (text, record) => (
         <>
-          <Button type="primary" onClick={() => handleEdit(record.name)}>
+          <Button type="primary" onClick={() => handleEdit(record.id)}>
             Chỉnh sửa
           </Button>
 

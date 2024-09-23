@@ -40,6 +40,12 @@ const AsideAdmin = () => {
       label: (
         <Link to="/admin/semesters">Quản lý kỳ học</Link>
       )
+    },
+    {
+      key: "sub5",
+      label: (
+        <Link to="/admin/subjects">Quản lý môn học</Link>
+      )
     }
   ];
 

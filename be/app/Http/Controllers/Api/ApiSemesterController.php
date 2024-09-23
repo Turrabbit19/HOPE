@@ -63,22 +63,22 @@ class ApiSemesterController extends Controller
         }
     }
 
-    public function show(string $name)
+    public function show(string $id)
     {
         try {
-            $semester = Semester::where('name', $name)->firstOrFail();
+            $semester = Semester::findOrFail($id);
             return response()->json(['data' => $semester], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy name'], 404);
+            return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function update(Request $request, string $name)
+    public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:semesters,name,' . $name,
+            'name' => 'required|string|max:255|unique:semesters|sometimes',
             // 'number' => 'required|integer|min:1',
             'course_id' => 'required|exists:courses,id',
             'start_date' => 'required|date',
@@ -90,7 +90,7 @@ class ApiSemesterController extends Controller
         }
 
         try {
-            $semester = Semester::where('name', $name)->firstOrFail();
+            $semester = Semester::findOrFail($id);
 
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
@@ -98,7 +98,7 @@ class ApiSemesterController extends Controller
 
             return response()->json(['data' => $semester, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy name'], 404);
+            return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }

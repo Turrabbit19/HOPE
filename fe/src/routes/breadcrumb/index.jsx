@@ -1,10 +1,20 @@
 import { Breadcrumb } from "antd";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
 const BreadCrumb = () => {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
+  const {t} = useTranslation("breadcrumb");
+  const translation = {
+    home: t("home"),
+    admin: t("admin"),
+    subjects: t("subjects"),
+    semesters: t("semesters"),
+    majors: t("majors"),
+    courses: t("courses"),
+  }
   return (
     <>
       <Breadcrumb style={{ margin: "16px 0" }}>
@@ -15,7 +25,7 @@ const BreadCrumb = () => {
           const to = `/${pathnames.slice(0, index + 1).join("/")}`;
           return (
             <Breadcrumb.Item key={to}>
-              <Link to={to}>{value}</Link>
+              <Link to={to}>{translation[value] || value}</Link>
             </Breadcrumb.Item>
           );
         })}

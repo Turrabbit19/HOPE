@@ -14,6 +14,7 @@ import UserManager from "../pages/admin/userManager";
 import CoursesManager from "../pages/admin/courses";
 import SemesterManage from "../pages/admin/semesters";
 import SubjectManager from "../pages/admin/subjects";
+import SectionManage from "../pages/admin/sections";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -36,8 +37,9 @@ const Router = createBrowserRouter([
         <ScrollToTopButton />
       </Suspense>
     ),
-
+    
     children: [
+      // <BreadCrumb />,
       {
         path: "list",
         element: (
@@ -97,7 +99,16 @@ const Router = createBrowserRouter([
         element: (
           <>
             <BreadCrumb />
-            <SubjectManager/>
+            <SubjectManager />
+          </>
+        ),
+      },
+      {
+        path: "sections",
+        element: (
+          <>
+            <BreadCrumb />
+            <SectionManage />
           </>
         ),
       },

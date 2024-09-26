@@ -14,8 +14,17 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
-            $course = Course::select('id', 'name', 'start_date', 'end_date')->get();
-            return response()->json(['data' => $course], 200);
+            $courses = Course::get();
+
+            $data = $courses->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }

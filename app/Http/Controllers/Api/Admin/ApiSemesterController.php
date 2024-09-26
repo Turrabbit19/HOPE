@@ -14,18 +14,51 @@ class ApiSemesterController extends Controller
     public function index()
     {
         try {
-            $semesters = Semester::select('id', 'name', 'number', 'course_id', 'start_date', 'end_date')->paginate(9);
-            return response()->json(['data' => $semesters], 200);
+            $semesters = Semester::with('course:id,name')->paginate(9);
+
+            $data = collect($semesters->items())->map(function ($semester) {
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'course_id' => $semester->course->id,
+                    'course_name' => $semester->course->name,
+                    'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                ];
+            });
+
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $semesters->total(),
+                    'per_page' => $semesters->perPage(),
+                    'current_page' => $semesters->currentPage(),
+                    'last_page' => $semesters->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }
     }
 
+
     public function getAll()
     {
         try {
-            $semesters = Semester::select('id', 'name', 'number', 'course_id', 'start_date', 'end_date')->get();
-            return response()->json(['data' => $semesters], 200);
+            $semesters = Semester::with('course:id, name')->get();
+
+            $data = $semesters->map(function ($semester) {
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'course_id' => $semester->course->id,
+                    'course_name' => $semester->course->name,
+                    'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }

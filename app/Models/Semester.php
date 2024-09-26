@@ -17,4 +17,8 @@ class Semester extends Model
         'start_date',
         'end_date',
     ];
+
+    public function course() {
+        return $this->belongsTo(Course::class);
+    }
 }

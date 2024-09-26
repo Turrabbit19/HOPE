@@ -17,12 +17,8 @@ class ApiSectionController extends Controller
     public function index()
     {
         try {
-            $sections = Section::paginate(5)->map(function($sections){
-                return [
-                    'name' => $sections->name
-                ];
-            });;
-            return response()->json(['sections' => $sections], 200);
+            $sections = Section::select('id', 'name')->get();
+            return response()->json(['data' => $sections], 200);
         } catch (\Exception $e) {
             return response()->json(['error'=>'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
         }
@@ -72,7 +68,7 @@ class ApiSectionController extends Controller
     public function update(Request $request, string $id)
     {
          $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:sections',   
+            'name' => 'sometimes|string|max:100|unique:sections,name,' . $id,   
         ]);
 
         if ($validator->fails()) {
@@ -82,7 +78,7 @@ class ApiSectionController extends Controller
         try {
             $section = Section::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $section->update($data);
 

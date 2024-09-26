@@ -14,7 +14,17 @@ class ApiTeacherController extends Controller
     public function index()
     {
         try {
-            $teachers = Teacher::all();
+            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code')->paginate(9);
+            return response()->json(['data' => $teachers], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code')->get();
             return response()->json(['data' => $teachers], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
@@ -58,9 +68,9 @@ class ApiTeacherController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'major_id' => 'required|exists:majors,id',
-            'teacher_code' => 'required|string|max:19|unique:teachers',
+            'user_id' => 'sometimes|exists:users,id',
+            'major_id' => 'sometimes|exists:majors,id',
+            'teacher_code' => 'sometimes|string|max:19|unique:teachers,teacher_code,' . $id
         ]);
 
         if ($validator->fails()) {
@@ -70,7 +80,7 @@ class ApiTeacherController extends Controller
         try {
             $teacher = Teacher::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $teacher->update($data);
 

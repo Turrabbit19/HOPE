@@ -14,8 +14,17 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
-            $course = Course::all();
-            return response()->json(['data' => $course], 200);
+            $courses = Course::get();
+
+            $data = $courses->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
@@ -58,9 +67,9 @@ class ApiCourseController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:courses',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'name' => 'sometimes|string|max:50|unique:courses,name,' . $id,
+            'start_date' => 'sometimes|date',
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
         ]);
 
         if ($validator->fails()) {
@@ -70,7 +79,7 @@ class ApiCourseController extends Controller
         try {
             $course = Course::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $course->update($data);
 

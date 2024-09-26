@@ -14,7 +14,17 @@ class ApiSubjectController extends Controller
     public function index()
     {
         try {
-            $subjects = Subject::all();
+            $subjects = Subject::select('id', 'subject_code', 'semester_id', 'major_id', 'name', 'description', 'credit')->paginate(9);
+            return response()->json(['data' => $subjects], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $subjects = Subject::select('id', 'subject_code', 'semester_id', 'major_id', 'name', 'description', 'credit')->get();
             return response()->json(['data' => $subjects], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
@@ -24,7 +34,7 @@ class ApiSubjectController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'subject_code' => 'required|string|max:50|unique:subjects,subject_code', 
+            'subject_code' => 'required|string|max:50|unique:subjects', 
             'semester_id' => 'required|exists:semesters,id', 
             'major_id' => 'required|exists:majors,id', 
             'name' => 'required|string|max:100', 
@@ -61,12 +71,12 @@ class ApiSubjectController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'subject_code' => 'required|string|max:50|unique:subjects,subject_code', 
-            'semester_id' => 'required|exists:semesters,id', 
-            'major_id' => 'required|exists:majors,id', 
-            'name' => 'required|string|max:100', 
+            'subject_code' => 'sometimes|string|max:50|unique:subjects,subject_code,' . $id,
+            'semester_id' => 'sometimes|exists:semesters,id', 
+            'major_id' => 'sometimes|exists:majors,id', 
+            'name' => 'sometimes|string|max:100', 
             'description' => 'nullable|string|max:255', 
-            'credit' => 'required|integer|min:1|max:19',
+            'credit' => 'sometimes|integer|min:1|max:19',
         ]);
 
         if ($validator->fails()) {
@@ -76,7 +86,7 @@ class ApiSubjectController extends Controller
         try {
             $subject = Subject::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $subject->update($data);
 

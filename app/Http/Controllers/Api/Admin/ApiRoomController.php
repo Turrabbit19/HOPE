@@ -14,14 +14,8 @@ class ApiRoomController extends Controller
     public function index()
     {
         try {
-            $rooms = Room::paginate(5)->map(function($rooms){
-                return [
-                    'name' => $rooms->name,
-                    'slot' => $rooms->slot,
-                    'status' => $rooms->status,
-                ];
-            });;
-            return response()->json(['rooms' => $rooms], 200);
+            $rooms = Room::select('id', 'name', 'slot', 'status')->get();
+            return response()->json(['data' => $rooms], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
@@ -64,9 +58,9 @@ class ApiRoomController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:rooms',
-            'slot' => 'required|integer|min:1', 
-            'status' => 'required|boolean',
+            'name' => 'sometimes|string|max:50|unique:rooms,name,' . $id,
+            'slot' => 'sometimes|integer|min:1', 
+            'status' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -76,7 +70,7 @@ class ApiRoomController extends Controller
         try {
             $room = Room::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $room->update($data);
 

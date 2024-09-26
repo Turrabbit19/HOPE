@@ -17,14 +17,8 @@ class ApiShiftController extends Controller
     public function index()
     {
         try {
-            $shifts = Shift::paginate(5)->map(function($shifts){
-                return [
-                    'name' => $shifts->name,
-                    'start_time' => $shifts->start_time,
-                    'end_time' => $shifts->end_time,
-                ];
-            });;
-            return response()->json(['shifts' => $shifts], 200);
+            $shifts = Shift::select('id', 'name', 'start_time', 'end_time')->get();
+            return response()->json(['data' => $shifts], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
@@ -76,9 +70,9 @@ class ApiShiftController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:shifts', 
-            'start_time' => 'required|date_format:H:i:s',
-            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
+            'name' => 'sometimes|string|max:100|unique:shifts,name,' . $id,
+            'start_time' => 'sometimes|date_format:H:i:s',
+            'end_time' =>  'sometimes|date_format:H:i:s|after_or_equal:start_time', 
         ]);
 
         if ($validator->fails()) {
@@ -88,7 +82,7 @@ class ApiShiftController extends Controller
         try {
             $shift = Shift::findOrFail($id);
             
-            $data = $request->all();
+            $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $shift->update($data);
 

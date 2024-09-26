@@ -12,14 +12,22 @@ use Illuminate\Support\Facades\Validator;
 class ApiRoleController extends Controller
 {
     public function index()
-    {
-        try {
-            $roles = Role::select('id', 'name')->get();
-            return response()->json(['data' => $roles], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
-        }
+{
+    try {
+        $roles = Role::select('id', 'name')->get();
+
+        $data = $roles->map(function ($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+            ];
+        });
+
+        return response()->json(['data' => $data], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
     }
+}
 
     public function store(Request $request)
     {

@@ -16,8 +16,23 @@ class ApiLessonController extends Controller
     public function index()
     {
         try {
-           $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->paginate(9);
-            return response()->json(['data' => $lessons], 200);
+            $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->paginate(9);
+            
+            $data = $lessons->getCollection()->map(function ($lesson) {
+                return [
+                    'id' => $lesson->id,
+                    'subject_id' => $lesson->subject_id,
+                    'name' => $lesson->name,
+                    'description' => $lesson->description,
+                ];
+            });
+    
+            return response()->json(['data' => $data, 'meta' => [
+                'current_page' => $lessons->currentPage(),
+                'last_page' => $lessons->lastPage(),
+                'per_page' => $lessons->perPage(),
+                'total' => $lessons->total(),
+            ]], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
@@ -26,8 +41,19 @@ class ApiLessonController extends Controller
     public function getAll()
     {
         try {
-           $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->get();
-            return response()->json(['data' =>$lessons], 200);
+            $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->get();
+            
+            // Sử dụng map để xử lý dữ liệu và đổi tên thành 'data'
+            $data = $lessons->map(function ($lesson) {
+                return [
+                    'id' => $lesson->id,
+                    'subject_id' => $lesson->subject_id,
+                    'name' => $lesson->name,
+                    'description' => $lesson->description,
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }

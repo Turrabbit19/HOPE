@@ -15,11 +15,21 @@ class ApiMajorController extends Controller
     {
         try {
             $majors = Major::select('id', 'name')->get();
-            return response()->json(['data' => $majors], 200);
+    
+
+            $data = $majors->map(function ($major) {
+                return [
+                    'id' => $major->id,
+                    'name' => $major->name,
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
     }
+    
 
     public function store(Request $request)
     {

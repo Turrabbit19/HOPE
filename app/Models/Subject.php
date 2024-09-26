@@ -26,4 +26,7 @@ class Subject extends Model
     public function majors() {
         return $this->belongsToMany(Major::class);
     }
+    public function plan() {
+        return $this->belongsToMany(Plan::class);
+    }
 }

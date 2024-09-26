@@ -17,8 +17,37 @@ class ApiPlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::select('id', 'course_id', 'semester_id', 'subject_id')->paginate(9);
-            return response()->json(['data' => $plans], 200);
+            $plans = Plan::with('course', 'semesters', 'subjects')->paginate(9);
+
+            $data = collect($plans->items())->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'course_name' => $plan->course->name,
+                    'semesters' => $plan->semesters->map(function ($semester) {
+                        return [
+                            'semester_name' => $semester->name,
+                            'semester_start' => Carbon::parse($semester->start_date)->format('d/m/Y'),
+                            'semester_end' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                        ];
+                    }),
+                    'subjects' => $plan->subjects->map(function ($subject) {
+                        return [
+                            'subject_code' => $subject->subject_code,
+                            'subject_name' => $subject->name,
+                            'subject_credit' => $subject->credit,
+                        ];
+                    }),
+                ];
+            });
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $plans->total(),
+                    'per_page' => $plans->perPage(),
+                    'current_page' => $plans->currentPage(),
+                    'last_page' => $plans->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
         }

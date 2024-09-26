@@ -17,7 +17,7 @@ class ApiLessonController extends Controller
     {
         try {
            $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->paginate(9);
-            return response()->json(['data' =>$lessons], 200);
+            return response()->json(['data' => $lessons], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }

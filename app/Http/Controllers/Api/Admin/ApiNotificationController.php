@@ -18,21 +18,52 @@ class ApiNotificationController extends Controller
     {
         try {
             $notifications = Notification::select('id', 'section_id', 'description', 'time')->paginate(9);
-            return response()->json(['data' => $notifications], 200);
+    
+   
+            $data = $notifications->getCollection()->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'section_id' => $notification->section_id,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                ];
+            });
+    
+            return response()->json([
+                'data' => $data,
+                'meta' => [
+                    'current_page' => $notifications->currentPage(),
+                    'last_page' => $notifications->lastPage(),
+                    'per_page' => $notifications->perPage(),
+                    'total' => $notifications->total(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
     }
-
+    
     public function getAll()
     {
         try {
             $notifications = Notification::select('id', 'section_id', 'description', 'time')->get();
-            return response()->json(['data' => $notifications], 200);
+    
+        
+            $data = $notifications->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'section_id' => $notification->section_id,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
     }
+    
 
     /**
      * Store a newly created resource in storage.

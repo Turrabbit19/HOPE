@@ -14,8 +14,31 @@ class ApiUserController extends Controller
     public function index()
     {
         try {
-            $users = User::select('id', 'avatar', 'name', 'email', 'phone', 'dob', 'gender', 'ethnicity', 'address', 'role_id')->paginate(9);
-            return response()->json(['data' => $users], 200);
+            $users = User::with('role')->paginate(9);
+            $data = collect($users->items())->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'avatar' => $user->avatar,
+                    'user_name' => $user->name,
+                    'email ' => $user->email,
+                    'phone ' => $user->phone,
+                    'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
+                    'gender' => $user->gender,
+                    'ethnicity' => $user->ethnicity,
+                    'address' => $user->address,
+                    'role_name' => $user->role->name,
+                ];
+            });
+
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $users->total(),
+                    'per_page' => $users->perPage(),
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
@@ -24,8 +47,23 @@ class ApiUserController extends Controller
     public function getAll()
     {
         try {
-            $users = User::select('id', 'avatar', 'name', 'email', 'phone', 'dob', 'gender', 'ethnicity', 'address', 'role_id')->get();
-            return response()->json(['data' => $users], 200);
+            $users = User::with('role')->get();
+            $data = collect($users->items())->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'avatar' => $user->avatar,
+                    'user_name' => $user->name,
+                    'email ' => $user->email,
+                    'phone ' => $user->phone,
+                    'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
+                    'gender' => $user->gender,
+                    'ethnicity' => $user->ethnicity,
+                    'address' => $user->address,
+                    'role_name' => $user->role->name,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }

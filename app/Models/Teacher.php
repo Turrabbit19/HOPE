@@ -23,6 +23,6 @@ class Teacher extends Model
 
     public function major()
     {
-        return $this->belongsToMany(Major::class);
+        return $this->belongsTo(Major::class);
     }
 }

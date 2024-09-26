@@ -14,8 +14,28 @@ class ApiSubjectController extends Controller
     public function index()
     {
         try {
-            $subjects = Subject::select('id', 'subject_code', 'semester_id', 'major_id', 'name', 'description', 'credit')->paginate(9);
-            return response()->json(['data' => $subjects], 200);
+            $subjects = Subject::with('semester', 'majors')->paginate(9);
+            $data = collect($subjects->items())->map(function ($subject) {
+                return [
+                    'id' => $subject->id,
+                    'subject_code' => $subject->subject_code,
+                    'semester_name' => $subject->semester->name, 
+                    'semester_number' => $subject->semester->number, 
+                    'major_name' => $subject->majors->pluck('name')->join(', '), 
+                    'name' => $subject->name,
+                    'description' => $subject->description,
+                    'credit' => $subject->credit
+                ];
+            });
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $subjects->total(),
+                    'per_page' => $subjects->perPage(),
+                    'current_page' => $subjects->currentPage(),
+                    'last_page' => $subjects->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
@@ -24,8 +44,20 @@ class ApiSubjectController extends Controller
     public function getAll()
     {
         try {
-            $subjects = Subject::select('id', 'subject_code', 'semester_id', 'major_id', 'name', 'description', 'credit')->get();
-            return response()->json(['data' => $subjects], 200);
+            $subjects = Subject::with('semester', 'majors')->get();
+            $data = $subjects->map(function ($subject) {
+                return [
+                    'id' => $subject->id,
+                    'subject_code' => $subject->subject_code,
+                    'semester_name' => $subject->semester->name, 
+                    'semester_number' => $subject->semester->number, 
+                    'major_name' => $subject->majors->pluck('name')->join(', '), 
+                    'name' => $subject->name,
+                    'description' => $subject->description,
+                    'credit' => $subject->credit
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }

@@ -21,4 +21,7 @@ class Semester extends Model
     public function course() {
         return $this->belongsTo(Course::class);
     }
+    public function plan() {
+        return $this->belongsTo(Plan::class);
+    }
 }

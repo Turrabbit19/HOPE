@@ -14,13 +14,12 @@ class ApiSemesterController extends Controller
     public function index()
     {
         try {
-            $semesters = Semester::with('course:id,name')->paginate(9);
+            $semesters = Semester::with('course')->paginate(9);
 
             $data = collect($semesters->items())->map(function ($semester) {
                 return [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'course_id' => $semester->course->id,
                     'course_name' => $semester->course->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
@@ -45,13 +44,12 @@ class ApiSemesterController extends Controller
     public function getAll()
     {
         try {
-            $semesters = Semester::with('course:id, name')->get();
+            $semesters = Semester::with('course')->get();
 
             $data = $semesters->map(function ($semester) {
                 return [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'course_id' => $semester->course->id,
                     'course_name' => $semester->course->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),

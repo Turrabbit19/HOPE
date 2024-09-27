@@ -11,22 +11,17 @@ class Subject extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'subject_code',
+        'code',
         'semester_id',
-        'major_id',
         'name',
         'description',
         'credit',
     ];
-
-    public function semester() {
-        return $this->belongsTo(Semester::class);
-    }
     
     public function majors() {
         return $this->belongsToMany(Major::class);
     }
-    public function plan() {
-        return $this->belongsToMany(Plan::class);
+    public function planSemester() {
+        return $this->belongsTo(Plan::class);
     }
 }

@@ -24,8 +24,4 @@ class Plan extends Model
     {
         return $this->belongsToMany(Semester::class);
     }
-    public function subjects()
-    {
-        return $this->belongsToMany(Subject::class);
-    }
 }

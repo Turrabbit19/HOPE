@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Major;
+use App\Models\PlanSemester;
 use App\Models\Semester;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,12 +16,11 @@ return new class extends Migration
     {
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
-            $table->string('subject_code')->unique();
-            $table->foreignIdFor(Semester::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Major::class)->constrained()->onDelete('cascade');
+            $table->string('code')->unique();
             $table->string('name')->unique();
             $table->text('description');
             $table->integer('credit');
+            $table->foreignIdFor(PlanSemester::class)->constrained()->onDelete('cascade'); 
             $table->softDeletes();
             $table->timestamps();
         });

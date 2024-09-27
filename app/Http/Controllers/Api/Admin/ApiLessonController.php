@@ -16,7 +16,17 @@ class ApiLessonController extends Controller
     public function index()
     {
         try {
-           $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->paginate(9);
+            $lessons = Lesson::with('subject')->paginate(9);
+
+            $data = collect($lessons->items())->map(function ($lesson){
+                return [
+                    'id' => $lesson->id,
+                    'subject_code' => $lesson->subject->code,
+                    'subject_name' => $lesson->subject->name,
+                    'name' => $lesson->name,
+                    'description' =>$lesson->description,
+                ];
+            }); 
             return response()->json(['data' => $lessons], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);

@@ -14,6 +14,7 @@ const BreadCrumb = () => {
     semesters: t("semesters"),
     majors: t("majors"),
     courses: t("courses"),
+    student_manager: t("student-manager"),
   }
   return (
     <>

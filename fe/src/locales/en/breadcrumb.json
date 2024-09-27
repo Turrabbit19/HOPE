@@ -4,5 +4,6 @@
     "subjects": "Subject",
     "semesters": "Semester",
     "courses": "Course",
-    "majors": "Major"
+    "majors": "Major",
+    "student-manager": "Student Manager"
 }

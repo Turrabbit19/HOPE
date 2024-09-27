@@ -16,6 +16,7 @@ import SemesterManage from "../pages/admin/semesters";
 import SubjectManager from "../pages/admin/subjects";
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
+import StudentManager from "../pages/admin/userManager/student";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -119,6 +120,15 @@ const Router = createBrowserRouter([
           <>
             <BreadCrumb />
             <SectionManage />
+          </>
+        ),
+      },
+      {
+        path: "student_manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <StudentManager/>
           </>
         ),
       },

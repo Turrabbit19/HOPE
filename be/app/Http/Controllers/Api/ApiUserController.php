@@ -24,7 +24,7 @@ class ApiUserController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120', 
+            // 'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120',
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:11|unique:users',
@@ -43,7 +43,7 @@ class ApiUserController extends Controller
         try {
             $data = $validator->validated();
             $user = User::create($data);
-            
+
             return response()->json(['data' => $user, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -65,7 +65,7 @@ class ApiUserController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120', 
+            'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120',
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:11|unique:users',
@@ -83,7 +83,7 @@ class ApiUserController extends Controller
 
         try {
             $user = User::findOrFail($id);
-            
+
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
             $user->update($data);

@@ -14,7 +14,8 @@ class ApiStudentController extends Controller
     public function index()
     {
         try {
-            $students = Student::paginate(9)->all();
+            $students = Student::with(['major', 'course', 'user', 'semester'])->paginate(9);
+            // $students = Student::paginate(9)->all();
             return response()->json(['data' => $students], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
@@ -39,7 +40,7 @@ class ApiStudentController extends Controller
         try {
             $data = $validator->validated();
             $student = Student::create($data);
-            
+
             return response()->json(['data' => $student, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -66,7 +67,7 @@ class ApiStudentController extends Controller
             'major_id' => 'required|exists:majors,id',
             'semester_id' => 'required|exists:semesters,id',
             'student_code' => 'required|string|max:19|unique:students',
-            'status' => 'required|integer',
+            'status' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -75,7 +76,7 @@ class ApiStudentController extends Controller
 
         try {
             $student = Student::findOrFail($id);
-            
+
             $data = $request->all();
             $data['updated_at'] = Carbon::now();
             $student->update($data);

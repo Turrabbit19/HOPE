@@ -12,7 +12,6 @@ class Subject extends Model
 
     protected $fillable = [
         'code',
-        'semester_id',
         'name',
         'description',
         'credit',
@@ -20,8 +19,5 @@ class Subject extends Model
     
     public function majors() {
         return $this->belongsToMany(Major::class);
-    }
-    public function planSemester() {
-        return $this->belongsTo(Plan::class);
     }
 }

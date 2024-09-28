@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
+            $table->integer('semester_order');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

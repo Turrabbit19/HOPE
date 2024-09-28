@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->text('description');
             $table->integer('credit');
-            $table->foreignIdFor(PlanSemester::class)->constrained()->onDelete('cascade'); 
             $table->softDeletes();
             $table->timestamps();
         });

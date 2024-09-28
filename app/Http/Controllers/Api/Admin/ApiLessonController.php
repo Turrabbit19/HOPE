@@ -10,9 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 class ApiLessonController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
@@ -27,7 +24,16 @@ class ApiLessonController extends Controller
                     'description' =>$lesson->description,
                 ];
             }); 
-            return response()->json(['data' => $lessons], 200);
+
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $lessons->total(),
+                    'per_page' => $lessons->perPage(),
+                    'current_page' => $lessons->currentPage(),
+                    'last_page' => $lessons->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
@@ -36,16 +42,24 @@ class ApiLessonController extends Controller
     public function getAll()
     {
         try {
-           $lessons = Lesson::select('id', 'subject_id', 'name', 'description')->get();
-            return response()->json(['data' =>$lessons], 200);
+            $lessons = Lesson::with('subject')->get();
+
+            $data = $lessons->map(function ($lesson){
+                return [
+                    'id' => $lesson->id,
+                    'subject_code' => $lesson->subject->code,
+                    'subject_name' => $lesson->subject->name,
+                    'name' => $lesson->name,
+                    'description' =>$lesson->description,
+                ];
+            });
+
+            return response()->json(['data' =>$data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = validator::make($request->all(), [
@@ -68,9 +82,6 @@ class ApiLessonController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
@@ -83,9 +94,6 @@ class ApiLessonController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -111,9 +119,6 @@ class ApiLessonController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {

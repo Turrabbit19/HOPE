@@ -14,7 +14,7 @@ class Student extends Model
         'user_id',
         'course_id',
         'major_id',
-        'semester_id',
+        'current_semester_id',
         'student_code',
         'status',
     ];
@@ -34,8 +34,8 @@ class Student extends Model
         return $this->belongsTo(Major::class);
     }
 
-    public function semester()
+    public function currentSemester()
     {
-        return $this->belongsTo(Semester::class);
+        return $this->belongsTo(CourseSemester::class);
     }
 }

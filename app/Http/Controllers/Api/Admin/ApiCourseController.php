@@ -22,6 +22,7 @@ class ApiCourseController extends Controller
                     'name' => $course->name,
                     'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'status' => $course->status ? "Đang diễn ra" : "Kết thúc",
                 ];
             });
             return response()->json(['data' => $data], 200);
@@ -36,6 +37,7 @@ class ApiCourseController extends Controller
             'name' => 'required|string|max:50|unique:courses',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'status' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -70,6 +72,7 @@ class ApiCourseController extends Controller
             'name' => 'sometimes|string|max:50|unique:courses,name,' . $id,
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date',
+            'status' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {

@@ -14,8 +14,28 @@ class ApiTeacherController extends Controller
     public function index()
     {
         try {
-            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code')->paginate(9);
-            return response()->json(['data' => $teachers], 200);
+            $teachers = Teacher::with( 'user', 'major')->paginate(9);
+            
+            $data = collect($teachers->items())->map(function ($teacher) {
+                return [
+                    'id' => $teacher->id,
+                    'name' => $teacher->user->name,
+                    'code' => $teacher->teacher_code,
+                    'email ' => $teacher->user->email ,
+                    'phone ' => $teacher->user->phone ,
+                    'major' => $teacher->major->name,
+                ];
+            });
+
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $teachers->total(),
+                    'per_page' => $teachers->perPage(),
+                    'current_page' => $teachers->currentPage(),
+                    'last_page' => $teachers->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
@@ -24,8 +44,19 @@ class ApiTeacherController extends Controller
     public function getAll()
     {
         try {
-            $teachers = Teacher::select('id', 'user_id', 'major_id', 'teacher_code')->get();
-            return response()->json(['data' => $teachers], 200);
+            $teachers = Teacher::with( 'user', 'major')->get();
+
+            $data = $teachers->map(function ($teacher) {
+                return [
+                    'id' => $teacher->id,
+                    'name' => $teacher->user->name,
+                    'code' => $teacher->teacher_code,
+                    'email ' => $teacher->user->email ,
+                    'phone ' => $teacher->user->phone ,
+                    'major' => $teacher->major->name,
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }

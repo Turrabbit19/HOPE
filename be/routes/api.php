@@ -1,19 +1,19 @@
 <?php
 
-use App\Http\Controllers\Api\ApiCourseController;
-use App\Http\Controllers\Api\ApiLessonController;
-use App\Http\Controllers\Api\ApiMajorController;
-use App\Http\Controllers\Api\ApiNotificationController;
-use App\Http\Controllers\Api\ApiPlanController;
-use App\Http\Controllers\Api\ApiRoleController;
-use App\Http\Controllers\Api\ApiRoomController;
-use App\Http\Controllers\Api\ApiSectionController;
-use App\Http\Controllers\Api\ApiSemesterController;
-use App\Http\Controllers\Api\ApiShiftController;
-use App\Http\Controllers\Api\ApiStudentController;
-use App\Http\Controllers\Api\ApiSubjectController;
-use App\Http\Controllers\Api\ApiTeacherController;
-use App\Http\Controllers\Api\ApiUserController;
+use App\Http\Controllers\Api\Admin\ApiCourseController;
+use App\Http\Controllers\Api\Admin\ApiLessonController;
+use App\Http\Controllers\Api\Admin\ApiMajorController;
+use App\Http\Controllers\Api\Admin\ApiNotificationController;
+use App\Http\Controllers\Api\Admin\ApiPlanController;
+use App\Http\Controllers\Api\Admin\ApiRoleController;
+use App\Http\Controllers\Api\Admin\ApiRoomController;
+use App\Http\Controllers\Api\Admin\ApiSectionController;
+use App\Http\Controllers\Api\Admin\ApiSemesterController;
+use App\Http\Controllers\Api\Admin\ApiShiftController;
+use App\Http\Controllers\Api\Admin\ApiStudentController;
+use App\Http\Controllers\Api\Admin\ApiSubjectController;
+use App\Http\Controllers\Api\Admin\ApiTeacherController;
+use App\Http\Controllers\Api\Admin\ApiUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

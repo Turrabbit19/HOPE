@@ -181,7 +181,7 @@ const ListCourse = () => {
                                     </button>
                                 </h1>
 
-                                <div className="flex justify-between  items-center mt-6">
+                                <div className="flex justify-between items-center">
                                     <Link
                                         to={`add`}
                                         className="btn btn--outline  text-[#7017E2] "

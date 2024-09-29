@@ -10,15 +10,9 @@ class Course extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public function semesters()
-    {
-        return $this->hasMany(Semester::class);
-    }
-
     protected $fillable = [
         'name',
         'start_date',
         'end_date'
     ];
-
 }

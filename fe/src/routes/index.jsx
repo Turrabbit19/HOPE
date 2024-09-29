@@ -16,6 +16,14 @@ import SemesterManage from "../pages/admin/semesters";
 import Teach from "../pages/admin/teaching/page";
 import TeachAdd from "../pages/admin/teaching/add/page";
 import ListCourse from "../pages/admin/teaching/listCourse/page";
+import { ClassStudent } from "../pages/admin/classStudent/ClassStudent";
+import { AddClassStudent } from "../pages/admin/classStudent/AddClassStudent";
+import { ClassDetailLayout } from "../components/layout/ClassDetailLayout";
+import { ClassStudentDetail } from "../pages/admin/classStudent/ClassStudentDetail";
+import { AddScheduleManual } from "../pages/admin/classStudent/schedule/AddScheduleManual";
+import { AddScheduleSeries } from "../pages/admin/classStudent/schedule/AddScheduleSeries";
+import { AccountManage } from "../pages/admin/classStudent/account-manage/AccountManage";
+import { Resource } from "../pages/admin/classStudent/resource/Resource";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -66,6 +74,40 @@ const Router = createBrowserRouter([
                         <TeachAdd />
                     </>
                 ),
+            },
+            {
+                path: "class-student",
+                element: <ClassStudent />,
+            },
+            {
+                path: "class-student/add",
+                element: <AddClassStudent />,
+            },
+            {
+                path: "class-student/:classId",
+                element: <ClassDetailLayout />,
+                children: [
+                    {
+                        path: "",
+                        element: <ClassStudentDetail />,
+                    },
+                    {
+                        path: "schedule/add-manual",
+                        element: <AddScheduleManual />,
+                    },
+                    {
+                        path: "schedule/add-series",
+                        element: <AddScheduleSeries />,
+                    },
+                    {
+                        path: "account-manage",
+                        element: <AccountManage />,
+                    },
+                    {
+                        path: "resource",
+                        element: <Resource />,
+                    },
+                ],
             },
             {
                 path: "teaching/list",

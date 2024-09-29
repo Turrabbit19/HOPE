@@ -1700,24 +1700,11 @@ label[for=file-input]:hover .upload-image {
   opacity: 0.8;
 }
 
-.aside-overlay {
-  top: 60px;
-  animation: slideIn 0.5s ease-in-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-300px);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
 .header_wrapper {
   background: rgb(255, 255, 255);
   border-bottom: 1px solid #888888;
   box-shadow: 1px 1px 3px #888888;
-  margin-bottom: 18px;
+  margin-bottom: 32px;
 }
 
 .header {

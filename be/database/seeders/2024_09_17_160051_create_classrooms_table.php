@@ -16,7 +16,6 @@ return new class extends Migration
     {
         Schema::create('classrooms', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Semester::class)->constrained()->onDelete('cascade');
             $table->foreignIdFor(Subject::class)->constrained()->onDelete('cascade');
             $table->string('code')->unique(); // mã lớp
             $table->foreignIdFor(Teacher::class)->constrained()->onDelete('cascade');

@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::prefix('admin')->group(function() {
+Route::prefix('admin')->group(function () {
     Route::apiResource('roles', ApiRoleController::class);
     Route::apiResource('users', ApiUserController::class);
     Route::apiResource('students', ApiStudentController::class);
@@ -43,6 +43,8 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('majors', ApiMajorController::class);
     Route::apiResource('plans', ApiPlanController::class);
     Route::apiResource('subjects', ApiSubjectController::class);
+    Route::post('/subjects/{id}/restore', [ApiSubjectController::class, 'restore']);
+
     Route::apiResource('rooms', ApiRoomController::class);
     Route::apiResource('lessons', ApiLessonController::class);
     Route::apiResource('sections', ApiSectionController::class);

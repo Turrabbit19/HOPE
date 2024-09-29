@@ -2,9 +2,6 @@ import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LandingPage from "../components/landingPage";
 import NotFound from "../components/NotFound";
-// import LayoutAdmin from "../components/layout/layoutAdmin";
-// import List from "../pages/admin/list";
-// import Schedule from "../pages/admin/schedul";
 import Loading from "../components/loading";
 import ScrollToTopButton from "../components/scrollToTopButton";
 import BreadCrumb from "./breadcrumb";
@@ -13,9 +10,23 @@ import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
 import CoursesManager from "../pages/admin/courses";
 import SemesterManage from "../pages/admin/semesters";
-import Teach from "../pages/admin/teaching/page";
-import TeachAdd from "../pages/admin/teaching/add/page";
-import ListCourse from "../pages/admin/teaching/listCourse/page";
+import SubjectManager from "../pages/admin/subjects";
+import SectionManage from "../pages/admin/sections";
+import NotificationManage from "../pages/admin/notification";
+import StudentManager from "../pages/admin/userManager/student";
+const LayoutStudent = lazy(() => import("../components/layout/layoutStudent"));
+const StudentInformation = lazy(() => import("../pages/student/information"));
+// Lazy loading for components
+const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
+const Schedule = lazy(() => import("../pages/student/schedul"));
+const List = lazy(() => import("../pages/admin/list"));
+
+const Teach = lazy(() => import("../pages/admin/teaching/page"));
+const TeachAdd = lazy(() => import("../pages/admin/teaching/add/page"));
+const ListCourse = lazy(() =>
+    import("../pages/admin/teaching/listCourse/page")
+);
+
 import { ClassStudent } from "../pages/admin/classStudent/ClassStudent";
 import { AddClassStudent } from "../pages/admin/classStudent/AddClassStudent";
 import { ClassDetailLayout } from "../components/layout/ClassDetailLayout";
@@ -24,17 +35,9 @@ import { AddScheduleManual } from "../pages/admin/classStudent/schedule/AddSched
 import { AddScheduleSeries } from "../pages/admin/classStudent/schedule/AddScheduleSeries";
 import { AccountManage } from "../pages/admin/classStudent/account-manage/AccountManage";
 import { Resource } from "../pages/admin/classStudent/resource/Resource";
-// import LayoutStudent from "../components/layout/layoutStudent";
-
-const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
-const Schedule = lazy(() => import("../pages/student/schedul"));
-const List = lazy(() => import("../pages/admin/list"));
-const LayoutStudent = lazy(() => import("../components/layout/layoutStudent"));
-const StudentInformation = lazy(() => import("../pages/student/information"));
 
 const Router = createBrowserRouter([
     {
-        // index,
         path: "",
         element: <LandingPage />,
     },
@@ -46,8 +49,16 @@ const Router = createBrowserRouter([
                 <ScrollToTopButton />
             </Suspense>
         ),
-
         children: [
+            {
+                path: "",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <NotificationManage />
+                    </>
+                ),
+            },
             {
                 path: "list",
                 element: (
@@ -56,7 +67,6 @@ const Router = createBrowserRouter([
                     </Suspense>
                 ),
             },
-
             {
                 path: "teaching",
                 element: (
@@ -72,6 +82,15 @@ const Router = createBrowserRouter([
                     <>
                         <BreadCrumb />
                         <TeachAdd />
+                    </>
+                ),
+            },
+            {
+                path: "teaching/list",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ListCourse />
                     </>
                 ),
             },
@@ -108,15 +127,6 @@ const Router = createBrowserRouter([
                         element: <Resource />,
                     },
                 ],
-            },
-            {
-                path: "teaching/list",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <ListCourse />
-                    </>
-                ),
             },
 
             {
@@ -169,7 +179,25 @@ const Router = createBrowserRouter([
                 element: (
                     <>
                         <BreadCrumb />
-                        <SemesterManage />
+                        <SubjectManager />
+                    </>
+                ),
+            },
+            {
+                path: "sections",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <SectionManage />
+                    </>
+                ),
+            },
+            {
+                path: "student_manager",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <StudentManager />
                     </>
                 ),
             },

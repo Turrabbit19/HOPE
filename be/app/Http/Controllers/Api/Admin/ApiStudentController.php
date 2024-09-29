@@ -14,17 +14,8 @@ class ApiStudentController extends Controller
     public function index()
     {
         try {
-            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status')->paginate(9);
-            return response()->json(['data' => $students], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function getAll()
-    {
-        try {
-            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status')->get();
+            $students = Student::with(['major', 'course', 'user', 'semester'])->paginate(9);
+            // $students = Student::paginate(9)->all();
             return response()->json(['data' => $students], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
@@ -49,7 +40,7 @@ class ApiStudentController extends Controller
         try {
             $data = $validator->validated();
             $student = Student::create($data);
-            
+
             return response()->json(['data' => $student, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -71,12 +62,12 @@ class ApiStudentController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'sometimes|exists:users,id',
-            'course_id' => 'sometimes|exists:courses,id',
-            'major_id' => 'sometimes|exists:majors,id',
-            'semester_id' => 'sometimes|exists:semesters,id',
-            'student_code' => 'sometimes|string|max:19|unique:students,student_code,' . $id,
-            'status' => 'sometimes|integer',
+            'user_id' => 'required|exists:users,id',
+            'course_id' => 'required|exists:courses,id',
+            'major_id' => 'required|exists:majors,id',
+            'semester_id' => 'required|exists:semesters,id',
+            'student_code' => 'required|string|max:19|unique:students',
+            'status' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -85,8 +76,8 @@ class ApiStudentController extends Controller
 
         try {
             $student = Student::findOrFail($id);
-            
-            $data = $validator->validated();
+
+            $data = $request->all();
             $data['updated_at'] = Carbon::now();
             $student->update($data);
 

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const AsideAdmin = () => {
     const navigates = [
-        { name: "Quản lý sinh viên", link: "/admin/student-manager" },
+        { name: "Quản lý sinh viên", link: "/admin/student_manager" },
         { name: "Quản lý giảng viên", link: "/admin/teacher-manager" },
     ];
     const { Sider } = Layout;
@@ -38,6 +38,10 @@ const AsideAdmin = () => {
         {
             key: "sub6",
             label: <Link to="/admin/teaching">Quản lý chương trình dạy</Link>,
+        },
+        {
+            key: "sub7",
+            label: <Link to="/admin/class-student">Quản lý lớp học</Link>,
         },
     ];
 

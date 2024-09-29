@@ -71,10 +71,10 @@ class ApiSemesterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255|unique:semesters,name,' . $id,
-            'number' => 'sometimes|integer|min:1', 
-            'course_id' => 'sometimes|exists:courses,id', 
+            'number' => 'sometimes|integer|min:1',
+            'course_id' => 'sometimes|exists:courses,id',
             'start_date' => 'sometimes|date',
-            'end_date' => 'sometimes|date|after_or_equal:start_date', 
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
         ]);
 
         if ($validator->fails()) {
@@ -83,7 +83,6 @@ class ApiSemesterController extends Controller
 
         try {
             $semester = Semester::findOrFail($id);
-            
             $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $semester->update($data);

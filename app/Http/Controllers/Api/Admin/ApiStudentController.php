@@ -14,8 +14,31 @@ class ApiStudentController extends Controller
     public function index()
     {
         try {
-            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status')->paginate(9);
-            return response()->json(['data' => $students], 200);
+            $students = Student::with(['user', 'course', 'major', 'currentSemester'])->paginate(9);
+            
+            $data = collect($students->items())->map(function($student){
+                return [
+                    'id' => $student->id,
+                    'name' => $student->user->name,
+                    'code' => $student->student_code,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'course' => $student->course->name,
+                    'major' => $student->major->name,
+                    'current_semester' => $student->currentSemester->order,
+                    'status' => $student->status,
+                ];
+            });
+
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $students->total(),
+                    'per_page' => $students->perPage(),
+                    'current_page' => $students->currentPage(),
+                    'last_page' => $students->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
@@ -24,8 +47,22 @@ class ApiStudentController extends Controller
     public function getAll()
     {
         try {
-            $students = Student::select('id', 'user_id', 'course_id', 'major_id', 'semester_id', 'student_code', 'status')->get();
-            return response()->json(['data' => $students], 200);
+            $students = Student::with(['user', 'course', 'major', 'currentSemester'])->get();
+
+            $data = $students->map(function($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->user->name,
+                    'code' => $student->student_code,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'course' => $student->course->name,
+                    'major' => $student->major->name,
+                    'current_semester' => $student->currentSemester->order,
+                    'status' => $student->status,
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
@@ -37,7 +74,7 @@ class ApiStudentController extends Controller
             'user_id' => 'required|exists:users,id',
             'course_id' => 'required|exists:courses,id',
             'major_id' => 'required|exists:majors,id',
-            'semester_id' => 'required|exists:semesters,id',
+            'current_semester_id' => 'required|exists:course_semesters,id', 
             'student_code' => 'required|string|max:19|unique:students',
             'status' => 'required|integer',
         ]);
@@ -74,7 +111,7 @@ class ApiStudentController extends Controller
             'user_id' => 'sometimes|exists:users,id',
             'course_id' => 'sometimes|exists:courses,id',
             'major_id' => 'sometimes|exists:majors,id',
-            'semester_id' => 'sometimes|exists:semesters,id',
+            'current_semester_id' => 'sometimes|exists:course_semesters,id',
             'student_code' => 'sometimes|string|max:19|unique:students,student_code,' . $id,
             'status' => 'sometimes|integer',
         ]);

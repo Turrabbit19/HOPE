@@ -14,27 +14,19 @@ class ApiSemesterController extends Controller
     public function index()
     {
         try {
-            $semesters = Semester::with('course')->paginate(9);
+            $semesters = Semester::get();
 
-            $data = collect($semesters->items())->map(function ($semester) {
+            $data = $semesters->map(function ($semester) {
                 return [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'course_name' => $semester->course->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'status' => $semester->status ? "Đang diễn ra" : "Kết thúc",
                 ];
             });
 
-            return response()->json([
-                'data' => $data,
-                'pagination' => [
-                    'total' => $semesters->total(),
-                    'per_page' => $semesters->perPage(),
-                    'current_page' => $semesters->currentPage(),
-                    'last_page' => $semesters->lastPage(),
-                ]
-            ], 200);
+            return response()->json(['data' => $data,], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }
@@ -53,6 +45,7 @@ class ApiSemesterController extends Controller
                     'course_name' => $semester->course->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'status' => $semester->status ? "Đang diễn ra" : "Kết thúc",
                 ];
             });
 
@@ -70,6 +63,7 @@ class ApiSemesterController extends Controller
             'course_id' => 'required|exists:courses,id', 
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date', 
+            'status' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -106,6 +100,7 @@ class ApiSemesterController extends Controller
             'course_id' => 'sometimes|exists:courses,id', 
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date', 
+            'status' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {

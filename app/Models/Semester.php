@@ -11,17 +11,20 @@ class Semester extends Model
     use HasFactory, SoftDeletes;
     protected $fillable = [
         'name',
-        'number',
-        'course_id',
         'start_date',
         'end_date',
+        'status',
+    ];
+
+    protected $casts = [
+        'status' => 'boolean',
     ];
 
     public function course() {
         return $this->belongsTo(Course::class);
     }
-    public function plan() {
-        return $this->belongsTo(Plan::class);
+    public function plans() {
+        return $this->belongsToMany(Plan::class);
     }
 
 }

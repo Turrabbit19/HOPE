@@ -13,7 +13,12 @@ class Course extends Model
     protected $fillable = [
         'name',
         'start_date',
-        'end_date'
+        'end_date',
+        'status'
+    ];
+
+    protected $casts = [
+        'status' => 'boolean',
     ];
 
     public function semester()

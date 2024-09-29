@@ -14,19 +14,18 @@ class ApiSubjectController extends Controller
     public function index()
     {
         try {
-            $subjects = Subject::with('semester', 'majors')->paginate(9);
-            $data = collect($subjects->items())->map(function ($subject) {
+            $subjects = Subject::paginate(9);
+
+            $data = collect($subjects->items())->map(function ($subject){
                 return [
                     'id' => $subject->id,
-                    'subject_code' => $subject->subject_code,
-                    'semester_name' => $subject->semester->name, 
-                    'semester_number' => $subject->semester->number, 
-                    'major_name' => $subject->majors->pluck('name')->join(', '), 
+                    'code' => $subject->code,
                     'name' => $subject->name,
                     'description' => $subject->description,
-                    'credit' => $subject->credit
+                    'credit' => $subject->credit,
                 ];
-            });
+            }); 
+
             return response()->json([
                 'data' => $data,
                 'pagination' => [
@@ -44,17 +43,15 @@ class ApiSubjectController extends Controller
     public function getAll()
     {
         try {
-            $subjects = Subject::with('semester', 'majors')->get();
+            $subjects = Subject::get();
+
             $data = $subjects->map(function ($subject) {
                 return [
                     'id' => $subject->id,
-                    'subject_code' => $subject->subject_code,
-                    'semester_name' => $subject->semester->name, 
-                    'semester_number' => $subject->semester->number, 
-                    'major_name' => $subject->majors->pluck('name')->join(', '), 
+                    'code' => $subject->code,
                     'name' => $subject->name,
                     'description' => $subject->description,
-                    'credit' => $subject->credit
+                    'credit' => $subject->credit,
                 ];
             });
             return response()->json(['data' => $data], 200);

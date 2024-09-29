@@ -14,8 +14,19 @@ class ApiMajorController extends Controller
     public function index()
     {
         try {
-            $majors = Major::select('id', 'name')->get();
-            return response()->json(['data' => $majors], 200);
+            $majors = Major::get();
+
+            $data = $majors->map(function($major) {
+                return [
+                    'id' => $major->id,
+                    'code' => $major->code,
+                    'name' => $major->name,
+                    'description' => $major->description,
+                    'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
@@ -24,7 +35,10 @@ class ApiMajorController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:majors'
+            'code' => 'required|string|max:19|unique:majors,code',
+            'name' => 'required|string|max:50|unique:majors,name',
+            'description' => 'required|string',
+            'status' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -56,7 +70,10 @@ class ApiMajorController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
+            'code' => 'sometimes|string|max:19|unique:majors,code,' . $id,
             'name' => 'sometimes|string|max:50|unique:majors,name,' . $id,
+            'description' => 'nullable|string',
+            'status' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {

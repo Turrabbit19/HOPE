@@ -14,8 +14,17 @@ class ApiRoomController extends Controller
     public function index()
     {
         try {
-            $rooms = Room::select('id', 'name', 'slot', 'status')->get();
-            return response()->json(['data' => $rooms], 200);
+            $rooms = Room::get();
+
+            $data = $rooms->map(function ($room){
+                return [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'slot' => $room->slot,
+                    'status' => $room->status ? "Đang sử dụng" : "Đang trống",
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }

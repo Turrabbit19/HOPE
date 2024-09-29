@@ -6,21 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Major extends Model
+class Classroom extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'id',
+        'subject_id',
         'code',
-        'name',
-        'description',
+        'max_students',
         'status',
     ];
+
     protected $casts = [
         'status' => 'boolean',
     ];
 
-    public function subjects() {
-        return $this->belongsToMany(Subject::class);
+    public function subject() {
+        return $this->belongsTo(Subject::class);
     }
 }

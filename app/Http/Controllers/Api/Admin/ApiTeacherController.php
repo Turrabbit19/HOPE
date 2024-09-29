@@ -15,19 +15,15 @@ class ApiTeacherController extends Controller
     {
         try {
             $teachers = Teacher::with( 'user', 'major')->paginate(9);
+            
             $data = collect($teachers->items())->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
-                    'avatar' => $teacher->user->avatar,
-                    'user_name' => $teacher->user->name,
+                    'name' => $teacher->user->name,
+                    'code' => $teacher->teacher_code,
                     'email ' => $teacher->user->email ,
                     'phone ' => $teacher->user->phone ,
-                    'dob' =>  Carbon::parse($teacher->user->dob)->format('d/m/Y'),
-                    'gender' => $teacher->user->gender,
-                    'ethnicity' => $teacher->user->ethnicity,
-                    'address' => $teacher->user->address,
-                    'major_name' => $teacher->major->name,
-                    'teacher_code' => $teacher->teacher_code,
+                    'major' => $teacher->major->name,
                 ];
             });
 
@@ -49,19 +45,15 @@ class ApiTeacherController extends Controller
     {
         try {
             $teachers = Teacher::with( 'user', 'major')->get();
+
             $data = $teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
-                    'avatar' => $teacher->user->avatar,
-                    'user_name' => $teacher->user->name,
+                    'name' => $teacher->user->name,
+                    'code' => $teacher->teacher_code,
                     'email ' => $teacher->user->email ,
                     'phone ' => $teacher->user->phone ,
-                    'dob' =>  Carbon::parse($teacher->user->dob)->format('d/m/Y'),
-                    'gender' => $teacher->user->gender,
-                    'ethnicity' => $teacher->user->ethnicity,
-                    'address' => $teacher->user->address,
-                    'major_name' => $teacher->major->name,
-                    'teacher_code' => $teacher->teacher_code,
+                    'major' => $teacher->major->name,
                 ];
             });
             return response()->json(['data' => $data], 200);

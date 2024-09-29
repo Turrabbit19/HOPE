@@ -19,14 +19,14 @@ class ApiUserController extends Controller
                 return [
                     'id' => $user->id,
                     'avatar' => $user->avatar,
-                    'user_name' => $user->name,
+                    'name' => $user->name,
                     'email ' => $user->email,
                     'phone ' => $user->phone,
                     'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
                     'gender' => $user->gender,
                     'ethnicity' => $user->ethnicity,
                     'address' => $user->address,
-                    'role_name' => $user->role->name,
+                    'role' => $user->role->name,
                 ];
             });
 
@@ -52,14 +52,14 @@ class ApiUserController extends Controller
                 return [
                     'id' => $user->id,
                     'avatar' => $user->avatar,
-                    'user_name' => $user->name,
+                    'name' => $user->name,
                     'email ' => $user->email,
                     'phone ' => $user->phone,
                     'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
                     'gender' => $user->gender,
                     'ethnicity' => $user->ethnicity,
                     'address' => $user->address,
-                    'role_name' => $user->role->name,
+                    'role' => $user->role->name,
                 ];
             });
 

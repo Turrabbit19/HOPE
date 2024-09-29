@@ -6,22 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Plan extends Model
+class CourseSemester extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
         'course_id',
-        'major_id',
+        'semester_id',
+        'order',
     ];
 
-    public function course()
-    {
+    public function course() {
         return $this->belongsTo(Course::class);
     }
-    public function major()
-    {
+    public function semester() {
         return $this->belongsTo(Semester::class);
     }
 }

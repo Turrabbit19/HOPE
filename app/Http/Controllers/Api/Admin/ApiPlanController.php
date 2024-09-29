@@ -17,26 +17,14 @@ class ApiPlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::with('course', 'semesters', 'subjects')->paginate(9);
+            $plans = Plan::with('course', 'major')->paginate(9);
 
             $data = collect($plans->items())->map(function ($plan) {
                 return [
                     'id' => $plan->id,
+                    'name' => $plan->name,
                     'course_name' => $plan->course->name,
-                    'semesters' => $plan->semesters->map(function ($semester) {
-                        return [
-                            'semester_name' => $semester->name,
-                            'semester_start' => Carbon::parse($semester->start_date)->format('d/m/Y'),
-                            'semester_end' => Carbon::parse($semester->end_date)->format('d/m/Y'),
-                        ];
-                    }),
-                    'subjects' => $plan->subjects->map(function ($subject) {
-                        return [
-                            'subject_code' => $subject->subject_code,
-                            'subject_name' => $subject->name,
-                            'subject_credit' => $subject->credit,
-                        ];
-                    }),
+                    'major_name' => $plan->major->name,
                 ];
             });
             return response()->json([
@@ -56,8 +44,17 @@ class ApiPlanController extends Controller
     public function getAll()
     {
         try {
-            $plans = Plan::select('id', 'course_id', 'semester_id', 'subject_id')->get();
-            return response()->json(['data' => $plans], 200);
+            $plans = Plan::with('course', 'major')->get();
+
+            $data = $plans->map(function($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'course_name' => $plan->course->name,
+                    'major_name' => $plan->major->name,
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
         }
@@ -69,9 +66,9 @@ class ApiPlanController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:50|unique:plans,name',
             'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'major_id' => 'required|exists:majors,id',
         ]);
 
         if ($validator->fails()) {
@@ -109,9 +106,9 @@ class ApiPlanController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:50|unique:plans,name,' . $id,
             'course_id' => 'sometimes|exists:courses,id',
-            'semester_id' => 'sometimes|exists:semesters,id',
-            'subject_id' => 'sometimes|exists:subjects,id',
+            'major_id' => 'sometimes|exists:majors,id',
         ]);
 
         if ($validator->fails()) {

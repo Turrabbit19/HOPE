@@ -38,4 +38,14 @@ class Student extends Model
     {
         return $this->belongsTo(CourseSemester::class);
     }
+
+    public function classrooms()
+    {
+        return $this->belongsToMany(Classroom::class);
+    }
+
+    public function schedules()
+    {
+        return $this->belongsToMany(Schedule::class);
+    }
 }

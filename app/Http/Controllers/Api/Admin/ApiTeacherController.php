@@ -14,7 +14,7 @@ class ApiTeacherController extends Controller
     public function index()
     {
         try {
-            $teachers = Teacher::with( 'user', 'major')->paginate(9);
+            $teachers = Teacher::with( ['user', 'major'])->paginate(9);
             
             $data = collect($teachers->items())->map(function ($teacher) {
                 return [
@@ -44,7 +44,7 @@ class ApiTeacherController extends Controller
     public function getAll()
     {
         try {
-            $teachers = Teacher::with( 'user', 'major')->get();
+            $teachers = Teacher::with(['user', 'major'])->get();
 
             $data = $teachers->map(function ($teacher) {
                 return [
@@ -87,7 +87,7 @@ class ApiTeacherController extends Controller
     public function show(string $id)
     {
         try {
-           $teacher = Teacher::findOrFail($id);
+           $teacher = Teacher::with(['user', 'major'])->findOrFail($id);
             return response()->json(['data' =>$teacher], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

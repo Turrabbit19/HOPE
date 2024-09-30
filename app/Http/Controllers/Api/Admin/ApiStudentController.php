@@ -96,7 +96,7 @@ class ApiStudentController extends Controller
     public function show(string $id)
     {
         try {
-            $student = Student::findOrFail($id);
+            $student = Student::with(['user', 'course', 'major', 'currentSemester'])->findOrFail($id);
             return response()->json(['data' => $student], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

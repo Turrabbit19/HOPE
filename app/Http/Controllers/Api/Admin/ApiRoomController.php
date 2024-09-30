@@ -20,7 +20,6 @@ class ApiRoomController extends Controller
                 return [
                     'id' => $room->id,
                     'name' => $room->name,
-                    'slot' => $room->slot,
                     'status' => $room->status ? "Đang sử dụng" : "Đang trống",
                 ];
             });
@@ -33,8 +32,7 @@ class ApiRoomController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:rooms',
-            'slot' => 'required|integer|min:1', 
+            'name' => 'required|string|max:19|unique:rooms',
             'status' => 'required|boolean',
         ]);
 
@@ -67,8 +65,7 @@ class ApiRoomController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:50|unique:rooms,name,' . $id,
-            'slot' => 'sometimes|integer|min:1', 
+            'name' => 'sometimes|string|max:19|unique:rooms,name,' . $id,
             'status' => 'sometimes|boolean',
         ]);
 

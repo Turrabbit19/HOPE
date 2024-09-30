@@ -75,7 +75,7 @@ class ApiUserController extends Controller
             'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120', 
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:11|unique:users',
+            'phone' => 'required|string|max:10|unique:users',
             'dob' => 'required|date|before:today',
             'gender' => 'required|boolean',
             'ethnicity' => 'required|string|max:100',
@@ -101,7 +101,7 @@ class ApiUserController extends Controller
     public function show(string $id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::with('role')->findOrFail($id);
             return response()->json(['data' => $user], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);
@@ -116,7 +116,7 @@ class ApiUserController extends Controller
             'avatar' => 'sometimes|file|mimes:jpeg,png,jpg|max:5120', 
             'name' => 'sometimes|string|max:100',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'sometimes|string|max:11|unique:users,phone,' . $id,
+            'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
             'dob' => 'sometimes|date|before:today',
             'gender' => 'sometimes|boolean',
             'ethnicity' => 'sometimes|string|max:100',

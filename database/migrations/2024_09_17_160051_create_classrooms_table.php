@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(Subject::class)->constrained()->onDelete('cascade');
             $table->string('code')->unique(); 
             $table->integer('max_students');
-            $table->boolean('status')->default(true);
+            $table->integer('status')->default(1);
             $table->softDeletes();
             $table->timestamps();
         });

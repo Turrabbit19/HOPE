@@ -85,7 +85,7 @@ class ApiLessonController extends Controller
     public function show(string $id)
     {
         try {
-            $lesson = Lesson::findOrFail($id);
+            $lesson = Lesson::with('subject')->findOrFail($id);
             return response()->json(['data' => $lesson], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

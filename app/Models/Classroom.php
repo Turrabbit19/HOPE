@@ -11,7 +11,6 @@ class Classroom extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'id',
         'subject_id',
         'code',
         'max_students',

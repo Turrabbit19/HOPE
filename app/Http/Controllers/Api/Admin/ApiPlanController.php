@@ -17,7 +17,7 @@ class ApiPlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::with('course', 'major')->paginate(9);
+            $plans = Plan::with(['course', 'major'])->paginate(9);
 
             $data = collect($plans->items())->map(function ($plan) {
                 return [
@@ -91,7 +91,7 @@ class ApiPlanController extends Controller
     public function show(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
+            $plan = Plan::with(['course', 'major'])->findOrFail($id);
             return response()->json(['data' => $plan], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

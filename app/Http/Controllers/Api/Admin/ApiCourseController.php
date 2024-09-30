@@ -60,7 +60,7 @@ class ApiCourseController extends Controller
             $course = Course::findOrFail($id);
             return response()->json(['data' => $course], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy khóa học'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
@@ -88,7 +88,7 @@ class ApiCourseController extends Controller
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy khóa học'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -99,9 +99,10 @@ class ApiCourseController extends Controller
         try {
             $course = Course::findOrFail($id);
             $course->delete();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy khóa học'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

@@ -90,7 +90,7 @@ class ApiNotificationController extends Controller
     public function show(string $id)
     {
         try {
-            $notification = Notification::findOrFail($id);
+            $notification = Notification::with('section')->findOrFail($id);
             return response()->json(['data' => $notification], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy id'], 404);

@@ -18,7 +18,7 @@ const semesterData = {
 
 const semesters = Object.keys(semesterData); // Lấy danh sách các kỳ học
 
-const Testing = () => {
+const CourseAdd = () => {
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [form] = Form.useForm();
     const [selectedSemester, setSelectedSemester] = useState(semesters[0]);
@@ -249,4 +249,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default CourseAdd;

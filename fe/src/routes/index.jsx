@@ -35,6 +35,7 @@ import { AddScheduleManual } from "../pages/admin/classStudent/schedule/AddSched
 import { AddScheduleSeries } from "../pages/admin/classStudent/schedule/AddScheduleSeries";
 import { AccountManage } from "../pages/admin/classStudent/account-manage/AccountManage";
 import { Resource } from "../pages/admin/classStudent/resource/Resource";
+import Testing from "../pages/test/page";
 
 const Router = createBrowserRouter([
     {
@@ -58,6 +59,10 @@ const Router = createBrowserRouter([
                         <NotificationManage />
                     </>
                 ),
+            },
+            {
+                path: "test",
+                element: <Testing />,
             },
             {
                 path: "list",

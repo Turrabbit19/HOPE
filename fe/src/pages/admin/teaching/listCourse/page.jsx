@@ -1,13 +1,46 @@
-import { Pagination, Row, Form, Input, Button, Modal, InputNumber } from "antd";
+import {
+    Pagination,
+    Row,
+    Form,
+    Input,
+    Button,
+    Modal,
+    InputNumber,
+    Select,
+    Space,
+    Popconfirm,
+} from "antd";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+const semesterData = {
+    1: ["Khóa 18.3", "Môn học 2", "Môn học 3", "Môn học 4"],
+    2: ["Môn học 1", "Môn học 2", "Môn học 3"],
+    3: ["Môn học 1", "Môn học 2", "Môn học 3", "Môn học 4", "Môn học 5"],
+    4: ["Môn học 1", "Môn học 2", "Môn học 3", "Môn học 4", "Môn học 5"],
+    5: ["Môn học 1", "Môn học 2", "Môn học 3", "Môn học 4"],
+    6: ["Môn học 1", "Môn học 2", "Môn học 3", "Môn học 4"],
+    7: ["Thực tập tốt nghiệp", "Đồ án tốt nghiệp"],
+};
 
+const semesters = Object.keys(semesterData);
 const ListCourse = () => {
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const [filteredCourses, setFilteredCourses] = useState([]);
-    const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
+    const [selectedSemester, setSelectedSemester] = useState(semesters[0]);
+    const [subjects, setSubjects] = useState(semesterData[selectedSemester]);
+    const [selectedSubject, setSelectedSubject] = useState(subjects[0]);
+
+    const handleSemesterChange = (value) => {
+        setSelectedSemester(value);
+        setSubjects(semesterData[value]);
+        setSelectedSubject(semesterData[value][0]);
+    };
+
+    const onSubjectChange = (value) => {
+        setSelectedSubject(value);
+    };
 
     const allCourses = [
         { id: 1, name: "Math" },
@@ -27,14 +60,6 @@ const ListCourse = () => {
         form.resetFields();
     };
 
-    const showModal = () => {
-        setIsModalVisible(true);
-    };
-
-    const handleCancel = () => {
-        setIsModalVisible(false);
-    };
-
     const handleFormSubmit = (values) => {
         console.log("Form data:", values);
         togglePopup();
@@ -51,6 +76,15 @@ const ListCourse = () => {
             );
             setFilteredCourses(filtered);
         }
+    };
+
+    const confirm = (e) => {
+        console.log(e);
+        message.success("Click on Yes");
+    };
+    const cancel = (e) => {
+        console.log(e);
+        message.error("Click on No");
     };
 
     return (
@@ -77,16 +111,7 @@ const ListCourse = () => {
                                             Quản Lý:
                                         </h3>
                                         <div className="ml-8">
-                                            <button className="flex gap-4 my-10">
-                                                <img
-                                                    src="/assets/svg/book.svg"
-                                                    alt=""
-                                                />
-                                                <p className="text-[#1167B4] text-[16px] font-bold">
-                                                    Danh Sách Môn Học
-                                                </p>
-                                            </button>
-                                            <div className="flex gap-4">
+                                            <div className="flex mt-10 gap-4">
                                                 <img
                                                     src="/assets/svg/cart.svg"
                                                     alt=""
@@ -125,7 +150,7 @@ const ListCourse = () => {
                                                     alt=""
                                                 />
                                                 <Link
-                                                    to={"/"}
+                                                    to={"/admin/teaching"}
                                                     className="text-[#1167B4] text-[16px] font-bold"
                                                 >
                                                     Đóng
@@ -284,44 +309,24 @@ const ListCourse = () => {
                                                         Chi Tiết
                                                     </button>
 
-                                                    <button
-                                                        className="text-[#FF5252] font-bold flex items-center gap-2 justify-center"
-                                                        onClick={showModal}
+                                                    <Popconfirm
+                                                        title="Xóa môn học"
+                                                        description={`Bạn có chắc chắn muốn xóa môn học ${course.name} không? `}
+                                                        onConfirm={confirm}
+                                                        onCancel={cancel}
+                                                        okText="Có"
+                                                        cancelText="Không"
                                                     >
-                                                        <img
-                                                            src="/assets/svg/remove.svg"
-                                                            alt=""
-                                                        />
-                                                        Xóa khỏi Danh Sách
-                                                    </button>
+                                                        <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                                                            <img
+                                                                src="/assets/svg/remove.svg"
+                                                                alt=""
+                                                            />
+                                                            Xóa khỏi Danh Sách
+                                                        </button>
+                                                    </Popconfirm>
                                                 </div>
                                             </div>
-                                            <Modal
-                                                title="Delete Confirmation"
-                                                visible={isModalVisible}
-                                                onCancel={handleCancel}
-                                                footer={[
-                                                    <Button
-                                                        key="cancel"
-                                                        onClick={handleCancel}
-                                                    >
-                                                        Cancel
-                                                    </Button>,
-                                                    <Button
-                                                        key="confirm"
-                                                        type="primary"
-                                                        danger
-                                                    >
-                                                        Delete
-                                                    </Button>,
-                                                ]}
-                                            >
-                                                <p>
-                                                    Are you sure you want to
-                                                    delete this course{" "}
-                                                    {course.name}?
-                                                </p>
-                                            </Modal>
                                         </div>
                                     ))
                                 ) : (
@@ -342,7 +347,7 @@ const ListCourse = () => {
                         </div>
                     </div>
 
-                    {/* Popup Modal */}
+                    {/* Popup Modal Form Add */}
                     <Modal
                         visible={isPopupVisible}
                         onCancel={togglePopup}
@@ -372,7 +377,7 @@ const ListCourse = () => {
                                         },
                                     ]}
                                 >
-                                    <Input placeholder="Code" />
+                                    <Input placeholder="Mã môn học" />
                                 </Form.Item>
 
                                 <Form.Item
@@ -405,6 +410,50 @@ const ListCourse = () => {
                                     />
                                 </Form.Item>
                                 <Form.Item
+                                    label="Ngành học"
+                                    name="type"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: "Vui lòng chọn ngành học!",
+                                        },
+                                    ]}
+                                >
+                                    <Select placeholder="Chọn ngành học">
+                                        <Select.Option value="Lập trình Web">
+                                            Lập trình Web
+                                        </Select.Option>
+                                        <Select.Option value="Thiết kế đồ họa">
+                                            Thiết kế đồ họa
+                                        </Select.Option>
+                                    </Select>
+                                </Form.Item>
+
+                                <Form.Item label="Kỳ học">
+                                    <Select
+                                        defaultValue={semesters[0]}
+                                        style={{
+                                            width: 120,
+                                        }}
+                                        onChange={handleSemesterChange}
+                                        options={semesters.map((semester) => ({
+                                            label: `Kỳ ${semester}`, // Hiển thị "Kỳ 1", "Kỳ 2", ...
+                                            value: semester,
+                                        }))}
+                                    />
+                                    <Select
+                                        style={{
+                                            width: 120,
+                                        }}
+                                        value={selectedSubject}
+                                        onChange={onSubjectChange}
+                                        options={subjects.map((subject) => ({
+                                            label: subject,
+                                            value: subject,
+                                        }))}
+                                    />
+                                </Form.Item>
+                                <Form.Item
                                     label="Tín chỉ"
                                     name="credit"
                                     rules={[
@@ -413,14 +462,33 @@ const ListCourse = () => {
                                             message: "Vui lòng nhập Tín chỉ!",
                                         },
                                         {
-                                            min: 0,
-                                            message: "Tín chỉ phải lớn hơn 0",
+                                            pattern: /^(?!0)\d(\.\d+)?$/, // Regex cho số dương
+                                            message:
+                                                "Tín chỉ phải là số dương.",
+                                        },
+                                        {
+                                            validator: (_, value) => {
+                                                if (
+                                                    value &&
+                                                    (value < 0 || value >= 8)
+                                                ) {
+                                                    return Promise.reject(
+                                                        new Error(
+                                                            "Tín chỉ phải nhỏ hơn 8."
+                                                        )
+                                                    );
+                                                }
+                                                return Promise.resolve();
+                                            },
                                         },
                                     ]}
                                 >
-                                    <InputNumber />
+                                    <InputNumber
+                                        placeholder="Tín chỉ"
+                                        min={0}
+                                        max={8}
+                                    />
                                 </Form.Item>
-
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit">
                                         Tạo Môn Học

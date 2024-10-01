@@ -17,7 +17,9 @@ class Subject extends Model
         'credit',
     ];
     
-    public function majors() {
-        return $this->belongsToMany(Major::class);
+    public function majors()
+    {
+        return $this->belongsToMany(Major::class, 'major_subjects')
+                    ->withPivot('semester_order');
     }
 }

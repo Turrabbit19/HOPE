@@ -63,12 +63,13 @@ class ApiSubjectController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'subject_code' => 'required|string|max:50|unique:subjects', 
-            'semester_id' => 'required|exists:semesters,id', 
-            'major_id' => 'required|exists:majors,id', 
-            'name' => 'required|string|max:100', 
+            'code' => 'required|string|max:50|unique:subjects', 
+            'name' => 'required|string|max:100|unique:subjects', 
             'description' => 'nullable|string|max:255', 
             'credit' => 'required|integer|min:1|max:19',
+            'majors' => 'required|array',
+            'majors.*.id' => 'required|exists:majors,id',
+            'majors.*.semester_order' => 'required|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -78,6 +79,12 @@ class ApiSubjectController extends Controller
         try {
             $data = $validator->validated();
             $subject = Subject::create($data);
+
+            $majorsWithOrder = collect($data['majors'])->mapWithKeys(function ($major) {
+                return [$major['id'] => ['semester_order' => $major['semester_order']]];
+            });
+            
+            $subject->majors()->sync($majorsWithOrder);
             
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -100,12 +107,13 @@ class ApiSubjectController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'subject_code' => 'sometimes|string|max:50|unique:subjects,subject_code,' . $id,
-            'semester_id' => 'sometimes|exists:semesters,id', 
-            'major_id' => 'sometimes|exists:majors,id', 
-            'name' => 'sometimes|string|max:100', 
+            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id, 
+            'name' => 'sometimes|string|max:100|unique:subjects,name' . $id, 
             'description' => 'nullable|string|max:255', 
             'credit' => 'sometimes|integer|min:1|max:19',
+            'majors' => 'sometimes|array',
+            'majors.*.id' => 'sometimes|exists:majors,id',
+            'majors.*.semester_order' => 'sometimes|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -118,6 +126,14 @@ class ApiSubjectController extends Controller
             $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $subject->update($data);
+
+            if(isset($data['majors'])) {
+                $majorsWithOrder = collect($data['majors'])->mapWithKeys(function ($major) {
+                    return [$major['id'] => ['semester_order' => $major['semester_order']]];
+                });
+                
+                $subject->majors()->sync($majorsWithOrder);
+            }
 
             return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {

@@ -21,10 +21,9 @@ class Semester extends Model
         'status' => 'boolean',
     ];
 
-    public function course() {
-        return $this->belongsTo(Course::class);
-    }
-    public function plans() {
-        return $this->belongsToMany(Plan::class);
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'course_semesters')
+                    ->withPivot('order');
     }
 }

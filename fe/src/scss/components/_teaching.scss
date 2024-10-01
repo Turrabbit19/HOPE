@@ -126,16 +126,7 @@ label[for="file-input"]:hover .upload-image {
         position: sticky;
         top: 0;
         height: 100vh;
-        padding-right: 0 !important;
-        padding-top: 12px;
-        margin-top: -32px;
-        border-right: 1px solid #9e9e9e;
-    }
-
-    &__group {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
+        padding-top: 18px;
     }
 
     &__item {

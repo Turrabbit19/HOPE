@@ -37,7 +37,7 @@ const AsideAdmin = () => {
         },
         {
             key: "sub6",
-            label: <Link to="/admin/teaching">Quản lý chương trình dạy</Link>,
+            label: <Link to="/admin/teaching">Quản lý Chuyên Ngành Học</Link>,
         },
         {
             key: "sub7",

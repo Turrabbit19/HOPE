@@ -71,7 +71,6 @@ const Router = createBrowserRouter([
                 path: "teaching",
                 element: (
                     <>
-                        <BreadCrumb />
                         <Teach />
                     </>
                 ),
@@ -89,7 +88,6 @@ const Router = createBrowserRouter([
                 path: "teaching/list",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ListCourse />
                     </>
                 ),

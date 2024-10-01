@@ -1,3 +1,4 @@
+import { Pagination } from "antd";
 import React from "react";
 import { Link, Outlet } from "react-router-dom";
 
@@ -8,7 +9,7 @@ const Teach = () => {
                 <div className="container">
                     <div className="row justify-between">
                         <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-                            Quản Lý Chương Trình Dạy
+                            Quản Lý Chuyên Ngành
                             <button>
                                 <img
                                     src="/assets/svg/reload.svg"
@@ -50,7 +51,10 @@ const Teach = () => {
                                             src="/assets/svg/share.svg"
                                             alt=""
                                         />
-                                        Chương trình dạy 01
+                                        Chuyên ngành:{" "}
+                                        <p className="text-red-300 uppercase ml-2 font-bold">
+                                            Thiết kế website
+                                        </p>
                                     </h2>
                                     <button>
                                         <img
@@ -61,36 +65,34 @@ const Teach = () => {
                                 </div>
 
                                 <div className="teaching__card-body">
-                                    {/* Img */}
-                                    <div className="flex gap-8 ">
-                                        <div className="teaching__card-thumb">
-                                            <img
-                                                src="/assets/svg/img_preview.svg"
-                                                alt=""
-                                                className="teaching_card-img"
-                                            />
-                                        </div>
-                                        <div className="teaching__card-status">
-                                            <img
-                                                className="svg-green"
-                                                src="/assets/svg/status.svg"
-                                                alt=""
-                                            />
-                                            <span className="text-[#44CC15] text-[12px]">
-                                                Active
-                                            </span>
-                                        </div>
-                                    </div>
                                     {/* Content */}
-
-                                    <div className="flex mt-8 gap-4 justify-center pb-6">
-                                        <div className="text-[#9E9E9E] text-[14px]">
-                                            <p>Code :</p>
-                                            <p>Description:</p>
+                                    <div className="mt-6 flex flex-col gap-8 pb-6">
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Trạng thái :
+                                            </p>
+                                            <div className="teaching__card-status">
+                                                <img
+                                                    className="svg-green"
+                                                    src="/assets/svg/status.svg"
+                                                    alt=""
+                                                />
+                                                <span className="text-[#44CC15] text-[12px]">
+                                                    Kích hoạt
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Code :
+                                            </p>
                                             <p className="font-bold text-[#000]">
                                                 0000000001
+                                            </p>
+                                        </div>
+                                        <div className="">
+                                            <p className="text-[#9E9E9E] mb-3">
+                                                Mô tả :
                                             </p>
                                             <p className="text-[14px] line-clamp-2">
                                                 The Nagasaki Lander is the
@@ -118,7 +120,7 @@ const Teach = () => {
                                 </div>
                             </div>
                         </div>
-                        {/* Teaching__Card 2 */}
+                        {/* Teaching__Card 1 */}
                         <div className="col ">
                             <div className="teaching__card">
                                 <div className="teaching__card-top">
@@ -127,7 +129,10 @@ const Teach = () => {
                                             src="/assets/svg/share.svg"
                                             alt=""
                                         />
-                                        Chương trình dạy 01
+                                        Chuyên ngành:{" "}
+                                        <p className="text-red-300 uppercase ml-2 font-bold">
+                                            Thiết kế website
+                                        </p>
                                     </h2>
                                     <button>
                                         <img
@@ -138,36 +143,34 @@ const Teach = () => {
                                 </div>
 
                                 <div className="teaching__card-body">
-                                    {/* Img */}
-                                    <div className="flex gap-8 ">
-                                        <div className="teaching__card-thumb">
-                                            <img
-                                                src="/assets/svg/img_preview.svg"
-                                                alt=""
-                                                className="teaching_card-img"
-                                            />
-                                        </div>
-                                        <div className="teaching__card-status">
-                                            <img
-                                                className="svg-green"
-                                                src="/assets/svg/status.svg"
-                                                alt=""
-                                            />
-                                            <span className="text-[#44CC15] text-[12px]">
-                                                Active
-                                            </span>
-                                        </div>
-                                    </div>
                                     {/* Content */}
-
-                                    <div className="flex mt-8 gap-4 justify-center pb-6">
-                                        <div className="text-[#9E9E9E] text-[14px]">
-                                            <p>Code :</p>
-                                            <p>Description:</p>
+                                    <div className="mt-6 flex flex-col gap-8 pb-6">
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Trạng thái :
+                                            </p>
+                                            <div className="teaching__card-status">
+                                                <img
+                                                    className="svg-green"
+                                                    src="/assets/svg/status.svg"
+                                                    alt=""
+                                                />
+                                                <span className="text-[#44CC15] text-[12px]">
+                                                    Kích hoạt
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Code :
+                                            </p>
                                             <p className="font-bold text-[#000]">
                                                 0000000001
+                                            </p>
+                                        </div>
+                                        <div className="">
+                                            <p className="text-[#9E9E9E] mb-3">
+                                                Mô tả :
                                             </p>
                                             <p className="text-[14px] line-clamp-2">
                                                 The Nagasaki Lander is the
@@ -183,7 +186,7 @@ const Teach = () => {
 
                                 <div className="teaching__card-bottom">
                                     <Link
-                                        to={`list`}
+                                        to="list"
                                         className="flex items-center gap-3 text-[#1167B4] font-bold"
                                     >
                                         <img
@@ -195,7 +198,7 @@ const Teach = () => {
                                 </div>
                             </div>
                         </div>
-                        {/* Teaching__Card 3 */}
+                        {/* Teaching__Card 1 */}
                         <div className="col ">
                             <div className="teaching__card">
                                 <div className="teaching__card-top">
@@ -204,7 +207,10 @@ const Teach = () => {
                                             src="/assets/svg/share.svg"
                                             alt=""
                                         />
-                                        Chương trình dạy 01
+                                        Chuyên ngành:{" "}
+                                        <p className="text-red-300 uppercase ml-2 font-bold">
+                                            Thiết kế website
+                                        </p>
                                     </h2>
                                     <button>
                                         <img
@@ -215,36 +221,34 @@ const Teach = () => {
                                 </div>
 
                                 <div className="teaching__card-body">
-                                    {/* Img */}
-                                    <div className="flex gap-8 ">
-                                        <div className="teaching__card-thumb">
-                                            <img
-                                                src="/assets/svg/img_preview.svg"
-                                                alt=""
-                                                className="teaching_card-img"
-                                            />
-                                        </div>
-                                        <div className="teaching__card-status">
-                                            <img
-                                                className="svg-green"
-                                                src="/assets/svg/status.svg"
-                                                alt=""
-                                            />
-                                            <span className="text-[#44CC15] text-[12px]">
-                                                Active
-                                            </span>
-                                        </div>
-                                    </div>
                                     {/* Content */}
-
-                                    <div className="flex mt-8 gap-4 justify-center pb-6">
-                                        <div className="text-[#9E9E9E] text-[14px]">
-                                            <p>Code :</p>
-                                            <p>Description:</p>
+                                    <div className="mt-6 flex flex-col gap-8 pb-6">
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Trạng thái :
+                                            </p>
+                                            <div className="teaching__card-status">
+                                                <img
+                                                    className="svg-green"
+                                                    src="/assets/svg/status.svg"
+                                                    alt=""
+                                                />
+                                                <span className="text-[#44CC15] text-[12px]">
+                                                    Kích hoạt
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Code :
+                                            </p>
                                             <p className="font-bold text-[#000]">
                                                 0000000001
+                                            </p>
+                                        </div>
+                                        <div className="">
+                                            <p className="text-[#9E9E9E] mb-3">
+                                                Mô tả :
                                             </p>
                                             <p className="text-[14px] line-clamp-2">
                                                 The Nagasaki Lander is the
@@ -260,7 +264,85 @@ const Teach = () => {
 
                                 <div className="teaching__card-bottom">
                                     <Link
-                                        to={`list`}
+                                        to="list"
+                                        className="flex items-center gap-3 text-[#1167B4] font-bold"
+                                    >
+                                        <img
+                                            src="/assets/svg/setting.svg"
+                                            alt=""
+                                        />
+                                        Quản Lý Chương Trình Dạy
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Teaching__Card 1 */}
+                        <div className="col ">
+                            <div className="teaching__card">
+                                <div className="teaching__card-top">
+                                    <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
+                                        <img
+                                            src="/assets/svg/share.svg"
+                                            alt=""
+                                        />
+                                        Chuyên ngành:{" "}
+                                        <p className="text-red-300 uppercase ml-2 font-bold">
+                                            Thiết kế website
+                                        </p>
+                                    </h2>
+                                    <button>
+                                        <img
+                                            src="/assets/svg/more_detail.svg"
+                                            alt=""
+                                        />
+                                    </button>
+                                </div>
+
+                                <div className="teaching__card-body">
+                                    {/* Content */}
+                                    <div className="mt-6 flex flex-col gap-8 pb-6">
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Trạng thái :
+                                            </p>
+                                            <div className="teaching__card-status">
+                                                <img
+                                                    className="svg-green"
+                                                    src="/assets/svg/status.svg"
+                                                    alt=""
+                                                />
+                                                <span className="text-[#44CC15] text-[12px]">
+                                                    Kích hoạt
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-6">
+                                            <p className="text-[#9E9E9E]">
+                                                Code :
+                                            </p>
+                                            <p className="font-bold text-[#000]">
+                                                0000000001
+                                            </p>
+                                        </div>
+                                        <div className="">
+                                            <p className="text-[#9E9E9E] mb-3">
+                                                Mô tả :
+                                            </p>
+                                            <p className="text-[14px] line-clamp-2">
+                                                The Nagasaki Lander is the
+                                                trademarked name of several
+                                                series of Nagasaki sport bikes.
+                                                The Nagasaki Lander is the
+                                                trademarked name of several
+                                                series of ...
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="teaching__card-bottom">
+                                    <Link
+                                        to="list"
                                         className="flex items-center gap-3 text-[#1167B4] font-bold"
                                     >
                                         <img
@@ -275,7 +357,7 @@ const Teach = () => {
                     </div>
 
                     {/* Next Page */}
-                    <div className="next__page-group font-bold my-20 gap-y-3">
+                    {/* <div className="next__page-group font-bold my-20 gap-y-3">
                         <div className="next__page flex items-center gap-4">
                             <button>
                                 <img
@@ -291,7 +373,14 @@ const Teach = () => {
                         </div>
 
                         <div className="next_page-list">(1 ~ 3 | 10)</div>
-                    </div>
+                    </div> */}
+
+                    <Pagination
+                        className="mt-12"
+                        align="center"
+                        defaultCurrent={1}
+                        total={50}
+                    />
                 </div>
             </div>
         </>

@@ -442,8 +442,6 @@ const Teach = () => {
                         </Form>
                     </Modal>
 
-                    {/* Modal Form Edit */}
-
                     <Modal
                         title="Sửa Ngành Học"
                         open={isEditModalVisible}

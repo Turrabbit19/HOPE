@@ -36,6 +36,7 @@ import { AddScheduleSeries } from "../pages/admin/classStudent/schedule/AddSched
 import { AccountManage } from "../pages/admin/classStudent/account-manage/AccountManage";
 import { Resource } from "../pages/admin/classStudent/resource/Resource";
 import Testing from "../pages/test/page";
+import ListSemester from "../pages/admin/semesters/list/page";
 
 const Router = createBrowserRouter([
     {
@@ -174,6 +175,16 @@ const Router = createBrowserRouter([
                     <>
                         <BreadCrumb />
                         <SemesterManage />
+                    </>
+                ),
+            },
+
+            {
+                path: "semestersList",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ListSemester />
                     </>
                 ),
             },

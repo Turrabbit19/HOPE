@@ -11,6 +11,7 @@ import {
     Col,
     message,
 } from "antd";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 const semesterData = {
@@ -31,6 +32,9 @@ const ListCourse = () => {
     const [additionalVariants, setAdditionalVariants] = useState([
         { semester: selectedSemester, major: selectedMajor },
     ]);
+
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [editingCourse, setEditingCourse] = useState(null);
 
     const allCourses = [
         { id: 1, name: "Math" },
@@ -112,6 +116,21 @@ const ListCourse = () => {
     const cancel = (e) => {
         console.log(e);
         // message.error("Click on No");
+    };
+    const openEditModal = (course) => {
+        setEditingCourse(course);
+        setIsEditModalVisible(true);
+        form.setFieldsValue({
+            code: course.code,
+            name: course.name,
+            description: course.description,
+            credit: course.credit,
+        });
+    };
+
+    const closeEditModal = () => {
+        setIsEditModalVisible(false);
+        form.resetFields();
     };
 
     return (
@@ -327,7 +346,7 @@ const ListCourse = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="listCourse__item-bottom">
+                                                <div className="listCourse__item-bottom teaching__card-bottom ">
                                                     <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                                                         <img
                                                             src="/assets/svg/eye.svg"
@@ -352,6 +371,18 @@ const ListCourse = () => {
                                                             Xóa khỏi Danh Sách
                                                         </button>
                                                     </Popconfirm>
+
+                                                    <button
+                                                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                                                        onClick={() =>
+                                                            openEditModal(
+                                                                course
+                                                            )
+                                                        }
+                                                    >
+                                                        <EditOutlined />
+                                                        Sửa Thông Tin
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -451,7 +482,7 @@ const ListCourse = () => {
                                                 },
                                                 {
                                                     pattern:
-                                                        /^(?!0)\d(\.\d+)?$/, // Regex cho số dương
+                                                        /^(?!0)\d(\.\d+)?$/,
                                                     message:
                                                         "Tín chỉ phải là số dương.",
                                                 },
@@ -547,16 +578,202 @@ const ListCourse = () => {
                                             </Button>
                                         </Form.Item>
                                     </Col>
-
-                                    <Form.Item>
-                                        <Button
-                                            type="primary"
-                                            htmlType="submit"
-                                        >
-                                            Tạo Môn Học
-                                        </Button>
-                                    </Form.Item>
                                 </Row>
+
+                                <div className="flex justify-center items-center mt-4">
+                                    <Button type="primary" htmlType="submit">
+                                        Tạo Môn Học
+                                    </Button>
+                                </div>
+                            </Form>
+                        </div>
+                    </Modal>
+
+                    {/* Popup Modal Form Edit */}
+                    <Modal
+                        open={isEditModalVisible}
+                        onCancel={closeEditModal}
+                        footer={null}
+                        centered
+                        width={1000}
+                    >
+                        <div className="createCourseForm pb-6">
+                            <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
+                                Sửa Môn Học
+                            </h3>
+
+                            <Form
+                                form={form}
+                                layout="vertical"
+                                onFinish={(values) =>
+                                    handleEditFormSubmit(
+                                        values,
+                                        editingCourse.id
+                                    )
+                                }
+                                autoComplete="off"
+                            >
+                                <Row gutter={24}>
+                                    <Col span={14}>
+                                        <Form.Item
+                                            label="Mã Môn Học"
+                                            name="code"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng nhập mã môn học!",
+                                                },
+                                            ]}
+                                        >
+                                            <Input placeholder="Mã môn học" />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            label="Tên Môn Học"
+                                            name="name"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng nhập tên môn học!",
+                                                },
+                                            ]}
+                                        >
+                                            <Input placeholder="Tên" />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            label="Mô tả"
+                                            name="description"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng nhập mô tả!",
+                                                },
+                                            ]}
+                                        >
+                                            <Input.TextArea
+                                                rows={3}
+                                                placeholder="Mô tả"
+                                            />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            label="Tín chỉ"
+                                            name="credit"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng nhập Tín chỉ!",
+                                                },
+                                                {
+                                                    pattern:
+                                                        /^(?!0)\d(\.\d+)?$/,
+                                                    message:
+                                                        "Tín chỉ phải là số dương.",
+                                                },
+                                                {
+                                                    validator: (_, value) => {
+                                                        if (
+                                                            value &&
+                                                            (value < 0 ||
+                                                                value >= 8)
+                                                        ) {
+                                                            return Promise.reject(
+                                                                new Error(
+                                                                    "Tín chỉ phải nhỏ hơn 8."
+                                                                )
+                                                            );
+                                                        }
+                                                        return Promise.resolve();
+                                                    },
+                                                },
+                                            ]}
+                                        >
+                                            <InputNumber
+                                                placeholder="Tín chỉ"
+                                                min={0}
+                                                max={8}
+                                            />
+                                        </Form.Item>
+                                    </Col>
+
+                                    <Col span={10}>
+                                        <Form.Item label="Kỳ học và Ngành học">
+                                            {additionalVariants.map(
+                                                (variant, index) => (
+                                                    <Row
+                                                        key={index}
+                                                        gutter={16}
+                                                        style={{
+                                                            marginBottom: 16,
+                                                        }}
+                                                    >
+                                                        <Col span={12}>
+                                                            <Select
+                                                                value={
+                                                                    variant.semester
+                                                                }
+                                                                onChange={(
+                                                                    value
+                                                                ) =>
+                                                                    handleSemesterChange(
+                                                                        value,
+                                                                        index
+                                                                    )
+                                                                }
+                                                                options={semesters.map(
+                                                                    (
+                                                                        semester
+                                                                    ) => ({
+                                                                        label: `Kỳ ${semester}`,
+                                                                        value: semester,
+                                                                    })
+                                                                )}
+                                                            />
+                                                        </Col>
+                                                        <Col span={12}>
+                                                            <Select
+                                                                value={
+                                                                    variant.major
+                                                                }
+                                                                onChange={(
+                                                                    value
+                                                                ) =>
+                                                                    handleMajorChange(
+                                                                        value,
+                                                                        index
+                                                                    )
+                                                                }
+                                                                options={majors.map(
+                                                                    (
+                                                                        major
+                                                                    ) => ({
+                                                                        label: major,
+                                                                        value: major,
+                                                                    })
+                                                                )}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                )
+                                            )}
+
+                                            <Button onClick={handleAddVariant}>
+                                                Thêm biến thể
+                                            </Button>
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                <div className="flex justify-center items-center mt-4">
+                                    <Button type="primary" htmlType="submit">
+                                        Lưu Thay Đổi
+                                    </Button>
+                                </div>
                             </Form>
                         </div>
                     </Modal>

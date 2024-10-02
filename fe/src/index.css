@@ -1406,7 +1406,7 @@ strong {
 .teaching__card-bottom {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   padding-top: 6px;
   border-top: 1px solid rgba(0, 0, 0, 0.1215686275);
   margin: 0 -16px;

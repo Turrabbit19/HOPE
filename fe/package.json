@@ -12,17 +12,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "node-sass": "^9.0.0",
-    "react-router-link": "^2.0.2",
+    "@ant-design/icons": "^5.5.1",
     "@react-oauth/google": "^0.12.1",
     "antd": "^5.20.3",
     "axios": "^1.7.5",
     "date-fns": "^4.1.0",
     "i18next": "^23.15.1",
+    "node-sass": "^9.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.0.2",
-    "react-router-dom": "^6.26.1"
+    "react-router-dom": "^6.26.1",
+    "react-router-link": "^2.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

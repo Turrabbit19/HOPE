@@ -23,16 +23,21 @@ const semesterData = {
 const schedules = ["18.3", "17.3", "19.1"];
 const semesters = Object.keys(semesterData);
 const ListCourse = () => {
+    // State để quản lý giá trị tìm kiếm và danh sách khóa học đã lọc
     const [searchValue, setSearchValue] = useState("");
     const [filteredCourses, setFilteredCourses] = useState([]);
 
-    //
+    // State cho popup tạo khóa học mới
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [form] = Form.useForm();
+
+    // State cho lựa chọn kỳ học và ngành học
     const [selectedSemester, setSelectedSemester] = useState(semesters[0]);
     const [majors, setMajors] = useState(semesterData[selectedSemester].majors);
     const [selectedMajor, setSelectedMajor] = useState(majors[0]);
     const [selectedSchedule, setSelectedSchedule] = useState(schedules[0]);
+
+    // State cho các biến thể được thêm vào
     const [additionalVariants, setAdditionalVariants] = useState([
         {
             major: selectedMajor,
@@ -40,11 +45,12 @@ const ListCourse = () => {
             semester: selectedSemester,
         },
     ]);
-    //
 
+    // State cho modal chỉnh sửa khóa học
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
 
+    // Danh sách tất cả các khóa học có sẵn
     const allCourses = [
         { id: 1, name: "Math" },
         { id: 2, name: "Physics" },
@@ -54,17 +60,21 @@ const ListCourse = () => {
         { id: 6, name: "Geography" },
     ];
 
+    // Thiết lập danh sách khóa học đã lọc khi component được mount
     useEffect(() => {
         setFilteredCourses(allCourses);
     }, []);
 
+    // Hàm xử lý tìm kiếm
     const handleSearch = (event) => {
         const value = event.target.value; // Lấy giá trị từ input
         setSearchValue(value);
 
         if (value.trim() === "") {
+            // Nếu input trống, hiển thị tất cả các khóa học
             setFilteredCourses(allCourses);
         } else {
+            // Lọc khóa học theo tên
             const filtered = allCourses.filter((course) =>
                 course.name.toLowerCase().includes(value.toLowerCase())
             );
@@ -72,10 +82,12 @@ const ListCourse = () => {
         }
     };
 
+    // Hàm toggle hiển thị popup thêm khóa học
     const togglePopup = () => {
-        setIsPopupVisible(!isPopupVisible);
-        form.resetFields();
+        setIsPopupVisible(!isPopupVisible); // Đảo ngược trạng thái hiển thị
+        form.resetFields(); // Reset các trường trong form
         setAdditionalVariants([
+            // Thiết lập lại các biến thể
             {
                 major: majors[0],
                 schedule: schedules[0],
@@ -84,6 +96,7 @@ const ListCourse = () => {
         ]);
     };
 
+    // Hàm xử lý khi form được gửi
     const handleFormSubmit = (values) => {
         console.log("Form data:", values, "Variants:", additionalVariants);
 
@@ -95,27 +108,31 @@ const ListCourse = () => {
         console.log("Form data:", formData);
     };
 
-    //
+    // Hàm xử lý thay đổi ngành học
     const handleMajorChange = (value, index) => {
-        const updatedVariants = [...additionalVariants];
-        updatedVariants[index].major = value;
-        setAdditionalVariants(updatedVariants);
+        const updatedVariants = [...additionalVariants]; // Sao chép danh sách biến thể hiện tại
+        updatedVariants[index].major = value; // Cập nhật ngành học
+        setAdditionalVariants(updatedVariants); // Cập nhật state với danh sách biến thể mới
     };
 
+    // Hàm xử lý thay đổi lịch học
     const handleScheduleChange = (value, index) => {
         const updatedVariants = [...additionalVariants];
-        updatedVariants[index].schedule = value;
+        updatedVariants[index].schedule = value; // Cập nhật lịch học
         setAdditionalVariants(updatedVariants);
     };
 
+    // Hàm xử lý thay đổi kỳ học
     const handleSemesterChange = (value, index) => {
         const updatedVariants = [...additionalVariants];
-        updatedVariants[index].semester = value;
+        updatedVariants[index].semester = value; // Cập nhật kỳ học
         setAdditionalVariants(updatedVariants);
     };
 
+    // Hàm thêm biến thể mới
     const handleAddVariant = () => {
         setAdditionalVariants([
+            // Thêm một biến thể mới vào danh sách
             ...additionalVariants,
             {
                 major: majors[0],
@@ -125,20 +142,24 @@ const ListCourse = () => {
         ]);
     };
 
-    //
-
+    // Hàm xác nhận xóa khóa học
     const confirm = (e) => {
         console.log(e);
-        message.success("Xóa thành công !");
+        message.success("Xóa thành công !"); // Hiển thị thông báo thành công
     };
+
+    // Hàm hủy xác nhận xóa
     const cancel = (e) => {
         console.log(e);
         // message.error("Click on No");
     };
+
+    // Hàm mở modal chỉnh sửa khóa học
     const openEditModal = (course) => {
-        setEditingCourse(course);
-        setIsEditModalVisible(true);
+        setEditingCourse(course); // Lưu khóa học hiện tại để chỉnh sửa
+        setIsEditModalVisible(true); // Hiển thị modal chỉnh sửa
         form.setFieldsValue({
+            // Thiết lập các trường trong form với dữ liệu của khóa học
             code: course.code,
             name: course.name,
             description: course.description,
@@ -146,88 +167,44 @@ const ListCourse = () => {
         });
     };
 
+    // Hàm đóng modal chỉnh sửa khóa học
     const closeEditModal = () => {
-        setIsEditModalVisible(false);
-        form.resetFields();
+        setIsEditModalVisible(false); // Ẩn modal chỉnh sửa
+        form.resetFields(); // Reset các trường trong form
     };
 
+    // State cho modal lọc khóa học
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    // Hàm hiển thị modal lọc khóa học
+    const handleShowModalFilter = () => {
+        setIsModalVisible(true);
+    };
+
+    // Hàm xử lý khi nhấn OK trong modal lọc
+    const handleOk = () => {
+        form.validateFields()
+            .then((values) => {
+                console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
+                // Xử lý lọc ở đây
+                setIsModalVisible(false); // Đóng modal sau khi xử lý xong
+            })
+            .catch((info) => {
+                console.log("Validate Failed:", info); // Xử lý lỗi xác thực
+            });
+    };
+
+    // Hàm hủy bỏ việc hiển thị modal
+    const handleCancel = () => {
+        setIsModalVisible(false); // Ẩn modal lọc
+    };
     return (
         <>
             <div className="listCourse">
                 <div className="container">
                     <div className="flex gap-4 row-cols-2 relative">
-                        {/* SideBar */}
-                        <Row className="col-2 g-x-4 mt-1">
-                            <div className="flex flex-col">
-                                <div>
-                                    <h1 className="flex items-center text-[18px] gap-3 text-[#1167B4] font-bold">
-                                        Q.lý Chuyên Ngành
-                                    </h1>
-                                    <p className="text-[15px] font-semibold italic my-2">
-                                        Lập trình web
-                                    </p>
-                                </div>
-                                {/* Content */}
-                                <div className="flex-1">
-                                    {/* Management */}
-                                    <div className="my-8">
-                                        <h3 className="text-[#9E9E9E] text-[16px] font-bold">
-                                            Quản Lý:
-                                        </h3>
-                                        <div className="ml-8">
-                                            <div className="flex mt-10 gap-4">
-                                                <img
-                                                    src="/assets/svg/cart.svg"
-                                                    alt=""
-                                                />
-                                                <Link
-                                                    to={"/"}
-                                                    className="text-[#1167B4] text-[16px] font-bold"
-                                                >
-                                                    Thông Tin Bán Hàng
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Setting */}
-                                    <div className="my-8 pt-3">
-                                        <h3 className="text-[#9E9E9E] text-[16px] font-bold">
-                                            Cài Đặt:
-                                        </h3>
-                                        <div className="ml-8">
-                                            <div className="flex gap-4 my-10">
-                                                <img
-                                                    src="/assets/svg/cart.svg"
-                                                    alt=""
-                                                />
-                                                <Link
-                                                    to={"/"}
-                                                    className="text-[#1167B4] text-[16px] font-bold"
-                                                >
-                                                    Khóa Chuyên Ngành
-                                                </Link>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <img
-                                                    src="/assets/svg/cart.svg"
-                                                    alt=""
-                                                />
-                                                <Link
-                                                    to={"/admin/teaching"}
-                                                    className="text-[#1167B4] text-[16px] font-bold"
-                                                >
-                                                    Đóng
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </Row>
-
                         {/* Item */}
-                        <div className="col-10">
+                        <div className="col-12">
                             <div>
                                 <div className="flex justify-between">
                                     <h1 className="flex gap-2 pb-5 items-center text-[#7017E2] text-[20px] font-semibold">
@@ -258,9 +235,18 @@ const ListCourse = () => {
                                         />
                                         Thêm Môn Học
                                     </button>
-                                    <span className="font-bold text-[14px] text-[#000]">
-                                        {filteredCourses.length} items
-                                    </span>
+                                    <div className="flex gap-6 items-center">
+                                        <span className="font-bold text-[14px] text-[#000]">
+                                            {filteredCourses.length} items
+                                        </span>
+
+                                        <Button
+                                            type="primary"
+                                            onClick={handleShowModalFilter}
+                                        >
+                                            Lọc Khóa Học
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -838,6 +824,59 @@ const ListCourse = () => {
                                 </div>
                             </Form>
                         </div>
+                    </Modal>
+
+                    {/* Modal Filter */}
+                    <Modal
+                        title="Lọc Khóa Học"
+                        visible={isModalVisible}
+                        onOk={handleOk}
+                        onCancel={handleCancel}
+                    >
+                        <Form form={form} layout="vertical">
+                            <Form.Item
+                                label="Chọn Ngành Học"
+                                name="major"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng chọn ngành học!",
+                                    },
+                                ]}
+                            >
+                                <Select placeholder="Chọn ngành học">
+                                    <Option value="computer-science">
+                                        Khoa học máy tính
+                                    </Option>
+                                    <Option value="data-science">
+                                        Khoa học dữ liệu
+                                    </Option>
+                                    <Option value="web-development">
+                                        Phát triển web
+                                    </Option>
+                                    <Option value="graphic-design">
+                                        Thiết kế đồ họa
+                                    </Option>
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item
+                                label="Chọn Kỳ Học"
+                                name="semester"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng chọn kỳ học!",
+                                    },
+                                ]}
+                            >
+                                <Select placeholder="Chọn kỳ học">
+                                    <Option value="semester1">Kỳ 1</Option>
+                                    <Option value="semester2">Kỳ 2</Option>
+                                    <Option value="semester3">Kỳ 3</Option>
+                                </Select>
+                            </Form.Item>
+                        </Form>
                     </Modal>
                 </div>
             </div>

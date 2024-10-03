@@ -37,6 +37,8 @@ import { AccountManage } from "../pages/admin/classStudent/account-manage/Accoun
 import { Resource } from "../pages/admin/classStudent/resource/Resource";
 import Testing from "../pages/test/page";
 import ListSemester from "../pages/admin/semesters/list/page";
+import ListCourseAll from "../pages/admin/courses/list/page";
+import ListSubjects from "../pages/admin/subjects/list/page";
 
 const Router = createBrowserRouter([
     {
@@ -160,6 +162,18 @@ const Router = createBrowserRouter([
                     </>
                 ),
             },
+
+            // giao diện list môn học
+            {
+                path: "list-subject",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ListCourseAll />
+                    </>
+                ),
+            },
+            //
             {
                 path: "courses",
                 element: (
@@ -169,6 +183,8 @@ const Router = createBrowserRouter([
                     </>
                 ),
             },
+
+            //
             {
                 path: "semesters",
                 element: (
@@ -178,9 +194,9 @@ const Router = createBrowserRouter([
                     </>
                 ),
             },
-
+            // Giao diện list semester
             {
-                path: "semestersList",
+                path: "list-semesters",
                 element: (
                     <>
                         <BreadCrumb />
@@ -188,12 +204,34 @@ const Router = createBrowserRouter([
                     </>
                 ),
             },
+            //
+
+            // giao diện list khóa học
+            {
+                path: "list-subject",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ListSubject />
+                    </>
+                ),
+            },
+
             {
                 path: "subjects",
                 element: (
                     <>
                         <BreadCrumb />
                         <SubjectManager />
+                    </>
+                ),
+            },
+            {
+                path: "list-courses",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ListSubjects />
                     </>
                 ),
             },

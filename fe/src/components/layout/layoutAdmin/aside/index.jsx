@@ -37,16 +37,28 @@ const AsideAdmin = () => {
         },
         {
             key: "sub6",
-            label: <Link to="/admin/teaching">Quản lý Chuyên Ngành Học -</Link>,
+            label: <Link to="/admin/teaching">Quản lý Ngành Học -atuan</Link>,
         },
         {
             key: "sub7",
-            label: <Link to="/admin/class-student">Quản lý lớp học</Link>,
+            label: <Link to="/admin/class-student">Quản lý lớp học -tuan</Link>,
         },
         {
             key: "sub8",
             label: (
-                <Link to="/admin/semestersList">Quản lý kỳ học - atuan</Link>
+                <Link to="/admin/list-semesters">Quản lý kỳ học - atuan</Link>
+            ),
+        },
+        {
+            key: "sub9",
+            label: (
+                <Link to="/admin/list-subject">Quản lý môn học - atuan</Link>
+            ),
+        },
+        {
+            key: "sub10",
+            label: (
+                <Link to="/admin/list-courses">Quản lý khóa học - atuan</Link>
             ),
         },
     ];

@@ -15,7 +15,7 @@ import moment from "moment";
 
 const { Option } = Select;
 
-const ListCourse = () => {
+const ListSubjects = () => {
     const [courses, setCourses] = useState([]);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -28,21 +28,21 @@ const ListCourse = () => {
             const data = [
                 {
                     id: 1,
-                    name: "Khóa 1",
+                    name: "Khóa 18.1",
                     startDate: "2024-01-01",
                     endDate: "2024-04-30",
                     status: "Đang diễn ra",
                 },
                 {
                     id: 2,
-                    name: "Khóa 2",
+                    name: "Khóa 18.2",
                     startDate: "2024-05-01",
                     endDate: "2024-08-31",
                     status: "Chờ diễn ra",
                 },
                 {
                     id: 3,
-                    name: "Khóa 3",
+                    name: "Khóa 18.3",
                     startDate: "2024-09-01",
                     endDate: "2024-12-31",
                     status: "Chờ diễn ra",
@@ -339,4 +339,4 @@ const ListCourse = () => {
     );
 };
 
-export default ListCourse;
+export default ListSubjects;

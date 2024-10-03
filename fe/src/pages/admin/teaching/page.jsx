@@ -87,7 +87,8 @@ const Teach = () => {
         fetchCourses();
     }, []);
 
-    const handleSearch = (value) => {
+    const handleSearch = (event) => {
+        const value = event.target.value; // Lấy giá trị từ input
         const filtered = courses.filter((course) =>
             course.name.toLowerCase().includes(value.toLowerCase())
         );
@@ -153,8 +154,8 @@ const Teach = () => {
 
                         <div>
                             <Input.Search
-                                placeholder="Tìm kiếm ngành học..."
-                                onSearch={handleSearch}
+                                placeholder="Tìm kiếm môn học..."
+                                onChange={handleSearch} // Sử dụng onChange để gọi hàm tìm kiếm
                                 style={{ width: 300 }}
                                 allowClear
                             />

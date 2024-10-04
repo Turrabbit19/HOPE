@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Created by https://www.toptal.com/developers/gitignore/api/react,laravel
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,laravel
 
@@ -43,3 +44,24 @@ thumb
 sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/react,laravel
+=======
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.fleet
+/.idea
+/.vscode
+>>>>>>> duck

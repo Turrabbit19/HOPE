@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Course;
 use App\Models\Major;
 use App\Models\Subject;
 use Illuminate\Database\Migrations\Migration;
@@ -15,6 +16,7 @@ return new class extends Migration
     {
         Schema::create('major_subjects', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
             $table->integer('semester_order');

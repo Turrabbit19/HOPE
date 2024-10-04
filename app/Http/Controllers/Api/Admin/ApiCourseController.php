@@ -83,7 +83,6 @@ class ApiCourseController extends Controller
             $course = Course::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $course->update($data);
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);

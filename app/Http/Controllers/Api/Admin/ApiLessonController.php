@@ -110,7 +110,6 @@ class ApiLessonController extends Controller
             $lesson = Lesson::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $lesson->update($data);
             
             return response()->json(['data' =>$lesson, 'message' => 'Tạo mới thành công'], 201);

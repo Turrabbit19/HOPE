@@ -133,7 +133,6 @@ class ApiUserController extends Controller
             $user = User::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $user->update($data);
 
             return response()->json(['data' => $user, 'message' => 'Cập nhật thành công'], 200);

@@ -112,7 +112,6 @@ class ApiTeacherController extends Controller
             $teacher = Teacher::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $teacher->update($data);
 
             return response()->json(['data' => $teacher, 'message' => 'Cập nhật thành công'], 200);

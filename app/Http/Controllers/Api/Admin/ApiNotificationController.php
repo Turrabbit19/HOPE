@@ -119,7 +119,6 @@ class ApiNotificationController extends Controller
             $notification = Notification::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $notification->update($data);
 
             return response()->json(['data' => $notification, 'message' => 'Cập nhật thành công'], 200);

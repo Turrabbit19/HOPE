@@ -93,7 +93,6 @@ class ApiShiftController extends Controller
             $shift = Shift::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $shift->update($data);
 
             return response()->json(['data' => $shift, 'message' => 'Cập nhật thành công'], 200);

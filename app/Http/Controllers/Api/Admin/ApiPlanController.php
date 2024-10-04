@@ -119,7 +119,6 @@ class ApiPlanController extends Controller
             $plan = Plan::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $plan->update($data);
 
             return response()->json(['data' => $plan, 'message' => 'Cập nhật thành công'], 200);

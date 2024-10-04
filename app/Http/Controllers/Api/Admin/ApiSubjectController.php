@@ -69,6 +69,7 @@ class ApiSubjectController extends Controller
             'credit' => 'required|integer|min:1|max:19',
             'majors' => 'required|array',
             'majors.*.id' => 'required|exists:majors,id',
+            'majors.*.course_id' => 'required|exists:courses,id',
             'majors.*.semester_order' => 'required|integer|min:1',
         ]);
 
@@ -81,7 +82,11 @@ class ApiSubjectController extends Controller
             $subject = Subject::create($data);
 
             $majorsWithOrder = collect($data['majors'])->mapWithKeys(function ($major) {
-                return [$major['id'] => ['semester_order' => $major['semester_order']]];
+                return [$major['id'] => [
+                    'course_id' => $major['course_id'],
+                    'semester_order' => $major['semester_order']
+                    ]
+                ];
             });
             
             $subject->majors()->sync($majorsWithOrder);
@@ -113,6 +118,7 @@ class ApiSubjectController extends Controller
             'credit' => 'sometimes|integer|min:1|max:19',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',
+            'majors.*.course_id' => 'sometimes|exists:courses,id',
             'majors.*.semester_order' => 'sometimes|integer|min:1',
         ]);
 
@@ -124,12 +130,15 @@ class ApiSubjectController extends Controller
             $subject = Subject::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $subject->update($data);
 
             if(isset($data['majors'])) {
                 $majorsWithOrder = collect($data['majors'])->mapWithKeys(function ($major) {
-                    return [$major['id'] => ['semester_order' => $major['semester_order']]];
+                    return [$major['id'] => [
+                        'course_id' => $major['course_id'],
+                        'semester_order' => $major['semester_order']
+                        ]
+                    ];
                 });
                 
                 $subject->majors()->sync($majorsWithOrder);

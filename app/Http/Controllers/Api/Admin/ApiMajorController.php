@@ -84,7 +84,6 @@ class ApiMajorController extends Controller
             $major = Major::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $major->update($data);
 
             return response()->json(['data' => $major, 'message' => 'Cập nhật thành công'], 200);

@@ -74,7 +74,6 @@ class ApiRoleController extends Controller
             $role = Role::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $role->update($data);
 
             return response()->json(['data' => $role, 'message' => 'Cập nhật thành công'], 200);

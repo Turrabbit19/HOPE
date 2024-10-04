@@ -124,7 +124,6 @@ class ApiStudentController extends Controller
             $student = Student::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $student->update($data);
 
             return response()->json(['data' => $student, 'message' => 'Cập nhật thành công'], 200);

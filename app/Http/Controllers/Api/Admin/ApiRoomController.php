@@ -77,7 +77,6 @@ class ApiRoomController extends Controller
             $room = Room::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $room->update($data);
 
             return response()->json(['data' => $room, 'message' => 'Cập nhật thành công'], 200);

@@ -86,7 +86,6 @@ class ApiSectionController extends Controller
             $section = Section::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $section->update($data);
 
             return response()->json(['data' => $section, 'message' => 'Cập nhật thành công'], 200);

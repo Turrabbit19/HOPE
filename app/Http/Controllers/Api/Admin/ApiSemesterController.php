@@ -125,7 +125,6 @@ class ApiSemesterController extends Controller
             $semester = Semester::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $semester->update($data);
 
             if (isset($data['courses'])) {

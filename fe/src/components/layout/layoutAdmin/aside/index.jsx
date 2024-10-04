@@ -1,9 +1,16 @@
-import React from "react";
-
-import { Layout, Menu, theme } from "antd";
+import React, { useState } from "react";
+import { Layout, Menu, theme, Button } from "antd";
 import { Link } from "react-router-dom";
+import {
+    DoubleLeftOutlined,
+    DoubleRightOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+} from "@ant-design/icons";
 
 const AsideAdmin = () => {
+    const [collapsed, setCollapsed] = useState(false);
+
     const navigates = [
         { name: "Quản lý sinh viên", link: "/admin/student_manager" },
         { name: "Quản lý giảng viên", link: "/admin/teacher-manager" },
@@ -17,25 +24,27 @@ const AsideAdmin = () => {
         { name: "Quản lý khóa học", link: "/admin/list-courses" },
         { name: "Quản lý phòng học", link: "/admin/classrooms" },
     ];
+
     const { Sider } = Layout;
 
     const items2 = [
         {
             key: "sub1",
-            label: "Quản lý nhân lực",
-            children: navigates.map((item, index) => ({
+            label: "Quản lý chương trình dạy",
+            children: study_manager.map((item, index) => ({
                 key: `sub1-${index + 1}`,
                 label: <Link to={item.link}>{item.name}</Link>,
             })),
         },
         {
             key: "sub2",
-            label: "Quản lý chương trình dạy",
-            children: study_manager.map((item, index) => ({
+            label: "Quản lý nhân lực",
+            children: navigates.map((item, index) => ({
                 key: `sub2-${index + 1}`,
                 label: <Link to={item.link}>{item.name}</Link>,
             })),
         },
+
         {
             key: "sub3",
             label: <Link to="/admin/majors">Quản lý ngành học</Link>,
@@ -57,13 +66,27 @@ const AsideAdmin = () => {
     const {
         token: { colorBgContainer },
     } = theme.useToken();
+
     return (
         <Sider
-            width={300}
+            width={250}
+            collapsible
+            collapsed={collapsed}
             style={{
                 background: colorBgContainer,
             }}
         >
+            <Button
+                type="text"
+                icon={
+                    collapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />
+                }
+                onClick={() => setCollapsed(!collapsed)}
+                style={{
+                    marginBottom: 16,
+                    width: "100%",
+                }}
+            />
             <Menu
                 mode="inline"
                 defaultSelectedKeys={["1"]}

@@ -212,7 +212,7 @@ const Router = createBrowserRouter([
                 element: (
                     <>
                         <BreadCrumb />
-                        <ListSubject />
+                        <ListSubjects />
                     </>
                 ),
             },

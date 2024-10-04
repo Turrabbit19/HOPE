@@ -201,7 +201,7 @@ const ListCourse = () => {
     return (
         <>
             <div className="listCourse">
-                <div className="container">
+                <div className="">
                     <div className="flex gap-4 row-cols-2 relative">
                         {/* Item */}
                         <div className="col-12">

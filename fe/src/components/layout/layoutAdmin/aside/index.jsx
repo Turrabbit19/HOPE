@@ -59,15 +59,8 @@ const AsideAdmin = () => {
     } = theme.useToken();
     return (
         <Sider
-            className="aside-overlay open close"
             width={300}
             style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                zIndex: 999,
-                boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
                 background: colorBgContainer,
             }}
         >

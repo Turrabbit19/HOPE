@@ -8,6 +8,7 @@ import {
     DatePicker,
     Select,
     Space,
+    Pagination,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -106,145 +107,168 @@ const ListSubjects = () => {
 
     return (
         <div className="row row-cols-2 g-3">
-            <div className="col-12 justify-between flex">
-                <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-                    Quản Lý Khóa Học
-                    <button>
-                        <img src="/assets/svg/reload.svg" alt="reload..." />
-                    </button>
-                </h1>
+            <div className="col-12">
+                <div className="col-12">
+                    <div className="justify-between flex">
+                        <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
+                            Quản Lý Khóa Học
+                            <button>
+                                <img
+                                    src="/assets/svg/reload.svg"
+                                    alt="reload..."
+                                />
+                            </button>
+                        </h1>
 
-                <div>
-                    <Input.Search
-                        placeholder="Tìm kiếm khóa học..."
-                        onSearch={handleSearch}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        style={{ width: 300 }}
-                        allowClear
-                    />
+                        <div>
+                            <Input.Search
+                                placeholder="Tìm kiếm khóa học..."
+                                onSearch={handleSearch}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                style={{ width: 300 }}
+                                allowClear
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-6">
+                        <Button
+                            onClick={showAddModal}
+                            className="btn btn--outline text-[#7017E2]"
+                        >
+                            <PlusOutlined />
+                            Tạo mới
+                        </Button>
+
+                        <span className="font-bold text-[14px] text-[#000]">
+                            {filteredCourses.length} items
+                        </span>
+                    </div>
                 </div>
-            </div>
-
-            <div className="col-12 flex justify-between items-center mt-6">
-                <Button
-                    onClick={showAddModal}
-                    className="btn btn--outline text-[#7017E2]"
-                >
-                    <PlusOutlined />
-                    Tạo mới
-                </Button>
-
-                <span className="font-bold text-[14px] text-[#000]">
-                    {filteredCourses.length} items
-                </span>
-            </div>
-            {filteredCourses.length > 0 ? (
-                filteredCourses.map((course) => (
-                    <div className="col" key={course.id}>
-                        <div className="teaching__card">
-                            <div className="teaching__card-top">
-                                <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
-                                    <img src="/assets/svg/share.svg" alt="" />
-                                    Chuyên ngành:{" "}
-                                    <p className="text-red-300 uppercase ml-2 font-bold">
-                                        {course.name}
-                                    </p>
-                                </h2>
-                                <button>
-                                    <img
-                                        src="/assets/svg/more_detail.svg"
-                                        alt=""
-                                    />
-                                </button>
-                            </div>
-
-                            <div className="teaching__card-body">
-                                <div className="mt-6 flex flex-col gap-8 pb-6">
-                                    <div className="flex gap-6">
-                                        <p className="text-[#9E9E9E]">
-                                            Trạng thái:
-                                        </p>
-                                        <div className="teaching__card-status">
+                <div className="row row-cols-2 g-3">
+                    {filteredCourses.length > 0 ? (
+                        filteredCourses.map((course) => (
+                            <div className="col" key={course.id}>
+                                <div className="teaching__card">
+                                    <div className="teaching__card-top">
+                                        <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                                             <img
-                                                className="svg-green"
-                                                src="/assets/svg/status.svg"
-                                                alt="status"
+                                                src="/assets/svg/share.svg"
+                                                alt=""
                                             />
-                                            <span className="text-[#44CC15] text-[12px]">
-                                                {course.status}
-                                            </span>
+                                            Chuyên ngành:{" "}
+                                            <p className="text-red-300 uppercase ml-2 font-bold">
+                                                {course.name}
+                                            </p>
+                                        </h2>
+                                        <button>
+                                            <img
+                                                src="/assets/svg/more_detail.svg"
+                                                alt=""
+                                            />
+                                        </button>
+                                    </div>
+
+                                    <div className="teaching__card-body">
+                                        <div className="mt-6 flex flex-col gap-8 pb-6">
+                                            <div className="flex gap-6">
+                                                <p className="text-[#9E9E9E]">
+                                                    Trạng thái:
+                                                </p>
+                                                <div className="teaching__card-status">
+                                                    <img
+                                                        className="svg-green"
+                                                        src="/assets/svg/status.svg"
+                                                        alt="status"
+                                                    />
+                                                    <span className="text-[#44CC15] text-[12px]">
+                                                        {course.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-6">
+                                                <p className="text-[#9E9E9E]">
+                                                    Ngày bắt đầu:
+                                                </p>
+                                                <p className="font-bold text-[#000]">
+                                                    {course.startDate}
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-6">
+                                                <p className="text-[#9E9E9E]">
+                                                    Ngày kết thúc:
+                                                </p>
+                                                <p className="font-bold text-[#000]">
+                                                    {course.endDate}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex gap-6">
-                                        <p className="text-[#9E9E9E]">
-                                            Ngày bắt đầu:
-                                        </p>
-                                        <p className="font-bold text-[#000]">
-                                            {course.startDate}
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-6">
-                                        <p className="text-[#9E9E9E]">
-                                            Ngày kết thúc:
-                                        </p>
-                                        <p className="font-bold text-[#000]">
-                                            {course.endDate}
-                                        </p>
+
+                                    <div className="teaching__card-bottom">
+                                        <Link
+                                            to="list"
+                                            className="flex items-center gap-3 text-[#1167B4] font-bold"
+                                        >
+                                            <img
+                                                src="/assets/svg/setting.svg"
+                                                alt="setting"
+                                            />
+                                            Quản Lý Khóa Học
+                                        </Link>
+                                        <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
+                                            <img
+                                                src="/assets/svg/eye.svg"
+                                                alt="detail"
+                                            />
+                                            Chi Tiết
+                                        </button>
+                                        <Popconfirm
+                                            title="Xóa khóa học"
+                                            onConfirm={() =>
+                                                confirmDelete(course.id)
+                                            }
+                                            okText="Có"
+                                            cancelText="Không"
+                                        >
+                                            <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                                                <img
+                                                    src="/assets/svg/remove.svg"
+                                                    alt="remove"
+                                                />
+                                                Xóa khỏi Danh Sách
+                                            </button>
+                                        </Popconfirm>
+
+                                        <button
+                                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                                            onClick={() =>
+                                                showEditModal(course)
+                                            }
+                                        >
+                                            <EditOutlined />
+                                            Sửa Thông Tin
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="teaching__card-bottom">
-                                <Link
-                                    to="list"
-                                    className="flex items-center gap-3 text-[#1167B4] font-bold"
-                                >
-                                    <img
-                                        src="/assets/svg/setting.svg"
-                                        alt="setting"
-                                    />
-                                    Quản Lý Khóa Học
-                                </Link>
-                                <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
-                                    <img
-                                        src="/assets/svg/eye.svg"
-                                        alt="detail"
-                                    />
-                                    Chi Tiết
-                                </button>
-                                <Popconfirm
-                                    title="Xóa khóa học"
-                                    onConfirm={() => confirmDelete(course.id)}
-                                    okText="Có"
-                                    cancelText="Không"
-                                >
-                                    <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                                        <img
-                                            src="/assets/svg/remove.svg"
-                                            alt="remove"
-                                        />
-                                        Xóa khỏi Danh Sách
-                                    </button>
-                                </Popconfirm>
-
-                                <button
-                                    className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                                    onClick={() => showEditModal(course)}
-                                >
-                                    <EditOutlined />
-                                    Sửa Thông Tin
-                                </button>
-                            </div>
+                        ))
+                    ) : (
+                        <div className="col-12 text-center">
+                            <p className="text-red-500 font-bold text-lg">
+                                Không tìm thấy khóa học
+                            </p>
                         </div>
-                    </div>
-                ))
-            ) : (
-                <div className="col-12 text-center">
-                    <p className="text-red-500 font-bold text-lg">
-                        Không tìm thấy khóa học
-                    </p>
+                    )}
                 </div>
-            )}
+
+                <Pagination
+                    className="mt-12"
+                    align="center"
+                    defaultCurrent={1}
+                    total={50}
+                />
+            </div>
 
             <Modal
                 title={

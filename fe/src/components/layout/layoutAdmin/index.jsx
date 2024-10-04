@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import HeaderAdmin from "./header";
 import { Layout } from "antd";
 import AsideAdmin from "./aside";
@@ -7,22 +7,15 @@ import { Outlet } from "react-router-dom";
 import List from "../../../pages/admin/list";
 
 const LayoutAdmin = () => {
-    const [isAsideVisible, setIsAsideVisible] = useState(false);
-
-    const toggleAside = () => {
-        setIsAsideVisible(!isAsideVisible);
-    };
-
     return (
         <Layout style={{ minHeight: "100vh" }}>
-            <HeaderAdmin toggleAside={toggleAside} />
-            <Layout style={{ position: "relative" }}>
-                {isAsideVisible && <AsideAdmin />}
+            <HeaderAdmin />
+            <Layout className="">
+                <AsideAdmin />
                 <Layout
+                    className=""
                     style={{
-                        padding: "0 12px 12px",
-                        position: "relative",
-                        zIndex: 1,
+                        padding: "0 24px 24px",
                     }}
                 >
                     <ContentAdmin />
@@ -31,5 +24,4 @@ const LayoutAdmin = () => {
         </Layout>
     );
 };
-
 export default LayoutAdmin;

@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiUserController extends Controller
 {
+    public function getUserCount()
+    {
+        $count = User::count();
+        $formattedNumber = str_pad($count, 5, '0', STR_PAD_LEFT);
+        return response()->json(['user_count' => $formattedNumber]);
+    }
     public function index()
     {
         try {

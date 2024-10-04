@@ -16,7 +16,10 @@ import SemesterManage from "../pages/admin/semesters";
 import SubjectManager from "../pages/admin/subjects";
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
-import StudentManager from "../pages/admin/userManager/student";
+import StudentManager from "../pages/admin/userManager/student/list";
+import AddStudent from "../pages/admin/userManager/student/add";
+import UpdateStudent from "../pages/admin/userManager/student/update";
+import Student from "../pages/admin/userManager/student";
 // import LayoutStudent from "../components/layout/layoutStudent";
 
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
@@ -128,9 +131,23 @@ const Router = createBrowserRouter([
         element: (
           <>
             <BreadCrumb />
-            <StudentManager/>
+            <Student/>
           </>
         ),
+        children: [
+          {
+            path: "",
+            element: <StudentManager />,
+          },
+          {
+            path: "add",
+            element: <AddStudent />,
+          },
+          {
+            path: "update",
+            element: <UpdateStudent />,
+          },
+        ],
       },
     ],
   },

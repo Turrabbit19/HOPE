@@ -36,6 +36,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('admin')->group(function () {
     Route::apiResource('roles', ApiRoleController::class);
     Route::apiResource('users', ApiUserController::class);
+    Route::get('/user-count', [ApiUserController::class, 'getUserCount']);
+
     Route::apiResource('students', ApiStudentController::class);
     Route::apiResource('teachers', ApiTeacherController::class);
     Route::apiResource('courses', ApiCourseController::class);

@@ -39,6 +39,7 @@ import Testing from "../pages/test/page";
 import ListSemester from "../pages/admin/semesters/list/page";
 import ListCourseAll from "../pages/admin/courses/list/page";
 import ListSubjects from "../pages/admin/subjects/list/page";
+import ClassRoom from "../pages/admin/classroom/page";
 
 const Router = createBrowserRouter([
     {
@@ -250,6 +251,16 @@ const Router = createBrowserRouter([
                     <>
                         <BreadCrumb />
                         <StudentManager />
+                    </>
+                ),
+            },
+
+            {
+                path: "classrooms",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ClassRoom />
                     </>
                 ),
             },

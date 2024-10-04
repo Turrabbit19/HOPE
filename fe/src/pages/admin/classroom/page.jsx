@@ -16,7 +16,7 @@ import moment from "moment";
 
 const { Option } = Select;
 
-const Testing = () => {
+const ClassRoom = () => {
     const [classrooms, setClassrooms] = useState([]);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -374,4 +374,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default ClassRoom;

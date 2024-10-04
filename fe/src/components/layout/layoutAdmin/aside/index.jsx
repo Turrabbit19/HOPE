@@ -8,6 +8,15 @@ const AsideAdmin = () => {
         { name: "Quản lý sinh viên", link: "/admin/student_manager" },
         { name: "Quản lý giảng viên", link: "/admin/teacher-manager" },
     ];
+
+    const study_manager = [
+        { name: "Quản lý ngành học", link: "/admin/teaching" },
+        { name: "Quản lý lớp học", link: "/admin/class-student" },
+        { name: "Quản lý Quản lý kỳ học", link: "/admin/list-semesters" },
+        { name: "Quản lý môn học", link: "/admin/list-subject" },
+        { name: "Quản lý khóa học", link: "/admin/list-courses" },
+        { name: "Quản lý phòng học", link: "/admin/classrooms" },
+    ];
     const { Sider } = Layout;
 
     const items2 = [
@@ -21,45 +30,27 @@ const AsideAdmin = () => {
         },
         {
             key: "sub2",
-            label: <Link to="/admin/majors">Quản lý ngành học</Link>,
+            label: "Quản lý chương trình dạy",
+            children: study_manager.map((item, index) => ({
+                key: `sub2-${index + 1}`,
+                label: <Link to={item.link}>{item.name}</Link>,
+            })),
         },
         {
             key: "sub3",
-            label: <Link to="/admin/courses">Quản lý khóa học</Link>,
+            label: <Link to="/admin/majors">Quản lý ngành học</Link>,
         },
         {
             key: "sub4",
-            label: <Link to="/admin/semesters">Quản lý kỳ học</Link>,
+            label: <Link to="/admin/courses">Quản lý khóa học</Link>,
         },
         {
             key: "sub5",
-            label: <Link to="/admin/subjects">Quản lý môn học</Link>,
+            label: <Link to="/admin/semesters">Quản lý kỳ học</Link>,
         },
         {
             key: "sub6",
-            label: <Link to="/admin/teaching">Quản lý Ngành Học -atuan</Link>,
-        },
-        {
-            key: "sub7",
-            label: <Link to="/admin/class-student">Quản lý lớp học -tuan</Link>,
-        },
-        {
-            key: "sub8",
-            label: (
-                <Link to="/admin/list-semesters">Quản lý kỳ học - atuan</Link>
-            ),
-        },
-        {
-            key: "sub9",
-            label: (
-                <Link to="/admin/list-subject">Quản lý môn học - atuan</Link>
-            ),
-        },
-        {
-            key: "sub10",
-            label: (
-                <Link to="/admin/list-courses">Quản lý khóa học - atuan</Link>
-            ),
+            label: <Link to="/admin/subjects">Quản lý môn học</Link>,
         },
     ];
 

@@ -1,0 +1,250 @@
+import { createBrowserRouter } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import LandingPage from "../components/landingPage";
+import NotFound from "../components/NotFound";
+// import LayoutAdmin from "../components/layout/layoutAdmin";
+// import List from "../pages/admin/list";
+// import Schedule from "../pages/admin/schedul";
+import Loading from "../components/loading";
+import ScrollToTopButton from "../components/scrollToTopButton";
+import BreadCrumb from "./breadcrumb";
+import MajorManagement from "../pages/admin/major";
+import Role from "../pages/admin/roles";
+import UserManager from "../pages/admin/userManager";
+import CoursesManager from "../pages/admin/courses";
+import SemesterManage from "../pages/admin/semesters";
+import Teach from "../pages/admin/teaching/page";
+import TeachAdd from "../pages/admin/teaching/add/page";
+import ListCourse from "../pages/admin/teaching/listCourse/page";
+import { ClassStudent } from "../pages/admin/classStudent/ClassStudent";
+import { AddClassStudent } from "../pages/admin/classStudent/AddClassStudent";
+import { ClassDetailLayout } from "../components/layout/ClassDetailLayout";
+import { ClassStudentDetail } from "../pages/admin/classStudent/ClassStudentDetail";
+import { AddScheduleManual } from "../pages/admin/classStudent/schedule/AddScheduleManual";
+import { AddScheduleSeries } from "../pages/admin/classStudent/schedule/AddScheduleSeries";
+import { AccountManage } from "../pages/admin/classStudent/account-manage/AccountManage";
+import { Resource } from "../pages/admin/classStudent/resource/Resource";
+import { SubjectManager } from "../pages/admin/subject-manager/SubjectManager";
+import { AddSubject } from "../pages/admin/subject-manager/AddSubject";
+import { SubjectDetailLayout } from "../components/layout/SubjectDetailLayout";
+import SubjectDetail from "../pages/admin/subject-manager/SubjectDetail";
+import EditSubject from "../pages/admin/subject-manager/EditSubject";
+import { SellInfo } from "../pages/admin/subject-manager/SellInfo";
+import { Document } from "../pages/admin/subject-manager/Document";
+import { SubjectResource } from "../pages/admin/subject-manager/SubjectResource";
+import { EditSubjectResource } from "../pages/admin/subject-manager/EditSubjectResource";
+import { Exercise } from "../pages/admin/subject-manager/Exercise";
+import { Quizz } from "../pages/admin/subject-manager/Quizz";
+// import LayoutStudent from "../components/layout/layoutStudent";
+
+const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
+const Schedule = lazy(() => import("../pages/student/schedul"));
+const List = lazy(() => import("../pages/admin/list"));
+const LayoutStudent = lazy(() => import("../components/layout/layoutStudent"));
+const StudentInformation = lazy(() => import("../pages/student/information"));
+
+const Router = createBrowserRouter([
+  {
+    // index,
+    path: "",
+    element: <LandingPage />,
+  },
+  {
+    path: "admin",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <LayoutAdmin />
+        <ScrollToTopButton />
+      </Suspense>
+    ),
+
+    children: [
+      {
+        path: "list",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <List />
+          </Suspense>
+        ),
+      },
+
+      {
+        path: "teaching",
+        element: (
+          <>
+            <BreadCrumb />
+            <Teach />
+          </>
+        ),
+      },
+      {
+        path: "teaching/add",
+        element: (
+          <>
+            <BreadCrumb />
+            <TeachAdd />
+          </>
+        ),
+      },
+      {
+        path: "class-student",
+        element: <ClassStudent />,
+      },
+      {
+        path: "class-student/add",
+        element: <AddClassStudent />,
+      },
+      {
+        path: "class-student/:classId",
+        element: <ClassDetailLayout />,
+        children: [
+          {
+            path: "",
+            element: <ClassStudentDetail />,
+          },
+          {
+            path: "schedule/add-manual",
+            element: <AddScheduleManual />,
+          },
+          {
+            path: "schedule/add-series",
+            element: <AddScheduleSeries />,
+          },
+          {
+            path: "account-manage",
+            element: <AccountManage />,
+          },
+          {
+            path: "resource",
+            element: <Resource />,
+          },
+        ],
+      },
+      {
+        path: "subject",
+        element: <SubjectManager />,
+      },
+      {
+        path: "subject/add",
+        element: <AddSubject />,
+      },
+      {
+        path: "subject/:subjectId",
+        element: <SubjectDetailLayout />,
+        children: [
+          { path: "", element: <SubjectDetail /> },
+          { path: "edit", element: <EditSubject /> },
+          { path: "sell-info", element: <SellInfo /> },
+          { path: "document", element: <Document /> },
+          { path: "resource", element: <SubjectResource /> },
+          { path: "resource/edit", element: <EditSubjectResource /> },
+          {
+            path: "exercise",
+            element: <Exercise />,
+          },
+          {
+            path: "exercise/quizz/:quizzId",
+            element: <Quizz />,
+          },
+        ],
+      },
+      {
+        path: "teaching/list",
+        element: (
+          <>
+            <BreadCrumb />
+            <ListCourse />
+          </>
+        ),
+      },
+
+      {
+        path: "majors",
+        element: (
+          <>
+            <BreadCrumb />
+            <MajorManagement />
+          </>
+        ),
+      },
+      {
+        path: "roles",
+        element: (
+          <>
+            <BreadCrumb />
+            <Role />
+          </>
+        ),
+      },
+      {
+        path: "user-manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <UserManager />
+          </>
+        ),
+      },
+      {
+        path: "courses",
+        element: (
+          <>
+            <BreadCrumb />
+            <CoursesManager />
+          </>
+        ),
+      },
+      {
+        path: "semesters",
+        element: (
+          <>
+            <BreadCrumb />
+            <SemesterManage />
+          </>
+        ),
+      },
+      {
+        path: "subjects",
+        element: (
+          <>
+            <BreadCrumb />
+            <SemesterManage />
+          </>
+        ),
+      },
+    ],
+  },
+  {
+    path: "student",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <LayoutStudent />
+        <ScrollToTopButton />
+      </Suspense>
+    ),
+    children: [
+      {
+        path: "information",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <StudentInformation />
+          </Suspense>
+        ),
+      },
+      {
+        path: "schedule",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Schedule />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
+
+export default Router;

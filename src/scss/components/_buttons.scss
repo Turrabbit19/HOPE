@@ -1,0 +1,51 @@
+// BUTTON
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    height: 36px;
+    padding: 0 16px;
+    background: #eeeef5;
+
+    font-size: 1.6rem;
+    font-weight: 500;
+    user-select: none;
+
+    border-radius: 4px;
+
+    &--text {
+        color: #9e9da8;
+        background: transparent;
+    }
+
+    &--primary {
+        color: #fff;
+        background: #1167b4;
+    }
+
+    &--cancel {
+        color: #fff;
+        background: #795548;
+    }
+
+    &--outline {
+        background: transparent;
+        border: 1px solid #1167b4;
+    }
+
+    &--rounded {
+        border-radius: 99px;
+    }
+
+    &[disabled],
+    &--disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    &:hover {
+        opacity: 0.8;
+    }
+}

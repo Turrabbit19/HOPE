@@ -1,0 +1,25 @@
+.slider.next .list .item {
+    animation: slideNext 0.5s linear forwards;
+}
+
+.slider.prev .list .item {
+    animation: slidePrev 0.5s linear forwards;
+}
+
+@keyframes slideNext {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slidePrev {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}

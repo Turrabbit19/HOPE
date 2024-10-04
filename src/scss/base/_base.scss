@@ -1,0 +1,92 @@
+@use "../abstracts";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+*,
+::after,
+::before {
+    box-sizing: border-box;
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    font-size: 1.6rem;
+    font-family: monospace, sans-serif;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    border: none;
+    outline: none;
+    background-color: transparent;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+}
+
+.line-camp {
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+button,
+a,
+img,
+input,
+label,
+textarea,
+select {
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    border: none;
+    color: inherit;
+}
+
+input {
+    background: transparent;
+}
+img.svg-red {
+    filter: invert(43%) sepia(87%) saturate(6148%) hue-rotate(354deg)
+        brightness(102%) contrast(101%);
+}
+
+img.svg-green {
+    filter: invert(64%) sepia(49%) saturate(426%) hue-rotate(69deg)
+        brightness(101%) contrast(99%);
+}
+
+.container {
+    @include abstracts.screen(sm) {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+}
+
+i,
+em {
+    font-style: italic;
+}
+
+b,
+strong {
+    font-weight: 600;
+}

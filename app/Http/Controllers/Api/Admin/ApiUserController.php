@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class ApiUserController extends Controller
@@ -20,10 +23,10 @@ class ApiUserController extends Controller
                     'id' => $user->id,
                     'avatar' => $user->avatar,
                     'name' => $user->name,
-                    'email ' => $user->email,
-                    'phone ' => $user->phone,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
                     'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
-                    'gender' => $user->gender,
+                    'gender' => $user->gender ? "Nam" : "Nữ",
                     'ethnicity' => $user->ethnicity,
                     'address' => $user->address,
                     'role' => $user->role->name,
@@ -48,13 +51,13 @@ class ApiUserController extends Controller
     {
         try {
             $users = User::with('role')->get();
-            $data = collect($users->items())->map(function ($user) {
+            $data = $users->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'avatar' => $user->avatar,
                     'name' => $user->name,
-                    'email ' => $user->email,
-                    'phone ' => $user->phone,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
                     'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
                     'gender' => $user->gender,
                     'ethnicity' => $user->ethnicity,
@@ -72,7 +75,7 @@ class ApiUserController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|file|mimes:jpeg,png,jpg|max:5120', 
+            'avatar' => 'nullable|file|mimes:jpeg,png,jpg|max:5120', 
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:10|unique:users',
@@ -82,6 +85,15 @@ class ApiUserController extends Controller
             'address' => 'required|string|max:255',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
+
+            'course_id' => 'required_if:role_id,2|exists:courses,id',
+            'student_major_id' => 'required_if:role_id,2|exists:majors,id',
+            'current_semester' => 'required_if:role_id,2|integer|min:1', 
+            'student_code' => 'required_if:role_id,2|unique:students,student_code',
+            'status' => 'required_if:role_id,2|integer',
+
+            'teacher_major_id' => 'required_if:role_id,3|exists:majors,id',
+            'teacher_code' => 'required_if:role_id,3|unique:teachers,teacher_code',
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +102,44 @@ class ApiUserController extends Controller
 
         try {
             $data = $validator->validated();
-            $user = User::create($data);
+            
+            $avatarPath = null;
+            if ($request->hasFile('avatar')) {
+                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            }
+
+            $user = User::create([
+                'avatar' => $avatarPath,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'dob' => $data['dob'],
+                'gender' => $data['gender'],
+                'ethnicity' => $data['ethnicity'],
+                'address' => $data['address'],
+                'password' => Hash::make($data['password']),
+                'role_id' => $data['role_id'],
+            ]);
+
+            if ($data['role_id'] == 2) {
+                Student::create([
+                    'user_id' => $user->id,
+                    'course_id' => $data['course_id'],
+                    'major_id' => $data['student_major_id'],
+                    'current_semester' => $data['current_semester'],
+                    'student_code' => $data['student_code'],
+                    'status' => $data['status'],
+                ]);
+            }
+
+            if ($data['role_id'] == 3) {
+                Teacher::create([
+                    'user_id' => $user->id,
+                    'major_id' => $data['teacher_major_id'],
+                    'teacher_code' => $data['teacher_code'],
+                ]);
+            }
+
             
             return response()->json(['data' => $user, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -113,7 +162,7 @@ class ApiUserController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'sometimes|file|mimes:jpeg,png,jpg|max:5120', 
+            'avatar' => 'nullable|file|mimes:jpeg,png,jpg|max:5120', 
             'name' => 'sometimes|string|max:100',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,

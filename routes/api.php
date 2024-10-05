@@ -35,7 +35,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::prefix('admin')->group(function() {
+// Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::prefix('admin')->group(function () {
     Route::apiResource('roles', ApiRoleController::class);
     Route::apiResource('users', ApiUserController::class);
     Route::apiResource('students', ApiStudentController::class);
@@ -52,4 +53,5 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('shifts', ApiShiftController::class);
     Route::apiResource('classrooms', ApiClassroomController::class);
     Route::apiResource('schedules', ApiScheduleController::class);
+    // });
 });

@@ -25,7 +25,7 @@ class ApiStudentController extends Controller
                     'phone' => $student->user->phone,
                     'course' => $student->course->name,
                     'major' => $student->major->name,
-                    'current_semester' => $student->currentSemester->order,
+                    'current_semester' => $student->current_semester,
                     'status' => $student->status,
                 ];
             });
@@ -58,7 +58,7 @@ class ApiStudentController extends Controller
                     'phone' => $student->user->phone,
                     'course' => $student->course->name,
                     'major' => $student->major->name,
-                    'current_semester' => $student->currentSemester->order,
+                    'current_semester' => $student->current_semester,
                     'status' => $student->status,
                 ];
             });
@@ -74,7 +74,7 @@ class ApiStudentController extends Controller
             'user_id' => 'required|exists:users,id',
             'course_id' => 'required|exists:courses,id',
             'major_id' => 'required|exists:majors,id',
-            'current_semester_id' => 'required|exists:course_semesters,id', 
+            'current_semester' => 'required|integer|min:1', 
             'student_code' => 'required|string|max:19|unique:students',
             'status' => 'required|integer',
         ]);
@@ -111,7 +111,7 @@ class ApiStudentController extends Controller
             'user_id' => 'sometimes|exists:users,id',
             'course_id' => 'sometimes|exists:courses,id',
             'major_id' => 'sometimes|exists:majors,id',
-            'current_semester_id' => 'sometimes|exists:course_semesters,id',
+            'current_semester' => 'sometimes|integer|min:1', 
             'student_code' => 'sometimes|string|max:19|unique:students,student_code,' . $id,
             'status' => 'sometimes|integer',
         ]);

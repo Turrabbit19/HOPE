@@ -208,15 +208,15 @@ const Router = createBrowserRouter([
             //
 
             // giao diện list khóa học
-            {
-                path: "list-subject",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <ListSubjects />
-                    </>
-                ),
-            },
+            // {
+            //     path: "list-subject",
+            //     element: (
+            //         <>
+            //             <BreadCrumb />
+            //             <ListSubjects />
+            //         </>
+            //     ),
+            // },
 
             {
                 path: "subjects",

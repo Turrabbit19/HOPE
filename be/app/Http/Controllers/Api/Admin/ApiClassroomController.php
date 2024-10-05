@@ -14,15 +14,29 @@ class ApiClassroomController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+     public function restore($id)
+     {
+         $classroom = Classroom::withTrashed()->find($id);
+
+         if ($classroom) {
+             $classroom->restore();
+
+             return response()->json(['data' => $classroom, 'message' => 'Khôi phục thành công.'], 200);
+         }
+
+         return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
+     }
     public function index()
     {
         try {
-            $classrooms = Classroom::with('subject')->paginate(9);
+            $classrooms = Classroom::with('subject')->paginate(8);
 
             $data = collect($classrooms->items())->map(function($classroom) {
                 return [
                     'id' => $classroom->id,
                     'subject_name' => $classroom->subject->name,
+                    'subject_id' => $classroom->subject_id,
                     'code' => $classroom->code,
                     'max_students' => $classroom->max_students,
                     'status' => $classroom->status,

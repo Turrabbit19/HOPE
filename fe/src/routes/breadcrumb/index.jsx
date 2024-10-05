@@ -18,7 +18,7 @@ const BreadCrumb = () => {
   }
   return (
     <>
-      <Breadcrumb style={{ margin: "16px 0" }}>
+      <Breadcrumb style={{ }}>
         <Breadcrumb.Item>
           <Link to="/">Home</Link>
         </Breadcrumb.Item>

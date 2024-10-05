@@ -11,6 +11,29 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCourseController extends Controller
 {
+    public function restore($id)
+{
+    $course = Course::withTrashed()->find($id);
+
+    if ($course) {
+        $course->restore();
+
+        return response()->json(['data' => $course, 'message' => 'Khôi phục thành công.'], 200);
+    }
+
+    return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
+}
+
+    public function getCount()
+    {
+        $totalCourses = Course::withTrashed()->count();
+        $activeCourses = Course::where('status', 'active')->count();
+
+        return response()->json([
+            'total_courses' => $totalCourses,
+            'active_courses' => $activeCourses
+        ], 200);
+    }
     public function index()
     {
         try {
@@ -20,8 +43,8 @@ class ApiCourseController extends Controller
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
-                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($course->start_date),
+                    'end_date' => Carbon::parse($course->end_date),
                     'status' => $course->status ? "Đang diễn ra" : "Kết thúc",
                 ];
             });
@@ -47,7 +70,7 @@ class ApiCourseController extends Controller
         try {
             $data = $validator->validated();
             $course = Course::create($data);
-            
+
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -81,7 +104,7 @@ class ApiCourseController extends Controller
 
         try {
             $course = Course::findOrFail($id);
-            
+
             $data = $validator->validated();
             $course->update($data);
 

@@ -40,9 +40,7 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('users', ApiUserController::class);
     Route::apiResource('students', ApiStudentController::class);
     Route::apiResource('teachers', ApiTeacherController::class);
-    Route::apiResource('courses', ApiCourseController::class);
     Route::apiResource('semesters', ApiSemesterController::class);
-    Route::apiResource('majors', ApiMajorController::class);
 
     Route::apiResource('plans', ApiPlanController::class);
     Route::apiResource('subjects', ApiSubjectController::class);
@@ -51,10 +49,21 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('sections', ApiSectionController::class);
     Route::apiResource('notifications', ApiNotificationController::class);
     Route::apiResource('shifts', ApiShiftController::class);
-    Route::apiResource('classrooms', ApiClassroomController::class);
     Route::apiResource('schedules', ApiScheduleController::class);
 
 
+    Route::apiResource('classrooms', ApiClassroomController::class);
+    Route::post('/classrooms/{id}/restore', [ApiClassroomController::class, 'restore']);
+
+
+    Route::apiResource('majors', ApiMajorController::class);
     Route::get('majors/check-unique/{name}', [ApiMajorController::class, 'checkNameUnique']);
     Route::post('/majors/{id}/restore', [ApiMajorController::class, 'restore']);
+
+
+
+    Route::apiResource('courses', ApiCourseController::class);
+    Route::get('count/courses', [ApiCourseController::class, 'getCount']);
+    Route::post('/courses/{id}/restore', [ApiCourseController::class, 'restore']);
+
 });

@@ -70,13 +70,39 @@ import {
       try {
         await instance.delete(`admin/majors/${id}`);
         setMajors(majors.filter((item) => item.id !== id));
-        message.success("Xóa ngành học thành công");
+        message.success(
+            <span>
+                Xóa mềm thành công,
+                <button
+                    onClick={() => undoMajor(id)}
+                    className="underline"
+                >
+                    Hoàn tác
+                </button>
+            </span>,
+            5
+        )
       } catch (error) {
         console.error(error.message);
       } finally {
         setLoading(false);
       }
     };
+
+    const undoMajor = async (id) => {
+        try {
+            const response = await instance.post(`admin/majors/${id}/restore`);
+        const restoredMajor = response.data.data;
+        message.success("Khôi phục thành công");
+        
+        setMajors((prevMajors) => [...prevMajors, restoredMajor]);
+        } catch (error) {
+            console.log(error.message);
+            message.error("Khôi phục thất bại thất bại");
+        } finally {
+            setLoading(false);
+        }
+    }
   
     const onHandleUpdate = async (values) => {
       setLoading(true);

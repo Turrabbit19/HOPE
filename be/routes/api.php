@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
 use App\Http\Controllers\Api\Admin\ApiMajorController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Api\Admin\ApiNotificationController;
 use App\Http\Controllers\Api\Admin\ApiPlanController;
 use App\Http\Controllers\Api\Admin\ApiRoleController;
 use App\Http\Controllers\Api\Admin\ApiRoomController;
+use App\Http\Controllers\Api\Admin\ApiScheduleController;
 use App\Http\Controllers\Api\Admin\ApiSectionController;
 use App\Http\Controllers\Api\Admin\ApiSemesterController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
@@ -41,6 +43,7 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('courses', ApiCourseController::class);
     Route::apiResource('semesters', ApiSemesterController::class);
     Route::apiResource('majors', ApiMajorController::class);
+
     Route::apiResource('plans', ApiPlanController::class);
     Route::apiResource('subjects', ApiSubjectController::class);
     Route::apiResource('rooms', ApiRoomController::class);
@@ -48,4 +51,10 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('sections', ApiSectionController::class);
     Route::apiResource('notifications', ApiNotificationController::class);
     Route::apiResource('shifts', ApiShiftController::class);
+    Route::apiResource('classrooms', ApiClassroomController::class);
+    Route::apiResource('schedules', ApiScheduleController::class);
+
+
+    Route::get('majors/check-unique/{name}', [ApiMajorController::class, 'checkNameUnique']);
+    Route::post('/majors/{id}/restore', [ApiMajorController::class, 'restore']);
 });

@@ -12,9 +12,18 @@ class Semester extends Model
 
     protected $fillable = [
         'name',
-        'number',
-        'course_id',
         'start_date',
         'end_date',
+        'status',
     ];
+
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'course_semesters')
+                    ->withPivot('order');
+    }
 }

@@ -17,8 +17,18 @@ class ApiShiftController extends Controller
     public function index()
     {
         try {
-            $shifts = Shift::select('id', 'name', 'start_time', 'end_time')->get();
-            return response()->json(['data' => $shifts], 200);
+            $shifts = Shift::get();
+            
+            $data = $shifts->map(function ($shift) {
+                return [
+                    'id' => $shift->id,
+                    'name' => $shift->name,
+                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'), 
+                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),     
+                ];
+            });            
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
@@ -83,7 +93,6 @@ class ApiShiftController extends Controller
             $shift = Shift::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $shift->update($data);
 
             return response()->json(['data' => $shift, 'message' => 'Cập nhật thành công'], 200);

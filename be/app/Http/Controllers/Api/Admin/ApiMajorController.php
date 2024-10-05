@@ -11,11 +11,31 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiMajorController extends Controller
 {
+
+    public function checkNameUnique($name)
+    {
+        $exists = Major::where('name', $name)->exists();
+
+        return response()->json([
+            'is_unique' => !$exists,
+        ]);
+    }
     public function index()
     {
         try {
-            $majors = Major::select('id', 'name')->get();
-            return response()->json(['data' => $majors], 200);
+            $majors = Major::get();
+
+            $data = $majors->map(function ($major) {
+                return [
+                    'id' => $major->id,
+                    'code' => $major->code,
+                    'name' => $major->name,
+                    'description' => $major->description,
+                    'status' => $major->status
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
@@ -24,7 +44,9 @@ class ApiMajorController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:majors'
+            'name' => 'required|string|max:50|unique:majors,name',
+            'description' => 'required|string',
+            'status' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -33,6 +55,11 @@ class ApiMajorController extends Controller
 
         try {
             $data = $validator->validated();
+
+
+            $data['code'] = $this->generateCodeFromName($data['name']);
+
+
             $major = Major::create($data);
 
             return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);
@@ -41,6 +68,31 @@ class ApiMajorController extends Controller
         }
     }
 
+    private function generateCodeFromName($name){
+        $parts = explode(' ', trim($name));
+        $code = '';
+        foreach ($parts as $part) {
+            if (!empty($part)) {
+                $code .= strtoupper($part[0]);
+            }
+        }
+        $day = date('d');
+        $random = rand(10, 99);
+        return strtoupper($code . $day . $random);
+    }
+
+    public function restore($id)
+{
+    $major = Major::withTrashed()->find($id);
+
+    if ($major) {
+        $major->restore();
+
+        return response()->json(['data' => $major, 'message' => 'Khôi phục thành công.'], 200);
+    }
+
+    return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
+}
     public function show(string $id)
     {
         try {
@@ -56,7 +108,10 @@ class ApiMajorController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
+            'code' => 'sometimes|string|max:19|unique:majors,code,' . $id,
             'name' => 'sometimes|string|max:50|unique:majors,name,' . $id,
+            'description' => 'nullable|string',
+            'status' => 'sometimes',
         ]);
 
         if ($validator->fails()) {
@@ -65,9 +120,8 @@ class ApiMajorController extends Controller
 
         try {
             $major = Major::findOrFail($id);
-            
+
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $major->update($data);
 
             return response()->json(['data' => $major, 'message' => 'Cập nhật thành công'], 200);

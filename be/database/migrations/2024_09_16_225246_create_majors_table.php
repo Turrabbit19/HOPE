@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('majors', function (Blueprint $table) {
             $table->id();
+            $table->string('code')->unique();
             $table->string('name')->unique();
+            $table->text('description');
+            $table->boolean('status')->default(TRUE);
             $table->softDeletes();
             $table->timestamps();
         });

@@ -15,10 +15,9 @@ return new class extends Migration
         Schema::create('semesters', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->integer('number');
-            $table->foreignIdFor(Course::class)->constrained()->onDelete('cascade');
             $table->date('start_date'); 
             $table->date('end_date'); 
+            $table->boolean('status')->default(TRUE);
             $table->softDeletes();
             $table->timestamps();
         });

@@ -14,8 +14,15 @@ class ApiRoleController extends Controller
     public function index()
     {
         try {
-            $roles = Role::select('id', 'name')->get();
-            return response()->json(['data' => $roles], 200);
+            $roles = Role::get();
+
+            $data = $roles->map(function($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
         }
@@ -67,7 +74,6 @@ class ApiRoleController extends Controller
             $role = Role::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $role->update($data);
 
             return response()->json(['data' => $role, 'message' => 'Cập nhật thành công'], 200);

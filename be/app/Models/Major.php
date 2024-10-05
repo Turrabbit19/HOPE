@@ -11,6 +11,14 @@ class Major extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name'
+        'code',
+        'name',
+        'description',
+        'status',
     ];
+
+
+    public function subjects() {
+        return $this->belongsToMany(Subject::class);
+    }
 }

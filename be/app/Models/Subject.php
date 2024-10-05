@@ -11,19 +11,16 @@ class Subject extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'subject_code',
-        'semester_id',
-        'major_id',
+        'code',
         'name',
         'description',
         'credit',
     ];
-
-    public function semester() {
-        return $this->belongsTo(Semester::class);
-    }
     
-    public function majors() {
-        return $this->belongsToMany(Major::class);
+    public function majors()
+    {
+        return $this->belongsToMany(Major::class, 'major_subjects')
+                    ->withPivot('course_id', 'semester_order')
+                    ->withTimestamps();;
     }
 }

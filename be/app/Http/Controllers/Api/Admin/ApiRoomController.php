@@ -14,8 +14,16 @@ class ApiRoomController extends Controller
     public function index()
     {
         try {
-            $rooms = Room::select('id', 'name', 'slot', 'status')->get();
-            return response()->json(['data' => $rooms], 200);
+            $rooms = Room::get();
+
+            $data = $rooms->map(function ($room){
+                return [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'status' => $room->status ? "Đang sử dụng" : "Đang trống",
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
@@ -24,8 +32,7 @@ class ApiRoomController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:rooms',
-            'slot' => 'required|integer|min:1', 
+            'name' => 'required|string|max:19|unique:rooms',
             'status' => 'required|boolean',
         ]);
 
@@ -58,8 +65,7 @@ class ApiRoomController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:50|unique:rooms,name,' . $id,
-            'slot' => 'sometimes|integer|min:1', 
+            'name' => 'sometimes|string|max:19|unique:rooms,name,' . $id,
             'status' => 'sometimes|boolean',
         ]);
 
@@ -71,7 +77,6 @@ class ApiRoomController extends Controller
             $room = Room::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $room->update($data);
 
             return response()->json(['data' => $room, 'message' => 'Cập nhật thành công'], 200);

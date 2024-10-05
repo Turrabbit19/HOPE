@@ -13,7 +13,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import instance from "../../../config/axios";
-import axios from "axios";
 
 const MajorManagement = () => {
     const [form] = Form.useForm();

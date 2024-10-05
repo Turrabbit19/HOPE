@@ -9,13 +9,20 @@ import {
     Select,
     Space,
     Pagination,
+    Row,
+    Col,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import moment from "moment";
 
 const { Option } = Select;
-
+const courseData = {
+    18.3: ["Kỳ 1", "Kỳ 2", "Kỳ 3"],
+    17.3: ["Kỳ 4", "Kỳ 5", "Kỳ 6"],
+    19.1: ["Kỳ 7", "Kỳ 8", "Kỳ 9"],
+};
+const courseKeys = ["18.3", "17.3", "19.1"];
 const ListSemester = () => {
     const [semesters, setSemesters] = useState([]);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -62,6 +69,43 @@ const ListSemester = () => {
     const filteredSemesters = semesters.filter((semester) =>
         semester.name.toLowerCase().includes(searchTerm)
     );
+    //
+    const [additionalVariants, setAdditionalVariants] = useState([
+        {
+            course: courseKeys[0],
+            order: courseData[courseKeys[0]][0],
+        },
+    ]);
+
+    const [orderOptions, setOrderOptions] = useState(courseData[courseKeys[0]]);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    // Hàm xử lý thay đổi khóa học
+    const handleCourseChange = (value, index) => {
+        const updatedVariants = [...additionalVariants];
+        updatedVariants[index].course = value;
+        updatedVariants[index].order = courseData[value][0];
+        setAdditionalVariants(updatedVariants);
+        setOrderOptions(courseData[value]);
+    };
+
+    // Hàm xử lý thay đổi thứ tự học
+    const handleOrderChange = (value, index) => {
+        const updatedVariants = [...additionalVariants];
+        updatedVariants[index].order = value;
+        setAdditionalVariants(updatedVariants);
+    };
+
+    // Hàm thêm biến thể mới
+    const handleAddVariant = () => {
+        setAdditionalVariants([
+            ...additionalVariants,
+            {
+                course: courseKeys[0],
+                order: courseData[courseKeys[0]][0],
+            },
+        ]);
+    };
+    //
 
     const showEditModal = (semester) => {
         setEditingSemester(semester);
@@ -285,91 +329,149 @@ const ListSemester = () => {
                     onCancel={handleModalCancel}
                     footer={null}
                     centered
-                    width={600}
+                    width={1000}
                 >
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        onFinish={handleModalOk}
-                        style={{ padding: "0 20px" }}
-                    >
-                        <Form.Item
-                            label="Tên Kỳ Học"
-                            name="name"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng nhập tên kỳ học!",
-                                },
-                            ]}
-                        >
-                            <Input placeholder="Nhập tên kỳ học" />
-                        </Form.Item>
+                    <div className="createScheduleForm pb-6">
+                        <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
+                            Tạo Kỳ Học Mới
+                        </h3>
 
-                        <Form.Item
-                            label="Ngày Bắt Đầu"
-                            name="startDate"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn ngày bắt đầu!",
-                                },
-                            ]}
+                        <Form
+                            form={form}
+                            layout="vertical"
+                            onFinish={handleModalOk}
+                            autoComplete="off"
                         >
-                            <DatePicker
-                                format="YYYY-MM-DD"
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
+                            <Row gutter={24}>
+                                <Col span={12}>
+                                    <Form.Item
+                                        label="Tên Kỳ Học"
+                                        name="semesterName"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message:
+                                                    "Vui lòng nhập tên kỳ học!",
+                                            },
+                                        ]}
+                                    >
+                                        <Input placeholder="Tên kỳ học" />
+                                    </Form.Item>
 
-                        <Form.Item
-                            label="Ngày Kết Thúc"
-                            name="endDate"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn ngày kết thúc!",
-                                },
-                            ]}
-                        >
-                            <DatePicker
-                                format="YYYY-MM-DD"
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
+                                    <Form.Item
+                                        label="Ngày Khởi Tạo"
+                                        name="startDate"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message:
+                                                    "Vui lòng chọn ngày khởi tạo!",
+                                            },
+                                        ]}
+                                    >
+                                        <DatePicker style={{ width: "100%" }} />
+                                    </Form.Item>
 
-                        <Form.Item
-                            label="Trạng Thái"
-                            name="status"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn trạng thái!",
-                                },
-                            ]}
-                        >
-                            <Select placeholder="Chọn trạng thái">
-                                <Option value="Đang diễn ra">
-                                    Đang diễn ra
-                                </Option>
-                                <Option value="Chờ diễn ra">Chờ diễn ra</Option>
-                            </Select>
-                        </Form.Item>
+                                    <Form.Item
+                                        label="Ngày Kết Thúc"
+                                        name="endDate"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message:
+                                                    "Vui lòng chọn ngày kết thúc!",
+                                            },
+                                        ]}
+                                    >
+                                        <DatePicker style={{ width: "100%" }} />
+                                    </Form.Item>
 
-                        <Form.Item className="pt-6">
-                            <Space
-                                style={{
-                                    width: "100%",
-                                    justifyContent: "center",
-                                }}
-                            >
+                                    <Form.Item
+                                        label="Trạng Thái"
+                                        name="status"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message:
+                                                    "Vui lòng chọn trạng thái!",
+                                            },
+                                        ]}
+                                    >
+                                        <Select placeholder="Chọn trạng thái">
+                                            <Select.Option value="active">
+                                                Đang hoạt động
+                                            </Select.Option>
+                                            <Select.Option value="inactive">
+                                                Ngừng hoạt động
+                                            </Select.Option>
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+
+                                <Col span={12}>
+                                    <Form.Item label="Khóa học và Thứ tự học">
+                                        {additionalVariants.map(
+                                            (variant, index) => (
+                                                <Row
+                                                    key={index}
+                                                    gutter={16}
+                                                    style={{ marginBottom: 16 }}
+                                                >
+                                                    <Col span={12}>
+                                                        <Select
+                                                            value={
+                                                                variant.course
+                                                            }
+                                                            onChange={(value) =>
+                                                                handleCourseChange(
+                                                                    value,
+                                                                    index
+                                                                )
+                                                            }
+                                                            options={courseKeys.map(
+                                                                (course) => ({
+                                                                    label: course,
+                                                                    value: course,
+                                                                })
+                                                            )}
+                                                        />
+                                                    </Col>
+                                                    <Col span={12}>
+                                                        <Select
+                                                            value={
+                                                                variant.order
+                                                            }
+                                                            onChange={(value) =>
+                                                                handleOrderChange(
+                                                                    value,
+                                                                    index
+                                                                )
+                                                            }
+                                                            options={orderOptions.map(
+                                                                (order) => ({
+                                                                    label: order,
+                                                                    value: order,
+                                                                })
+                                                            )}
+                                                        />
+                                                    </Col>
+                                                </Row>
+                                            )
+                                        )}
+                                        <Button onClick={handleAddVariant}>
+                                            Thêm Biến Thể
+                                        </Button>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+
+                            <div className="flex justify-center items-center mt-4">
                                 <Button type="primary" htmlType="submit">
-                                    {editingSemester ? "Cập Nhật" : "Thêm Mới"}
+                                    Tạo Kỳ Học
                                 </Button>
-                                <Button onClick={handleModalCancel}>Hủy</Button>
-                            </Space>
-                        </Form.Item>
-                    </Form>
+                            </div>
+                        </Form>
+                    </div>
                 </Modal>
             </div>
         </div>

@@ -19,7 +19,7 @@ const AsideAdmin = () => {
     const study_manager = [
         { name: "Quản lý ngành học", link: "/admin/teaching" },
         { name: "Quản lý lớp học", link: "/admin/class-student" },
-        { name: "Quản lý Quản lý kỳ học", link: "/admin/list-semesters" },
+        { name: "Quản lý kỳ học", link: "/admin/list-semesters" },
         { name: "Quản lý môn học", link: "/admin/list-subject" },
         { name: "Quản lý khóa học", link: "/admin/list-courses" },
         { name: "Quản lý phòng học", link: "/admin/classrooms" },

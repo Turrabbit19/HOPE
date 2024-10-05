@@ -86,14 +86,14 @@ class ApiUserController extends Controller
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
 
-            'course_id' => 'required_if:role_id,2|exists:courses,id',
-            'student_major_id' => 'required_if:role_id,2|exists:majors,id',
-            'current_semester' => 'required_if:role_id,2|integer|min:1', 
-            'student_code' => 'required_if:role_id,2|unique:students,student_code',
-            'status' => 'required_if:role_id,2|integer',
+            'student_course_id' => 'required_if:role_id,3|exists:courses,id',
+            'student_major_id' => 'required_if:role_id,3|exists:majors,id',
+            'student_current_semester' => 'required_if:role_id,3|integer|min:1', 
+            'student_code' => 'required_if:role_id,3|unique:students,student_code',
+            'student_status' => 'required_if:role_id,3|integer',
 
-            'teacher_major_id' => 'required_if:role_id,3|exists:majors,id',
-            'teacher_code' => 'required_if:role_id,3|unique:teachers,teacher_code',
+            'teacher_major_id' => 'required_if:role_id,4|exists:majors,id',
+            'teacher_code' => 'required_if:role_id,4|unique:teachers,teacher_code',
         ]);
 
         if ($validator->fails()) {
@@ -121,18 +121,18 @@ class ApiUserController extends Controller
                 'role_id' => $data['role_id'],
             ]);
 
-            if ($data['role_id'] == 2) {
+            if ($data['role_id'] == 3) {
                 Student::create([
                     'user_id' => $user->id,
-                    'course_id' => $data['course_id'],
+                    'course_id' => $data['student_course_id'],
                     'major_id' => $data['student_major_id'],
-                    'current_semester' => $data['current_semester'],
+                    'current_semester' => $data['student_current_semester'],
                     'student_code' => $data['student_code'],
-                    'status' => $data['status'],
+                    'status' => $data['student_status'],
                 ]);
             }
 
-            if ($data['role_id'] == 3) {
+            if ($data['role_id'] == 4) {
                 Teacher::create([
                     'user_id' => $user->id,
                     'major_id' => $data['teacher_major_id'],

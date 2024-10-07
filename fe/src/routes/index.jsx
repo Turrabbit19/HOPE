@@ -40,6 +40,7 @@ import ListSemester from "../pages/admin/semesters/list/page";
 import ListCourseAll from "../pages/admin/courses/list/page";
 import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
+import ListRooms from "../pages/admin/rooms/page";
 
 const Router = createBrowserRouter([
     {
@@ -73,6 +74,14 @@ const Router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<Loading />}>
                         <List />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "list-rooms",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <ListRooms />
                     </Suspense>
                 ),
             },

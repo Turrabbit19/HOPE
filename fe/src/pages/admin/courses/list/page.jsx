@@ -415,7 +415,7 @@ const ListCourse = () => {
                         onCancel={togglePopup}
                         footer={null}
                         centered
-                        width={1000}
+                        width={800}
                     >
                         <div className="createScheduleForm pb-6">
                             <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
@@ -429,7 +429,7 @@ const ListCourse = () => {
                                 autoComplete="off"
                             >
                                 <Row gutter={24}>
-                                    <Col span={12}>
+                                    <Col span={24}>
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -476,6 +476,29 @@ const ListCourse = () => {
                                         </Form.Item>
 
                                         <Form.Item
+                                            label="Chuyên Ngành"
+                                            name="major"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng chọn chuyên ngành!",
+                                                },
+                                            ]}
+                                        >
+                                            <Select placeholder="Chọn chuyên ngành">
+                                                {majors.map((major) => (
+                                                    <Select.Option
+                                                        key={major}
+                                                        value={major}
+                                                    >
+                                                        {major}
+                                                    </Select.Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+
+                                        <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
                                             rules={[
@@ -513,95 +536,6 @@ const ListCourse = () => {
                                                 min={0}
                                                 max={8}
                                             />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col span={12}>
-                                        <Form.Item label="Ngành học, Khóa học, Kỳ học">
-                                            {additionalVariants.map(
-                                                (variant, index) => (
-                                                    <Row
-                                                        key={index}
-                                                        gutter={16}
-                                                        style={{
-                                                            marginBottom: 16,
-                                                        }}
-                                                    >
-                                                        <Col span={8}>
-                                                            <Select
-                                                                value={
-                                                                    variant.major
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleMajorChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={majors.map(
-                                                                    (
-                                                                        major
-                                                                    ) => ({
-                                                                        label: major,
-                                                                        value: major,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                        <Col span={8}>
-                                                            <Select
-                                                                value={
-                                                                    variant.schedule
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleScheduleChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={schedules.map(
-                                                                    (
-                                                                        schedule
-                                                                    ) => ({
-                                                                        label: schedule,
-                                                                        value: schedule,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                        <Col span={8}>
-                                                            <Select
-                                                                value={
-                                                                    variant.semester
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleSemesterChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={semesters.map(
-                                                                    (
-                                                                        semester
-                                                                    ) => ({
-                                                                        label: `Kỳ ${semester}`,
-                                                                        value: semester,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                )
-                                            )}
-                                            <Button onClick={handleAddVariant}>
-                                                Thêm Biến Thể
-                                            </Button>
                                         </Form.Item>
                                     </Col>
                                 </Row>
@@ -621,7 +555,7 @@ const ListCourse = () => {
                         onCancel={closeEditModal}
                         footer={null}
                         centered
-                        width={1000}
+                        width={800}
                     >
                         <div className="createCourseForm pb-6">
                             <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
@@ -640,7 +574,7 @@ const ListCourse = () => {
                                 autoComplete="off"
                             >
                                 <Row gutter={24}>
-                                    <Col span={12}>
+                                    <Col span={24}>
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -687,6 +621,29 @@ const ListCourse = () => {
                                         </Form.Item>
 
                                         <Form.Item
+                                            label="Chuyên Ngành"
+                                            name="major"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng chọn chuyên ngành!",
+                                                },
+                                            ]}
+                                        >
+                                            <Select placeholder="Chọn chuyên ngành">
+                                                {majors.map((major) => (
+                                                    <Select.Option
+                                                        key={major}
+                                                        value={major}
+                                                    >
+                                                        {major}
+                                                    </Select.Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+
+                                        <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
                                             rules={[
@@ -724,95 +681,6 @@ const ListCourse = () => {
                                                 min={0}
                                                 max={8}
                                             />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col span={12}>
-                                        <Form.Item label="Ngành học, Khóa học, Kỳ học">
-                                            {additionalVariants.map(
-                                                (variant, index) => (
-                                                    <Row
-                                                        key={index}
-                                                        gutter={16}
-                                                        style={{
-                                                            marginBottom: 16,
-                                                        }}
-                                                    >
-                                                        <Col span={8}>
-                                                            <Select
-                                                                value={
-                                                                    variant.major
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleMajorChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={majors.map(
-                                                                    (
-                                                                        major
-                                                                    ) => ({
-                                                                        label: major,
-                                                                        value: major,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                        <Col span={8}>
-                                                            <Select
-                                                                value={
-                                                                    variant.schedule
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleScheduleChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={schedules.map(
-                                                                    (
-                                                                        schedule
-                                                                    ) => ({
-                                                                        label: schedule,
-                                                                        value: schedule,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                        <Col span={8}>
-                                                            <Select
-                                                                value={
-                                                                    variant.semester
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleSemesterChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={semesters.map(
-                                                                    (
-                                                                        semester
-                                                                    ) => ({
-                                                                        label: `Kỳ ${semester}`,
-                                                                        value: semester,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                )
-                                            )}
-                                            <Button onClick={handleAddVariant}>
-                                                Thêm Biến Thể
-                                            </Button>
                                         </Form.Item>
                                     </Col>
                                 </Row>

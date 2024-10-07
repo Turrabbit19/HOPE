@@ -30,24 +30,24 @@ const ClassRoom = () => {
             const data = [
                 {
                     id: 1,
-                    name: "Lập trình Reactjs",
-                    code: "101",
+                    name: "WEB209.16",
+                    nameSubject: "reactjs",
                     students: 35,
                     status: "Đang học",
                     createdDate: "2024-01-01",
                 },
                 {
                     id: 2,
-                    name: "PHP3",
-                    code: "102",
+                    name: "WEB101.01",
+                    nameSubject: "php",
                     students: 40,
                     status: "Sắp bắt đầu",
                     createdDate: "2024-02-01",
                 },
                 {
                     id: 3,
-                    name: "Lập trình Nodejs",
-                    code: "103",
+                    name: "WEB101.02",
+                    nameSubject: "java",
                     students: 30,
                     status: "Hoàn thành",
                     createdDate: "2024-03-01",
@@ -71,7 +71,7 @@ const ClassRoom = () => {
         setEditingClassroom(classroom);
         form.setFieldsValue({
             name: classroom.name,
-            code: classroom.code,
+            nameSubject: classroom.nameSubject,
             students: classroom.students,
             status: classroom.status,
             createdDate: moment(classroom.createdDate),
@@ -182,10 +182,10 @@ const ClassRoom = () => {
                                         <div className="mt-6 flex flex-col gap-8 pb-6">
                                             <div className="flex gap-6">
                                                 <p className="text-[#9E9E9E]">
-                                                    Mã môn:
+                                                    Tên môn:
                                                 </p>
                                                 <p className="font-bold text-[#000]">
-                                                    {classroom.code}
+                                                    {classroom.nameSubject}
                                                 </p>
                                             </div>
                                             <div className="flex gap-6">
@@ -313,7 +313,7 @@ const ClassRoom = () => {
 
                     <Form.Item
                         label="Mã Môn"
-                        name="code"
+                        name="nameSubject"
                         rules={[
                             {
                                 required: true,

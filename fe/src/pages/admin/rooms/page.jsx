@@ -18,7 +18,7 @@ import moment from "moment";
 
 const { Option } = Select;
 
-const Testing = () => {
+const ListRooms = () => {
     const [rooms, setRooms] = useState([]);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -259,9 +259,9 @@ const Testing = () => {
                 </div>
             </div>
             <Pagination
-                className="mt-6"
+                className="mt-12"
+                align="center"
                 total={filteredRooms.length}
-                showTotal={(total) => `Tổng cộng ${total} mục`}
                 defaultPageSize={6}
                 defaultCurrent={1}
             />
@@ -358,4 +358,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default ListRooms;

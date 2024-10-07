@@ -415,7 +415,7 @@ const ListCourse = () => {
                         onCancel={togglePopup}
                         footer={null}
                         centered
-                        width={800}
+                        width={1000}
                     >
                         <div className="createScheduleForm pb-6">
                             <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
@@ -429,7 +429,7 @@ const ListCourse = () => {
                                 autoComplete="off"
                             >
                                 <Row gutter={24}>
-                                    <Col span={24}>
+                                    <Col span={16}>
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -473,29 +473,6 @@ const ListCourse = () => {
                                                 rows={3}
                                                 placeholder="Mô tả"
                                             />
-                                        </Form.Item>
-
-                                        <Form.Item
-                                            label="Chuyên Ngành"
-                                            name="major"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng chọn chuyên ngành!",
-                                                },
-                                            ]}
-                                        >
-                                            <Select placeholder="Chọn chuyên ngành">
-                                                {majors.map((major) => (
-                                                    <Select.Option
-                                                        key={major}
-                                                        value={major}
-                                                    >
-                                                        {major}
-                                                    </Select.Option>
-                                                ))}
-                                            </Select>
                                         </Form.Item>
 
                                         <Form.Item
@@ -538,6 +515,49 @@ const ListCourse = () => {
                                             />
                                         </Form.Item>
                                     </Col>
+
+                                    <Col span={8}>
+                                        <Form.Item label="Ngành học">
+                                            {additionalVariants.map(
+                                                (variant, index) => (
+                                                    <Row
+                                                        key={index}
+                                                        gutter={16}
+                                                        style={{
+                                                            marginBottom: 16,
+                                                        }}
+                                                    >
+                                                        <Col span={24}>
+                                                            <Select
+                                                                value={
+                                                                    variant.major
+                                                                }
+                                                                onChange={(
+                                                                    value
+                                                                ) =>
+                                                                    handleMajorChange(
+                                                                        value,
+                                                                        index
+                                                                    )
+                                                                }
+                                                                options={majors.map(
+                                                                    (
+                                                                        major
+                                                                    ) => ({
+                                                                        label: major,
+                                                                        value: major,
+                                                                    })
+                                                                )}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                )
+                                            )}
+                                            <Button onClick={handleAddVariant}>
+                                                Thêm Biến Thể
+                                            </Button>
+                                        </Form.Item>
+                                    </Col>
                                 </Row>
 
                                 <div className="flex justify-center items-center mt-4">
@@ -555,7 +575,7 @@ const ListCourse = () => {
                         onCancel={closeEditModal}
                         footer={null}
                         centered
-                        width={800}
+                        width={1000}
                     >
                         <div className="createCourseForm pb-6">
                             <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
@@ -574,7 +594,7 @@ const ListCourse = () => {
                                 autoComplete="off"
                             >
                                 <Row gutter={24}>
-                                    <Col span={24}>
+                                    <Col span={16}>
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -621,29 +641,6 @@ const ListCourse = () => {
                                         </Form.Item>
 
                                         <Form.Item
-                                            label="Chuyên Ngành"
-                                            name="major"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng chọn chuyên ngành!",
-                                                },
-                                            ]}
-                                        >
-                                            <Select placeholder="Chọn chuyên ngành">
-                                                {majors.map((major) => (
-                                                    <Select.Option
-                                                        key={major}
-                                                        value={major}
-                                                    >
-                                                        {major}
-                                                    </Select.Option>
-                                                ))}
-                                            </Select>
-                                        </Form.Item>
-
-                                        <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
                                             rules={[
@@ -681,6 +678,49 @@ const ListCourse = () => {
                                                 min={0}
                                                 max={8}
                                             />
+                                        </Form.Item>
+                                    </Col>
+
+                                    <Col span={8}>
+                                        <Form.Item label="Ngành học">
+                                            {additionalVariants.map(
+                                                (variant, index) => (
+                                                    <Row
+                                                        key={index}
+                                                        gutter={16}
+                                                        style={{
+                                                            marginBottom: 16,
+                                                        }}
+                                                    >
+                                                        <Col span={24}>
+                                                            <Select
+                                                                value={
+                                                                    variant.major
+                                                                }
+                                                                onChange={(
+                                                                    value
+                                                                ) =>
+                                                                    handleMajorChange(
+                                                                        value,
+                                                                        index
+                                                                    )
+                                                                }
+                                                                options={majors.map(
+                                                                    (
+                                                                        major
+                                                                    ) => ({
+                                                                        label: major,
+                                                                        value: major,
+                                                                    })
+                                                                )}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                )
+                                            )}
+                                            <Button onClick={handleAddVariant}>
+                                                Thêm Biến Thể
+                                            </Button>
                                         </Form.Item>
                                     </Col>
                                 </Row>

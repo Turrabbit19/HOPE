@@ -5,19 +5,7 @@
                 <div class="item-title">
                     <h3>About Me</h3>
                 </div>
-                <div class="dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
-                        aria-expanded="false">...</a>
-
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="#"><i
-                                class="fas fa-times text-orange-red"></i>Close</a>
-                        <a class="dropdown-item" href="#"><i
-                                class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
-                        <a class="dropdown-item" href="#"><i
-                                class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
-                    </div>
-                </div>
+               
             </div>
             <div class="student-info">
                 <div class="media media-none--xs">
@@ -73,10 +61,7 @@
                                 <td>Class:</td>
                                 <td class="font-medium text-dark-medium">2</td>
                             </tr>
-                            <tr>
-                                <td>Section:</td>
-                                <td class="font-medium text-dark-medium">Pink</td>
-                            </tr>
+                           
                             <tr>
                                 <td>Roll:</td>
                                 <td class="font-medium text-dark-medium">10005</td>

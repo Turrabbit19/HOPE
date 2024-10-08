@@ -1,3 +1,5 @@
+@extends('client.master')
+@section('content')
 <style>
     * {
         box-sizing: border-box;
@@ -61,6 +63,15 @@
         background-color: #ff5722;
     }
 </style>
+<div class="breadcrumbs-area">
+    {{-- <h3>Admin Dashboard</h3> --}}
+    <ul>
+        <li>
+            <a href="index.html">Home</a>
+        </li>
+        <li>schedules</li>
+    </ul>
+</div>
 <div class="col-12-xxxl col-12">
     <div class="card dashboard-card-six">
         <div class="card-body">
@@ -200,3 +211,4 @@
         </div>
     </div>
 </div>
+@endsection

@@ -10,7 +10,7 @@
     <title>HOPE</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    @include('layouts.partials.css')
+    @include('client.layouts.css')
     <script src="{{ asset('assets/js/modernizr-3.6.0.min.js') }}"></script>
 </head>
 
@@ -19,7 +19,7 @@
     <div id="wrapper" class="wrapper bg-ash">
 
         <div class="navbar navbar-expand-md header-menu-one bg-light">
-            @include('layouts.partials.logo')
+            @include('client.layouts.logo')
 
             {{-- <div class="d-md-none mobile-nav-bar">
                 <button class="navbar-toggler pulse-animation" type="button" data-toggle="collapse" data-target="#mobile-navbar" aria-expanded="false">
@@ -30,7 +30,7 @@
                 </button>
             </div> --}}
 
-            @include('layouts.partials.header')
+            @include('client.layouts.header')
         </div>
 
         <div class="dashboard-page-one">
@@ -41,36 +41,26 @@
                         <a href="index.html"><img src="img/logo1.png" alt="logo"></a>
                     </div>
                 </div>
-                @include('layouts.partials.sidebar')
+                @include('client.layouts.sidebar')
             </div>
 
             <div class="dashboard-content-one">
 
-                @include('layouts.partials.content-top')
+             
 
                 <div class="row">
-
-                    @include('layouts.partials.content-left')
-
-                    @include('layouts.partials.content-right')
-                </div>
-
-                <div class="row">
-                    {{-- @include('layouts.partials.content-bottom1')
-                    {{-- @include('layouts.partials.content-bottom2') --}}
-                    @include('layouts.partials.content-bottom3')
-                  
+                    @yield('content')
                 </div>
 
                 <footer class="footer-wrap-layout1">
-                    @include('layouts.partials.footer')
+                    @include('client.layouts.footer')
                 </footer>
 
             </div>
         </div>
 
     </div>
-    @include('layouts.partials.js')
+    @include('client.layouts.js')
 </body>
 
 

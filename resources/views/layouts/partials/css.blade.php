@@ -17,3 +17,5 @@
  <link rel="stylesheet" href="{{asset('assets/css/jquery.dataTables.min.css')}}">
 
  <link rel="stylesheet" href="{{asset('assets/style.css')}}">
+ 
+ <link rel="stylesheet" href="{{asset('assets/scheduel.css')}}">

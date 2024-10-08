@@ -1,6 +1,6 @@
 <div class="sidebar-menu-content">
     <ul class="nav nav-sidebar-menu sidebar-toggle-view">
-        <li class="nav-item sidebar-nav-item">
+        {{-- <li class="nav-item sidebar-nav-item">
             <a href="#" class="nav-link"><i class="flaticon-dashboard"></i><span>Dashboard</span></a>
             <ul class="nav sub-group-menu sub-group-active">
                 <li class="nav-item">
@@ -18,7 +18,7 @@
                             class="fas fa-angle-right"></i>Teachers</a>
                 </li>
             </ul>
-        </li>
+        </li> --}}
         <li class="nav-item sidebar-nav-item">
             <a href="#" class="nav-link"><i class="flaticon-classmates"></i><span>Students</span></a>
             <ul class="nav sub-group-menu">
@@ -128,7 +128,7 @@
                     class="flaticon-open-book"></i><span>Subject</span></a>
         </li>
         <li class="nav-item">
-            <a href="class-routine.html" class="nav-link"><i class="flaticon-calendar"></i><span>Class
+            <a href="scheduel.blade.php" class="nav-link"><i class="flaticon-calendar"></i><span>Class
                     Routine</span></a>
         </li>
         <li class="nav-item">

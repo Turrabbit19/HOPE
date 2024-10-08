@@ -22,7 +22,7 @@
             <div class="student-info">
                 <div class="media media-none--xs">
                     <div class="item-img">
-                        <img src="img/figure/student.png" class="media-img-auto" alt="student">
+                        <img src="{{asset('assets/img/figure/student.png')}}" class="media-img-auto" alt="student">
                     </div>
                     <div class="media-body">
                         <h3 class="item-title">Jessia Rose</h3>

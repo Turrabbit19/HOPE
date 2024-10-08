@@ -1,60 +1,201 @@
-<div class="col-4-xxxl col-12">
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        table-layout: fixed;
+    }
+
+    th,
+    td {
+        padding: 10px;
+        border: 1px solid #ccc;
+    }
+
+    th {
+        background-color: #f4f4f4;
+    }
+
+    .event {
+        padding: 10px;
+        color: white;
+        border-radius: 8px;
+    }
+
+    .dance {
+        background-color: #00bcd4;
+    }
+
+    .yoga {
+        background-color: #4caf50;
+    }
+
+    .music {
+        background-color: #ffeb3b;
+        color: black;
+    }
+
+    .art {
+        background-color: #9c27b0;
+    }
+
+    .english {
+        background-color: #e91e63;
+    }
+
+    .break {
+        background-color: #ff5722;
+    }
+</style>
+<div class="col-12-xxxl col-12">
     <div class="card dashboard-card-six">
         <div class="card-body">
-            <div class="heading-layout1 mg-b-17">
-                <div class="item-title">
-                    <h3>Notifications</h3>
-                </div>
-                <div class="dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
-                        aria-expanded="false">...</a>
-
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="#"><i
-                                class="fas fa-times text-orange-red"></i>Close</a>
-                        <a class="dropdown-item" href="#"><i
-                                class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
-                        <a class="dropdown-item" href="#"><i
-                                class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
-                    </div>
-                </div>
-            </div>
-            <div class="notice-box-wrap">
-                <div class="notice-list">
-                    <div class="post-date bg-skyblue">16 June, 2019</div>
-                    <h6 class="notice-title"><a href="#">Great School manag mene esom tus eleifend
-                            lectus
-                            sed maximus mi faucibusnting.</a></h6>
-                    <div class="entry-meta"> Jennyfar Lopez / <span>5 min ago</span></div>
-                </div>
-                <div class="notice-list">
-                    <div class="post-date bg-yellow">16 June, 2019</div>
-                    <h6 class="notice-title"><a href="#">Great School manag printing.</a></h6>
-                    <div class="entry-meta"> Jennyfar Lopez / <span>5 min ago</span></div>
-                </div>
-                <div class="notice-list">
-                    <div class="post-date bg-pink">16 June, 2019</div>
-                    <h6 class="notice-title"><a href="#">Great School manag Nulla rhoncus eleifensed
-                            mim
-                            us mi faucibus id. Mauris vestibulum non purus lobortismenearea</a></h6>
-                    <div class="entry-meta"> Jennyfar Lopez / <span>5 min ago</span></div>
-                </div>
-                <div class="notice-list">
-                    <div class="post-date bg-skyblue">16 June, 2019</div>
-                    <h6 class="notice-title"><a href="#">Great School manag mene esom text of the
-                            printing.</a></h6>
-                    <div class="entry-meta"> Jennyfar Lopez / <span>5 min ago</span></div>
-                </div>
-                <div class="notice-list">
-                    <div class="post-date bg-yellow">16 June, 2019</div>
-                    <h6 class="notice-title"><a href="#">Great School manag printing.</a></h6>
-                    <div class="entry-meta"> Jennyfar Lopez / <span>5 min ago</span></div>
-                </div>
-                <div class="notice-list">
-                    <div class="post-date bg-pink">16 June, 2019</div>
-                    <h6 class="notice-title"><a href="#">Great School manag meneesom.</a></h6>
-                    <div class="entry-meta"> Jennyfar Lopez / <span>5 min ago</span></div>
-                </div>
+            <div class="container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TIME</th>
+                            <th>MONDAY</th>
+                            <th>TUESDAY</th>
+                            <th>WEDNESDAY</th>
+                            <th>THURSDAY</th>
+                            <th>FRIDAY</th>
+                            <th>SATURDAY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>09:00am</td>
+                            <td>
+                                <div class="event dance">Dance<br>9:00-10:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event yoga">Yoga<br>9:00-10:00<br><small>Marta
+                                        Healy</small></div>
+                            </td>
+                            <td>
+                                <div class="event music">Music<br>9:00-10:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event dance">Dance<br>9:00-10:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event art">Art<br>9:00-10:00<br><small>Kate
+                                        Alley</small></div>
+                            </td>
+                            <td>
+                                <div class="event english">English<br>9:00-10:00<br><small>James
+                                        Smith</small></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>10:00am</td>
+                            <td>
+                                <div class="event music">Music<br>10:00-11:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                            <td>
+                                <div class="event art">Art<br>10:00-11:00<br><small>Kate
+                                        Alley</small></div>
+                            </td>
+                            <td>
+                                <div class="event yoga">Yoga<br>10:00-11:00<br><small>Marta
+                                        Healy</small></div>
+                            </td>
+                            <td>
+                                <div class="event english">English<br>10:00-11:00<br><small>James
+                                        Smith</small></div>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>11:00am</td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                            <td>
+                                <div class="event break">Break<br>11:00-12:00</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>12:00pm</td>
+                            <td></td>
+                            <td>
+                                <div class="event art">Art<br>12:00-1:00<br><small>Kate
+                                        Alley</small></div>
+                            </td>
+                            <td>
+                                <div class="event dance">Dance<br>12:00-1:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event music">Music<br>12:00-1:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event yoga">Yoga<br>12:00-1:00<br><small>Marta
+                                        Healy</small></div>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>01:00pm</td>
+                            <td>
+                                <div class="event english">English<br>1:00-2:00<br><small>James
+                                        Smith</small></div>
+                            </td>
+                            <td>
+                                <div class="event music">Music<br>1:00-2:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td></td>
+                            <td>
+                                <div class="event yoga">Yoga<br>1:00-2:00<br><small>Marta
+                                        Healy</small></div>
+                            </td>
+                            <td>
+                                <div class="event music">Music<br>1:00-2:00<br><small>Ivana
+                                        Wong</small></div>
+                            </td>
+                            <td>
+                                <div class="event english">English<br>1:00-2:00<br><small>James
+                                        Smith</small></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

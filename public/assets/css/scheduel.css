@@ -1,0 +1,60 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    padding: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    table-layout: fixed;
+}
+
+th, td {
+    padding: 15px;
+    border: 1px solid #ccc;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+.event {
+    padding: 10px;
+    color: white;
+    border-radius: 8px;
+}
+
+.dance {
+    background-color: #00bcd4;
+}
+
+.yoga {
+    background-color: #4caf50;
+}
+
+.music {
+    background-color: #ffeb3b;
+    color: black;
+}
+
+.art {
+    background-color: #9c27b0;
+}
+
+.english {
+    background-color: #e91e63;
+}
+
+.break {
+    background-color: #ff5722;
+}

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ApiClassRoom;
 use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
 use App\Http\Controllers\Api\Admin\ApiMajorController;
@@ -48,4 +49,5 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('sections', ApiSectionController::class);
     Route::apiResource('notifications', ApiNotificationController::class);
     Route::apiResource('shifts', ApiShiftController::class);
+    Route::apiResource('classrooms', ApiClassRoom::class);
 });

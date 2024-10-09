@@ -193,7 +193,6 @@ const Router = createBrowserRouter([
                 path: "list-subject",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ListCourseAll />
                     </>
                 ),
@@ -224,7 +223,6 @@ const Router = createBrowserRouter([
                 path: "list-semesters",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ListSemester />
                     </>
                 ),
@@ -236,7 +234,6 @@ const Router = createBrowserRouter([
                 path: "list-subject",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ListSubjects />
                     </>
                 ),
@@ -255,7 +252,6 @@ const Router = createBrowserRouter([
                 path: "list-courses",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ListSubjects />
                     </>
                 ),
@@ -283,7 +279,6 @@ const Router = createBrowserRouter([
                 path: "classrooms",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ClassRoom />
                     </>
                 ),

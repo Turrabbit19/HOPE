@@ -430,6 +430,7 @@ const ListCourse = () => {
                             >
                                 <Row gutter={24}>
                                     <Col span={16}>
+                                        {/* Mã môn học */}
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -444,6 +445,7 @@ const ListCourse = () => {
                                             <Input placeholder="Mã môn học" />
                                         </Form.Item>
 
+                                        {/* Tên môn học */}
                                         <Form.Item
                                             label="Tên Môn Học"
                                             name="name"
@@ -458,6 +460,7 @@ const ListCourse = () => {
                                             <Input placeholder="Tên" />
                                         </Form.Item>
 
+                                        {/* Mô tả môn học */}
                                         <Form.Item
                                             label="Mô tả"
                                             name="description"
@@ -475,6 +478,7 @@ const ListCourse = () => {
                                             />
                                         </Form.Item>
 
+                                        {/* Tín chỉ */}
                                         <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
@@ -482,7 +486,7 @@ const ListCourse = () => {
                                                 {
                                                     required: true,
                                                     message:
-                                                        "Vui lòng nhập Tín chỉ!",
+                                                        "Vui lòng nhập tín chỉ!",
                                                 },
                                                 {
                                                     pattern:
@@ -516,50 +520,34 @@ const ListCourse = () => {
                                         </Form.Item>
                                     </Col>
 
+                                    {/* Ngành học */}
                                     <Col span={8}>
-                                        <Form.Item label="Ngành học">
-                                            {additionalVariants.map(
-                                                (variant, index) => (
-                                                    <Row
-                                                        key={index}
-                                                        gutter={16}
-                                                        style={{
-                                                            marginBottom: 16,
-                                                        }}
-                                                    >
-                                                        <Col span={24}>
-                                                            <Select
-                                                                value={
-                                                                    variant.major
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleMajorChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={majors.map(
-                                                                    (
-                                                                        major
-                                                                    ) => ({
-                                                                        label: major,
-                                                                        value: major,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                )
-                                            )}
-                                            <Button onClick={handleAddVariant}>
-                                                Thêm Biến Thể
-                                            </Button>
+                                        <Form.Item
+                                            label="Ngành Học"
+                                            name="majors"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng chọn ngành học!",
+                                                },
+                                            ]}
+                                        >
+                                            <Select
+                                                mode="multiple"
+                                                placeholder="Chọn ngành học"
+                                                options={majors.map(
+                                                    (major) => ({
+                                                        label: major,
+                                                        value: major,
+                                                    })
+                                                )}
+                                            />
                                         </Form.Item>
                                     </Col>
                                 </Row>
 
+                                {/* Nút tạo môn học */}
                                 <div className="flex justify-center items-center mt-4">
                                     <Button type="primary" htmlType="submit">
                                         Tạo Môn Học
@@ -595,6 +583,7 @@ const ListCourse = () => {
                             >
                                 <Row gutter={24}>
                                     <Col span={16}>
+                                        {/* Mã môn học */}
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -609,6 +598,7 @@ const ListCourse = () => {
                                             <Input placeholder="Mã môn học" />
                                         </Form.Item>
 
+                                        {/* Tên môn học */}
                                         <Form.Item
                                             label="Tên Môn Học"
                                             name="name"
@@ -623,6 +613,7 @@ const ListCourse = () => {
                                             <Input placeholder="Tên" />
                                         </Form.Item>
 
+                                        {/* Mô tả môn học */}
                                         <Form.Item
                                             label="Mô tả"
                                             name="description"
@@ -640,6 +631,7 @@ const ListCourse = () => {
                                             />
                                         </Form.Item>
 
+                                        {/* Tín chỉ */}
                                         <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
@@ -682,45 +674,28 @@ const ListCourse = () => {
                                     </Col>
 
                                     <Col span={8}>
-                                        <Form.Item label="Ngành học">
-                                            {additionalVariants.map(
-                                                (variant, index) => (
-                                                    <Row
-                                                        key={index}
-                                                        gutter={16}
-                                                        style={{
-                                                            marginBottom: 16,
-                                                        }}
-                                                    >
-                                                        <Col span={24}>
-                                                            <Select
-                                                                value={
-                                                                    variant.major
-                                                                }
-                                                                onChange={(
-                                                                    value
-                                                                ) =>
-                                                                    handleMajorChange(
-                                                                        value,
-                                                                        index
-                                                                    )
-                                                                }
-                                                                options={majors.map(
-                                                                    (
-                                                                        major
-                                                                    ) => ({
-                                                                        label: major,
-                                                                        value: major,
-                                                                    })
-                                                                )}
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                )
-                                            )}
-                                            <Button onClick={handleAddVariant}>
-                                                Thêm Biến Thể
-                                            </Button>
+                                        {/* Ngành học */}
+                                        <Form.Item
+                                            label="Ngành học"
+                                            name="majors"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        "Vui lòng chọn ít nhất một ngành học!",
+                                                },
+                                            ]}
+                                        >
+                                            <Select
+                                                mode="multiple"
+                                                placeholder="Chọn ngành học"
+                                                options={majors.map(
+                                                    (major) => ({
+                                                        label: major,
+                                                        value: major,
+                                                    })
+                                                )}
+                                            />
                                         </Form.Item>
                                     </Col>
                                 </Row>

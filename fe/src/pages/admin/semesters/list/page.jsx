@@ -386,7 +386,7 @@ const ListSemester = () => {
                                         <DatePicker style={{ width: "100%" }} />
                                     </Form.Item>
 
-                                    <Form.Item
+                                    {/* <Form.Item
                                         label="Trạng Thái"
                                         name="status"
                                         rules={[
@@ -405,7 +405,7 @@ const ListSemester = () => {
                                                 Ngừng hoạt động
                                             </Select.Option>
                                         </Select>
-                                    </Form.Item>
+                                    </Form.Item> */}
                                 </Col>
 
                                 <Col span={12}>

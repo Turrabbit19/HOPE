@@ -307,7 +307,7 @@ const Teach = () => {
                 onCancel={handleModalCancel}
                 footer={null}
                 centered
-                width={1000}
+                width={600}
             >
                 <Form
                     form={form}
@@ -320,8 +320,8 @@ const Teach = () => {
                     wrapperCol={{ span: 26 }}
                     initialValues={{ remember: true }}
                 >
-                    <div className="flex row-cols-2 pb-6 justify-between items-end teaching__add   ">
-                        <div className="col-6">
+                    <div className="pb-6  teaching__add   ">
+                        <div className="col">
                             <div className="teaching_add-form-left ">
                                 <h1 className="text-[#1167B4] text-[20px] mt-4 font-semibold">
                                     Tổng quan
@@ -372,40 +372,11 @@ const Teach = () => {
                                         />
                                     </Form.Item>
                                 </div>
-
-                                <div className="teaching__add-form-group mt-14 mb-8">
-                                    <Form.Item
-                                        name="status"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message:
-                                                    "Vui lòng điền vào trường này",
-                                            },
-                                        ]}
-                                    >
-                                        <Select
-                                            showSearch
-                                            placeholder="Chọn trạng thái"
-                                            optionFilterProp="label"
-                                            options={[
-                                                {
-                                                    value: "Kích Hoạt",
-                                                    label: "Kích Hoạt",
-                                                },
-                                                {
-                                                    value: "Chưa Kích Hoạt",
-                                                    label: "Chưa Kích Hoạt",
-                                                },
-                                            ]}
-                                        />
-                                    </Form.Item>
-                                </div>
                             </div>
                         </div>
 
-                        <div className="col-5">
-                            <div className="teaching_add-form-lef">
+                        <div className="col">
+                            <div className="teaching_add-form-left">
                                 <div className="teaching__add-form-group ">
                                     <Form.Item
                                         name="description"

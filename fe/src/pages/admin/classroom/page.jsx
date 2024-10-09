@@ -10,6 +10,8 @@ import {
     Space,
     message,
     Pagination,
+    Checkbox,
+    Radio,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -166,7 +168,7 @@ const ClassRoom = () => {
                                                 alt=""
                                             />
                                             Tên lớp:{" "}
-                                            <p className="text-red-300 uppercase ml-2 font-bold">
+                                            <p className="text-red-300 uppercase ml-2 ">
                                                 {classroom.name}
                                             </p>
                                         </h2>
@@ -184,7 +186,7 @@ const ClassRoom = () => {
                                                 <p className="text-[#9E9E9E]">
                                                     Tên môn:
                                                 </p>
-                                                <p className="font-bold text-[#000]">
+                                                <p className=" text-[#000]">
                                                     {classroom.nameSubject}
                                                 </p>
                                             </div>
@@ -192,7 +194,7 @@ const ClassRoom = () => {
                                                 <p className="text-[#9E9E9E]">
                                                     Học sinh:
                                                 </p>
-                                                <p className="font-bold text-[#000]">
+                                                <p className=" text-[#000]">
                                                     {classroom.students}
                                                 </p>
                                             </div>
@@ -200,7 +202,7 @@ const ClassRoom = () => {
                                                 <p className="text-[#9E9E9E]">
                                                     Trạng thái:
                                                 </p>
-                                                <p className="font-bold text-[#000]">
+                                                <p className=" text-[#000]">
                                                     {classroom.status}
                                                 </p>
                                             </div>
@@ -208,7 +210,7 @@ const ClassRoom = () => {
                                                 <p className="text-[#9E9E9E]">
                                                     Ngày khởi tạo:
                                                 </p>
-                                                <p className="font-bold text-[#000]">
+                                                <p className=" text-[#000]">
                                                     {classroom.createdDate}
                                                 </p>
                                             </div>
@@ -346,7 +348,8 @@ const ClassRoom = () => {
                         />
                     </Form.Item>
 
-                    <Form.Item
+                    {/* Trạng thái chuyển sang Checkbox Group */}
+                    {/* <Form.Item
                         label="Trạng thái"
                         name="status"
                         rules={[
@@ -356,34 +359,15 @@ const ClassRoom = () => {
                             },
                         ]}
                     >
-                        <Select placeholder="Chọn trạng thái">
-                            <Option value="Sắp bắt đầu">Sắp bắt đầu</Option>
-                            <Option value="Đang học">Đang học</Option>
-                            <Option value="Hoàn thành">Hoàn thành</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Ngày khởi tạo"
-                        name="createdDate"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Vui lòng chọn ngày khởi tạo!",
-                            },
-                        ]}
-                    >
-                        <DatePicker
-                            style={{ width: "100%" }}
-                            placeholder="Chọn ngày khởi tạo"
-                        />
-                    </Form.Item>
+                        <Radio.Group>
+                            <Radio value="Sắp bắt đầu">Sắp bắt đầu</Radio>
+                            <Radio value="Đang học">Đang học</Radio>
+                            <Radio value="Hoàn thành">Hoàn thành</Radio>
+                        </Radio.Group>
+                    </Form.Item> */}
 
                     <Space
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        }}
+                        style={{ display: "flex", justifyContent: "flex-end" }}
                     >
                         <Button onClick={handleModalCancel}>Hủy</Button>
                         <Button type="primary" htmlType="submit">

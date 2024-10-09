@@ -328,7 +328,7 @@ const ListRooms = () => {
                         />
                     </Form.Item>
 
-                    <Form.Item
+                    {/* <Form.Item
                         label="Trạng Thái"
                         name="status"
                         rules={[
@@ -342,7 +342,7 @@ const ListRooms = () => {
                             <Option value="Đang diễn ra">Đang diễn ra</Option>
                             <Option value="Ngừng diễn ra">Ngừng diễn ra</Option>
                         </Select>
-                    </Form.Item>
+                    </Form.Item> */}
 
                     <Form.Item>
                         <Space>

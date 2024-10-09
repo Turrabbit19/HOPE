@@ -333,7 +333,7 @@ const ListSubjects = () => {
                         />
                     </Form.Item>
 
-                    <Form.Item
+                    {/* <Form.Item
                         label="Trạng Thái"
                         name="status"
                         rules={[
@@ -346,6 +346,21 @@ const ListSubjects = () => {
                         <Select placeholder="Chọn trạng thái">
                             <Option value="Đang diễn ra">Đang diễn ra</Option>
                             <Option value="Chờ diễn ra">Chờ diễn ra</Option>
+                        </Select>
+                    </Form.Item> */}
+                    <Form.Item
+                        label="Quản lý học tập"
+                        name="status"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng không để trống",
+                            },
+                        ]}
+                    >
+                        <Select placeholder="Chọn quản lý học tập">
+                            <Option value="abcyxz">abcyxz</Option>
+                            <Option value="123456">123456</Option>
                         </Select>
                     </Form.Item>
 

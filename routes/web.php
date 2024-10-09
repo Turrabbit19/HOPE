@@ -23,7 +23,7 @@ Route::prefix('/')->group( function () {
     Route::get('schedules', function () {
         return view('client.schedule');
     });
-    Route::get('student-details', function () {
-        return view('client.student-detail');
+    Route::get('schedules-registers', function () {
+        return view('client.schedule-register  ');
     });
 });

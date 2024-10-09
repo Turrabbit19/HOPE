@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học phần đăng ký</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+        }
+
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .details {
+            background-color: #ffffcc;
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .details table {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .details th, .details td {
+            border: none;
+        }
+
+        .details th {
+            background-color: #f9f9f9;
+        }
+
+        .details p {
+            margin: 5px 0;
+        }
+
+        .locked {
+            color: red;
+            font-weight: bold;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Phần thêm mới cho lớp học phần */
+        .class-section {
+            background-color: #ffffe0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .class-section table {
+            width: 100%;
+        }
+
+        .class-section th, .class-section td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .class-section th {
+            background-color: #f2f2f2;
+        }
+
+        .class-section tr:hover {
+            background-color: #f1f1f1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Môn học/học phần đang chờ đăng ký</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Mã học phần</th>
+                <th>Tên môn học/học phần</th>
+                <th>TC</th>
+                <th>Bắt buộc</th>
+            </tr>
+        </thead>
+        <tbody id="courseList">
+            <tr onclick="showCourseDetails(1)">
+                <td>1</td>
+                <td>0101081107</td>
+                <td>Hàm biến phức và phép BĐ Laplace</td>
+                <td>2</td>
+                <td>✖</td>
+            </tr>
+            <tr onclick="showCourseDetails(2)">
+                <td>2</td>
+                <td>0101081115</td>
+                <td>Xác suất thống kê</td>
+                <td>2</td>
+                <td>✖</td>
+            </tr>
+            <tr onclick="showCourseDetails(3)">
+                <td>3</td>
+                <td>0101081199</td>
+                <td>Nguyên lý kế toán</td>
+                <td>3</td>
+                <td>✖</td>
+            </tr>
+            <!-- Các môn khác có thể thêm tương tự -->
+        </tbody>
+    </table>
+
+    <div id="courseDetails" class="details hidden">
+        <h2>Chi tiết lớp học phần</h2>
+        <table>
+            <tr>
+                <th>STT</th>
+                <th>Thông tin lớp học phần</th>
+                <th>Đã đăng ký</th>
+                <th>Trạng thái</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td id="courseName">Nguyên lý kế toán</td>
+                <td>52/80</td>
+                <td><span class="locked">Đã khóa</span></td>
+            </tr>
+        </table>
+        <p>Giáo viên: ThS. Bùi Thị Dâu</p>
+        <p id="courseSchedule">Lịch học: Thứ 6 (Tiết 6 -> 9)</p>
+        <p>Phòng: P. học lý thuyết_503-B2</p>
+    </div>
+
+    <!-- Phần lớp học phần để sinh viên chọn lớp -->
+    <div id="classSection" class="class-section hidden">
+        <h2>Chọn lớp học phần</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Lớp học phần</th>
+                    <th>Số sinh viên đã đăng ký</th>
+                    <th>Trạng thái</th>
+                    <th>Chọn</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Lớp Kế toán 1</td>
+                    <td>52/80</td>
+                    <td>Đã khóa</td>
+                    <td><input type="radio" name="classSelect"></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Lớp Kế toán 2</td>
+                    <td>50/80</td>
+                    <td>Còn chỗ</td>
+                    <td><input type="radio" name="classSelect"></td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Lớp Kế toán 3</td>
+                    <td>78/80</td>
+                    <td>Còn chỗ</td>
+                    <td><input type="radio" name="classSelect"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="button">Đăng ký</button>
+    </div>
+
+    <script>
+        function showCourseDetails(courseId) {
+            const courseDetails = document.getElementById('courseDetails');
+            const classSection = document.getElementById('classSection');
+            courseDetails.classList.remove('hidden');
+            classSection.classList.remove('hidden');
+
+            if (courseId === 1) {
+                document.getElementById('courseName').innerText = "Hàm biến phức và phép BĐ Laplace";
+                document.getElementById('courseSchedule').innerText = "Lịch học: Thứ 2 (Tiết 6 -> 9)";
+            } else if (courseId === 2) {
+                document.getElementById('courseName').innerText = "Xác suất thống kê";
+                document.getElementById('courseSchedule').innerText = "Lịch học: Thứ 3 (Tiết 6 -> 9)";
+            } else if (courseId === 3) {
+                document.getElementById('courseName').innerText = "Nguyên lý kế toán";
+                document.getElementById('courseSchedule').innerText = "Lịch học: Thứ 6 (Tiết 6 -> 9)";
+            }
+        }
+    </script>
+
+</body>
+</html>

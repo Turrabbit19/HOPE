@@ -20,7 +20,7 @@ class ApiRoomController extends Controller
                 return [
                     'id' => $room->id,
                     'name' => $room->name,
-                    'status' => $room->status ? "Đang sử dụng" : "Đang trống",
+                    'status' => $room->status ? "Đang trống" : "Đang hoạt động",
                 ];
             });
             return response()->json(['data' => $data], 200);
@@ -54,9 +54,17 @@ class ApiRoomController extends Controller
     {
         try {
             $room = Room::findOrFail($id);
-            return response()->json(['data' => $room], 200);
+            $data = $room->map(function ($room){
+                return [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'status' => $room->status ? "Đang trống" : "Đang hoạt động",
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
@@ -81,7 +89,7 @@ class ApiRoomController extends Controller
 
             return response()->json(['data' => $room, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -94,7 +102,7 @@ class ApiRoomController extends Controller
             $room->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

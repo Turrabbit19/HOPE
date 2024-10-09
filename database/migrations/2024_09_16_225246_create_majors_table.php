@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('name')->unique();
             $table->text('description');
-            $table->boolean('status')->default(TRUE);
+            $table->boolean('status')->default(TRUE); // 'Đang hoạt động', 'Tạm dừng'
             $table->softDeletes();
             $table->timestamps();
         });

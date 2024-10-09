@@ -66,9 +66,18 @@ class ApiShiftController extends Controller
     {
         try {
             $shift = Shift::findOrFail($id);
-            return response()->json(['data' => $shift], 200);
+            $data = $shift->map(function ($shift) {
+                return [
+                    'id' => $shift->id,
+                    'name' => $shift->name,
+                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'), 
+                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),     
+                ];
+            });   
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy ca học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
@@ -97,7 +106,7 @@ class ApiShiftController extends Controller
 
             return response()->json(['data' => $shift, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy ca học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -113,7 +122,7 @@ class ApiShiftController extends Controller
             $shift->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy ca học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

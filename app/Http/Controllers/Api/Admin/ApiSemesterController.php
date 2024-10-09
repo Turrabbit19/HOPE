@@ -22,7 +22,12 @@ class ApiSemesterController extends Controller
                     'name' => $semester->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
-                    'status' => $semester->status ? "Đang diễn ra" : "Kết thúc",
+                    'status' => match($semester->status) {
+                        0 => "Chờ diễn ra",
+                        1 => "Đang diễn ra",
+                        2 => "Kết thúc",
+                        default => "Không xác định",
+                    },
                 ];
             });
 
@@ -51,7 +56,12 @@ class ApiSemesterController extends Controller
                     'name' => $semester->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
-                    'status' => $semester->status ? "Đang diễn ra" : "Kết thúc",
+                    'status' => match($semester->status) {
+                        0 => "Chờ diễn ra",
+                        1 => "Đang diễn ra",
+                        2 => "Kết thúc",
+                        default => "Không xác định",
+                    },
                 ];
             });
 
@@ -67,7 +77,7 @@ class ApiSemesterController extends Controller
             'name' => 'required|string|max:255|unique:semesters', 
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date', 
-            'status' => 'required|boolean',
+            'status' => 'required|integer|in:0,1,2',
             'courses' => 'required|array', 
             'courses.*.id' => 'required|exists:courses,id', 
             'courses.*.order' => 'required|integer|min:1', 
@@ -97,9 +107,24 @@ class ApiSemesterController extends Controller
     {
         try {
             $semester = Semester::findOrFail($id);
-            return response()->json(['data' => $semester], 200);
+            $data = $semester->map(function ($semester) {
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'status' => match($semester->status) {
+                        0 => "Chờ diễn ra",
+                        1 => "Đang diễn ra",
+                        2 => "Kết thúc",
+                        default => "Không xác định",
+                    },
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy kỳ học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
         }
@@ -111,7 +136,7 @@ class ApiSemesterController extends Controller
             'name' => 'sometimes|string|max:255|unique:semesters,name,' . $id,
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date', 
-            'status' => 'sometimes|boolean',
+            'status' => 'sometimes|integer|in:0,1,2',
             'courses' => 'sometimes|array',
             'courses.*.id' => 'sometimes|exists:courses,id',
             'courses.*.order' => 'sometimes|integer|min:1',
@@ -137,7 +162,7 @@ class ApiSemesterController extends Controller
 
             return response()->json(['data' => $semester, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy kỳ học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -150,7 +175,7 @@ class ApiSemesterController extends Controller
             $semester->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy kỳ học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

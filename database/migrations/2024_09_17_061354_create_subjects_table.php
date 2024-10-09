@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->text('description');
             $table->integer('credit');
+            $table->boolean('status')->default(TRUE); // 'Đang hoạt động', 'Tạm dừng'
             $table->softDeletes();
             $table->timestamps();
         });

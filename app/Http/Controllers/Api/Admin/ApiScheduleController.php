@@ -33,7 +33,7 @@ class ApiScheduleController extends Controller
                     'link' => $schedule->link ? $schedule->link : "NULL",
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
-                    'status' => $schedule->status ? "Đang diễn ra" : "Đã kết thúc",
+                    'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
                 ];
             });
 
@@ -46,6 +46,34 @@ class ApiScheduleController extends Controller
                     'last_page' => $schedules->lastPage(),
                 ]
             ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $schedules = Schedule::with(['courseSemester', 'majorSubject', 'classroom', 'teacher', 'shift', 'room'])->get();
+
+            $data = $schedules->map(function($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'course_name' => $schedule->courseSemester->course->name,
+                    'semester_name' => $schedule->courseSemester->semester->name,
+                    'major_name' => $schedule->majorSubject->major->name,
+                    'subject_name' => $schedule->majorSubject->subject->name,
+                    'order' => $schedule->majorSubject->order,
+                    'teacher_name' => $schedule->teacher->name,
+                    'shift_name' => $schedule->shift->name,
+                    'room_name' => $schedule->room->name,
+                    'link' => $schedule->link ? $schedule->link : "NULL",
+                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                    'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
+                ];
+            });
+            return response()->json(['data' => $data,], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
@@ -90,9 +118,27 @@ class ApiScheduleController extends Controller
     {
         try {
             $schedule = Schedule::with(['courseSemester', 'majorSubject', 'classroom', 'teacher', 'shift', 'room'])->findOrFail($id);
-            return response()->json(['data' => $schedule], 200);
+            $data = $schedule->map(function($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'course_name' => $schedule->courseSemester->course->name,
+                    'semester_name' => $schedule->courseSemester->semester->name,
+                    'major_name' => $schedule->majorSubject->major->name,
+                    'subject_name' => $schedule->majorSubject->subject->name,
+                    'order' => $schedule->majorSubject->order,
+                    'teacher_name' => $schedule->teacher->name,
+                    'shift_name' => $schedule->shift->name,
+                    'room_name' => $schedule->room->name,
+                    'link' => $schedule->link ? $schedule->link : "NULL",
+                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                    'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lịch học'], 404);
+            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới lịch học', 'message' => $e->getMessage()], 500);
         }
@@ -128,7 +174,7 @@ class ApiScheduleController extends Controller
 
             return response()->json(['data' => $schedule, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lịch học'], 404);
+            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -144,7 +190,7 @@ class ApiScheduleController extends Controller
             $schedule->delete();   
             return response()->json(['message' => 'Xóa thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lịch học'], 404);
+            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }

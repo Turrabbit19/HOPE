@@ -86,9 +86,19 @@ class ApiLessonController extends Controller
     {
         try {
             $lesson = Lesson::with('subject')->findOrFail($id);
-            return response()->json(['data' => $lesson], 200);
+            $data = $lesson->map(function ($lesson){
+                return [
+                    'id' => $lesson->id,
+                    'subject_code' => $lesson->subject->code,
+                    'subject_name' => $lesson->subject->name,
+                    'name' => $lesson->name,
+                    'description' =>$lesson->description,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
@@ -112,9 +122,11 @@ class ApiLessonController extends Controller
             $data = $validator->validated();
             $lesson->update($data);
             
-            return response()->json(['data' =>$lesson, 'message' => 'Tạo mới thành công'], 201);
+            return response()->json(['data' => $lesson, 'message' => 'Cập nhật thành công'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -125,7 +137,7 @@ class ApiLessonController extends Controller
             $lesson->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

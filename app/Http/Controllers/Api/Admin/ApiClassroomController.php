@@ -25,7 +25,7 @@ class ApiClassroomController extends Controller
                     'subject_name' => $classroom->subject->name,
                     'code' => $classroom->code,
                     'max_students' => $classroom->max_students,
-                    'status' => $classroom->status,
+                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
 
@@ -54,7 +54,7 @@ class ApiClassroomController extends Controller
                     'subject_name' => $classroom->subject->name,
                     'code' => $classroom->code,
                     'max_students' => $classroom->max_students,
-                    'status' => $classroom->status,
+                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
 
@@ -98,9 +98,19 @@ class ApiClassroomController extends Controller
     {
         try {
             $classroom = Classroom::with('subject')->findOrFail($id);
-            return response()->json(['data' => $classroom], 200);
+
+            $data = $classroom->map(function ($classroom){
+                return [
+                    'subject_name' => $classroom->subject->name,
+                    'code' => $classroom->code,
+                    'max_students' => $classroom->max_students,
+                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lớp học'], 404);
+            return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
@@ -130,7 +140,7 @@ class ApiClassroomController extends Controller
 
             return response()->json(['data' => $classroom, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lớp học'], 404);
+            return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -147,7 +157,7 @@ class ApiClassroomController extends Controller
 
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lớp học'], 404);
+            return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }

@@ -6,19 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Course extends Model
+class Enrollment extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'plan_id',
-        'start_date',
-        'end_date',
-        'status'
+        'student_id',
+        'schedule_id',
     ];
-
-    public function plan() {
-        return $this->belongsTo(Plan::class);
-    }
 }

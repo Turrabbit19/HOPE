@@ -5,7 +5,7 @@
     {{-- <h3>Admin Dashboard</h3> --}}
     <ul>
         <li>
-            <a href="index.html">Trang ch</a>
+            <a href="index.html">Trang chủ</a>
         </li>
         <li>Thông báo</li>
     </ul>

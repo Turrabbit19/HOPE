@@ -23,9 +23,6 @@ const List = lazy(() => import("../pages/admin/list"));
 
 const Teach = lazy(() => import("../pages/admin/teaching/page"));
 const TeachAdd = lazy(() => import("../pages/admin/teaching/add/page"));
-const ListCourse = lazy(() =>
-    import("../pages/admin/teaching/listCourse/page")
-);
 
 import { ClassStudent } from "../pages/admin/classStudent/ClassStudent";
 import { AddClassStudent } from "../pages/admin/classStudent/AddClassStudent";
@@ -37,13 +34,13 @@ import { AccountManage } from "../pages/admin/classStudent/account-manage/Accoun
 import { Resource } from "../pages/admin/classStudent/resource/Resource";
 import Testing from "../pages/test/page";
 import ListSemester from "../pages/admin/semesters/list/page";
-import ListCourseAll from "../pages/admin/courses/list/page";
 import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
 import ListRooms from "../pages/admin/rooms/page";
 import SyllabusAdd from "../pages/admin/syllabus/add/page";
 import SyllabusList from "../pages/admin/syllabus/page";
 import SyllabusEdit from "../pages/admin/syllabus/edit/page";
+import ListCourse from "../pages/admin/courses/list/page";
 
 const Router = createBrowserRouter([
     {
@@ -193,7 +190,7 @@ const Router = createBrowserRouter([
                 path: "list-subject",
                 element: (
                     <>
-                        <ListCourseAll />
+                        <ListSubjects />
                     </>
                 ),
             },
@@ -229,16 +226,6 @@ const Router = createBrowserRouter([
             },
             //
 
-            // giao diện list khóa học
-            {
-                path: "list-subject",
-                element: (
-                    <>
-                        <ListSubjects />
-                    </>
-                ),
-            },
-
             {
                 path: "subjects",
                 element: (
@@ -249,10 +236,10 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "list-courses",
+                path: "list-course",
                 element: (
                     <>
-                        <ListSubjects />
+                        <ListCourse />
                     </>
                 ),
             },

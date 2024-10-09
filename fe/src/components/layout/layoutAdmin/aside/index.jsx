@@ -20,7 +20,7 @@ const AsideAdmin = () => {
         { name: "Quản lý ngành học", link: "/admin/teaching" },
         { name: "Quản lý môn học", link: "/admin/list-subject" },
         { name: "Kế hoạch học tập", link: "/admin/list-syllabus" },
-        { name: "Quản lý khóa học", link: "/admin/list-courses" },
+        { name: "Quản lý khóa học", link: "/admin/list-course" },
         { name: "Quản lý kỳ học", link: "/admin/list-semesters" },
         { name: "Quản lý phòng học", link: "/admin/list-rooms" },
         { name: "Quản lý lớp học", link: "/admin/classrooms" },

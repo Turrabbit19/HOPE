@@ -22,7 +22,7 @@ const semesterData = {
 
 const schedules = ["18.3", "17.3", "19.1"];
 const semesters = Object.keys(semesterData);
-const ListCourse = () => {
+const ListCourses = () => {
     const [searchValue, setSearchValue] = useState("");
     const [filteredCourses, setFilteredCourses] = useState([]);
 
@@ -775,4 +775,4 @@ const ListCourse = () => {
     );
 };
 
-export default ListCourse;
+export default ListCourses;

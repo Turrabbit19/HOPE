@@ -21,7 +21,7 @@
             table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 20px;
+                margin-bottom: 60px;
                 background-color: white;
                 table-layout: fixed;
                 /* Ensures even spacing of columns */
@@ -144,79 +144,83 @@
                 <li>Đăng ký môn học</li>
             </ul>
         </div>
-       
-        <table>
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Mã môn</th>
-                    <th>Tên môn học</th>
-                    <th>Tín chỉ</th>
 
-                </tr>
-            </thead>
-            <tbody id="courseList">
-                <tr onclick="showCourseDetails(1)">
-                    <td>1</td>
-                    <td>WEB181</td>
-                    <td>Nhập môn lập trình</td>
-                    <td>2</td>
+        <div class="card dashboard-card-ten">
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã môn</th>
+                            <th>Tên môn học</th>
+                            <th>Tín chỉ</th>
 
-                </tr>
-                <tr onclick="showCourseDetails(2)">
-                    <td>2</td>
-                    <td>WEB182</td>
-                    <td>Lập trình PHP 3</td>
-                    <td>2</td>
+                        </tr>
+                    </thead>
+                    <tbody id="courseList">
+                        <tr onclick="showCourseDetails(1)">
+                            <td>1</td>
+                            <td>WEB181</td>
+                            <td>Nhập môn lập trình</td>
+                            <td>2</td>
 
-                </tr>
-                <tr onclick="showCourseDetails(3)">
-                    <td>3</td>
-                    <td>WEB183</td>
-                    <td>Lập trình PHP 2</td>
-                    <td>3</td>
+                        </tr>
+                        <tr onclick="showCourseDetails(2)">
+                            <td>2</td>
+                            <td>WEB182</td>
+                            <td>Lập trình PHP 3</td>
+                            <td>2</td>
 
-                </tr>
-                <!-- Các môn khác có thể thêm tương tự -->
-            </tbody>
-        </table>
+                        </tr>
+                        <tr onclick="showCourseDetails(3)">
+                            <td>3</td>
+                            <td>WEB183</td>
+                            <td>Lập trình PHP 2</td>
+                            <td>3</td>
 
-        <!-- Phần lớp học phần để sinh viên chọn lớp -->
-        <div id="classSection" class="class-section hidden">
-            <h2>Chọn lớp học</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Lớp học</th>
-                        <th>Số lượng</th>
-                        <th>Ca học</th>
-                        <th>Trạng thái</th>
-                        <th>Chọn</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr onclick="showCourseDetails(1)">
-                        <td>1</td>
-                        <td>WEB183</td>
-                        <td>Nhập môn lập trình</td>
-                        <td>2</td>
-                    </tr>
-                    <tr onclick="showCourseDetails(2)">
-                        <td>2</td>
-                        <td>WEB182</td>
-                        <td>Lập trình PHP 3</td>
-                        <td>2</td>
-                    </tr>
-                    <tr onclick="showCourseDetails(3)">
-                        <td>3</td>
-                        <td>WEB181</td>
-                        <td>Lập trình PHP 2</td>
-                        <td>3</td>
-                    </tr>
-                </tbody>
-            </table>
-            <button class="button">Đăng ký</button>
+                        </tr>
+                        <!-- Các môn khác có thể thêm tương tự -->
+                    </tbody>
+                </table>
+
+                <!-- Phần lớp học phần để sinh viên chọn lớp -->
+                <div id="classSection" class="class-section hidden">
+                    <h2>Chọn lớp học</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Lớp học</th>
+                                <th>Số lượng</th>
+                                <th>Ca học</th>
+                                <th>Trạng thái</th>
+                                <th>Chọn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="showCourseDetails(1)">
+                                <td>1</td>
+                                <td>WEB183</td>
+                                <td>Nhập môn lập trình</td>
+                                <td>2</td>
+                            </tr>
+                            <tr onclick="showCourseDetails(2)">
+                                <td>2</td>
+                                <td>WEB182</td>
+                                <td>Lập trình PHP 3</td>
+                                <td>2</td>
+                            </tr>
+                            <tr onclick="showCourseDetails(3)">
+                                <td>3</td>
+                                <td>WEB181</td>
+                                <td>Lập trình PHP 2</td>
+                                <td>3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="button">Đăng ký</button>
+                </div>
+            </div>
         </div>
 
         <script>

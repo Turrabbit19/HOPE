@@ -32,7 +32,7 @@ const majorsWithCourses = [
     },
 ];
 
-const Testing = () => {
+const SyllabusAdd = () => {
     const [form] = Form.useForm();
     const [selectedMajors, setSelectedMajors] = useState([]);
     const [subjectsByMajorAndSemester, setSubjectsByMajorAndSemester] =
@@ -230,4 +230,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default SyllabusAdd;

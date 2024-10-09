@@ -41,6 +41,9 @@ import ListCourseAll from "../pages/admin/courses/list/page";
 import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
 import ListRooms from "../pages/admin/rooms/page";
+import SyllabusAdd from "../pages/admin/syllabus/add/page";
+import SyllabusList from "../pages/admin/syllabus/page";
+import SyllabusEdit from "../pages/admin/syllabus/edit/page";
 
 const Router = createBrowserRouter([
     {
@@ -68,6 +71,18 @@ const Router = createBrowserRouter([
             {
                 path: "test",
                 element: <Testing />,
+            },
+            {
+                path: "list-syllabus",
+                element: <SyllabusList />,
+            },
+            {
+                path: "list-syllabus/add",
+                element: <SyllabusAdd />,
+            },
+            {
+                path: "list-syllabus/edit/:id",
+                element: <SyllabusEdit />,
             },
             {
                 path: "list",

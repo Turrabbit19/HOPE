@@ -19,8 +19,6 @@ class Subject extends Model
     
     public function majors()
     {
-        return $this->belongsToMany(Major::class, 'major_subjects')
-                    ->withPivot('course_id', 'semester_order')
-                    ->withTimestamps();;
+        return $this->belongsToMany(Major::class, 'major_subjects');
     }
 }

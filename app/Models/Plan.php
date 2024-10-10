@@ -18,4 +18,9 @@ class Plan extends Model
     protected $casts = [
         'status' => 'boolean',
     ];
+
+    public function planSubjects()
+    {
+        return $this->hasMany(PlanSubject::class);
+    }
 }

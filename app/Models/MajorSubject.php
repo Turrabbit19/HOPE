@@ -19,6 +19,6 @@ class MajorSubject extends Model
         return $this->belongsTo(Major::class);
     }
     public function subject() {
-        return $this->belongsTo(subject::class);
+        return $this->belongsTo(Subject::class);
     }
 }

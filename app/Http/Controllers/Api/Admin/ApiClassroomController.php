@@ -98,15 +98,12 @@ class ApiClassroomController extends Controller
     {
         try {
             $classroom = Classroom::with('subject')->findOrFail($id);
-
-            $data = $classroom->map(function ($classroom){
-                return [
+            $data = [
                     'subject_name' => $classroom->subject->name,
                     'code' => $classroom->code,
                     'max_students' => $classroom->max_students,
                     'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

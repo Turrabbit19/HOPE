@@ -67,9 +67,9 @@
         {{-- <h3>Admin Dashboard</h3> --}}
         <ul>
             <li>
-                <a href="index.html">Home</a>
+                <a href="index.html">Trang chủ</a>
             </li>
-            <li>schedules</li>
+            <li>Lịch học</li>
         </ul>
     </div>
     <div class="col-12-xxxl col-12">
@@ -79,134 +79,137 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>TIME</th>
-                                <th>MONDAY</th>
-                                <th>TUESDAY</th>
-                                <th>WEDNESDAY</th>
-                                <th>THURSDAY</th>
-                                <th>FRIDAY</th>
-                                <th>SATURDAY</th>
+                                <th>THỜI GIAN</th>
+                                <th>THỨ HAI</th>
+                                <th>THỨ BA</th>
+                                <th>THỨ TƯ</th>
+                                <th>THỨ NĂM</th>
+                                <th>THỨ SÁU</th>
+                                <th>THỨ BẢY</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>09:00am</td>
+                                <td>Ca 1</td>
                                 <td>
-                                    <div class="event dance">Dance<br>9:00-10:00<br><small>Ivana
-                                            Wong</small></div>
+                                    <div class="event dance">Pháp luật<br>7:10-9:10<br><small>baovvph36087</small></div>
                                 </td>
                                 <td>
-                                    <div class="event yoga">Yoga<br>9:00-10:00<br><small>Marta
-                                            Healy</small></div>
+                                   
                                 </td>
                                 <td>
-                                    <div class="event music">Music<br>9:00-10:00<br><small>Ivana
-                                            Wong</small></div>
+                                    <div class="event dance">Pháp luật<br>7:10-9:10<br><small>baovvph36087</small></div>
                                 </td>
                                 <td>
-                                    <div class="event dance">Dance<br>9:00-10:00<br><small>Ivana
-                                            Wong</small></div>
+                                 
                                 </td>
                                 <td>
-                                    <div class="event art">Art<br>9:00-10:00<br><small>Kate
-                                            Alley</small></div>
+                                    <div class="event dance">Pháp luật<br>7:10-9:10<br><small>baovvph36087</small></div>
                                 </td>
                                 <td>
-                                    <div class="event english">English<br>9:00-10:00<br><small>James
-                                            Smith</small></div>
+                                  
                                 </td>
                             </tr>
                             <tr>
-                                <td>10:00am</td>
+                                <td>Ca 2</td>
                                 <td>
-                                    <div class="event music">Music<br>10:00-11:00<br><small>Ivana
-                                            Wong</small></div>
+                                   
                                 </td>
                                 <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
+                                    <div class="event music">Lập trình PHP2<br>9:20-11:20<br><small>baovvph36087</small></div>
                                 </td>
                                 <td>
-                                    <div class="event art">Art<br>10:00-11:00<br><small>Kate
-                                            Alley</small></div>
+                              
                                 </td>
                                 <td>
-                                    <div class="event yoga">Yoga<br>10:00-11:00<br><small>Marta
-                                            Healy</small></div>
+                                    <div class="event music">Lập trình PHP2<br>9:20-11:20<br><small>baovvph36087</small></div>
                                 </td>
                                 <td>
-                                    <div class="event english">English<br>10:00-11:00<br><small>James
-                                            Smith</small></div>
+                                  
+                                </td>
+                                <td>
+                                    <div class="event music">Lập trình PHP2<br>9:20-11:20<br><small>baovvph36087</small></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ca 3</td>
+                                <td>
+                                    
+                                </td>
+                                <td>
+                                    
+                                </td>
+                                <td>
+                                    
+                                </td>
+                                <td>
+                                    
+                                </td>
+                                <td>
+                                    
+                                </td>
+                                <td>
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ca 4</td>
+                                <td>
+                                    <div class="event yoga">Quản trị Website<br>14:10-16:10<br><small>baovvph36087</small></div>
+                                </td>
+                                <td>
+                                  
+                                </td>
+                                <td>
+                                    <div class="event yoga">Quản trị Website<br>14:10-16:10<br><small>baovvph36087</small></div>
+                                </td>
+                                <td>
+                                  
+                                </td>
+                                <td>
+                                    <div class="event yoga">Quản trị Website<br>14:10-16:10<br><small>baovvph36087</small></div>
                                 </td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td>11:00am</td>
+                                <td>Ca 5</td>
                                 <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
+                                   
                                 </td>
                                 <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
+                                    <div class="event english">Chính trị<br>16:20-18:20<br><small>baovvph36087</small></div>
                                 </td>
+                                <td></td>
                                 <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
+                                    <div class="event english">Chính trị<br>16:20-18:20<br><small>baovvph36087</small></div>
                                 </td>
+                                <td></td>
                                 <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
-                                </td>
-                                <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
-                                </td>
-                                <td>
-                                    <div class="event break">Break<br>11:00-12:00</div>
+                                    <div class="event english">Chính trị<br>16:20-18:20<br><small>baovvph36087</small></div>
                                 </td>
                             </tr>
                             <tr>
-                                <td>12:00pm</td>
-                                <td></td>
+                                <td>Ca 6</td>
                                 <td>
-                                    <div class="event art">Art<br>12:00-1:00<br><small>Kate
-                                            Alley</small></div>
+                                  
                                 </td>
                                 <td>
-                                    <div class="event dance">Dance<br>12:00-1:00<br><small>Ivana
-                                            Wong</small></div>
-                                </td>
-                                <td>
-                                    <div class="event music">Music<br>12:00-1:00<br><small>Ivana
-                                            Wong</small></div>
-                                </td>
-                                <td>
-                                    <div class="event yoga">Yoga<br>12:00-1:00<br><small>Marta
-                                            Healy</small></div>
-                                </td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td>01:00pm</td>
-                                <td>
-                                    <div class="event english">English<br>1:00-2:00<br><small>James
-                                            Smith</small></div>
-                                </td>
-                                <td>
-                                    <div class="event music">Music<br>1:00-2:00<br><small>Ivana
-                                            Wong</small></div>
+                                 
                                 </td>
                                 <td></td>
                                 <td>
-                                    <div class="event yoga">Yoga<br>1:00-2:00<br><small>Marta
-                                            Healy</small></div>
+                                    
                                 </td>
                                 <td>
-                                    <div class="event music">Music<br>1:00-2:00<br><small>Ivana
-                                            Wong</small></div>
+                                    
                                 </td>
                                 <td>
-                                    <div class="event english">English<br>1:00-2:00<br><small>James
-                                            Smith</small></div>
+                              
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                    
                 </div>
             </div>
         </div>

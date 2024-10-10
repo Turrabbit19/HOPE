@@ -7,12 +7,6 @@
             <div class="mb-3">
                 <h4>Notifications</h4>
             </div>
-            <div class="d-flex align-items-center mb-3">
-                <a href="javascript:void(0);" class="btn btn-light me-2"><i
-                        class="ti ti-check me-2"></i>Mark all as read</a>
-                <a href="javascript:void(0);" class="btn btn-danger"><i
-                        class="ti ti-trash me-2"></i>Delete all</a>
-            </div>
         </div>
     </div>
     <div class="card-body pb-1">
@@ -33,9 +27,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="noti-delete mb-3">
-                    <a href="javascript:void(0);" class="btn btn-danger btn-sm text-white">Delete</a>
-                </div>
             </div>
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap shadow-sm noti-hover border p-3 pb-0 rounded mb-3">
@@ -50,9 +41,6 @@
                         <span>6 mins ago</span>
                     </div>
                 </div>
-                <div class="noti-delete mb-3">
-                    <a href="javascript:void(0);" class="btn btn-danger btn-sm text-white">Delete</a>
-                </div>
             </div>
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap shadow-sm noti-hover border p-3 pb-0 rounded mb-3">
@@ -65,9 +53,6 @@
                         <p class="mb-0 text-dark  fw-medium">A new teacher record for John</p>
                         <span>09:45 am</span>
                     </div>
-                </div>
-                <div class="noti-delete mb-3">
-                    <a href="javascript:void(0);" class="btn btn-danger btn-sm text-white">Delete</a>
                 </div>
             </div>
             <div
@@ -83,9 +68,6 @@
                         <span>2 hrs ago</span>
                     </div>
                 </div>
-                <div class="noti-delete mb-3">
-                    <a href="javascript:void(0);" class="btn btn-danger btn-sm text-white">Delete</a>
-                </div>
             </div>
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap shadow-sm noti-hover border p-3 pb-0 rounded mb-3">
@@ -99,9 +81,6 @@
                         <span>10 mins ago</span>
                     </div>
                 </div>
-                <div class="noti-delete mb-3">
-                    <a href="javascript:void(0);" class="btn btn-danger btn-sm text-white">Delete</a>
-                </div>
             </div>
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap shadow-sm noti-hover border p-3 pb-0 rounded mb-3">
@@ -114,9 +93,6 @@
                         <p class="mb-0 text-dark  fw-medium">Exam time table added</p>
                         <span>1 hr ago</span>
                     </div>
-                </div>
-                <div class="noti-delete mb-3">
-                    <a href="javascript:void(0);" class="btn btn-danger btn-sm text-white">Delete</a>
                 </div>
             </div>
         </div>

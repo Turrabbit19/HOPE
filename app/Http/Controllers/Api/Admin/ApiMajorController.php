@@ -59,15 +59,13 @@ class ApiMajorController extends Controller
     {
         try {
             $major = Major::findOrFail($id);
-            $data = $major->map(function($major) {
-                return [
+            $data = [
                     'id' => $major->id,
                     'code' => $major->code,
                     'name' => $major->name,
                     'description' => $major->description,
                     'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

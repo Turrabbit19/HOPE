@@ -61,12 +61,10 @@ class ApiSectionController extends Controller
     {
         try {
             $section = Section::findOrFail($id);
-            $data = $section->map(function($section) {
-                return [
+            $data = [
                     'id' => $section->id,
                     'name' => $section->name,
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -76,9 +74,6 @@ class ApiSectionController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
          $validator = Validator::make($request->all(), [

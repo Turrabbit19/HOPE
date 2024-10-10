@@ -118,8 +118,7 @@ class ApiScheduleController extends Controller
     {
         try {
             $schedule = Schedule::with(['courseSemester', 'majorSubject', 'classroom', 'teacher', 'shift', 'room'])->findOrFail($id);
-            $data = $schedule->map(function($schedule) {
-                return [
+            $data = [
                     'id' => $schedule->id,
                     'course_name' => $schedule->courseSemester->course->name,
                     'semester_name' => $schedule->courseSemester->semester->name,
@@ -134,7 +133,6 @@ class ApiScheduleController extends Controller
                     'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
                     'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

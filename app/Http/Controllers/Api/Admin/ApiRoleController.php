@@ -52,12 +52,10 @@ class ApiRoleController extends Controller
     {
         try {
             $role = Role::findOrFail($id);
-            $data = $role->map(function($role) {
-                return [
+            $data = [
                     'id' => $role->id,
                     'name' => $role->name,
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

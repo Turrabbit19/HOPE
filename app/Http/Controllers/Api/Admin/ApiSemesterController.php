@@ -107,8 +107,7 @@ class ApiSemesterController extends Controller
     {
         try {
             $semester = Semester::findOrFail($id);
-            $data = $semester->map(function ($semester) {
-                return [
+            $data = [
                     'id' => $semester->id,
                     'name' => $semester->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
@@ -120,7 +119,6 @@ class ApiSemesterController extends Controller
                         default => "Không xác định",
                     },
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

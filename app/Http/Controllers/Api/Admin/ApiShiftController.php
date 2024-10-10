@@ -66,14 +66,12 @@ class ApiShiftController extends Controller
     {
         try {
             $shift = Shift::findOrFail($id);
-            $data = $shift->map(function ($shift) {
-                return [
+            $data = [
                     'id' => $shift->id,
                     'name' => $shift->name,
                     'start_time' => Carbon::parse($shift->start_time)->format('H:i'), 
                     'end_time' => Carbon::parse($shift->end_time)->format('H:i'),     
-                ];
-            });   
+                ];  
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

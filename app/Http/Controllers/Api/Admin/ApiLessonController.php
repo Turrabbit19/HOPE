@@ -86,15 +86,13 @@ class ApiLessonController extends Controller
     {
         try {
             $lesson = Lesson::with('subject')->findOrFail($id);
-            $data = $lesson->map(function ($lesson){
-                return [
+            $data = [
                     'id' => $lesson->id,
                     'subject_code' => $lesson->subject->code,
                     'subject_name' => $lesson->subject->name,
                     'name' => $lesson->name,
                     'description' =>$lesson->description,
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

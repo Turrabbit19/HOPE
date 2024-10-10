@@ -91,15 +91,13 @@ class ApiNotificationController extends Controller
     {
         try {
             $notification = Notification::with('section')->findOrFail($id);
-            $data = $notification->map(function ($notification) {
-                return [
+            $data = [
                     'id' => $notification->id,
                     'section_name' => $notification->section->name,
                     'name' => $notification->name,
                     'description' => $notification->description,
                     'time' => $notification->time,
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

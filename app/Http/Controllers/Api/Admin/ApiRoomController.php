@@ -54,13 +54,11 @@ class ApiRoomController extends Controller
     {
         try {
             $room = Room::findOrFail($id);
-            $data = $room->map(function ($room){
-                return [
+            $data = [
                     'id' => $room->id,
                     'name' => $room->name,
                     'status' => $room->status ? "Đang trống" : "Đang hoạt động",
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

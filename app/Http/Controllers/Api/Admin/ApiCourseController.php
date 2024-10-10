@@ -65,8 +65,7 @@ class ApiCourseController extends Controller
     {
         try {
             $course = Course::with('plan')->findOrFail($id);
-            $data = $course->map(function ($course) {
-                return [
+            $data = [
                     'id' => $course->id,
                     'name' => $course->name,
                     'plan' => $course->plan->name,
@@ -79,7 +78,6 @@ class ApiCourseController extends Controller
                         default => "Không xác định",
                     },
                 ];
-            });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

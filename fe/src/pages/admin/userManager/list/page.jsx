@@ -6,15 +6,18 @@ import {
     Modal,
     Descriptions,
     Divider,
-    Input,
+    Popconfirm,
+    message,
 } from "antd";
 import {
     DeleteOutlined,
     UserOutlined,
     InfoCircleOutlined,
+    PlusOutlined,
 } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 
-// Sample data
+// Dữ liệu mẫu
 const accounts = {
     classManager: [
         {
@@ -23,10 +26,10 @@ const accounts = {
             phone: "0912789789",
             email: "quanly@example.com",
             avatar: "",
-            dob: "1985-05-05",
-            gender: true,
-            ethnicity: "Kinh",
-            address: "Hà Nội",
+            dob: "01-10-2003",
+            gender: true, // true: Nam, false: Nữ
+            ethnicity: "Kinh", // Dân tộc
+            address: "Hà Nội", // Địa chỉ
         },
     ],
     teachers: [
@@ -35,25 +38,25 @@ const accounts = {
             name: "Nguyễn Văn B",
             phone: "0912789789",
             email: "giangvien1@example.com",
-            avatar: "",
+            avatar: "", // Ví dụ URL cho avatar
             teacher_code: "GV001",
             major: "Công nghệ thông tin",
-            status: 0,
-            dob: "1990-01-01",
-            gender: true,
-            ethnicity: "Kinh",
-            address: "Hà Nội",
+            status: 0, // 'Đang công tác'
+            dob: "01-10-2003",
+            gender: true, // true: Nam, false: Nữ
+            ethnicity: "Kinh", // Dân tộc
+            address: "Hà Nội", // Địa chỉ
         },
         {
             id: 3,
             name: "Nguyễn Văn C",
             phone: "0912789789",
             email: "giangvien2@example.com",
-            avatar: "",
+            avatar: "", // Ví dụ URL cho avatar
             teacher_code: "GV002",
             major: "Kinh tế",
-            status: 1,
-            dob: "1988-02-02",
+            status: 1, // 'Tạm dừng'
+            dob: "01-10-2003",
             gender: false,
             ethnicity: "Kinh",
             address: "TP HCM",
@@ -66,13 +69,13 @@ const accounts = {
             phone: "0912789789",
             email: "hocvien1@example.com",
             parent: "Lê Thị A",
-            avatar: "",
+            avatar: "", // Ví dụ URL cho avatar
             student_code: "SV001",
             current_semester: 3,
-            status: 0,
+            status: 0, // 'Đang học'
             course: "Khóa Học 1",
             major: "Công nghệ thông tin",
-            dob: "2000-03-03",
+            dob: "01-10-2003",
             gender: true,
             ethnicity: "Kinh",
             address: "Đà Nẵng",
@@ -83,13 +86,13 @@ const accounts = {
             phone: "0912789789",
             email: "hocvien2@example.com",
             parent: "Lê Thị A",
-            avatar: "",
+            avatar: "", // Ví dụ URL cho avatar
             student_code: "SV002",
             current_semester: 2,
-            status: 1,
+            status: 1, // 'Bảo lưu'
             course: "Khóa Học 2",
             major: "Kinh tế",
-            dob: "2001-04-04",
+            dob: "01-10-2003",
             gender: false,
             ethnicity: "Kinh",
             address: "Nha Trang",
@@ -97,7 +100,7 @@ const accounts = {
     ],
 };
 
-// Convert status from number to string for Students
+// Hàm chuyển đổi trạng thái từ số sang chuỗi cho Học viên
 const getStudentStatus = (status) => {
     switch (status) {
         case 0:
@@ -111,7 +114,7 @@ const getStudentStatus = (status) => {
     }
 };
 
-// Convert status from number to string for Teachers
+// Hàm chuyển đổi trạng thái từ số sang chuỗi cho Giảng viên
 const getTeacherStatus = (status) => {
     switch (status) {
         case 0:
@@ -125,14 +128,12 @@ const getTeacherStatus = (status) => {
     }
 };
 
-const Testing = () => {
+const ListUser = () => {
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [recordType, setRecordType] = useState("");
-    const [teacherFilter, setTeacherFilter] = useState("");
-    const [studentFilter, setStudentFilter] = useState("");
+    const [recordType, setRecordType] = useState(""); // "teacher" hoặc "student" hoặc "classManager"
 
-    // Show account detail
+    // Hàm hiển thị thông tin chi tiết của tài khoản
     const handleDetailClick = (record, type) => {
         setSelectedRecord(record);
         setRecordType(type);
@@ -145,8 +146,13 @@ const Testing = () => {
         setRecordType("");
     };
 
-    // Columns for displaying table (only includes 4 columns: Avatar, Name, Phone, Email)
+    const handleDelete = (record) => {
+        message.success(`Đã xóa tài khoản: ${record.name}`);
+    };
+
+    // Các cột cho bảng hiển thị (chỉ bao gồm 4 cột: Avatar, Họ Tên, Điện Thoại, Email)
     const getColumns = (type = "") => {
+        // Cột chung
         const commonColumns = [
             {
                 title: "Avatar",
@@ -173,7 +179,7 @@ const Testing = () => {
             },
         ];
 
-        // Action column (Details and Delete)
+        // Cột hành động
         const actionColumn = {
             title: "Hành Động",
             key: "actions",
@@ -195,7 +201,14 @@ const Testing = () => {
                     >
                         Chi tiết
                     </Button>
-                    <Button type="link" icon={<DeleteOutlined />} />
+                    <Popconfirm
+                        title="Bạn có chắc chắn muốn xóa tài khoản này?"
+                        onConfirm={() => handleDelete(record)} // Xóa tài khoản
+                        okText="Có"
+                        cancelText="Không"
+                    >
+                        <Button type="link" icon={<DeleteOutlined />} />
+                    </Popconfirm>
                 </>
             ),
         };
@@ -203,27 +216,30 @@ const Testing = () => {
         return [...commonColumns, actionColumn];
     };
 
-    // Filter teachers and students based on the input fields
-    const filteredTeachers = accounts.teachers.filter((teacher) =>
-        teacher.teacher_code.toLowerCase().includes(teacherFilter.toLowerCase())
-    );
-
-    const filteredStudents = accounts.students.filter((student) =>
-        student.course.toLowerCase().includes(studentFilter.toLowerCase())
-    );
-
     return (
         <div>
-            <div className="col-12 justify-between flex">
-                <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-                    Quản Lý Tài Khoản
-                    <button>
-                        <img src="/assets/svg/reload.svg" alt="reload..." />
-                    </button>
-                </h1>
+            <div className="col-12 pb-8">
+                <div className="col-12 justify-between flex">
+                    <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
+                        Quản Lý Tài Khoản
+                        <button>
+                            <img src="/assets/svg/reload.svg" alt="reload..." />
+                        </button>
+                    </h1>
+                </div>
+
+                <div className="col-12 flex justify-between items-center mt-6">
+                    <Link
+                        to={`add`}
+                        className="btn btn--outline text-[#7017E2]"
+                    >
+                        <PlusOutlined />
+                        Tạo mới
+                    </Link>
+                </div>
             </div>
 
-            {/* Account Management */}
+            {/* Tài Khoản Quản Lý Lớp */}
             <Divider orientation="left">#1. Quản trị Viên</Divider>
             <Table
                 dataSource={accounts.classManager}
@@ -232,37 +248,25 @@ const Testing = () => {
                 pagination={false}
             />
 
-            {/* Teachers Filter */}
+            {/* Tài Khoản Giảng Viên */}
             <Divider orientation="left">#2. Giảng Viên</Divider>
-            <Input
-                placeholder="Tìm kiếm theo mã giảng viên..."
-                value={teacherFilter}
-                onChange={(e) => setTeacherFilter(e.target.value)}
-                style={{ width: 300, marginBottom: 16 }}
-            />
             <Table
-                dataSource={filteredTeachers}
+                dataSource={accounts.teachers}
                 columns={getColumns("teachers")}
                 rowKey="id"
                 pagination={false}
             />
 
-            {/* Students Filter */}
+            {/* Tài Khoản Học Viên */}
             <Divider orientation="left">#3. Sinh Viên</Divider>
-            <Input
-                placeholder="Tìm kiếm theo khóa học..."
-                value={studentFilter}
-                onChange={(e) => setStudentFilter(e.target.value)}
-                style={{ width: 300, marginBottom: 16 }}
-            />
             <Table
-                dataSource={filteredStudents}
+                dataSource={accounts.students}
                 columns={getColumns("students")}
                 rowKey="id"
                 pagination={false}
             />
 
-            {/* Modal for displaying account details */}
+            {/* Modal hiển thị chi tiết tài khoản */}
             {selectedRecord && (
                 <Modal
                     title={`Chi tiết ${
@@ -279,7 +283,7 @@ const Testing = () => {
                             Đóng
                         </Button>,
                     ]}
-                    width={800} // Increase modal size
+                    width={800} // Tăng kích thước modal
                 >
                     <div
                         style={{
@@ -302,6 +306,7 @@ const Testing = () => {
                     <Divider />
 
                     <Descriptions bordered column={1}>
+                        {/* Thông tin cho Quản Trị Viên */}
                         {recordType === "classManager" && (
                             <>
                                 <Descriptions.Item label="Ngày Sinh">
@@ -319,6 +324,7 @@ const Testing = () => {
                             </>
                         )}
 
+                        {/* Thông tin cho Giảng Viên */}
                         {recordType === "teacher" && (
                             <>
                                 <Descriptions.Item label="Mã Giảng Viên">
@@ -345,6 +351,7 @@ const Testing = () => {
                             </>
                         )}
 
+                        {/* Thông tin cho Học Viên */}
                         {recordType === "student" && (
                             <>
                                 <Descriptions.Item label="Mã Sinh Viên">
@@ -386,4 +393,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default ListUser;

@@ -41,9 +41,8 @@ import SyllabusAdd from "../pages/admin/syllabus/add/page";
 import SyllabusList from "../pages/admin/syllabus/page";
 import SyllabusEdit from "../pages/admin/syllabus/edit/page";
 import ListCourse from "../pages/admin/courses/list/page";
-import AllStudent from "../pages/admin/userManager/all-student";
-import AllUser from "../pages/admin/userManager/all-user";
-import AllTeacher from "../pages/admin/userManager/all-teacher";
+import ListUser from "../pages/admin/userManager/list/page";
+import UserAdd from "../pages/admin/userManager/add/page";
 
 const Router = createBrowserRouter([
     {
@@ -266,40 +265,21 @@ const Router = createBrowserRouter([
             },
 
             {
-                path: "all-student",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <AllStudent />
-                    </>
-                ),
-            },
-            {
-                path: "all-user",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <AllUser />
-                    </>
-                ),
-            },
-            {
-                path: "teacher-manager",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <AllTeacher />
-                    </>
-                ),
-            },
-
-            {
                 path: "classrooms",
                 element: (
                     <>
                         <ClassRoom />
                     </>
                 ),
+            },
+
+            {
+                path: "list-users",
+                element: <ListUser />,
+            },
+            {
+                path: "list-users/add",
+                element: <UserAdd />,
             },
         ],
     },

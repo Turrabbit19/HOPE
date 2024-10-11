@@ -33,7 +33,7 @@ class ApiRoomController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:19|unique:rooms',
-            'status' => 'required|boolean',
+            'status' => 'boolean',
         ]);
 
         if ($validator->fails()) {

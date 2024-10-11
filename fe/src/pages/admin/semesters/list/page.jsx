@@ -12,6 +12,8 @@ import {
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import moment from "moment";
+import Loading from "../../../../components/loading";
+import instance from "../../../../config/axios";
 
 const { Option } = Select;
 
@@ -21,37 +23,23 @@ const ListSemester = () => {
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [editingSemester, setEditingSemester] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
     useEffect(() => {
-        const fetchSemesters = async () => {
-            const data = [
-                {
-                    id: 1,
-                    name: "Kỳ 1",
-                    startDate: "2024-01-01",
-                    endDate: "2024-04-30",
-                    status: "Đang diễn ra",
-                },
-                {
-                    id: 2,
-                    name: "Kỳ 2",
-                    startDate: "2024-05-01",
-                    endDate: "2024-08-31",
-                    status: "Chờ diễn ra",
-                },
-                {
-                    id: 3,
-                    name: "Kỳ 3",
-                    startDate: "2024-09-01",
-                    endDate: "2024-12-31",
-                    status: "Chờ diễn ra",
-                },
-            ];
-            setSemesters(data);
-        };
-
-        fetchSemesters();
+       (
+        async () => {
+        setLoading(true);
+            try {
+                const {data} = await instance.get("admin/semesters");
+                setSemesters(data.data);
+            } catch (error) {
+                console.log(error.message);
+            }finally {
+                setLoading(false)
+            }
+        }
+       )()
     }, []);
 
     const handleSearch = (value) => {
@@ -107,6 +95,10 @@ const ListSemester = () => {
         setSemesters(semesters.filter((semester) => semester.id !== id));
     };
 
+    if(loading) {
+        return <Loading/>
+    }
+
     return (
         <div className="row row-cols-2 g-3">
             <div className="col-12 justify-between flex">
@@ -138,11 +130,11 @@ const ListSemester = () => {
                 </Button>
 
                 <span className="font-bold text-[14px] text-[#000]">
-                    {filteredSemesters.length} items
+                    {semesters.length} items
                 </span>
             </div>
-            {filteredSemesters.length > 0 ? (
-                filteredSemesters.map((semester) => (
+            {semesters.length > 0 ? (
+                semesters.map((semester) => (
                     <div className="col" key={semester.id}>
                         <div className="teaching__card">
                             <div className="teaching__card-top">

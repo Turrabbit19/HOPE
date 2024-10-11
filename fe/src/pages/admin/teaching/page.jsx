@@ -16,7 +16,7 @@ import {
   import instance from "../../../config/axios";
   
   const Teach = () => {
-    const [courses, setCourses] = useState([]);
+    // const [courses, setCourses] = useState([]);
     const [filterMajors, setFilterMajors] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [update, setUpdate] = useState(false);
@@ -45,7 +45,12 @@ import {
   
     const checkNameUnique = async (name) => {
       const { data } = await instance.get(`admin/majors/check-unique/${name}`);
-      return data.status === 200 ? data.data.is_unique : "";
+      if(data.is_unique){
+        return true;
+      }else {
+        return ""
+      }
+    //   return  data.data.is_unique : "";
     };
   
     const onHandleSubmit = async (values) => {
@@ -332,9 +337,10 @@ import {
                       <div className="teaching__add-form-group mt-3">
                         <Form.Item
                           name="description"
+                        //   className="w-500"
                           rules={[{ required: true, message: "Vui lòng điền vào trường này" }]}
                         >
-                          <Input.TextArea placeholder="Mô tả" rows={8} />
+                          <Input.TextArea placeholder="Mô tả" rows={8}  />
                         </Form.Item>
                       </div>
                     </div>

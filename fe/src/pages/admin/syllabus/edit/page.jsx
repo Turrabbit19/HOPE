@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Form,
     Input,
@@ -32,20 +32,51 @@ const majorsWithCourses = [
     },
 ];
 
-const Testing = () => {
+// Giả lập dữ liệu syllabus để chỉnh sửa
+const existingSyllabus = {
+    name: "Lập trình C++",
+    majors: ["1", "2"],
+    totalSemesters: 3,
+    subjectsByMajorAndSemester: {
+        1: {
+            0: ["1"],
+            1: ["2"],
+            2: [],
+        },
+        2: {
+            0: ["4"],
+            1: ["5"],
+            2: [],
+        },
+    },
+};
+
+const SyllabusEdit = () => {
     const [form] = Form.useForm();
     const [selectedMajors, setSelectedMajors] = useState([]);
     const [subjectsByMajorAndSemester, setSubjectsByMajorAndSemester] =
         useState({});
-    const [totalSemesters, setTotalSemesters] = useState([]);
+    const [totalSemesters, setTotalSemesters] = useState(0);
 
-    // Xử lý chọn ngành học
+    useEffect(() => {
+        // Gán giá trị vào form từ syllabus đã có
+        form.setFieldsValue({
+            name: existingSyllabus.name,
+            majors: existingSyllabus.majors,
+            totalSemesters: existingSyllabus.totalSemesters,
+        });
+        setSelectedMajors(existingSyllabus.majors);
+        setTotalSemesters(existingSyllabus.totalSemesters);
+        setSubjectsByMajorAndSemester(
+            existingSyllabus.subjectsByMajorAndSemester
+        );
+    }, [form]);
+
     const handleMajorsChange = (value) => {
         setSelectedMajors(value);
         setSubjectsByMajorAndSemester({});
     };
 
-    // Lấy môn học theo kỳ
     const getCoursesBySemesterForMajor = (majorId, semester) => {
         const major = majorsWithCourses.find((m) => m.id === majorId);
         if (!major) return [];
@@ -57,7 +88,6 @@ const Testing = () => {
             }));
     };
 
-    // Xử lý chọn môn học theo kỳ cho từng ngành
     const handleCoursesChange = (value, majorId, semesterIndex) => {
         setSubjectsByMajorAndSemester((prevState) => ({
             ...prevState,
@@ -68,23 +98,21 @@ const Testing = () => {
         }));
     };
 
-    // Xử lý chọn số kỳ học
     const handleSemesterNumberChange = (value) => {
         setTotalSemesters(value);
     };
 
-    // Xử lý submit form
     const handleFormSubmit = (values) => {
         const finalData = {
             ...values,
             subjectsByMajorAndSemester,
         };
-        console.log("Syllabus Data: ", finalData);
+        console.log("Updated Syllabus Data: ", finalData);
     };
 
     return (
         <div className="syllabus-container">
-            <h2 className="syllabus-title">Thêm Mới Quản Lý Học Tập</h2>
+            <h2 className="syllabus-title">Chỉnh Sửa Quản Lý Học Tập</h2>
             <Form
                 form={form}
                 layout="vertical"
@@ -176,8 +204,6 @@ const Testing = () => {
                                                     semesterIndex + 1
                                                 }`}</h4>
                                                 <Col span={24}>
-                                                    {" "}
-                                                    {/* Chiều rộng 100% theo bố cục cột */}
                                                     <Select
                                                         mode="multiple"
                                                         placeholder={`Chọn môn học cho kỳ ${
@@ -222,7 +248,7 @@ const Testing = () => {
                 {/* Nút lưu syllabus */}
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
-                        Lưu Syllabus
+                        Cập Nhật Syllabus
                     </Button>
                 </Form.Item>
             </Form>
@@ -230,4 +256,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default SyllabusEdit;

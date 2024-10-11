@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Layout, Menu, Select } from "antd";
 import { useTranslation } from "react-i18next";
-const HeaderAdmin = ({ toggleAside }) => {
+const HeaderAdmin = () => {
     const { Header } = Layout;
     const { t, i18n } = useTranslation();
 
@@ -78,12 +78,6 @@ const HeaderAdmin = ({ toggleAside }) => {
             <div className="container">
                 <div className="header">
                     <div className="header__right">
-                        <button
-                            className="header__btn-more"
-                            onClick={toggleAside}
-                        >
-                            <img src="/assets/svg/more.svg" alt="" />
-                        </button>
                         <a href="/" className="logo">
                             <img
                                 src="/assets/img/logo.png"

@@ -23,9 +23,6 @@ const List = lazy(() => import("../pages/admin/list"));
 
 const Teach = lazy(() => import("../pages/admin/teaching/page"));
 const TeachAdd = lazy(() => import("../pages/admin/teaching/add/page"));
-const ListCourse = lazy(() =>
-    import("../pages/admin/teaching/listCourse/page")
-);
 
 import { ClassStudent } from "../pages/admin/classStudent/ClassStudent";
 import { AddClassStudent } from "../pages/admin/classStudent/AddClassStudent";
@@ -37,9 +34,16 @@ import { AccountManage } from "../pages/admin/classStudent/account-manage/Accoun
 import { Resource } from "../pages/admin/classStudent/resource/Resource";
 import Testing from "../pages/test/page";
 import ListSemester from "../pages/admin/semesters/list/page";
-import ListCourseAll from "../pages/admin/courses/list/page";
 import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
+import ListRooms from "../pages/admin/rooms/page";
+import SyllabusAdd from "../pages/admin/syllabus/add/page";
+import SyllabusList from "../pages/admin/syllabus/page";
+import SyllabusEdit from "../pages/admin/syllabus/edit/page";
+import ListCourse from "../pages/admin/courses/list/page";
+import AllStudent from "../pages/admin/userManager/all-student";
+import AllUser from "../pages/admin/userManager/all-user";
+import AllTeacher from "../pages/admin/userManager/all-teacher";
 
 const Router = createBrowserRouter([
     {
@@ -69,10 +73,30 @@ const Router = createBrowserRouter([
                 element: <Testing />,
             },
             {
+                path: "list-syllabus",
+                element: <SyllabusList />,
+            },
+            {
+                path: "list-syllabus/add",
+                element: <SyllabusAdd />,
+            },
+            {
+                path: "list-syllabus/edit/:id",
+                element: <SyllabusEdit />,
+            },
+            {
                 path: "list",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <List />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "list-rooms",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <ListRooms />
                     </Suspense>
                 ),
             },
@@ -169,8 +193,7 @@ const Router = createBrowserRouter([
                 path: "list-subject",
                 element: (
                     <>
-                        <BreadCrumb />
-                        <ListCourseAll />
+                        <ListSubjects />
                     </>
                 ),
             },
@@ -200,7 +223,6 @@ const Router = createBrowserRouter([
                 path: "list-semesters",
                 element: (
                     <>
-                        <BreadCrumb />
                         <ListSemester />
                     </>
                 ),
@@ -208,15 +230,15 @@ const Router = createBrowserRouter([
             //
 
             // giao diện list khóa học
-            // {
-            //     path: "list-subject",
-            //     element: (
-            //         <>
-            //             <BreadCrumb />
-            //             <ListSubjects />
-            //         </>
-            //     ),
-            // },
+            {
+                path: "list-subject",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <ListSubjects />
+                    </>
+                ),
+            },
 
             {
                 path: "subjects",
@@ -228,11 +250,10 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "list-courses",
+                path: "list-course",
                 element: (
                     <>
-                        <BreadCrumb />
-                        <ListSubjects />
+                        <ListCourse />
                     </>
                 ),
             },
@@ -256,10 +277,37 @@ const Router = createBrowserRouter([
             },
 
             {
-                path: "classrooms",
+                path: "all-student",
                 element: (
                     <>
                         <BreadCrumb />
+                        <AllStudent />
+                    </>
+                ),
+            },
+            {
+                path: "all-user",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <AllUser />
+                    </>
+                ),
+            },
+            {
+                path: "teacher-manager",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <AllTeacher />
+                    </>
+                ),
+            },
+
+            {
+                path: "classrooms",
+                element: (
+                    <>
                         <ClassRoom />
                     </>
                 ),

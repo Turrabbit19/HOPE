@@ -22,7 +22,7 @@ const semesterData = {
 
 const schedules = ["18.3", "17.3", "19.1"];
 const semesters = Object.keys(semesterData);
-const ListCourse = () => {
+const ListCourses = () => {
     const [searchValue, setSearchValue] = useState("");
     const [filteredCourses, setFilteredCourses] = useState([]);
 
@@ -154,80 +154,10 @@ const ListCourse = () => {
     return (
         <>
             <div className="listCourse">
-                <div className="container">
+                <div className="">
                     <div className="flex gap-4 row-cols-2 relative">
-                        {/* SideBar */}
-                        <Row className="col-2 g-x-4 mt-1">
-                            <div className="flex flex-col">
-                                <div>
-                                    <h1 className="flex items-center text-[18px] gap-3 text-[#1167B4] font-bold">
-                                        Q.lý Chuyên Ngành
-                                    </h1>
-                                    <p className="text-[15px] font-semibold italic my-2">
-                                        Lập trình web
-                                    </p>
-                                </div>
-                                {/* Content */}
-                                <div className="flex-1">
-                                    {/* Management */}
-                                    <div className="my-8">
-                                        <h3 className="text-[#9E9E9E] text-[16px] font-bold">
-                                            Quản Lý:
-                                        </h3>
-                                        <div className="ml-8">
-                                            <div className="flex mt-10 gap-4">
-                                                <img
-                                                    src="/assets/svg/cart.svg"
-                                                    alt=""
-                                                />
-                                                <Link
-                                                    to={"/"}
-                                                    className="text-[#1167B4] text-[16px] font-bold"
-                                                >
-                                                    Thông Tin Bán Hàng
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Setting */}
-                                    <div className="my-8 pt-3">
-                                        <h3 className="text-[#9E9E9E] text-[16px] font-bold">
-                                            Cài Đặt:
-                                        </h3>
-                                        <div className="ml-8">
-                                            <div className="flex gap-4 my-10">
-                                                <img
-                                                    src="/assets/svg/cart.svg"
-                                                    alt=""
-                                                />
-                                                <Link
-                                                    to={"/"}
-                                                    className="text-[#1167B4] text-[16px] font-bold"
-                                                >
-                                                    Khóa Chuyên Ngành
-                                                </Link>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <img
-                                                    src="/assets/svg/cart.svg"
-                                                    alt=""
-                                                />
-                                                <Link
-                                                    to={"/admin/teaching"}
-                                                    className="text-[#1167B4] text-[16px] font-bold"
-                                                >
-                                                    Đóng
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </Row>
-
                         {/* Item */}
-                        <div className="col-10">
+                        <div className="col-12">
                             <div>
                                 <div className="flex justify-between">
                                     <h1 className="flex gap-2 pb-5 items-center text-[#7017E2] text-[20px] font-semibold">
@@ -845,4 +775,4 @@ const ListCourse = () => {
     );
 };
 
-export default ListCourse;
+export default ListCourses;

@@ -10,6 +10,11 @@ logs
 
 node_modules
 bower_components
+fe/src/pages/admin/classroom/page.jsx
+fe/src/pages/admin/semesters/list/page.jsx
+fe/src/pages/admin/subjects/list/page.jsx
+fe/src/pages/admin/teaching/page.jsx
+
 
 *.sublime*
 

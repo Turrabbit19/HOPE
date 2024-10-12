@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MajorSubject;
 use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -14,17 +15,22 @@ class ApiSubjectController extends Controller
     public function index()
     {
         try {
-            $subjects = Subject::paginate(9);
+            $perPage = request()->input('per_page', 9);
 
-            $data = collect($subjects->items())->map(function ($subject){
+            $perPage = max(1, (int) $perPage);
+
+            $subjects = Subject::paginate($perPage);
+
+            $data = collect($subjects->items())->map(function ($subject) {
                 return [
                     'id' => $subject->id,
                     'code' => $subject->code,
                     'name' => $subject->name,
                     'description' => $subject->description,
                     'credit' => $subject->credit,
+                    'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
-            }); 
+            });
 
             return response()->json([
                 'data' => $data,
@@ -39,6 +45,7 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function getAll()
     {
@@ -63,14 +70,11 @@ class ApiSubjectController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:subjects', 
-            'name' => 'required|string|max:100|unique:subjects', 
-            'description' => 'nullable|string|max:255', 
+            'name' => 'required|string|max:100|unique:subjects',
+            'description' => 'nullable|string|max:255',
             'credit' => 'required|integer|min:1|max:19',
             'majors' => 'required|array',
             'majors.*.id' => 'required|exists:majors,id',
-            'majors.*.course_id' => 'required|exists:courses,id',
-            'majors.*.semester_order' => 'required|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -79,22 +83,59 @@ class ApiSubjectController extends Controller
 
         try {
             $data = $validator->validated();
+
+            $data['code'] = $this->generateCodeFromName($data['name']);
+
             $subject = Subject::create($data);
 
             $majorsWithOrder = collect($data['majors'])->mapWithKeys(function ($major) {
-                return [$major['id'] => [
-                    'course_id' => $major['course_id'],
-                    'semester_order' => $major['semester_order']
-                    ]
-                ];
+                return [$major['id'] => []];
             });
-            
+
             $subject->majors()->sync($majorsWithOrder);
-            
+
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function getMajorIdBySubjectId($subjectId)
+    {
+        $majors = MajorSubject::where('subject_id', $subjectId)->pluck('major_id');
+
+        if ($majors->isEmpty()) {
+            return response()->json(['message' => 'Không tìm thấy ngành học cho môn này.'], 404);
+        }
+
+        return response()->json($majors);
+    }
+
+    public function restore($id)
+    {
+        $subject = Subject::withTrashed()->find($id);
+
+        if ($subject) {
+            $subject->restore();
+
+            return response()->json(['data' => $subject, 'message' => 'Khôi phục thành công.'], 200);
+        }
+
+        return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
+    }
+
+    private function generateCodeFromName($name)
+    {
+        $parts = explode(' ', trim($name));
+        $code = '';
+        foreach ($parts as $part) {
+            if (!empty($part)) {
+                $code .= strtoupper($part[0]);
+            }
+        }
+        $day = date('d');
+        $random = rand(10, 99);
+        return strtoupper($code . $day . $random);
     }
 
     public function show(string $id)
@@ -112,14 +153,13 @@ class ApiSubjectController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id, 
-            'name' => 'sometimes|string|max:100|unique:subjects,name' . $id, 
-            'description' => 'nullable|string|max:255', 
+            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id,
+            'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id,
+            'description' => 'nullable|string|max:255',
             'credit' => 'sometimes|integer|min:1|max:19',
+            'status' => 'sometimes',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',
-            'majors.*.course_id' => 'sometimes|exists:courses,id',
-            'majors.*.semester_order' => 'sometimes|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -127,26 +167,24 @@ class ApiSubjectController extends Controller
         }
 
         try {
-            $subject = Subject::findOrFail($id);
-            
+            $subject = Subject::with('majors')->findOrFail($id);
+
             $data = $validator->validated();
             $subject->update($data);
 
-            if(isset($data['majors'])) {
-                $majorsWithOrder = collect($data['majors'])->mapWithKeys(function ($major) {
-                    return [$major['id'] => [
-                        'course_id' => $major['course_id'],
-                        'semester_order' => $major['semester_order']
-                        ]
-                    ];
+            if (isset($data['majors'])) {
+                $majors = collect($data['majors'])->mapWithKeys(function ($major) {
+                    return [$major['id'] => []];
                 });
-                
-                $subject->majors()->sync($majorsWithOrder);
+
+                $subject->majors()->sync($majors);
             }
+
+            $subject->load('majors');
 
             return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }

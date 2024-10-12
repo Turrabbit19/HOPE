@@ -6,17 +6,15 @@ import {
     Form,
     Input,
     message,
-    Modal,
     notification,
     Pagination,
-    Popconfirm,
     Select,
   } from "antd";
   import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-  import React, { useState, useEffect } from "react";
   import { Link } from "react-router-dom";
   import Loading from "../../../components/loading";
-  import instance from "../../../config/axios";
+import instance from "../../../config/axios";
+  
   
   const Teach = () => {
     // const [courses, setCourses] = useState([]);

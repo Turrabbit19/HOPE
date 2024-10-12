@@ -1,132 +1,250 @@
-import React from 'react';
+import { Calendar, Clock } from "lucide-react"
+import React, { useState } from 'react'
+import { Link } from 'react-router-dom';
 
 export default function StudentDashboard() {
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
+
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
+
+  const prevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+  }
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+  }
+
+  const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
   return (
-    <div className="container mx-auto p-4 space-y-4">
-        <h1 className="text-xl font-semibold mb-4 bg-white sticky top-0 z-10 p-4">Trang chủ</h1>
-      {/* Thông tin sinh viên */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4">Thông tin sinh viên</h2>
-          <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 min-h-screen">
+      {/* Left Column */}
+      <div className="w-full lg:w-1/4 space-y-6">
+        {/* User Profile Card */}
+        <div className="bg-indigo-900 text-white p-6 rounded-lg">
+          <div className="flex items-center space-x-4 mb-4">
+            <img
+              src="/placeholder.svg?height=80&width=80"
+              alt="Pham Quoc Khanh"
+              className="w-20 h-20 rounded-full"
+            />
             <div>
-              <p><strong>Mã SV:</strong> PH44354</p>
-              <p><strong>Họ và tên:</strong> Trần Đức Khang</p>
-              <p><strong>Ngày sinh:</strong> 19/09/2004</p>
-              <p><strong>Giới tính:</strong> Nam</p>
-              <p><strong>Email:</strong> Khangtdph44354@fpt.edu.vn</p>
-            </div>
-            <div>
-              <p><strong>Số điện thoại:</strong> 0386598511</p>
-              <p><strong>Địa chỉ:</strong> 2/235 Lê Hồng Phong, Vĩ Hoàng, TP Nam Định, Nam Định</p>
-              <p><strong>Dân tộc:</strong> Kinh</p>
-              <p><strong>Trạng thái học:</strong> Đang học</p>
+              <h2 className="text-xl font-bold">Pham Quoc Khanh</h2>
+              <p className="text-indigo-300">MSV: PH38668</p>
             </div>
           </div>
+          <Link to="/student/info-student">
+          <button className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded">
+            Thông tin cá nhân
+          </button>
+          </Link>
         </div>
 
-        {/* Nhắc nhở */}
-        <div className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-600">TĐK</span>
-              </div>
-              <div className="ml-4">
-                <h3 className="font-semibold">Nhắc nhở mới chưa xem</h3>
-                <div className="flex items-center mt-2">
-                  <span className="text-4xl font-bold mr-2">1</span>
+        {/* Today's Classes */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Lớp Học Hôm Nay</h3>
+            <div className="flex items-center text-gray-500">
+              <span className="mr-2">16 May 2024</span>
+              <button className="p-1 hover:bg-gray-100 rounded-full">
+                <Calendar className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <ul className="space-y-4">
+            {[
+              { name: "PHP3", time: "09:00 - 09:45 AM", status: "Hoàn Thành" },
+              { name: "PTCN2", time: "10:45 - 11:30 AM", status: "Hoàn Thành" },
+              { name: "JS Nâng Cao", time: "11:30 - 12:15 AM", status: "Sắp Tới" },
+            ].map((cls, index) => (
+              <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                <div className="flex items-center space-x-3">
+                  <img
+                    src="/placeholder.svg?height=40&width=40"
+                    alt={cls.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div>
+                    <p className="font-medium">{cls.name}</p>
+                    <p className="text-sm text-gray-500 flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {cls.time}
+                    </p>
+                  </div>
                 </div>
-                <button className="text-blue-500 underline hover:text-blue-700 transition duration-200">
-                  Xem chi tiết
-                </button>
-              </div>
+                <span className={`text-sm ${
+                  cls.status === "Hoàn Thành" ? "text-green-500" : "text-yellow-500"
+                }`}>
+                  {cls.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Middle Column */}
+      <div className="w-full lg:w-1/2 space-y-6">
+        {/* Score Section */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Điểm Danh</h3>
+            <select className="border rounded px-2 py-1">
+              <option>Tuần này</option>
+            </select>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">
+            No of total working days 28 Days
+          </p>
+          <div className="flex justify-between mb-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold">25</p>
+              <p className="text-sm text-gray-500">Present</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">2</p>
+              <p className="text-sm text-gray-500">Absent</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">0</p>
+              <p className="text-sm text-gray-500">Halfday</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">1</p>
+              <p className="text-sm text-gray-500">Late</p>
             </div>
           </div>
+          {/* Attendance Chart */}
+          <div className="w-48 h-48 mx-auto relative">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="10" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#22c55e" strokeWidth="10" strokeDasharray="220 283" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" strokeWidth="10" strokeDasharray="20 283" strokeDashoffset="-220" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" strokeWidth="10" strokeDasharray="10 283" strokeDashoffset="-240" />
+              <circle cx="50" cy="50" r="38" fill="white" />
+            </svg>
+          </div>
+          <div className="flex justify-center mt-4 space-x-4">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+              <span className="text-sm">Present</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+              <span className="text-sm">Absent</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
+              <span className="text-sm">Half Day</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              <span className="text-sm">Late</span>
+            </div>
+          </div>
+        </div>
 
-          {/* Lịch học và lịch thi */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-blue-100 p-6 rounded-lg shadow-md hover:bg-blue-200 transition duration-300">
-              <h3 className="font-semibold">Lịch học trong tuần</h3>
-              <div className="flex items-center mt-2">
-                <span className="text-4xl font-bold mr-2">0</span>
+        {/* Last 7 Days */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Last 7 Days</h3>
+          <p className="text-sm text-gray-500 mb-4">14 May 2024 - 21 May 2024</p>
+          <div className="flex justify-between">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
+              <div key={index} className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${
+                index === 4 ? 'bg-red-500' : index < 4 ? 'bg-green-500' : 'bg-gray-300'
+              }`}>
+                {day}
               </div>
-              <button className="text-blue-500 underline hover:text-blue-700 transition duration-200">
-                Xem chi tiết
-              </button>
-            </div>
-            <div className="bg-orange-100 p-6 rounded-lg shadow-md hover:bg-orange-200 transition duration-300">
-              <h3 className="font-semibold">Lịch thi trong tuần</h3>
-              <div className="flex items-center mt-2">
-                <span className="text-4xl font-bold mr-2">0</span>
-              </div>
-              <button className="text-blue-500 underline hover:text-blue-700 transition duration-200">
-                Xem chi tiết
-              </button>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Thông tin khóa học */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-bold mb-4">Thông tin khóa học</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p><strong>Ngành:</strong> Lập trình Web</p>
-          </div>
-          <div>
-            <p><strong>Bậc đào tạo:</strong> Cao đẳng (2,5 năm)</p>
-          </div>
-          <div>
-            <p><strong>Niên khóa:</strong> K18.3</p>
+      {/* Right Column */}
+      <div className="w-full lg:w-1/3 space-y-6">
+        {/* Calendar */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Lịch</h3>
+          <div className="bg-gray-100 p-4 rounded">
+            <div className="flex justify-between items-center mb-4">
+              <button onClick={prevMonth} className="p-1 hover:bg-gray-200 rounded-full">
+                <Calendar className="w-5 h-5" />
+              </button>
+              <h4 className="text-lg font-medium">
+                {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h4>
+              <button onClick={nextMonth} className="p-1 hover:bg-gray-200 rounded-full">
+                <Calendar className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {DAYS.map(day => (
+                <div key={day} className="text-sm font-medium text-gray-500">
+                  {day}
+                </div>
+              ))}
+              {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+                <div key={`empty-${index}`} className="text-sm p-2"></div>
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1
+                const isToday = day === 10 // Assuming 10th is the current day as shown in the image
+                return (
+                  <div
+                    key={day}
+                    className={`text-sm p-2 rounded-full ${
+                      isToday
+                        ? 'bg-blue-500 text-white'
+                        : 'hover:bg-gray-200'
+                    }`}
+                  >
+                    {day}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Điểm danh */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Điểm danh</h2>
-          <select className="border rounded p-2 focus:ring focus:border-blue-300">
-            <option value="fall2024">Học kỳ Fall 2024</option>
-          </select>
+        {/* Assignments */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Bài tập</h3>
+          <ul className="space-y-4">
+            {[
+              { name: "1st Quarterly", subject: "Mathematics", date: "06 May 2024", time: "01:30 - 02:15 PM", room: "15", daysLeft: 19 },
+              { name: "2nd Quarterly", daysLeft: 20 },
+            ].map((assignment, index) => (
+              <li key={index} className="border-b pb-4 last:border-b-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">{assignment.name}</p>
+                    {assignment.subject && (
+                      <p className="text-sm text-gray-500">{assignment.subject}</p>
+                    )}
+                  </div>
+                  <span className="text-xs text-red-500 font-medium">
+                    {assignment.daysLeft} Days More
+                  </span>
+                </div>
+                {assignment.date && (
+                  <div className="mt-2 text-sm text-gray-500 flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {assignment.date}
+                    <span className="mx-2">•</span>
+                    <Clock className="w-4 h-4 mr-1" />
+                    {assignment.time}
+                    <span className="mx-2">•</span>
+                    Room No : {assignment.room}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2 border">Tên môn học</th>
-              <th className="p-2 border">Quá trình</th>
-              <th className="p-2 border">Điểm danh</th>
-              <th className="p-2 border">Vắng</th>
-              <th className="p-2 border">Còn</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="hover:bg-gray-50">
-              <td className="p-2 border">Lập trình PHP3</td>
-              <td className="p-2 border">-</td>
-              <td className="p-2 border">10</td>
-              <td className="p-2 border">2</td>
-              <td className="p-2 border">5</td>
-            </tr>
-            <tr className="hover:bg-gray-50">
-              <td className="p-2 border">Khởi sự doanh nghiệp</td>
-              <td className="p-2 border">-</td>
-              <td className="p-2 border">11</td>
-              <td className="p-2 border">3</td>
-              <td className="p-2 border">3</td>
-            </tr>
-            <tr className="hover:bg-gray-50">
-              <td className="p-2 border">JS nâng cao</td>
-              <td className="p-2 border">-</td>
-              <td className="p-2 border">13</td>
-              <td className="p-2 border">0</td>
-              <td className="p-2 border">4</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
-  );
+  )
 }

@@ -5,10 +5,9 @@ import ProductCard from './ProductCard';
 const DashboardActions = () => {
     return (
         
-        <div className="max-h-[500px] overflow-y-auto"> {/* Thiết lập chiều cao tối đa và cuộn dọc cho div */}
-         <h1 className="text-xl font-semibold mb-4 bg-white sticky top-0 z-10 p-4">Time Table</h1>
+        <div className="max-h-[800px] "> {/* Thiết lập chiều cao tối đa và cuộn dọc cho div */}
             <table className="min-w-full border border-gray-200">
-            <thead className="bg-gray-100 sticky top-[56px] z-10">
+            <thead className="bg-gray-100 top-[56px] z-10">
                     <tr>
                         <th className="border border-gray-300 p-2">Ca học</th>
                         <th className="border border-gray-300 p-2">Thứ Hai</th>
@@ -17,6 +16,7 @@ const DashboardActions = () => {
                         <th className="border border-gray-300 p-2">Thứ Năm</th>
                         <th className="border border-gray-300 p-2">Thứ Sáu</th>
                         <th className="border border-gray-300 p-2">Thứ Bảy</th>
+                        <th className="border border-gray-300 p-2">Chủ Nhật</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -28,6 +28,7 @@ const DashboardActions = () => {
                         <td className="border border-gray-300 p-2"><ProductCard day="Thursday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Friday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Saturday" /></td>
+                        <td className="border border-gray-300 p-2 text-center">Nghỉ</td>
                     </tr>
                     <tr>
                         <td className="border border-gray-300 p-2">2</td>
@@ -37,6 +38,7 @@ const DashboardActions = () => {
                         <td className="border border-gray-300 p-2"><ProductCard day="Thursday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Friday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Saturday" /></td>
+                        <td className="border border-gray-300 p-2 text-center">Nghỉ</td>
                     </tr>
                     <tr>
                         <td className="border border-gray-300 p-2">3</td>
@@ -46,6 +48,7 @@ const DashboardActions = () => {
                         <td className="border border-gray-300 p-2"><ProductCard day="Thursday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Friday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Saturday" /></td>
+                        <td className="border border-gray-300 p-2 text-center">Nghỉ</td>
                     </tr>
                     <tr>
                         <td className="border border-gray-300 p-2">4</td>
@@ -55,6 +58,7 @@ const DashboardActions = () => {
                         <td className="border border-gray-300 p-2"><ProductCard day="Thursday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Friday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Saturday" /></td>
+                        <td className="border border-gray-300 p-2 text-center">Nghỉ</td>
                     </tr>
                     <tr>
                         <td className="border border-gray-300 p-2">5</td>
@@ -64,6 +68,7 @@ const DashboardActions = () => {
                         <td className="border border-gray-300 p-2"><ProductCard day="Thursday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Friday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Saturday" /></td>
+                        <td className="border border-gray-300 p-2 text-center">Nghỉ</td>
                     </tr>
                     <tr>
                         <td className="border border-gray-300 p-2">6</td>
@@ -73,6 +78,7 @@ const DashboardActions = () => {
                         <td className="border border-gray-300 p-2"><ProductCard day="Thursday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Friday" /></td>
                         <td className="border border-gray-300 p-2"><ProductCard day="Saturday" /></td>
+                        <td className="border border-gray-300 p-2 text-center">Nghỉ</td>
                     </tr>
                     {/* Thêm các hàng khác cho các ca học khác ở đây nếu cần */}
                 </tbody>

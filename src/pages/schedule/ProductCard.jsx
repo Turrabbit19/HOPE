@@ -14,11 +14,11 @@ const ProductCard = ({ day, additionalInfo  }) => {
     return (
         
         <div className={`p-2 rounded ${colorMap[day]}`}>
-            <p className="text-xs">09:00 - 09:45 AM</p>
+            {/* <p className="text-xs">09:00 - 09:45 AM</p> */}
             <p className="text-sm font-semibold">Subject: Maths</p>
-            <p className="text-sm">Class: 10A</p>
+            {/* <p className="text-sm">Class: 10A</p> */}
             <p className="text-sm">Room: 101</p>
-            <p className="text-sm">Session: 2</p>
+            {/* <p className="text-sm">Session: 2</p> */}
             <div className="flex items-center mt-2">
                 <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full">
                     <img className="aspect-square h-full w-full" alt="User" src="/placeholder-user.jpg" />

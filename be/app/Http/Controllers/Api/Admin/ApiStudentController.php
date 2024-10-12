@@ -15,7 +15,7 @@ class ApiStudentController extends Controller
     {
         try {
             $students = Student::with(['user', 'course', 'major', 'currentSemester'])->paginate(9);
-            
+
             $data = collect($students->items())->map(function($student){
                 return [
                     'id' => $student->id,
@@ -74,7 +74,7 @@ class ApiStudentController extends Controller
             'user_id' => 'required|exists:users,id',
             'course_id' => 'required|exists:courses,id',
             'major_id' => 'required|exists:majors,id',
-            'current_semester_id' => 'required|exists:course_semesters,id', 
+            'current_semester_id' => 'required|exists:course_semesters,id',
             'student_code' => 'required|string|max:19|unique:students',
             'status' => 'required|integer',
         ]);
@@ -86,7 +86,7 @@ class ApiStudentController extends Controller
         try {
             $data = $validator->validated();
             $student = Student::create($data);
-            
+
             return response()->json(['data' => $student, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -122,7 +122,7 @@ class ApiStudentController extends Controller
 
         try {
             $student = Student::findOrFail($id);
-            
+
             $data = $validator->validated();
             $student->update($data);
 

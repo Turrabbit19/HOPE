@@ -110,6 +110,16 @@ class ApiSubjectController extends Controller
 
         return response()->json($majors);
     }
+    public function getSubjectByMajorId($majorId)
+    {
+        $subjects = MajorSubject::where('major_id', $majorId)->pluck('subject_id');
+
+        if ($subjects->isEmpty()) {
+            return response()->json(['message' => 'Không tìm thấy ngành học cho môn này.'], 404);
+        }
+
+        return response()->json(data: $subjects);
+    }
 
     public function restore($id)
     {

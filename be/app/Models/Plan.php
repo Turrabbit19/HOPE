@@ -24,4 +24,8 @@ class Plan extends Model
     {
         return $this->belongsTo(Semester::class);
     }
+    public function planSubjects()
+    {
+        return $this->hasMany(PlanSubject::class);
+    }
 }

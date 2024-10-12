@@ -15,7 +15,5 @@ class Room extends Model
         'status',
     ];
 
-    protected $casts = [
-        'status' => 'boolean'
-    ];
+
 }

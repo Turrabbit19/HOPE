@@ -20,7 +20,7 @@ class ApiRoomController extends Controller
                 return [
                     'id' => $room->id,
                     'name' => $room->name,
-                    'status' => $room->status ? "Đang sử dụng" : "Đang trống",
+                    'status' => $room->status
                 ];
             });
             return response()->json(['data' => $data], 200);
@@ -29,11 +29,23 @@ class ApiRoomController extends Controller
         }
     }
 
+    public function restore($id)
+    {
+        $room = Room::withTrashed()->find($id);
+
+        if ($room) {
+            $room->restore();
+
+            return response()->json(['data' => $room, 'message' => 'Khôi phục thành công.'], 200);
+        }
+
+        return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:19|unique:rooms',
-            'status' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -43,7 +55,7 @@ class ApiRoomController extends Controller
         try {
             $data = $validator->validated();
             $room = Room::create($data);
-            
+
             return response()->json(['data' => $room, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -66,7 +78,7 @@ class ApiRoomController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:19|unique:rooms,name,' . $id,
-            'status' => 'sometimes|boolean',
+            'status' => 'sometimes',
         ]);
 
         if ($validator->fails()) {
@@ -75,7 +87,7 @@ class ApiRoomController extends Controller
 
         try {
             $room = Room::findOrFail($id);
-            
+
             $data = $validator->validated();
             $room->update($data);
 

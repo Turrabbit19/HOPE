@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MajorSubject;
 use App\Models\Plan;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,13 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('courses', function (Blueprint $table) {
+        Schema::create('plan_subjects', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
             $table->foreignIdFor(Plan::class)->constrained()->cascadeOnDelete();
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->tinyInteger('status')->default(0); // 0: Chờ diễn ra, 1: Đang diễn ra, 2: Kết thúc
+            $table->foreignIdFor(MajorSubject::class)->constrained()->cascadeOnDelete();
+            $table->tinyInteger('semester_order');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('courses');
+        Schema::dropIfExists('plan_subjects');
     }
 };

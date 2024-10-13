@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MajorSubject;
 use App\Models\Plan;
+use App\Models\PlanSubject;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -11,47 +13,16 @@ use Illuminate\Http\Request;
 
 class ApiPlanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
-            $plans = Plan::with('course', 'major')->paginate(9);
-
-            $data = collect($plans->items())->map(function ($plan) {
-                return [
-                    'id' => $plan->id,
-                    'name' => $plan->name,
-                    'course_name' => $plan->course->name,
-                    'major_name' => $plan->major->name,
-                ];
-            });
-            return response()->json([
-                'data' => $data,
-                'pagination' => [
-                    'total' => $plans->total(),
-                    'per_page' => $plans->perPage(),
-                    'current_page' => $plans->currentPage(),
-                    'last_page' => $plans->lastPage(),
-                ]
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function getAll()
-    {
-        try {
-            $plans = Plan::with('course', 'major')->get();
+            $plans = Plan::get();
 
             $data = $plans->map(function($plan) {
                 return [
                     'id' => $plan->id,
                     'name' => $plan->name,
-                    'course_name' => $plan->course->name,
-                    'major_name' => $plan->major->name,
+                    'status' => $plan->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
             return response()->json(['data' => $data], 200);
@@ -60,15 +31,18 @@ class ApiPlanController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:plans,name',
-            'course_id' => 'required|exists:courses,id',
-            'major_id' => 'required|exists:majors,id',
+            'status' => 'boolean',
+            
+            'majors' => 'required|array',
+            'majors.*.id' => 'required|exists:major_subjects,id',
+            'majors.*.semesters' => 'required|array',
+            'majors.*.semesters.*.order' => 'required|integer',
+            'majors.*.semesters.*.subjects' => 'required|array',
+            'majors.*.semesters.*.subjects.*.id' => 'required|exists:subjects,id',
         ]);
 
         if ($validator->fails()) {
@@ -78,6 +52,26 @@ class ApiPlanController extends Controller
         try {
             $data = $validator->validated();
             $plan = Plan::create($data);
+
+            foreach ($data['majors'] as $major) {
+                foreach ($major['semesters'] as $semester) {
+                    foreach ($semester['subjects'] as $subject) {
+                        $majorSubject = MajorSubject::where('major_id', $major['id'])
+                        ->where('subject_id', $subject['id'])
+                        ->first();
+
+                        if ($majorSubject) {
+                            PlanSubject::create([
+                                'plan_id' => $plan->id,
+                                'major_subject_id' => $majorSubject->id,
+                                'semester_order' => $semester['order'],
+                            ]);
+                        } else {
+                            return response()->json(['error' => 'Không tìm thấy major_subject với major_id: ' . $major['id'] . ' và subject_id: ' . $subject['id']], 400);
+                        }
+                    }
+                }
+            }
             
             return response()->json(['data' => $plan, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -85,30 +79,54 @@ class ApiPlanController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
-            $plan = Plan::findOrFail($id);
-            return response()->json(['data' => $plan], 200);
+            $plan = Plan::with(['planSubjects.majorSubject.major', 'planSubjects.majorSubject.subject'])->findOrFail($id);
+            
+            $data = [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'status' => $plan->status ? "Đang hoạt động" : "Tạm dừng",
+                'majors' => $plan->planSubjects->groupBy('majorSubject.major_id')->map(function ($group) {
+                    return [
+                        'id' => $group->first()->majorSubject->major->id,
+                        'name' => $group->first()->majorSubject->major->name,
+                        'semesters' => $group->groupBy('semester_order')->map(function ($semesterGroup) {
+                            return [
+                                'order' => $semesterGroup->first()->semester_order,
+                                'subjects' => $semesterGroup->map(function ($planSubject) {
+                                    return [
+                                        'id' => $planSubject->majorSubject->subject->id,
+                                        'name' => $planSubject->majorSubject->subject->name,
+                                    ];
+                                }),
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })->values()->toArray(),
+            ];
+    
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy kế hoạch với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
         }
-    }
+    }     
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:50|unique:plans,name,' . $id,
-            'course_id' => 'sometimes|exists:courses,id',
-            'major_id' => 'sometimes|exists:majors,id',
+            'status' => 'sometimes|boolean',
+
+            'majors' => 'sometimes|array',
+            'majors.*.id' => 'required_with:majors|exists:major_subjects,id',
+            'majors.*.semesters' => 'required_with:majors|array',
+            'majors.*.semesters.*.order' => 'required_with:majors|integer',
+            'majors.*.semesters.*.subjects' => 'required_with:majors|array',
+            'majors.*.semesters.*.subjects.*.id' => 'required_with:majors|exists:subjects,id',
         ]);
 
         if ($validator->fails()) {
@@ -119,28 +137,49 @@ class ApiPlanController extends Controller
             $plan = Plan::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $plan->update($data);
+
+            if (isset($data['majors'])) {
+                $plan->planSubjects()->delete();
+    
+                foreach ($data['majors'] as $major) {
+                    foreach ($major['semesters'] as $semester) {
+                        foreach ($semester['subjects'] as $subject) {
+                            $majorSubject = MajorSubject::where('major_id', $major['id'])
+                                ->where('subject_id', $subject['id'])
+                                ->first();
+    
+                            if ($majorSubject) {
+                                PlanSubject::create([
+                                    'plan_id' => $plan->id,
+                                    'major_subject_id' => $majorSubject->id,
+                                    'semester_order' => $semester['order'],
+                                ]);
+                            } else {
+                                return response()->json(['error' => 'Không tìm thấy major_subject với major_id: ' . $major['id'] . ' và subject_id: ' . $subject['id']], 400);
+                            }
+                        }
+                    }
+                }
+            }
 
             return response()->json(['data' => $plan, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy kế hoạch với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {
             $plan = Plan::findOrFail($id);
             $plan->delete();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy kế hoạch với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

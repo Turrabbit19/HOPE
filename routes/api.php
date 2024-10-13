@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Admin\ApiClassRoom;
+use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
 use App\Http\Controllers\Api\Admin\ApiMajorController;
@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\ApiNotificationController;
 use App\Http\Controllers\Api\Admin\ApiPlanController;
 use App\Http\Controllers\Api\Admin\ApiRoleController;
 use App\Http\Controllers\Api\Admin\ApiRoomController;
+use App\Http\Controllers\Api\Admin\ApiScheduleController;
 use App\Http\Controllers\Api\Admin\ApiSectionController;
 use App\Http\Controllers\Api\Admin\ApiSemesterController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
@@ -34,7 +35,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::prefix('admin')->group(function() {
+// Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::prefix('admin')->group(function () {
     Route::apiResource('roles', ApiRoleController::class);
     Route::apiResource('users', ApiUserController::class);
     Route::apiResource('students', ApiStudentController::class);
@@ -49,5 +51,7 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('sections', ApiSectionController::class);
     Route::apiResource('notifications', ApiNotificationController::class);
     Route::apiResource('shifts', ApiShiftController::class);
-    Route::apiResource('classrooms', ApiClassRoom::class);
+    Route::apiResource('classrooms', ApiClassroomController::class);
+    Route::apiResource('schedules', ApiScheduleController::class);
+    // });
 });

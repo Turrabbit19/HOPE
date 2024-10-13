@@ -20,7 +20,7 @@ class Major extends Model
         'status' => 'boolean',
     ];
 
-    public function subjects() {
-        return $this->belongsToMany(Subject::class);
+    public function majorSubjects() {
+        return $this->hasMany(MajorSubject::class);
     }
 }

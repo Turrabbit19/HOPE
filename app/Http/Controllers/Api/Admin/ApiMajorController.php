@@ -38,7 +38,7 @@ class ApiMajorController extends Controller
             'code' => 'required|string|max:19|unique:majors,code',
             'name' => 'required|string|max:50|unique:majors,name',
             'description' => 'required|string',
-            'status' => 'required|boolean',
+            'status' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -59,9 +59,17 @@ class ApiMajorController extends Controller
     {
         try {
             $major = Major::findOrFail($id);
-            return response()->json(['data' => $major], 200);
+            $data = [
+                    'id' => $major->id,
+                    'code' => $major->code,
+                    'name' => $major->name,
+                    'description' => $major->description,
+                    'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
@@ -84,12 +92,11 @@ class ApiMajorController extends Controller
             $major = Major::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $major->update($data);
 
             return response()->json(['data' => $major, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -102,7 +109,7 @@ class ApiMajorController extends Controller
             $major->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

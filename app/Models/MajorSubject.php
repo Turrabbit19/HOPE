@@ -13,13 +13,12 @@ class MajorSubject extends Model
     protected $fillable = [
         'major_id',
         'subject_id',
-        'semester_order',
     ];
 
     public function major() {
         return $this->belongsTo(Major::class);
     }
     public function subject() {
-        return $this->belongsTo(subject::class);
+        return $this->belongsTo(Subject::class);
     }
 }

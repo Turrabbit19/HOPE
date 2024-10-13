@@ -12,16 +12,15 @@ class Plan extends Model
 
     protected $fillable = [
         'name',
-        'course_id',
-        'major_id',
+        'status',
     ];
 
-    public function course()
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+
+    public function planSubjects()
     {
-        return $this->belongsTo(Course::class);
-    }
-    public function major()
-    {
-        return $this->belongsTo(Semester::class);
+        return $this->hasMany(PlanSubject::class);
     }
 }

@@ -90,10 +90,18 @@ class ApiNotificationController extends Controller
     public function show(string $id)
     {
         try {
-            $notification = Notification::findOrFail($id);
-            return response()->json(['data' => $notification], 200);
+            $notification = Notification::with('section')->findOrFail($id);
+            $data = [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
@@ -119,12 +127,11 @@ class ApiNotificationController extends Controller
             $notification = Notification::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $notification->update($data);
 
             return response()->json(['data' => $notification, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -140,7 +147,7 @@ class ApiNotificationController extends Controller
             $notification->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

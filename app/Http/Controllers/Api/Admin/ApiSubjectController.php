@@ -18,7 +18,7 @@ class ApiSubjectController extends Controller
         try {
             $subjects = Subject::paginate(9);
 
-            $data = collect($subjects->items())->map(function ($subject){
+            $data = collect($subjects->items())->map(function ($subject) {
                 return [
                     'id' => $subject->id,
                     'code' => $subject->code,
@@ -27,7 +27,7 @@ class ApiSubjectController extends Controller
                     'credit' => $subject->credit,
                     'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
-            }); 
+            });
 
             return response()->json([
                 'data' => $data,
@@ -67,9 +67,9 @@ class ApiSubjectController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:subjects', 
-            'name' => 'required|string|max:100|unique:subjects', 
-            'description' => 'nullable|string|max:255', 
+            'code' => 'required|string|max:50|unique:subjects',
+            'name' => 'required|string|max:100|unique:subjects',
+            'description' => 'nullable|string|max:255',
             'credit' => 'required|integer|min:1|max:19',
             'status' => 'boolean',
             'majors' => 'required|array',
@@ -87,9 +87,9 @@ class ApiSubjectController extends Controller
             $majors = collect($data['majors'])->mapWithKeys(function ($major) {
                 return [$major['id'] => []];
             });
-            
+
             $subject->majors()->sync($majors);
-            
+
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -126,9 +126,9 @@ class ApiSubjectController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id, 
-            'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id, 
-            'description' => 'nullable|string|max:255', 
+            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id,
+            'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id,
+            'description' => 'nullable|string|max:255',
             'credit' => 'sometimes|integer|min:1|max:19',
             'status' => 'sometimes|boolean',
             'majors' => 'sometimes|array',
@@ -141,15 +141,15 @@ class ApiSubjectController extends Controller
 
         try {
             $subject = Subject::findOrFail($id);
-            
+
             $data = $validator->validated();
             $subject->update($data);
 
-            if(isset($data['majors'])) {
+            if (isset($data['majors'])) {
                 $majors = collect($data['majors'])->mapWithKeys(function ($major) {
                     return [$major['id'] => []];
                 });
-                
+
                 $subject->majors()->sync($majors);
             }
 
@@ -174,28 +174,76 @@ class ApiSubjectController extends Controller
         }
     }
 
-    public function getAllLesson(string $id){
+    public function getAllLesson(string $id)
+    {
         try {
-            $lessons = Lesson::with('subject')->where('subject_id', $id)->get();
+            $lessons = Lesson::where('subject_id', $id)->get();
 
-            $data = $lessons->map(function ($lesson){
+            $data = $lessons->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'name' => $lesson->name,
-                    'description' =>$lesson->description,
+                    'description' => $lesson->description,
                 ];
             });
 
-            return response()->json(['data' =>$data], 200);
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
-    public function getAllClassroom(string $id){
-        try {
-            $classrooms = Classroom::with('subject')->where('subject_id', $id)->get();
 
-            $data = $classrooms->map(function($classroom) {
+    public function addLesson(string $id, Request $request)
+    {
+        $data = $request->input('lessons');
+        $success = [];
+        $errors = [];
+
+        if (is_null($data) || !is_array($data)) {
+            return response()->json(['error' => 'Dữ liệu không phù hợp với định dạng'], 400);
+        }
+
+        foreach ($data as $index => $value) {
+            $validator = Validator::make($value, [
+                'name' => 'required|string|max:50',
+                'description' => 'required'
+            ]);
+
+            if ($validator->fails()) {
+                $errors[$index] = $validator->errors();
+                continue;
+            }
+
+            try {
+                $value['subject_id'] = $id; 
+
+                $lesson = Lesson::create($value);
+                $success[] = $lesson; 
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Tạo mới thất bại cho một bản ghi',
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
+        }
+
+        if (!empty($errors)) {
+            return response()->json(['errors' => $errors], 400);
+        }
+
+        return response()->json([
+            'data' => $success,
+            'message' => 'Tạo mới thành công tất cả'
+        ], 201);
+    }
+
+
+    public function getAllClassroom(string $id)
+    {
+        try {
+            $classrooms = Classroom::where('subject_id', $id)->get();
+
+            $data = $classrooms->map(function ($classroom) {
                 return [
                     'id' => $classroom->id,
                     'code' => $classroom->code,
@@ -204,9 +252,46 @@ class ApiSubjectController extends Controller
                 ];
             });
 
-            return response()->json(['data' =>$data], 200);
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function addClassroom(string $id, Request $request){
+        $data = $request->input('classrooms');
+        $errors = [];
+        $success = [];
+
+        foreach($data as $index => $value){
+            $validator = Validator::make($value, [
+                'code' => 'required|string|max:10|unique:classrooms',
+                'max_students' => 'required|integer|min:1',
+                'status' => 'boolean',
+            ]);
+    
+            if ($validator->fails()) {
+                $errors[$index] = $validator->errors();
+                continue;
+            }
+    
+            try {
+                $value['subject_id'] = $id;
+                $classroom = Classroom::create($value);
+                $success[] = $classroom;
+               
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Tạo mới thất bại một bản ghi', 
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        }
+        if(!empty($errors)){
+            return response()->json(['errors' => $errors], 400);
+        }
+        return response()->json([
+            'data' => $success, 'message' => 'Tạo mới thành công tất cả'
+            ], 201);
     }
 }

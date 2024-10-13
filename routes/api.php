@@ -56,6 +56,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
     // test api subject (lesson + classroom)
     Route::get('/subject/lessons/{id}', [ApiSubjectController::class, 'getAllLesson']);
+    Route::post('/subject/lessons/add/{id}', [ApiSubjectController::class, 'addLesson']); // Thêm nhiều bản ghi
     Route::get('/subject/classrooms/{id}', [ApiSubjectController::class, 'getAllClassroom']);
+    Route::post('/subject/classrooms/add/{id}', [ApiSubjectController::class, 'addClassroom']); // Thêm nhiều bản ghi
+
     // });
 });

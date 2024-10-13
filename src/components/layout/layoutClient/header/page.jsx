@@ -19,9 +19,9 @@ export default function HeaderClient() {
       <div className="flex items-center justify-end w-1/3 space-x-4">
         <button className="p-2 hover:bg-gray-100 rounded-full">
           <img
-            src="https://flagcdn.com/w20/us.png"
+            src="https://flagcdn.com/w20/vn.png"
             width="20"
-            alt="US flag"
+            alt="vn flag"
             className="rounded-sm"
           />
         </button>

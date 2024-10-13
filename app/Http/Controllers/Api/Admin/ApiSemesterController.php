@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -11,10 +12,13 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiSemesterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $semesters = Semester::paginate(9);
+            $perPage = $request->input('perPage', 9);
+
+            $semesters = Semester::paginate($perPage);
+            $courses = Course::get();
 
             $data = collect($semesters->items())->map(function ($semester) {
                 return [
@@ -110,6 +114,12 @@ class ApiSemesterController extends Controller
             $data = [
                     'id' => $semester->id,
                     'name' => $semester->name,
+                    'courses' => $semester->courses->map(function ($course) {
+                        return [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                        ];
+                    }),
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
                     'status' => match($semester->status) {

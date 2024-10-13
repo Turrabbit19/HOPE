@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Plan;
 use App\Models\PlanSubject;
@@ -17,6 +18,8 @@ class ApiPlanController extends Controller
     {
         try {
             $plans = Plan::get();
+
+            $majors = Major::get();
 
             $data = $plans->map(function($plan) {
                 return [
@@ -38,7 +41,7 @@ class ApiPlanController extends Controller
             'status' => 'boolean',
             
             'majors' => 'required|array',
-            'majors.*.id' => 'required|exists:major_subjects,id',
+            'majors.*.id' => 'required|exists:majors,id',
             'majors.*.semesters' => 'required|array',
             'majors.*.semesters.*.order' => 'required|integer',
             'majors.*.semesters.*.subjects' => 'required|array',
@@ -53,17 +56,21 @@ class ApiPlanController extends Controller
             $data = $validator->validated();
             $plan = Plan::create($data);
 
+            $majorSubjectIds = MajorSubject::whereIn('major_id', collect($data['majors'])->pluck('id'))
+                ->whereIn('subject_id', collect($data['majors'])->pluck('semesters.*.subjects.*.id')->flatten())
+                ->get()
+                ->keyBy(function ($item) {
+                    return $item->major_id . '+' . $item->subject_id;
+                });
+
             foreach ($data['majors'] as $major) {
                 foreach ($major['semesters'] as $semester) {
                     foreach ($semester['subjects'] as $subject) {
-                        $majorSubject = MajorSubject::where('major_id', $major['id'])
-                        ->where('subject_id', $subject['id'])
-                        ->first();
-
-                        if ($majorSubject) {
+                        $key = $major['id'] . '+' . $subject['id'];
+                        if (isset($majorSubjectIds[$key])) {
                             PlanSubject::create([
                                 'plan_id' => $plan->id,
-                                'major_subject_id' => $majorSubject->id,
+                                'major_subject_id' => $majorSubjectIds[$key]->id,
                                 'semester_order' => $semester['order'],
                             ]);
                         } else {
@@ -122,7 +129,7 @@ class ApiPlanController extends Controller
             'status' => 'sometimes|boolean',
 
             'majors' => 'sometimes|array',
-            'majors.*.id' => 'required_with:majors|exists:major_subjects,id',
+            'majors.*.id' => 'required_with:majors|exists:majors,id',
             'majors.*.semesters' => 'required_with:majors|array',
             'majors.*.semesters.*.order' => 'required_with:majors|integer',
             'majors.*.semesters.*.subjects' => 'required_with:majors|array',
@@ -141,18 +148,22 @@ class ApiPlanController extends Controller
 
             if (isset($data['majors'])) {
                 $plan->planSubjects()->delete();
-    
+
+                $majorSubjectIds = MajorSubject::whereIn('major_id', collect($data['majors'])->pluck('id'))
+                    ->whereIn('subject_id', collect($data['majors'])->pluck('semesters.*.subjects.*.id')->flatten())
+                    ->get()
+                    ->keyBy(function ($item) {
+                        return $item->major_id . '+' . $item->subject_id;
+                    });
+
                 foreach ($data['majors'] as $major) {
                     foreach ($major['semesters'] as $semester) {
                         foreach ($semester['subjects'] as $subject) {
-                            $majorSubject = MajorSubject::where('major_id', $major['id'])
-                                ->where('subject_id', $subject['id'])
-                                ->first();
-    
-                            if ($majorSubject) {
+                            $key = $major['id'] . '+' . $subject['id'];
+                            if (isset($majorSubjectIds[$key])) {
                                 PlanSubject::create([
                                     'plan_id' => $plan->id,
-                                    'major_subject_id' => $majorSubject->id,
+                                    'major_subject_id' => $majorSubjectIds[$key]->id,
                                     'semester_order' => $semester['order'],
                                 ]);
                             } else {

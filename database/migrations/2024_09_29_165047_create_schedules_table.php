@@ -2,7 +2,7 @@
 
 use App\Models\Classroom;
 use App\Models\CourseSemester;
-use App\Models\MajorSubject;
+use App\Models\PlanSubject;
 use App\Models\Room;
 use App\Models\Shift;
 use App\Models\Teacher;
@@ -20,7 +20,7 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(CourseSemester::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(MajorSubject::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(PlanSubject::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Classroom::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Shift::class)->constrained()->cascadeOnDelete();

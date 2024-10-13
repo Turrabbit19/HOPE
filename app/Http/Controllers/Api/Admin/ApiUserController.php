@@ -15,38 +15,75 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $users = User::with('role')->paginate(9);
-            $data = collect($users->items())->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'avatar' => $user->avatar,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
-                    'gender' => $user->gender ? "Nam" : "Nữ",
-                    'ethnicity' => $user->ethnicity,
-                    'address' => $user->address,
-                    'role' => $user->role->name,
-                ];
-            });
+            $perPageAdmin = $request->input('perPageAdmin', 9);
+            $perPageOfficer = $request->input('perPageOfficer', 9);
+            $perPageStudent = $request->input('perPageStudent', 9);
+            $perPageTeacher = $request->input('perPageTeacher', 9);
+
+            $admins = User::with('role')->where('role_id', 1)->paginate($perPageAdmin);
+            $officers = User::with('role')->where('role_id', 2)->paginate($perPageOfficer);
+            $students = User::with('role')->where('role_id', 3)->paginate($perPageStudent);
+            $teachers = User::with('role')->where('role_id', 4)->paginate($perPageTeacher);
+
+            $formatUserData = function ($users) {
+                return $users->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'avatar' => $user->avatar,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'role' => $user->role->name,
+                    ];
+                });
+            };
 
             return response()->json([
-                'data' => $data,
-                'pagination' => [
-                    'total' => $users->total(),
-                    'per_page' => $users->perPage(),
-                    'current_page' => $users->currentPage(),
-                    'last_page' => $users->lastPage(),
-                ]
+                'admins' => [
+                    'data' => $formatUserData($admins->items()),
+                    'pagination' => [
+                        'total' => $admins->total(),
+                        'per_page' => $admins->perPage(),
+                        'current_page' => $admins->currentPage(),
+                        'last_page' => $admins->lastPage(),
+                    ],
+                ],
+                'officers' => [
+                    'data' => $formatUserData($officers->items()),
+                    'pagination' => [
+                        'total' => $officers->total(),
+                        'per_page' => $officers->perPage(),
+                        'current_page' => $officers->currentPage(),
+                        'last_page' => $officers->lastPage(),
+                    ],
+                ],
+                'students' => [
+                    'data' => $formatUserData($students->items()),
+                    'pagination' => [
+                        'total' => $students->total(),
+                        'per_page' => $students->perPage(),
+                        'current_page' => $students->currentPage(),
+                        'last_page' => $students->lastPage(),
+                    ],
+                ],
+                'teachers' => [
+                    'data' => $formatUserData($teachers->items()),
+                    'pagination' => [
+                        'total' => $teachers->total(),
+                        'per_page' => $teachers->perPage(),
+                        'current_page' => $teachers->currentPage(),
+                        'last_page' => $teachers->lastPage(),
+                    ],
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function getAll()
     {
@@ -91,10 +128,11 @@ class ApiUserController extends Controller
             'student_major_id' => 'required_if:role_id,3|exists:majors,id',
             'student_current_semester' => 'required_if:role_id,3|integer|min:1', 
             'student_code' => 'required_if:role_id,3|unique:students,student_code',
-            'student_status' => 'required_if:role_id,3|integer',
+            'student_status' => 'integer|in:0,1,2',
 
             'teacher_major_id' => 'required_if:role_id,4|exists:majors,id',
             'teacher_code' => 'required_if:role_id,4|unique:teachers,teacher_code',
+            'teacher_status' => 'integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -138,6 +176,7 @@ class ApiUserController extends Controller
                     'user_id' => $user->id,
                     'major_id' => $data['teacher_major_id'],
                     'teacher_code' => $data['teacher_code'],
+                    'status' => $data['teacher_status'],
                 ]);
             }
 
@@ -217,13 +256,13 @@ class ApiUserController extends Controller
             'ethnicity' => 'sometimes|string|max:100',
             'address' => 'sometimes|string|max:255',
             'password' => 'sometimes|string|min:8',
-            'role_id' => 'sometimes|exists:roles,id',
+            'role_id' => 'sometimes|exists:roles,id|',
 
             'student_course_id' => 'required_if:role_id,3|exists:courses,id',
             'student_major_id' => 'required_if:role_id,3|exists:majors,id',
             'student_current_semester' => 'required_if:role_id,3|integer|min:1', 
             'student_code' => 'required_if:role_id,3|unique:students,student_code,' . $id . ',user_id', 
-            'student_status' => 'required_if:role_id,3|integer',
+            'student_status' => 'required_if:role_id,3|integer||in:0,1,2',
 
             'teacher_major_id' => 'required_if:role_id,4|exists:majors,id',
             'teacher_code' => 'required_if:role_id,4|unique:teachers,teacher_code,' . $id . ',user_id', 
@@ -299,7 +338,12 @@ class ApiUserController extends Controller
     {
         try {
             $user = User::findOrFail($id);
+
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
             $user->delete();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tài khoản với ID: ' . $id], 404);

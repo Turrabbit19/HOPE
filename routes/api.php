@@ -53,5 +53,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     Route::apiResource('shifts', ApiShiftController::class);
     Route::apiResource('classrooms', ApiClassroomController::class);
     Route::apiResource('schedules', ApiScheduleController::class);
+
+    // test api subject (lesson + classroom)
+    Route::get('/subject/lessons/{id}', [ApiSubjectController::class, 'getAllLesson']);
+    Route::get('/subject/classrooms/{id}', [ApiSubjectController::class, 'getAllClassroom']);
     // });
 });

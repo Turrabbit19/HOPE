@@ -190,4 +190,35 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
+    // public function getAllSchedules() {
+    //     try {
+    //         $schedules = Schedule::with(['courseSemester', 'planSubject', 'classroom', 'teacher', 'shift', 'room'])
+    //             ->get();
+                
+    //         $data = $schedules->map(function ($schedule) {
+    //             return [
+    //                 'id' => $schedule->id,
+    //                 'course_semester_id' => $schedule->course_semester_id,
+    //                 'plan_subject_id' => $schedule->plan_subject_id,
+    //                 'classroom_id' => $schedule->classroom_id,
+    //                 'teacher_id' => $schedule->teacher_id,
+    //                 'shift_id' => $schedule->shift_id,
+    //                 'room_id' => $schedule->room_id,
+    //                 'link' => $schedule->link,
+    //                 'start_date' => $schedule->start_date,
+    //                 'end_date' => $schedule->end_date,
+    //                 'status' => $schedule->status,
+    //                 'created_at' => $schedule->created_at,
+    //                 'updated_at' => $schedule->updated_at,
+    //             ];
+    //         });
+    
+    //         return response()->json(['data' => $data], 200);
+    
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Không thể truy vấn tới bảng Schedules', 'message' => $e->getMessage()], 500);
+    //     }
+    // }
+    
 }

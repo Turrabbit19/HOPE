@@ -1,10 +1,11 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
-import { Search, Bell, MessageCircle, BarChart2, Maximize } from "lucide-react"
+import { Search, Bell, MessageCircle, BarChart2, Maximize, Minimize } from "lucide-react"
 
 export default function HeaderClient() {
   const [showNotifications, setShowNotifications] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const notificationRef = useRef(null)
   const buttonRef = useRef(null)
 
@@ -26,8 +27,29 @@ export default function HeaderClient() {
     }
   }, [])
 
+  useEffect(() => {
+    function onFullscreenChange() {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+
+    document.addEventListener("fullscreenchange", onFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
+  }, [])
+
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications)
+  }
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`)
+      })
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+    }
   }
 
   return (
@@ -103,8 +125,15 @@ export default function HeaderClient() {
         <button className="p-2 hover:bg-gray-100 rounded-full border">
           <BarChart2 className="h-5 w-5 text-gray-600" />
         </button>
-        <button className="p-2 hover:bg-gray-100 rounded-full border">
-          <Maximize className="h-5 w-5 text-gray-600" />
+        <button
+          className="p-2 hover:bg-gray-100 rounded-full border"
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? (
+            <Minimize className="h-5 w-5 text-gray-600" />
+          ) : (
+            <Maximize className="h-5 w-5 text-gray-600" />
+          )}
         </button>
         <button className="p-1 hover:bg-gray-100 rounded-full border">
           <img

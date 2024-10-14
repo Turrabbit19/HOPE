@@ -18,7 +18,6 @@ class ApiSemesterController extends Controller
             $perPage = $request->input('perPage', 9);
 
             $semesters = Semester::paginate($perPage);
-            $courses = Course::get();
 
             $data = collect($semesters->items())->map(function ($semester) {
                 return [

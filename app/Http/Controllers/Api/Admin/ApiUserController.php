@@ -18,72 +18,61 @@ class ApiUserController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPageAdmin = $request->input('perPageAdmin', 9);
-            $perPageOfficer = $request->input('perPageOfficer', 9);
-            $perPageStudent = $request->input('perPageStudent', 9);
-            $perPageTeacher = $request->input('perPageTeacher', 9);
+            $perPage = [
+                'Quản trị viên' => $request->input('perPageAdmin', 9),
+                'Cán bộ' => $request->input('perPageOfficer', 9),
+                'Sinh viên' => $request->input('perPageStudent', 9),
+                'Giảng viên' => $request->input('perPageTeacher', 9),
+            ];
 
-            $admins = User::with('role')->where('role_id', 1)->paginate($perPageAdmin);
-            $officers = User::with('role')->where('role_id', 2)->paginate($perPageOfficer);
-            $students = User::with('role')->where('role_id', 3)->paginate($perPageStudent);
-            $teachers = User::with('role')->where('role_id', 4)->paginate($perPageTeacher);
+            $users = User::with('role')->whereIn('role_id', [1, 2, 3, 4])->get();
 
-            $formatUserData = function ($users) {
-                return $users->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'avatar' => $user->avatar,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'phone' => $user->phone,
-                        'role' => $user->role->name,
-                    ];
-                });
-            };
+            $groupUsers = $users->groupBy('role_id');
 
-            return response()->json([
-                'admins' => [
-                    'data' => $formatUserData($admins->items()),
+            $roles = [
+                1 => 'Quản trị viên',
+                2 => 'Cán bộ',
+                3 => 'Sinh viên',
+                4 => 'Giảng viên',
+            ];
+
+            $responseData = [];
+            
+            foreach ($roles as $roleId => $roleKey) {
+                $roleUsers = $groupUsers->get($roleId, collect());
+                $pageUsers = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $roleUsers->forPage($request->input("page_{$roleKey}", 1), $perPage[$roleKey]),
+                    $roleUsers->count(),
+                    $perPage[$roleKey],
+                    $request->input("page_{$roleKey}", 1),
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
+
+                $responseData[$roleKey] = [
+                    'data' => $pageUsers->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'avatar' => $user->avatar,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'phone' => $user->phone,
+                            'role' => $user->role->name,
+                        ];
+                    }),
                     'pagination' => [
-                        'total' => $admins->total(),
-                        'per_page' => $admins->perPage(),
-                        'current_page' => $admins->currentPage(),
-                        'last_page' => $admins->lastPage(),
+                        'total' => $pageUsers->total(),
+                        'per_page' => $pageUsers->perPage(),
+                        'current_page' => $pageUsers->currentPage(),
+                        'last_page' => $pageUsers->lastPage(),
                     ],
-                ],
-                'officers' => [
-                    'data' => $formatUserData($officers->items()),
-                    'pagination' => [
-                        'total' => $officers->total(),
-                        'per_page' => $officers->perPage(),
-                        'current_page' => $officers->currentPage(),
-                        'last_page' => $officers->lastPage(),
-                    ],
-                ],
-                'students' => [
-                    'data' => $formatUserData($students->items()),
-                    'pagination' => [
-                        'total' => $students->total(),
-                        'per_page' => $students->perPage(),
-                        'current_page' => $students->currentPage(),
-                        'last_page' => $students->lastPage(),
-                    ],
-                ],
-                'teachers' => [
-                    'data' => $formatUserData($teachers->items()),
-                    'pagination' => [
-                        'total' => $teachers->total(),
-                        'per_page' => $teachers->perPage(),
-                        'current_page' => $teachers->currentPage(),
-                        'last_page' => $teachers->lastPage(),
-                    ],
-                ],
-            ], 200);
+                ];
+            }
+
+            return response()->json($responseData, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function getAll()
     {
@@ -206,16 +195,16 @@ class ApiUserController extends Controller
             ];
     
             if ($user->role_id == 3) {
-                $student = Student::where('user_id', $user->id)->first();
+                $student = Student::with('course', 'major')->where('user_id', $user->id)->first();
                 $data['student'] = [
-                    'course_id' => $student->course_id,
-                    'major_id' => $student->major_id,
+                    'course_id' => $student->course->name,
+                    'major_id' => $student->major->name,
                     'current_semester' => $student->current_semester,
                     'student_code' => $student->student_code,
                     'status' => match($student->status) {
-                        0 => "Đang học",
-                        1 => "Bảo lưu",
-                        2 => "Hoàn thành",
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
                         default => "Không xác định",
                     },
                 ];
@@ -227,9 +216,9 @@ class ApiUserController extends Controller
                     'major_id' => $teacher->major_id,
                     'teacher_code' => $teacher->teacher_code,
                     'status' => match($student->status) {
-                        0 => "Đang công tác",
-                        1 => "Tạm dừng",
-                        2 => "Kết thúc",
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
                         default => "Không xác định",
                     },
                 ];
@@ -243,7 +232,6 @@ class ApiUserController extends Controller
         }
     }
     
-
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -332,7 +320,6 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function destroy(string $id)
     {

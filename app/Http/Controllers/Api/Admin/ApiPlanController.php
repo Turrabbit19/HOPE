@@ -7,7 +7,6 @@ use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Plan;
 use App\Models\PlanSubject;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -193,6 +192,26 @@ class ApiPlanController extends Controller
             return response()->json(['error' => 'Không tìm thấy kế hoạch với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getSubjectsByMajor($id)
+    {
+        try {
+            $subjects = MajorSubject::where('major_id', $id)->with('subject')->get();
+
+            $data = $subjects->map(function($majorSubject) {
+                return [
+                    'id' => $majorSubject->subject->id,
+                    'name' => $majorSubject->subject->name,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }
     }
 }

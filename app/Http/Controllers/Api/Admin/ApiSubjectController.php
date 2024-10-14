@@ -20,7 +20,6 @@ class ApiSubjectController extends Controller
             $perPage = $request->input('per_page', 9); 
 
             $subjects = Subject::paginate($perPage);
-            $majors = Major::get();
 
             $data = collect($subjects->items())->map(function ($subject){
                 return [

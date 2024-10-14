@@ -42,12 +42,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
         Route::apiResource('courses', ApiCourseController::class);
         Route::apiResource('semesters', ApiSemesterController::class);
+
         Route::apiResource('majors', ApiMajorController::class);
+
         Route::apiResource('plans', ApiPlanController::class);
+        Route::get('major/{id}/subjects', [ApiPlanController::class, 'getSubjectsByMajor']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
-        Route::get('subject/lessons/{id}', [ApiSubjectController::class, 'getAllLessons']);
-        Route::get('subject/classrooms/{id}', [ApiSubjectController::class, 'getAllClassrooms']);
+        Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
+        Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
 
         Route::apiResource('rooms', ApiRoomController::class);
         Route::apiResource('lessons', ApiLessonController::class);

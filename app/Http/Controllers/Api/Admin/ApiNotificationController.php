@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\NotificationEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -52,9 +53,11 @@ class ApiNotificationController extends Controller
 
         try {
             $data = $validator->validated();
-            $notification = Notification::create($data);
+            $notifications = Notification::create($data);
             
-            return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
+            broadcast(new NotificationEvent($notifications));
+
+            return response()->json(['data' => $notifications, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }

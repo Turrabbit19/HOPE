@@ -26,4 +26,7 @@ Route::prefix('/')->group( function () {
     Route::get('schedules-registers', function () {
         return view('client.schedule-register  ');
     });
+    Route::get('users', function () {
+        return view('client.user');
+    });
 });

@@ -199,7 +199,7 @@ const Router = createBrowserRouter([
             },
 
             {
-                path: "list-subject/add",
+                path: "list-subject/detail/:id",
                 element: (
                     <>
                         <DetailSubject />

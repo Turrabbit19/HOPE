@@ -10,9 +10,12 @@ import {
     Popconfirm,
     Col,
     message,
+    Menu,
+    Dropdown,
 } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, MoreOutlined, PlusOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 const semesterData = {
     1: { majors: ["Lập trình Web", "Thiết kế đồ họa", "An ninh mạng"] },
     2: { majors: ["Kinh tế", "Tài chính", "Quản lý dự án"] },
@@ -58,6 +61,13 @@ const ListSubject = () => {
         { id: 5, name: "Biology" },
         { id: 6, name: "Geography" },
     ];
+
+    const MoreMenu = (
+        <Menu>
+            <Menu.Item key="1">Lớp học</Menu.Item>
+            <Menu.Item key="2">Ca học</Menu.Item>
+        </Menu>
+    );
 
     // Thiết lập danh sách khóa học đã lọc khi component được mount
     useEffect(() => {
@@ -266,12 +276,16 @@ const ListSubject = () => {
                                                             {course.name}
                                                         </span>
                                                     </h2>
-                                                    <button>
-                                                        <img
-                                                            src="/assets/svg/more_detail.svg"
-                                                            alt=""
+                                                    <Dropdown
+                                                        overlay={MoreMenu}
+                                                        trigger={["click"]}
+                                                    >
+                                                        <Button
+                                                            icon={
+                                                                <MoreOutlined />
+                                                            }
                                                         />
-                                                    </button>
+                                                    </Dropdown>
                                                 </div>
 
                                                 <div className="listCourse__item-body">
@@ -350,13 +364,16 @@ const ListSubject = () => {
                                                 </div>
 
                                                 <div className="listCourse__item-bottom teaching__card-bottom ">
-                                                    <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
+                                                    <Link
+                                                        to={`add`}
+                                                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                                                    >
                                                         <img
                                                             src="/assets/svg/eye.svg"
                                                             alt=""
                                                         />
                                                         Chi Tiết
-                                                    </button>
+                                                    </Link>
 
                                                     <Popconfirm
                                                         title="Xóa môn học"

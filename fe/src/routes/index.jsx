@@ -43,6 +43,7 @@ import SyllabusEdit from "../pages/admin/syllabus/edit/page";
 import ListCourse from "../pages/admin/courses/list/page";
 import ListUser from "../pages/admin/userManager/list/page";
 import UserAdd from "../pages/admin/userManager/add/page";
+import DetailSubject from "../pages/admin/subjects/detail/page";
 
 const Router = createBrowserRouter([
     {
@@ -193,6 +194,15 @@ const Router = createBrowserRouter([
                 element: (
                     <>
                         <ListSubjects />
+                    </>
+                ),
+            },
+
+            {
+                path: "list-subject/add",
+                element: (
+                    <>
+                        <DetailSubject />
                     </>
                 ),
             },

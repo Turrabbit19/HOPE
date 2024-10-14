@@ -4,7 +4,7 @@ import { EditOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
 
-const Testing = () => {
+const DetailSubject = () => {
     const [activeTab, setActiveTab] = useState("lecture"); // Theo dõi tab hiện tại
     const [isLectureModalVisible, setIsLectureModalVisible] = useState(false); // Hiện modal bài giảng
     const [isClassroomModalVisible, setIsClassroomModalVisible] =
@@ -497,4 +497,4 @@ const Testing = () => {
     );
 };
 
-export default Testing;
+export default DetailSubject;

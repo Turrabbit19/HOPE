@@ -3,6 +3,14 @@ import slide1 from "../../assets/slide1.jpg";
 import slide2 from "../../assets/slide2.jpg";
 import slide3 from "../../assets/slide3.jpg";
 import "./style.css";
+import { Carousel } from "antd";
+import {
+  LeftCircleOutlined,
+  LeftOutlined,
+  RightCircleFilled,
+  RightCircleTwoTone,
+  RightOutlined,
+} from "@ant-design/icons";
 
 const CarouselLandingPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,64 +36,45 @@ const CarouselLandingPage = () => {
   const handleAnimationEnd = () => {
     setDirection(null);
   };
+
+  const contentStyle = {
+    margin: 0,
+    height: "160px",
+    lineHeight: "160px",
+    textAlign: "center",
+  };
   return (
-    <>
-      <div
-        className={`slider relative overflow-hidden h-screen w-screen mt-[-50px] ${
-          direction || ""
-        }`}
-        onAnimationEnd={handleAnimationEnd}
-      >
-        <div className="list absolute inset-0 w-full h-full">
-          {sliderItems.map((item, index) => (
-            <div
-              key={index}
-              className={`item absolute inset-0 w-full h-full ${
-                index === currentIndex ? "block" : "hidden"
-              }`}
-            >
-              <img
-                src={item.src}
-                alt=""
-                className="w-full h-full object-fill"
-              />
-            </div>
-          ))}
+    <div>
+      <Carousel arrows>
+        <div>
+          <div>
+            <img
+              className="px-8 pb-10 h-[1000px] w-full"
+              src={sliderItems[0].src}
+              alt=""
+            />
+          </div>
         </div>
-
-        <div className="thumbnail absolute bottom-12 left-[70%] transform -translate-x-1/2 flex gap-5 z-10">
-          {sliderItems.map((item, index) => (
-            <div
-              key={index}
-              className={`item w-[150px] h-[220px] flex-shrink-0 relative ${
-                index === currentIndex ? "opacity-100" : "opacity-50"
-              }`}
-            >
-              <img
-                src={item.src}
-                alt=""
-                className="w-full h-full object-cover rounded-[20px] shadow-md"
-              />
-            </div>
-          ))}
+        <div>
+          <div>
+            <img
+              className="px-8 pb-10 h-[1000px] w-full"
+              src={sliderItems[1].src}
+              alt=""
+            />
+          </div>{" "}
         </div>
-
-        <div className="nextPrevArrows absolute top-[80%] right-[70%] z-10 flex gap-2">
-          <button
-            className="w-10 h-10 rounded-full bg-black border-none text-white font-mono font-bold transition-all duration-500 hover:bg-white hover:text-black"
-            onClick={() => moveSlider("prev")}
-          >
-            ◄
-          </button>
-          <button
-            className="w-10 h-10 rounded-full bg-black border-none text-white font-mono font-bold transition-all duration-500 hover:bg-white hover:text-black"
-            onClick={() => moveSlider("next")}
-          >
-            ►
-          </button>
+        <div>
+          <div>
+            <img
+              className="px-8 pb-10 h-[1000px] w-full"
+              src={sliderItems[2].src}
+              alt=""
+            />
+          </div>
         </div>
-      </div>
-    </>
+      </Carousel>
+    </div>
   );
 };
 

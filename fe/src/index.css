@@ -1699,4 +1699,11 @@ strong {
   border: 2px solid #eee;
 }
 
+& .ant-carousel .slick-prev {
+  color: black;
+}
+& .ant-carousel .slick-next {
+  color: black;
+}
+
 /*# sourceMappingURL=index.css.map */

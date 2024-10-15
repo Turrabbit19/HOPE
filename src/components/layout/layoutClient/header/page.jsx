@@ -8,6 +8,7 @@ export default function HeaderClient() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const notificationRef = useRef(null)
   const buttonRef = useRef(null)
+  const unreadNotificationsCount = 3; // Số lượng thông báo chưa đọc
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -79,10 +80,15 @@ export default function HeaderClient() {
         <div className="relative">
           <button
             ref={buttonRef}
-            className="p-2 hover:bg-gray-100 rounded-full border"
+            className="p-2 hover:bg-gray-100 rounded-full border relative"
             onClick={toggleNotifications}
           >
             <Bell className="h-5 w-5 text-gray-600" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadNotificationsCount}
+              </span>
+            )}
           </button>
           {showNotifications && (
             <div
@@ -91,7 +97,7 @@ export default function HeaderClient() {
             >
               <div className="p-4 border-b">
                 <h3 className="text-lg font-semibold">Thông báo</h3>
-                <p className="text-sm text-gray-500">Bạn có 3 thông báo chưa đọc</p>
+                <p className="text-sm text-gray-500">Bạn có {unreadNotificationsCount} thông báo chưa đọc</p>
               </div>
               <div className="p-4 space-y-4">
                 <div className="flex items-start space-x-4">

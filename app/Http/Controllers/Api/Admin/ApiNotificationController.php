@@ -45,6 +45,8 @@ class ApiNotificationController extends Controller
             'name' => 'required|string|max:255|unique:notifications',   
             'description' => 'required|string',  
             'time' => 'required|date_format:Y-m-d H:i:s',
+            'notification_courses' => 'required|array',
+            'notification_courses.*.id' => 'required|exists:notification_courses,id',
         ]);
 
         if ($validator->fails()) {
@@ -54,6 +56,12 @@ class ApiNotificationController extends Controller
         try {
             $data = $validator->validated();
             $notifications = Notification::create($data);
+
+            $notification_courses = collect($data['notification_courses'])->mapWithKeys(function ($notification_courses) {
+                return [$notification_courses['id'] => []];
+            });
+            
+            $notifications->notifications()->sync($notification_courses);
             
             broadcast(new NotificationEvent($notifications));
 

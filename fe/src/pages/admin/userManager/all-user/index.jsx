@@ -15,7 +15,6 @@ import { AddAllUserModal } from "../../../../components/modals/AddAllUserModal";
 import { UserDetail } from "../../../../components/modals/UserDetail";
 import { EditUserModal } from "../../../../components/modals/EditUserModal";
 import { ChangeRoleModal } from "../../../../components/modals/ChangeRoleModal";
-import Loading from "../../../../components/loading";
 
 const AllUser = () => {
     const [openAdduserModal, setOpenAdduserModal] = useState(false);
@@ -24,7 +23,6 @@ const AllUser = () => {
     const [openConfirmModal, setOpenConfirmModal] = useState(false);
     const [openChangeRoleModal, setOpenChangeRoleModal] = useState(false);
     const [value, setValue] = useState("teacher");
-    const [loading, setLoading] = useState(false);
 
     const listUser = [
         {
@@ -88,11 +86,6 @@ const AllUser = () => {
             address: "Thạch Thất, Hà Nội",
         },
     ];
-
-
-    if(loading) {
-        return <Loading/>
-    }
     return (
         <div className="p-2">
             <ChangeRoleModal

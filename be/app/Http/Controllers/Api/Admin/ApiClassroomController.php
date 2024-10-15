@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
+use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -78,32 +79,40 @@ class ApiClassroomController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'subject_id' => 'required|exists:subjects,id',
-            'code' => 'required|string|max:10|unique:classrooms',
-            'max_students' => 'required|integer|min:1',
-            'status' => 'boolean',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'subject_id' => 'required|exists:subjects,id',
+        'code' => 'required|string|max:10|unique:classrooms',
+        'max_students' => 'required|integer|min:1',
+        'status' => 'boolean',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        try {
-            $data = $validator->validated();
-            $classroom = Classroom::create($data);
-
-            return response()->json(['data' => $classroom, 'message' => 'Tạo mới thành công'], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
-        }
-
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 400);
     }
+
+    try {
+        $data = $validator->validated();
+        $classroom = Classroom::create($data);
+
+        $subject = Subject::find($data['subject_id']);
+
+        return response()->json([
+            'data' => [
+                'subject_name' => $subject->name,
+                'subject_id' => $subject->id,
+                'code' => $classroom->code,
+                'max_students' => $classroom->max_students,
+                'status' => $classroom->status,
+            ],
+            'message' => 'Tạo mới thành công'
+        ], 201);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+    }
+}
 
     /**
      * Display the specified resource.

@@ -185,7 +185,7 @@ const SyllabusList = () => {
                       </button>
                     </Popconfirm>
                     <Link
-                      to={`edit/${syllabus.id}`}
+                      to={`edit/${item.id}`}
                       className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
                       onClick={() => handleEdit(item.id)}
                     >
@@ -194,7 +194,7 @@ const SyllabusList = () => {
                     </Link>
                     <Button
                       className="text-[#1167B4] font-bold flex items-center gap-2 justify-center border-none"
-                      onClick={() => handleEdit(syllabus.id)}
+                      // onClick={() => handleEdit(syllabus.id)}
                     >
                       <EditOutlined />
                       Chi tiết

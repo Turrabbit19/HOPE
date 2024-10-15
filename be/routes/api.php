@@ -68,6 +68,7 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('majors', ApiMajorController::class);
     Route::post('/majors/{id}/restore', [ApiMajorController::class, 'restore']);
     Route::get('majors/check-unique/{name}', [ApiMajorController::class, 'checkNameUnique']);
+    Route::get('majors/{id}/subjects', [ApiMajorController::class, 'getSubjectsByMajor']);
 
 
 

@@ -129,6 +129,8 @@ const ClassRoom = () => {
       message.success("Thêm lớp học thành công");
       const newClassroom = response.data.data;
       setClassrooms((prevClassrooms) => [...prevClassrooms, newClassroom]);
+      handleModalCancel();
+      form.resetFields();
     } catch (error) {
       console.log(error.message);
       message.warning("Thêm lớp học thất bại !!!");
@@ -218,8 +220,8 @@ const ClassRoom = () => {
         </span>
       </div>
       {classrooms.length > 0 ? (
-        classrooms.map((classroom) => (
-          <div className="col" key={classroom.id}>
+        classrooms.map((classroom, index) => (
+          <div className="col" key={index}>
             <div className="teaching__card">
               <div className="teaching__card-top">
                 <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
@@ -327,7 +329,7 @@ const ClassRoom = () => {
               style={{
                 width: 300,
               }}
-              placeholder="Vui lòng chọn ngành học"
+              placeholder="Vui lòng chọn môn học"
               optionFilterProp="label"
               filterSort={(optionA, optionB) =>
                 (optionA?.label ?? "")
@@ -385,7 +387,7 @@ const ClassRoom = () => {
           >
             <Select placeholder="Chọn trạng thái">
               <Option value="1">Còn trống</Option>
-              <Option value="0">Đang học</Option>
+              <Option value="0">Đang có lớp</Option>
             </Select>
           </Form.Item>
 
@@ -402,14 +404,7 @@ const ClassRoom = () => {
           </Space>
         </Form>
       </Modal>
-      <Pagination
-        defaultCurrent={1}
-        current={pagination.current}
-        pageSize={pagination.pageSize}
-        total={pagination.total}
-        onChange={handlePageChange}
-        style={{ marginTop: 16, textAlign: "right" }}
-      />
+      
     </div>
   );
 };

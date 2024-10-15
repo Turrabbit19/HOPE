@@ -9,18 +9,22 @@ import {
   InputNumber,
   Tabs,
   Card,
+  notification,
+  message,
 } from "antd";
 import Loading from "../../../../components/loading";
 import instance from "../../../../config/axios";
+import { useNavigate } from "react-router-dom";
 
 const SyllabusAdd = () => {
   const [form] = Form.useForm();
   const [selectedMajors, setSelectedMajors] = useState([]);
   const [subjectsByMajorAndSemester, setSubjectsByMajorAndSemester] = useState({});
-  const [totalSemesters, setTotalSemesters] = useState(1); // Default to 1 semester
+  const [totalSemesters, setTotalSemesters] = useState(1); 
   const [majors, setMajors] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -28,11 +32,15 @@ const SyllabusAdd = () => {
         setLoading(true);
         const [subjectsData, majorsData] = await Promise.all([
           instance.get(`admin/subjects`),
-          instance.get(`admin/majors`)
+          instance.get(`admin/majors`),
         ]);
         setSubjects(subjectsData.data.data);
         setMajors(majorsData.data.data);
       } catch (error) {
+        notification.error({
+          message: "Lối khi fetch data",
+          description: "thử lại sau",
+        });
         console.error(error);
       } finally {
         setLoading(false);
@@ -40,18 +48,16 @@ const SyllabusAdd = () => {
     })();
   }, []);
 
-  // Handle major selection
   const handleMajorsChange = (value) => {
     setSelectedMajors(value);
     setSubjectsByMajorAndSemester({});
+
   };
 
-  // Handle semester number change
   const handleSemesterNumberChange = (value) => {
     setTotalSemesters(value);
   };
 
-  // Handle subject selection
   const handleCoursesChange = (value, majorId, semesterIndex) => {
     setSubjectsByMajorAndSemester((prevState) => ({
       ...prevState,
@@ -62,26 +68,53 @@ const SyllabusAdd = () => {
     }));
   };
 
-  // Get available subjects for the current semester excluding already selected subjects
   const getAvailableSubjectsForSemester = (majorId, semesterIndex) => {
-    const selectedSubjects = Object.values(subjectsByMajorAndSemester)
-      .flatMap(semesters => Object.values(semesters).flat());
+    
+    const selectedSubjects = Object.keys(subjectsByMajorAndSemester).flatMap((key) =>
+      Object.values(subjectsByMajorAndSemester[key] || {}).flat()
+    );
 
     return subjects
-      .filter(subject => !selectedSubjects.includes(subject.id))
+      .filter(subject => !selectedSubjects.includes(subject.id)) 
       .map(subject => ({
         label: subject.name,
         value: subject.id,
       }));
   };
 
-  // Handle form submission
-  const handleFormSubmit = (values) => {
-    const finalData = {
-      ...values,
-      subjectsByMajorAndSemester,
+  const transformData = (values, subjectsByMajorAndSemester) => {
+    return {
+      name: values.name,
+      status: true, 
+      majors: Object.entries(subjectsByMajorAndSemester).map(([majorId, semesters], index) => ({
+        id: parseInt(majorId),
+        semesters: Object.entries(semesters).map(([semesterIndex, subjects]) => ({
+          order: parseInt(semesterIndex) + 1, 
+          subjects: subjects.map(subjectId => ({ id: subjectId }))
+        }))
+      }))
     };
-    console.log("Syllabus Data: ", finalData);
+  };
+
+  const handleFormSubmit = async (values) => {
+    const finalData = transformData(values, subjectsByMajorAndSemester);
+    console.log(finalData);
+    try {
+      setLoading(true);
+      await instance.post(`admin/plans`, finalData);
+      message.success("Thêm thành công kế hoạch học tập");
+      form.setFieldsValue();
+      navigate(`/admin/list-syllabus`);
+    } catch (error) {
+      notification.error({
+        message: "Lối khi fetch data",
+        description: "thử lại sau",
+      });
+      console.error(error);
+    }finally{
+      setLoading(false);
+    }
+  
   };
 
   if (loading) {
@@ -122,7 +155,7 @@ const SyllabusAdd = () => {
             >
               <InputNumber
                 min={1}
-                defaultValue={totalSemesters}
+                value={totalSemesters} 
                 onChange={handleSemesterNumberChange}
                 placeholder="Số kỳ học"
               />
@@ -143,9 +176,9 @@ const SyllabusAdd = () => {
                           mode="multiple"
                           placeholder={`Chọn môn học cho kỳ ${semesterIndex + 1}`}
                           options={getAvailableSubjectsForSemester(majorId, semesterIndex)}
-                          value={subjectsByMajorAndSemester[majorId]?.[semesterIndex] || []}
                           onChange={(value) => handleCoursesChange(value, majorId, semesterIndex)}
                           style={{ width: "100%" }}
+                          // value={subjectsByMajorAndSemester[majorId]?.[semesterIndex] || []}
                         />
                       </Col>
                     </div>

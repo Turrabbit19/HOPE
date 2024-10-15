@@ -1,654 +1,354 @@
-import React, { useState, useEffect } from "react";
-import {
-    Button,
-    Popconfirm,
-    Modal,
-    Form,
-    Input,
-    Space,
-    Pagination,
-    message,
-    Tooltip,
-} from "antd";
-import {
-    EditOutlined,
-    PlusOutlined,
-    PlusCircleOutlined,
-    BugOutlined,
-} from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import moment from "moment";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"; // Import CSS cho React Quill
+import React, { useState } from "react";
+import { Button, Card, Input, Modal, Popconfirm, Form } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+
+const { TextArea } = Input;
 
 const Testing = () => {
-    const [sections, setSections] = useState([]);
-    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-    const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] =
-        useState(false);
-    const [isNotificationModalVisible, setIsNotificationModalVisible] =
-        useState(false);
-    const [editingSection, setEditingSection] = useState(null);
-    const [selectedSection, setSelectedSection] = useState(null); // Danh mục đã chọn
-    const [searchTerm, setSearchTerm] = useState("");
-    const [form] = Form.useForm();
-    const [notificationForm] = Form.useForm();
-    const [description, setDescription] = useState("");
-    const [notifications, setNotifications] = useState([]); // Thông báo thuộc danh mục
+    const [activeTab, setActiveTab] = useState("lecture"); // Theo dõi tab hiện tại
+    const [isLectureModalVisible, setIsLectureModalVisible] = useState(false); // Hiện modal bài giảng
+    const [isClassroomModalVisible, setIsClassroomModalVisible] =
+        useState(false); // Hiện modal lớp học
+    const [isEditing, setIsEditing] = useState(false); // Trạng thái sửa
+    const [currentLecture, setCurrentLecture] = useState({}); // Dữ liệu bài giảng hiện tại
+    const [currentClassroom, setCurrentClassroom] = useState({}); // Dữ liệu lớp học hiện tại
 
-    useEffect(() => {
-        const fetchSections = async () => {
-            const data = [
-                {
-                    id: 1,
-                    sectionName: "Học Tập",
-                    creationDate: "2024-01-01",
-                    startDate: "2024-01-05",
-                    status: "Đang hoạt động",
-                },
-                {
-                    id: 2,
-                    sectionName: "Học Phí",
-                    creationDate: "2024-02-01",
-                    startDate: "2024-02-05",
-                    status: "Ngừng hoạt động",
-                },
-                {
-                    id: 3,
-                    sectionName: "Thi Cử",
-                    creationDate: "2024-03-01",
-                    startDate: "2024-03-05",
-                    status: "Đang hoạt động",
-                },
-            ];
-            setSections(data);
-        };
-
-        fetchSections();
-    }, []);
-
-    const handleSearch = (value) => {
-        setSearchTerm(value.toLowerCase());
-    };
-
-    const filteredSections = sections.filter((section) =>
-        section.sectionName.toLowerCase().includes(searchTerm)
-    );
-
-    const showEditModal = (section) => {
-        setEditingSection(section);
-        form.setFieldsValue({
-            sectionName: section.sectionName,
-        });
-        setIsEditModalVisible(true);
-    };
-
-    const showAddModal = () => {
-        setEditingSection(null);
-        form.resetFields();
-        setIsAddModalVisible(true);
-    };
-
-    const handleModalOk = async () => {
-        try {
-            const values = await form.validateFields();
-            if (editingSection) {
-                // Sửa danh mục
-                setSections(
-                    sections.map((section) =>
-                        section.id === editingSection.id
-                            ? { ...section, sectionName: values.sectionName }
-                            : section
-                    )
-                );
-                message.success("Cập nhật danh mục thành công!");
-            } else {
-                // Thêm mới danh mục
-                setSections([
-                    ...sections,
-                    {
-                        id: sections.length + 1,
-                        sectionName: values.sectionName,
-                        creationDate: moment().format("YYYY-MM-DD"),
-                        startDate: moment().format("YYYY-MM-DD"),
-                        status: "Đang hoạt động",
-                    },
-                ]);
-                message.success("Thêm danh mục thành công!");
-            }
-            handleModalCancel();
-        } catch (errorInfo) {
-            console.log("Failed:", errorInfo);
-            message.error("Đã xảy ra lỗi, vui lòng thử lại!");
-        }
-    };
-
-    const handleModalCancel = () => {
-        setIsEditModalVisible(false);
-        setIsAddModalVisible(false);
-        form.resetFields();
-    };
-
-    const confirmDelete = (id) => {
-        setSections(sections.filter((section) => section.id !== id));
-        message.success("Xóa danh mục thành công!"); // Thông báo xóa thành công
-    };
-
-    const showAddNotificationModal = () => {
-        notificationForm.resetFields();
-        setDescription(""); // Reset description khi mở popup
-        setIsAddNotificationModalVisible(true);
-    };
-
-    const handleAddNotification = async () => {
-        try {
-            const values = await notificationForm.validateFields();
-            const notificationData = {
-                ...values,
-                description,
-            };
-            console.log("Notification Data:", notificationData);
-            message.success("Thêm thông báo thành công!");
-            setIsAddNotificationModalVisible(false);
-        } catch (errorInfo) {
-            console.log("Failed:", errorInfo);
-            message.error("Vui lòng điền đầy đủ thông tin!");
-        }
-    };
-
-    const handleNotificationModalCancel = () => {
-        setIsAddNotificationModalVisible(false);
-    };
-
-    // Hiển thị danh sách thông báo
-    const showNotifications = (section) => {
-        setSelectedSection(section);
-        setNotifications([
-            {
-                id: 1,
-                title: "Thông báo 1",
-                description: "Chi tiết thông báo 1",
-            },
-            {
-                id: 2,
-                title: "Thông báo 2",
-                description: "Chi tiết thông báo 2",
-            },
-        ]);
-        setIsNotificationModalVisible(true);
-    };
-
-    const handleNotificationListCancel = () => {
-        setIsNotificationModalVisible(false);
-    };
-
-    // Cấu hình module cho ReactQuill để hỗ trợ chỉnh sửa nâng cao
-    const quillModules = {
-        toolbar: [
-            [{ font: [] }],
-            [{ header: [1, 2, false] }],
-            ["bold", "italic", "underline", "strike"],
-            [{ color: [] }, { background: [] }],
-            [{ script: "sub" }, { script: "super" }],
-            ["blockquote", "code-block"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            [{ indent: "-1" }, { indent: "+1" }],
-            [{ direction: "rtl" }],
-            [{ align: [] }],
-            ["link", "image", "video"],
-            ["clean"],
-        ],
-    };
-
-    // Cấu hình format cho ReactQuill để hỗ trợ định dạng phức tạp
-    const quillFormats = [
-        "header",
-        "font",
-        "size",
-        "bold",
-        "italic",
-        "underline",
-        "strike",
-        "blockquote",
-        "list",
-        "bullet",
-        "indent",
-        "link",
-        "image",
-        "video",
-        "color",
-        "background",
-        "align",
-        "script",
+    // Dữ liệu giả định cho danh sách lớp học
+    const classData = [
+        {
+            id: "1",
+            name: "WEB502.1",
+            nameSubject: "Reactjs",
+            students: 25,
+            status: "Đang học",
+            createdDate: "2023-08-01",
+        },
+        {
+            id: "2",
+            name: "WEB502.3",
+            nameSubject: "Reactjs",
+            students: 30,
+            status: "Đã hoàn thành",
+            createdDate: "2023-05-10",
+        },
     ];
 
-    // SỬA XÓA THÔNG BÁO
-    const [isEditNotificationModalVisible, setIsEditNotificationModalVisible] =
-        useState(false);
-    const [editForm] = Form.useForm();
-    const [editingNotification, setEditingNotification] = useState(null);
-
-    // Khi nhấn vào nút "Sửa"
-    const handleEditNotification = (notification) => {
-        setEditingNotification(notification);
-        editForm.setFieldsValue({
-            title: notification.title,
-            description: notification.description,
-        });
-        setIsEditNotificationModalVisible(true);
+    // Xác nhận xóa lớp học
+    const confirmDelete = (id) => {
+        console.log("Xóa lớp học có id:", id);
+        // Thực hiện logic xóa lớp học ở đây
     };
 
-    // Khi nhấn "Hủy" trong modal sửa
-    const handleEditNotificationCancel = () => {
-        setIsEditNotificationModalVisible(false);
+    // Hiển thị modal thêm mới/sửa bài giảng
+    const showLectureModal = (lecture = {}) => {
+        setIsEditing(!!lecture.id); // Nếu có id, đang ở chế độ sửa
+        setCurrentLecture(lecture); // Cập nhật bài giảng hiện tại
+        setIsLectureModalVisible(true); // Mở modal
     };
 
-    // Khi nhấn "Cập nhật" để lưu thay đổi
-    const handleUpdateNotification = () => {
-        editForm.validateFields().then((values) => {
-            // Cập nhật thông báo trong danh sách
-            const updatedNotifications = notifications.map((notification) =>
-                notification.id === editingNotification.id
-                    ? { ...notification, ...values }
-                    : notification
-            );
-            setNotifications(updatedNotifications);
-            message.success("Thông báo đã được cập nhật thành công!");
-            setIsEditNotificationModalVisible(false);
-        });
+    // Hiển thị modal thêm mới/sửa lớp học
+    const showClassroomModal = (classroom = {}) => {
+        setIsEditing(!!classroom.id); // Nếu có id, đang ở chế độ sửa
+        setCurrentClassroom(classroom); // Cập nhật lớp học hiện tại
+        setIsClassroomModalVisible(true); // Mở modal
     };
 
-    // Khi nhấn "Xóa"
-    const handleDeleteNotification = (id) => {
-        const updatedNotifications = notifications.filter(
-            (notification) => notification.id !== id
-        );
-        setNotifications(updatedNotifications);
-        message.success("Thông báo đã được xóa thành công!");
+    // Đóng modal
+    const handleLectureModalCancel = () => {
+        setIsLectureModalVisible(false);
+        setCurrentLecture({}); // Reset dữ liệu
     };
+
+    const handleClassroomModalCancel = () => {
+        setIsClassroomModalVisible(false);
+        setCurrentClassroom({}); // Reset dữ liệu
+    };
+
+    // Các nút hành động sửa/xóa bài giảng
+    const renderActionButtons = (lecture) => (
+        <div className="flex justify-end space-x-4">
+            <Button
+                type="default"
+                icon={<EditOutlined />}
+                onClick={() => showLectureModal(lecture)}
+                className="hover:bg-[#1167B4] hover:text-white transition"
+            >
+                Sửa
+            </Button>
+            <Popconfirm
+                title="Bạn có chắc chắn muốn xóa bài giảng này?"
+                onConfirm={() => confirmDelete(lecture.id)}
+                okText="Có"
+                cancelText="Không"
+            >
+                <Button type="danger" icon={<DeleteOutlined />}>
+                    Xóa
+                </Button>
+            </Popconfirm>
+        </div>
+    );
+
+    // Các thẻ bài giảng
+    const renderLectureCards = () =>
+        [1, 2, 3, 4].map((i) => (
+            <Card
+                key={i}
+                title={
+                    <span className="text-[#1167B4] font-bold text-3xl">
+                        Buổi {i}: Giới thiệu về Reactjs
+                    </span>
+                }
+                className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
+                headStyle={{ backgroundColor: "#f0f8ff", padding: "16px" }}
+                bodyStyle={{ padding: "16px", fontSize: "16px" }}
+            >
+                <Card
+                    title={
+                        <span className="font-bold text-black">
+                            Mô tả buổi học
+                        </span>
+                    }
+                    bordered={false}
+                    className="mb-4"
+                >
+                    <p className="text-gray-700">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </Card>
+                {renderActionButtons({ id: i })}
+            </Card>
+        ));
 
     return (
-        <div className="test__list">
-            <div className="row row-cols-2 g-3">
-                <div className="col-12">
-                    <div>
-                        <div className="justify-between flex">
-                            <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-                                Quản Lý danh mục
-                                <button>
-                                    <img
-                                        src="/assets/svg/reload.svg"
-                                        alt="reload..."
-                                    />
-                                </button>
-                            </h1>
+        <div className="p-6">
+            <div className="col-12 justify-between flex mb-4">
+                <h1 className="text-[#7017E2] text-[24px] font-semibold">
+                    Chi tiết môn học: Reactjs
+                </h1>
+            </div>
 
-                            <div>
-                                <Input.Search
-                                    placeholder="Tìm kiếm danh mục..."
-                                    onSearch={handleSearch}
-                                    onChange={(e) =>
-                                        handleSearch(e.target.value)
-                                    }
-                                    style={{ width: 300 }}
-                                    allowClear
-                                />
-                            </div>
-                        </div>
+            <div className="col-12 mb-4">
+                <Button
+                    type={activeTab === "lecture" ? "primary" : "default"}
+                    onClick={() => setActiveTab("lecture")}
+                    className="text-lg"
+                >
+                    Bài giảng và tài nguyên
+                </Button>
+                <Button
+                    type={activeTab === "classroom" ? "primary" : "default"}
+                    onClick={() => setActiveTab("classroom")}
+                    className="ml-4 text-lg"
+                >
+                    Lớp học
+                </Button>
+            </div>
 
-                        <div className="flex justify-between items-center mt-6">
-                            <Button
-                                onClick={showAddModal}
-                                className="btn btn--outline text-[#7017E2]"
-                            >
-                                <PlusOutlined />
-                                Tạo mới
-                            </Button>
-
-                            <span className="font-bold text-[14px] text-[#000]">
-                                {filteredSections.length} items
-                            </span>
-                        </div>
+            {activeTab === "lecture" ? (
+                <>
+                    <div className="flex justify-end mb-4">
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => showLectureModal({})}
+                            className="text-lg"
+                        >
+                            Thêm bài giảng
+                        </Button>
                     </div>
-                    <div className="row row-cols-2 g-3">
-                        {filteredSections.length > 0 ? (
-                            filteredSections.map((section) => (
-                                <div className="col" key={section.id}>
-                                    <div className="teaching__card">
-                                        <div className="teaching__card-top">
+                    {renderLectureCards()}
+
+                    <Modal
+                        title={isEditing ? "Sửa Bài Giảng" : "Thêm Bài Giảng"}
+                        open={isLectureModalVisible}
+                        onCancel={handleLectureModalCancel}
+                        footer={null}
+                    >
+                        <Form
+                            initialValues={currentLecture}
+                            onFinish={() => {
+                                console.log("Form submitted");
+                                handleLectureModalCancel();
+                            }}
+                        >
+                            <Form.Item
+                                name="name"
+                                label="Tên Bài Giảng"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng nhập tên bài giảng!",
+                                    },
+                                ]}
+                            >
+                                <Input />
+                            </Form.Item>
+                            <Form.Item
+                                name="description"
+                                label="Mô Tả"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng nhập mô tả!",
+                                    },
+                                ]}
+                            >
+                                <TextArea rows={4} />
+                            </Form.Item>
+                            <Form.Item>
+                                <Button type="primary" htmlType="submit">
+                                    {isEditing ? "Cập nhật" : "Thêm"}
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </Modal>
+                </>
+            ) : (
+                <div>
+                    <div className="flex justify-end mb-4">
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => showClassroomModal({})} // Mở modal thêm mới
+                            className="text-lg"
+                        >
+                            Thêm lớp học
+                        </Button>
+                    </div>
+                    <div className="row row-cols-2 gx-3">
+                        {classData.length > 0 ? (
+                            classData.map((classroom) => (
+                                <div className="col" key={classroom.id}>
+                                    <div className="teaching__card border p-4 shadow-md rounded-lg">
+                                        <div className="teaching__card-top flex justify-between items-center mb-4">
                                             <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                                                 <img
                                                     src="/assets/svg/share.svg"
-                                                    alt=""
+                                                    alt="share icon"
                                                 />
-                                                Thông báo danh mục:{" "}
-                                                <p className="text-red-300 uppercase ml-2 font-bold">
-                                                    {section.sectionName}
-                                                </p>
+                                                Tên lớp:{" "}
+                                                <span className="text-red-300 uppercase ml-2">
+                                                    {classroom.name}
+                                                </span>
                                             </h2>
-                                            <Tooltip
-                                                title="Thêm mới thông báo"
-                                                className="mr-4"
-                                            >
-                                                <Button
-                                                    icon={
-                                                        <PlusCircleOutlined />
-                                                    }
-                                                    onClick={
-                                                        showAddNotificationModal
-                                                    }
-                                                />
-                                            </Tooltip>
                                         </div>
-
                                         <div className="teaching__card-body">
-                                            <div className="mt-6 flex flex-col gap-8 pb-6">
+                                            <div className="mt-6 flex flex-col gap-4 pb-6">
+                                                <div className="flex gap-6">
+                                                    <p className="text-[#9E9E9E]">
+                                                        Tên môn:
+                                                    </p>
+                                                    <p className="text-[#000]">
+                                                        {classroom.nameSubject}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-6">
+                                                    <p className="text-[#9E9E9E]">
+                                                        Học sinh:
+                                                    </p>
+                                                    <p className="text-[#000]">
+                                                        {classroom.students}
+                                                    </p>
+                                                </div>
                                                 <div className="flex gap-6">
                                                     <p className="text-[#9E9E9E]">
                                                         Trạng thái:
                                                     </p>
-                                                    <div className="teaching__card-status">
-                                                        <img
-                                                            className="svg-green"
-                                                            src="/assets/svg/status.svg"
-                                                            alt="status"
-                                                        />
-                                                        <span className="text-[#44CC15] text-[12px]">
-                                                            {section.status}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-6">
-                                                    <p className="text-[#9E9E9E]">
-                                                        Ngày khởi tạo:
-                                                    </p>
-                                                    <p className="font-bold text-[#000]">
-                                                        {section.creationDate}
+                                                    <p className="text-[#000]">
+                                                        {classroom.status}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-6">
                                                     <p className="text-[#9E9E9E]">
-                                                        Ngày bắt đầu:
+                                                        Ngày tạo:
                                                     </p>
-                                                    <p className="font-bold text-[#000]">
-                                                        {section.startDate}
+                                                    <p className="text-[#000]">
+                                                        {classroom.createdDate}
                                                     </p>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div className="teaching__card-bottom">
-                                            <button
-                                                className="flex items-center gap-3 text-[#1167B4] font-bold"
-                                                onClick={() =>
-                                                    showNotifications(section)
-                                                }
-                                            >
-                                                <BugOutlined />
-                                                Quản lý Thông Báo
-                                            </button>
-                                            <button
-                                                className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                                                onClick={() =>
-                                                    showEditModal(section)
-                                                }
-                                            >
-                                                <EditOutlined />
-                                                Chỉnh sửa
-                                            </button>
-                                            <Popconfirm
-                                                title="Xóa danh mục"
-                                                onConfirm={() =>
-                                                    confirmDelete(section.id)
-                                                }
-                                                okText="Có"
-                                                cancelText="Không"
-                                            >
-                                                <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                                                    <img
-                                                        src="/assets/svg/remove.svg"
-                                                        alt="remove"
-                                                    />
-                                                    Xóa khỏi Danh Sách
+                                            <div className="flex justify-end space-x-4">
+                                                <button
+                                                    className="text-[#1167B4] font-bold border border-[#1167B4] px-4 py-2 rounded hover:bg-[#1167B4] hover:text-white transition"
+                                                    onClick={() =>
+                                                        showClassroomModal(
+                                                            classroom
+                                                        )
+                                                    } // Mở modal sửa lớp học
+                                                >
+                                                    Sửa
                                                 </button>
-                                            </Popconfirm>
+                                                <Popconfirm
+                                                    title="Bạn có chắc chắn muốn xóa lớp học này?"
+                                                    onConfirm={() =>
+                                                        confirmDelete(
+                                                            classroom.id
+                                                        )
+                                                    }
+                                                    okText="Có"
+                                                    cancelText="Không"
+                                                >
+                                                    <button className="text-[#FF5252] font-bold border border-[#FF5252] px-4 py-2 rounded hover:bg-[#FF5252] hover:text-white transition">
+                                                        Xóa
+                                                    </button>
+                                                </Popconfirm>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="col-12">
-                                <div className="text-center">
-                                    Không tìm thấy danh mục nào!
-                                </div>
-                            </div>
+                            <p>Không có lớp học nào</p>
                         )}
                     </div>
-                </div>
-            </div>
-            <Pagination
-                className="mt-12"
-                align="center"
-                total={filteredSections.length}
-                defaultPageSize={6}
-                defaultCurrent={1}
-            />
-
-            {/* LIST THÔNG BÁO */}
-            <Modal
-                title={
-                    <h3 className="text-2xl font-semibold ">
-                        Danh mục thông báo :
-                        <span className="text-[#1167B4]">
-                            {" "}
-                            {selectedSection?.sectionName || "Thông báo"}
-                        </span>
-                    </h3>
-                }
-                open={isNotificationModalVisible}
-                onCancel={handleNotificationListCancel}
-                footer={null}
-                centered
-                width={700}
-                bodyStyle={{ padding: "20px 30px", backgroundColor: "#fafafa" }}
-                className="rounded-lg shadow-lg"
-            >
-                <div className="overflow-y-auto">
-                    {notifications.length > 0 ? (
-                        notifications.map((notification) => (
-                            <div
-                                key={notification.id}
-                                className="bg-white p-8 mb-8 rounded-lg shadow-lg"
+                    {/* Modal thêm/sửa lớp học */}
+                    <Modal
+                        title={isEditing ? "Sửa Lớp Học" : "Thêm Lớp Học"}
+                        open={isClassroomModalVisible}
+                        onCancel={handleClassroomModalCancel}
+                        footer={null}
+                    >
+                        <Form
+                            initialValues={currentClassroom}
+                            onFinish={() => {
+                                console.log("Form submitted"); // Thay thế bằng logic xử lý
+                                handleClassroomModalCancel();
+                            }}
+                        >
+                            <Form.Item
+                                name="name"
+                                label="Tên Lớp"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng nhập tên lớp!",
+                                    },
+                                ]}
                             >
-                                {/* Tiêu đề thông báo */}
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                                    <span className="text-blue-600 mr-2">
-                                        Tiêu đề:{" "}
-                                    </span>
-                                    {notification.title}
-                                </h2>
-                                {/* Nội dung thông báo */}
-                                <div className="text-2xl text-gray-700">
-                                    <span className="font-semibold text-blue-600">
-                                        Nội dung:
-                                    </span>
-                                    <p className="mt-4">
-                                        {notification.description}
-                                    </p>
-                                </div>
-                                {/* Nút Sửa và Xóa */}
-                                <div className="flex justify-end mt-6">
-                                    {/* Nút Sửa */}
-                                    <Button
-                                        className="mr-4"
-                                        type="primary"
-                                        onClick={() =>
-                                            handleEditNotification(notification)
-                                        }
-                                    >
-                                        Sửa
-                                    </Button>
+                                <Input />
+                            </Form.Item>
 
-                                    {/* Nút Xóa */}
-                                    <Popconfirm
-                                        title="Bạn có chắc chắn muốn xóa thông báo này?"
-                                        onConfirm={() =>
-                                            handleDeleteNotification(
-                                                notification.id
-                                            )
-                                        }
-                                        okText="Có"
-                                        cancelText="Không"
-                                    >
-                                        <Button type="danger">Xóa</Button>
-                                    </Popconfirm>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-center text-xl text-gray-500">
-                            Không có thông báo nào trong danh mục này
-                        </p>
-                    )}
+                            <Form.Item
+                                name="students"
+                                label="Số Học Sinh"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng không để trống",
+                                    },
+                                ]}
+                            >
+                                <Input type="number" />
+                            </Form.Item>
+                            <Form.Item>
+                                <Button type="primary" htmlType="submit">
+                                    {isEditing ? "Cập nhật" : "Thêm"}
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </Modal>
                 </div>
-            </Modal>
-            {/* Modal Thêm/Sửa Danh Mục */}
-            <Modal
-                title={editingSection ? "Sửa Danh Mục" : "Thêm Mới Danh Mục"}
-                open={isAddModalVisible || isEditModalVisible}
-                onCancel={handleModalCancel}
-                footer={null}
-                centered
-                width={600}
-            >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        label="Tên Danh Mục"
-                        name="sectionName"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Vui lòng nhập tên danh mục!",
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Nhập tên danh mục" />
-                    </Form.Item>
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            paddingTop: "20px",
-                        }}
-                    >
-                        <Button
-                            onClick={handleModalCancel}
-                            style={{ marginRight: 8 }}
-                        >
-                            Hủy
-                        </Button>
-                        <Button type="primary" onClick={handleModalOk}>
-                            {editingSection ? "Cập nhật" : "Tạo mới"}
-                        </Button>
-                    </div>
-                </Form>
-            </Modal>
-
-            {/* THÊM THÔNG BÁO */}
-            <Modal
-                title="Thêm Mới Thông Báo"
-                open={isAddNotificationModalVisible}
-                onCancel={handleNotificationModalCancel}
-                footer={null} // Loại bỏ footer mặc định
-                centered
-                width={700}
-            >
-                <Form form={notificationForm} layout="vertical">
-                    <Form.Item
-                        label="Tiêu đề"
-                        name="name"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Vui lòng nhập Tiêu đề!",
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Nhập Tiêu đề" />
-                    </Form.Item>
-
-                    <Form.Item label="Nội dung">
-                        <ReactQuill
-                            value={description}
-                            onChange={setDescription}
-                            placeholder="Nhập nội dung thông báo"
-                            modules={quillModules}
-                            formats={quillFormats}
-                            style={{ height: "250px", marginBottom: "50px" }}
-                        />
-                    </Form.Item>
-
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            paddingTop: "20px",
-                        }}
-                    >
-                        <Button
-                            onClick={handleNotificationModalCancel}
-                            style={{ marginRight: 8 }}
-                        >
-                            Hủy
-                        </Button>
-                        <Button type="primary" onClick={handleAddNotification}>
-                            Tạo mới
-                        </Button>
-                    </div>
-                </Form>
-            </Modal>
-
-            {/* SỬA THÔNG BÁO  */}
-            {/* Modal Sửa Thông Báo */}
-            <Modal
-                title="Sửa Thông Báo"
-                open={isEditNotificationModalVisible}
-                onCancel={handleEditNotificationCancel}
-                onOk={handleUpdateNotification} // Hàm cập nhật thông báo
-                centered
-                width={600}
-            >
-                <Form form={editForm} layout="vertical">
-                    <Form.Item
-                        label="Tiêu đề"
-                        name="title"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Vui lòng nhập tiêu đề!",
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Nhập tiêu đề thông báo" />
-                    </Form.Item>
-                    <Form.Item
-                        label="Nội dung"
-                        name="description"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Vui lòng nhập nội dung!",
-                            },
-                        ]}
-                    >
-                        <Input.TextArea
-                            rows={4}
-                            placeholder="Nhập nội dung thông báo"
-                        />
-                    </Form.Item>
-                </Form>
-            </Modal>
+            )}
         </div>
     );
 };

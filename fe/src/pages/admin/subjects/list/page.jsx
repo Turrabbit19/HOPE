@@ -193,7 +193,10 @@ const ListSubject = () => {
                                         <div className="col" key={course.id}>
                                             <div className="listCourse__item ">
                                                 <div className="listCourse__item-top flex justify-between items-center">
-                                                    <h2 className="teaching__item-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
+                                                    <Link
+                                                        to={`detail/${course.id}`}
+                                                        className="teaching__item-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]"
+                                                    >
                                                         <img
                                                             src="/assets/svg/share.svg"
                                                             alt=""
@@ -202,17 +205,7 @@ const ListSubject = () => {
                                                         <span>
                                                             {course.name}
                                                         </span>
-                                                    </h2>
-                                                    <Dropdown
-                                                        overlay={MoreMenu}
-                                                        trigger={["click"]}
-                                                    >
-                                                        <Button
-                                                            icon={
-                                                                <MoreOutlined />
-                                                            }
-                                                        />
-                                                    </Dropdown>
+                                                    </Link>
                                                 </div>
 
                                                 <div className="listCourse__item-body">

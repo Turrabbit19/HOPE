@@ -9,6 +9,7 @@ import {
     Pagination,
     message,
     Tooltip,
+    Select,
 } from "antd";
 import {
     EditOutlined,
@@ -147,6 +148,7 @@ const ListSections = () => {
             const notificationData = {
                 ...values,
                 description,
+                courses: values.courses, // Lưu thông tin các khóa học đã chọn
             };
             console.log("Notification Data:", notificationData);
             message.success("Thêm thông báo thành công!");
@@ -555,7 +557,6 @@ const ListSections = () => {
                 </Form>
             </Modal>
 
-            {/* THÊM THÔNG BÁO */}
             <Modal
                 title="Thêm Mới Thông Báo"
                 open={isAddNotificationModalVisible}
@@ -576,6 +577,31 @@ const ListSections = () => {
                         ]}
                     >
                         <Input placeholder="Nhập Tiêu đề" />
+                    </Form.Item>
+
+                    {/* Trường Khóa Học dạng Multiple Select */}
+                    <Form.Item
+                        label="Khóa Học"
+                        name="courses"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng chọn ít nhất một khóa học!",
+                            },
+                        ]}
+                    >
+                        <Select
+                            mode="multiple"
+                            placeholder="Chọn khóa học"
+                            allowClear
+                            style={{ width: "100%" }}
+                            options={[
+                                { value: "course1", label: "Khóa Học 18.1" },
+                                { value: "course2", label: "Khóa Học 17.3" },
+                                { value: "course3", label: "Khóa Học 16.5" },
+                                { value: "course4", label: "Khóa Học 15.6" },
+                            ]}
+                        />
                     </Form.Item>
 
                     <Form.Item label="Nội dung">

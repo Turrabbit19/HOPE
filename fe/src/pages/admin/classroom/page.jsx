@@ -198,19 +198,28 @@ const ClassRoom = () => {
                                                     {classroom.students}
                                                 </p>
                                             </div>
-                                            <div className="flex gap-6">
-                                                <p className="text-[#9E9E9E]">
-                                                    Trạng thái:
-                                                </p>
-                                                <p className=" text-[#000]">
-                                                    {classroom.status}
-                                                </p>
+                                            <div className=" flex flex-col gap-8">
+                                                <div className="flex gap-6">
+                                                    <p className="text-[#9E9E9E]">
+                                                        Trạng thái:
+                                                    </p>
+                                                    <div className="teaching__card-status">
+                                                        <img
+                                                            className="svg-green"
+                                                            src="/assets/svg/status.svg"
+                                                            alt="status"
+                                                        />
+                                                        <span className="text-[#44CC15] text-[12px]">
+                                                            Đang học
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="flex gap-6">
                                                 <p className="text-[#9E9E9E]">
                                                     Ngày khởi tạo:
                                                 </p>
-                                                <p className=" text-[#000]">
+                                                <p className="font-bold text-[#000]">
                                                     {classroom.createdDate}
                                                 </p>
                                             </div>

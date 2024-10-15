@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
     Pagination,
     Row,
@@ -14,8 +15,10 @@ import {
     Dropdown,
 } from "antd";
 import { EditOutlined, MoreOutlined, PlusOutlined } from "@ant-design/icons";
-import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+const { Option } = Select;
+
 const semesterData = {
     1: { majors: ["Lập trình Web", "Thiết kế đồ họa", "An ninh mạng"] },
     2: { majors: ["Kinh tế", "Tài chính", "Quản lý dự án"] },
@@ -24,35 +27,19 @@ const semesterData = {
 
 const schedules = ["18.3", "17.3", "19.1"];
 const semesters = Object.keys(semesterData);
+
 const ListSubject = () => {
-    // State để quản lý giá trị tìm kiếm và danh sách khóa học đã lọc
     const [searchValue, setSearchValue] = useState("");
     const [filteredCourses, setFilteredCourses] = useState([]);
-
-    // State cho popup tạo khóa học mới
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [form] = Form.useForm();
 
-    // State cho lựa chọn kỳ học và ngành học
-    const [selectedSemester, setSelectedSemester] = useState(semesters[0]);
-    const [majors, setMajors] = useState(semesterData[selectedSemester].majors);
-    const [selectedMajor, setSelectedMajor] = useState(majors[0]);
-    const [selectedSchedule, setSelectedSchedule] = useState(schedules[0]);
+    const [selectedSemester] = useState(semesters[0]);
+    const [majors] = useState(semesterData[selectedSemester].majors);
 
-    // State cho các biến thể được thêm vào
-    const [additionalVariants, setAdditionalVariants] = useState([
-        {
-            major: selectedMajor,
-            schedule: selectedSchedule,
-            semester: selectedSemester,
-        },
-    ]);
-
-    // State cho modal chỉnh sửa khóa học
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
 
-    // Danh sách tất cả các khóa học có sẵn
     const allCourses = [
         { id: 1, name: "Math" },
         { id: 2, name: "Physics" },
@@ -69,21 +56,17 @@ const ListSubject = () => {
         </Menu>
     );
 
-    // Thiết lập danh sách khóa học đã lọc khi component được mount
     useEffect(() => {
         setFilteredCourses(allCourses);
     }, []);
 
-    // Hàm xử lý tìm kiếm
     const handleSearch = (event) => {
-        const value = event.target.value; // Lấy giá trị từ input
+        const value = event.target.value;
         setSearchValue(value);
 
         if (value.trim() === "") {
-            // Nếu input trống, hiển thị tất cả các khóa học
             setFilteredCourses(allCourses);
         } else {
-            // Lọc khóa học theo tên
             const filtered = allCourses.filter((course) =>
                 course.name.toLowerCase().includes(value.toLowerCase())
             );
@@ -91,84 +74,27 @@ const ListSubject = () => {
         }
     };
 
-    // Hàm toggle hiển thị popup thêm khóa học
     const togglePopup = () => {
-        setIsPopupVisible(!isPopupVisible); // Đảo ngược trạng thái hiển thị
-        form.resetFields(); // Reset các trường trong form
-        setAdditionalVariants([
-            // Thiết lập lại các biến thể
-            {
-                major: majors[0],
-                schedule: schedules[0],
-                semester: semesters[0],
-            },
-        ]);
+        setIsPopupVisible(!isPopupVisible);
+        form.resetFields();
     };
 
-    // Hàm xử lý khi form được gửi
     const handleFormSubmit = (values) => {
-        console.log("Form data:", values, "Variants:", additionalVariants);
-
-        const formData = {
-            ...values,
-            variants: additionalVariants,
-        };
-
-        console.log("Form data:", formData);
+        console.log("Form data:", values);
+        // Xử lý dữ liệu form ở đây
+        message.success("Thêm môn học thành công!");
+        togglePopup();
     };
 
-    // Hàm xử lý thay đổi ngành học
-    const handleMajorChange = (value, index) => {
-        const updatedVariants = [...additionalVariants]; // Sao chép danh sách biến thể hiện tại
-        updatedVariants[index].major = value; // Cập nhật ngành học
-        setAdditionalVariants(updatedVariants); // Cập nhật state với danh sách biến thể mới
+    const confirmDelete = (course) => {
+        console.log("Xóa:", course);
+        message.success(`Xóa môn học ${course.name} thành công!`);
     };
 
-    // Hàm xử lý thay đổi lịch học
-    const handleScheduleChange = (value, index) => {
-        const updatedVariants = [...additionalVariants];
-        updatedVariants[index].schedule = value; // Cập nhật lịch học
-        setAdditionalVariants(updatedVariants);
-    };
-
-    // Hàm xử lý thay đổi kỳ học
-    const handleSemesterChange = (value, index) => {
-        const updatedVariants = [...additionalVariants];
-        updatedVariants[index].semester = value; // Cập nhật kỳ học
-        setAdditionalVariants(updatedVariants);
-    };
-
-    // Hàm thêm biến thể mới
-    const handleAddVariant = () => {
-        setAdditionalVariants([
-            // Thêm một biến thể mới vào danh sách
-            ...additionalVariants,
-            {
-                major: majors[0],
-                schedule: schedules[0],
-                semester: semesters[0],
-            },
-        ]);
-    };
-
-    // Hàm xác nhận xóa khóa học
-    const confirm = (e) => {
-        console.log(e);
-        message.success("Xóa thành công !"); // Hiển thị thông báo thành công
-    };
-
-    // Hàm hủy xác nhận xóa
-    const cancel = (e) => {
-        console.log(e);
-        // message.error("Click on No");
-    };
-
-    // Hàm mở modal chỉnh sửa khóa học
     const openEditModal = (course) => {
-        setEditingCourse(course); // Lưu khóa học hiện tại để chỉnh sửa
-        setIsEditModalVisible(true); // Hiển thị modal chỉnh sửa
+        setEditingCourse(course);
+        setIsEditModalVisible(true);
         form.setFieldsValue({
-            // Thiết lập các trường trong form với dữ liệu của khóa học
             code: course.code,
             name: course.name,
             description: course.description,
@@ -176,43 +102,45 @@ const ListSubject = () => {
         });
     };
 
-    // Hàm đóng modal chỉnh sửa khóa học
     const closeEditModal = () => {
-        setIsEditModalVisible(false); // Ẩn modal chỉnh sửa
-        form.resetFields(); // Reset các trường trong form
+        setIsEditModalVisible(false);
+        form.resetFields();
     };
 
-    // State cho modal lọc khóa học
+    const handleEditFormSubmit = (values) => {
+        console.log("Edit data:", values);
+        // Xử lý cập nhật môn học ở đây
+        message.success("Cập nhật môn học thành công!");
+        closeEditModal();
+    };
+
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-    // Hàm hiển thị modal lọc khóa học
     const handleShowModalFilter = () => {
         setIsModalVisible(true);
     };
 
-    // Hàm xử lý khi nhấn OK trong modal lọc
     const handleOk = () => {
         form.validateFields()
             .then((values) => {
-                console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
+                console.log("Selected Filters:", values);
                 // Xử lý lọc ở đây
-                setIsModalVisible(false); // Đóng modal sau khi xử lý xong
+                setIsModalVisible(false);
             })
             .catch((info) => {
-                console.log("Validate Failed:", info); // Xử lý lỗi xác thực
+                console.log("Validate Failed:", info);
             });
     };
 
-    // Hàm hủy bỏ việc hiển thị modal
     const handleCancel = () => {
-        setIsModalVisible(false); // Ẩn modal lọc
+        setIsModalVisible(false);
     };
+
     return (
         <>
             <div className="listCourse">
                 <div className="">
                     <div className="flex gap-4 row-cols-2 relative">
-                        {/* Item */}
                         <div className="col-12">
                             <div>
                                 <div className="flex justify-between">
@@ -228,7 +156,7 @@ const ListSubject = () => {
 
                                     <Input.Search
                                         placeholder="Tìm kiếm môn học..."
-                                        onChange={handleSearch} // Sử dụng onChange để gọi hàm tìm kiếm
+                                        onChange={handleSearch}
                                         style={{ width: 300 }}
                                         allowClear
                                     />
@@ -259,7 +187,6 @@ const ListSubject = () => {
                                 </div>
                             </div>
 
-                            {/* List Course Item */}
                             <div className="row row-cols-2 g-3">
                                 {filteredCourses.length > 0 ? (
                                     filteredCourses.map((course) => (
@@ -331,32 +258,7 @@ const ListSubject = () => {
                                                                 <span className="text-black ml-2 line-clamp-2">
                                                                     lorem ipsum
                                                                     dolor sit
-                                                                    amet lorem
-                                                                    ipsum dolor
-                                                                    sit amet
-                                                                    lorem ipsum
-                                                                    dolor sit
-                                                                    amet lorem
-                                                                    ipsum dolor
-                                                                    sit amet
-                                                                    lorem ipsum
-                                                                    dolor sit
-                                                                    amet lorem
-                                                                    ipsum dolor
-                                                                    sit amet
-                                                                    lorem ipsum
-                                                                    dolor sit
-                                                                    amet lorem
-                                                                    ipsum dolor
-                                                                    sit amet
-                                                                    lorem ipsum
-                                                                    dolor sit
-                                                                    amet lorem
-                                                                    ipsum dolor
-                                                                    sit amet
-                                                                    lorem ipsum
-                                                                    dolor sit
-                                                                    amet
+                                                                    amet...
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -378,8 +280,11 @@ const ListSubject = () => {
                                                     <Popconfirm
                                                         title="Xóa môn học"
                                                         description={`Bạn có chắc chắn muốn xóa môn học ${course.name} không? `}
-                                                        onConfirm={confirm}
-                                                        onCancel={cancel}
+                                                        onConfirm={() =>
+                                                            confirmDelete(
+                                                                course
+                                                            )
+                                                        }
                                                         okText="Có"
                                                         cancelText="Không"
                                                     >
@@ -420,7 +325,7 @@ const ListSubject = () => {
                                 className="mt-12"
                                 align="center"
                                 defaultCurrent={1}
-                                total={50}
+                                total={filteredCourses.length}
                             />
                         </div>
                     </div>
@@ -446,7 +351,6 @@ const ListSubject = () => {
                             >
                                 <Row gutter={24}>
                                     <Col span={16}>
-                                        {/* Mã môn học */}
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -461,7 +365,6 @@ const ListSubject = () => {
                                             <Input placeholder="Mã môn học" />
                                         </Form.Item>
 
-                                        {/* Tên môn học */}
                                         <Form.Item
                                             label="Tên Môn Học"
                                             name="name"
@@ -476,7 +379,6 @@ const ListSubject = () => {
                                             <Input placeholder="Tên" />
                                         </Form.Item>
 
-                                        {/* Mô tả môn học */}
                                         <Form.Item
                                             label="Mô tả"
                                             name="description"
@@ -494,7 +396,6 @@ const ListSubject = () => {
                                             />
                                         </Form.Item>
 
-                                        {/* Tín chỉ */}
                                         <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
@@ -506,7 +407,7 @@ const ListSubject = () => {
                                                 },
                                                 {
                                                     pattern:
-                                                        /^(?!0)\d(\.\d+)?$/,
+                                                        /^(?!0)\d+(\.\d+)?$/,
                                                     message:
                                                         "Tín chỉ phải là số dương.",
                                                 },
@@ -514,12 +415,12 @@ const ListSubject = () => {
                                                     validator: (_, value) => {
                                                         if (
                                                             value &&
-                                                            (value < 0 ||
+                                                            (value <= 0 ||
                                                                 value >= 8)
                                                         ) {
                                                             return Promise.reject(
                                                                 new Error(
-                                                                    "Tín chỉ phải nhỏ hơn 8."
+                                                                    "Tín chỉ phải lớn hơn 0 và nhỏ hơn 8."
                                                                 )
                                                             );
                                                         }
@@ -530,13 +431,12 @@ const ListSubject = () => {
                                         >
                                             <InputNumber
                                                 placeholder="Tín chỉ"
-                                                min={0}
-                                                max={8}
+                                                min={1}
+                                                max={7}
                                             />
                                         </Form.Item>
                                     </Col>
 
-                                    {/* Ngành học */}
                                     <Col span={8}>
                                         <Form.Item
                                             label="Ngành Học"
@@ -563,7 +463,6 @@ const ListSubject = () => {
                                     </Col>
                                 </Row>
 
-                                {/* Nút tạo môn học */}
                                 <div className="flex justify-center items-center mt-4">
                                     <Button type="primary" htmlType="submit">
                                         Tạo Môn Học
@@ -589,17 +488,11 @@ const ListSubject = () => {
                             <Form
                                 form={form}
                                 layout="vertical"
-                                onFinish={(values) =>
-                                    handleEditFormSubmit(
-                                        values,
-                                        editingCourse.id
-                                    )
-                                }
+                                onFinish={handleEditFormSubmit}
                                 autoComplete="off"
                             >
                                 <Row gutter={24}>
                                     <Col span={16}>
-                                        {/* Mã môn học */}
                                         <Form.Item
                                             label="Mã Môn Học"
                                             name="code"
@@ -614,7 +507,6 @@ const ListSubject = () => {
                                             <Input placeholder="Mã môn học" />
                                         </Form.Item>
 
-                                        {/* Tên môn học */}
                                         <Form.Item
                                             label="Tên Môn Học"
                                             name="name"
@@ -629,7 +521,6 @@ const ListSubject = () => {
                                             <Input placeholder="Tên" />
                                         </Form.Item>
 
-                                        {/* Mô tả môn học */}
                                         <Form.Item
                                             label="Mô tả"
                                             name="description"
@@ -647,7 +538,6 @@ const ListSubject = () => {
                                             />
                                         </Form.Item>
 
-                                        {/* Tín chỉ */}
                                         <Form.Item
                                             label="Tín chỉ"
                                             name="credit"
@@ -655,11 +545,11 @@ const ListSubject = () => {
                                                 {
                                                     required: true,
                                                     message:
-                                                        "Vui lòng nhập Tín chỉ!",
+                                                        "Vui lòng nhập tín chỉ!",
                                                 },
                                                 {
                                                     pattern:
-                                                        /^(?!0)\d(\.\d+)?$/,
+                                                        /^(?!0)\d+(\.\d+)?$/,
                                                     message:
                                                         "Tín chỉ phải là số dương.",
                                                 },
@@ -667,12 +557,12 @@ const ListSubject = () => {
                                                     validator: (_, value) => {
                                                         if (
                                                             value &&
-                                                            (value < 0 ||
+                                                            (value <= 0 ||
                                                                 value >= 8)
                                                         ) {
                                                             return Promise.reject(
                                                                 new Error(
-                                                                    "Tín chỉ phải nhỏ hơn 8."
+                                                                    "Tín chỉ phải lớn hơn 0 và nhỏ hơn 8."
                                                                 )
                                                             );
                                                         }
@@ -683,14 +573,13 @@ const ListSubject = () => {
                                         >
                                             <InputNumber
                                                 placeholder="Tín chỉ"
-                                                min={0}
-                                                max={8}
+                                                min={1}
+                                                max={7}
                                             />
                                         </Form.Item>
                                     </Col>
 
                                     <Col span={8}>
-                                        {/* Ngành học */}
                                         <Form.Item
                                             label="Ngành học"
                                             name="majors"
@@ -744,18 +633,11 @@ const ListSubject = () => {
                                 ]}
                             >
                                 <Select placeholder="Chọn ngành học">
-                                    <Option value="computer-science">
-                                        Khoa học máy tính
-                                    </Option>
-                                    <Option value="data-science">
-                                        Khoa học dữ liệu
-                                    </Option>
-                                    <Option value="web-development">
-                                        Phát triển web
-                                    </Option>
-                                    <Option value="graphic-design">
-                                        Thiết kế đồ họa
-                                    </Option>
+                                    {majors.map((major) => (
+                                        <Option key={major} value={major}>
+                                            {major}
+                                        </Option>
+                                    ))}
                                 </Select>
                             </Form.Item>
 
@@ -770,9 +652,11 @@ const ListSubject = () => {
                                 ]}
                             >
                                 <Select placeholder="Chọn kỳ học">
-                                    <Option value="semester1">Kỳ 1</Option>
-                                    <Option value="semester2">Kỳ 2</Option>
-                                    <Option value="semester3">Kỳ 3</Option>
+                                    {semesters.map((semester) => (
+                                        <Option key={semester} value={semester}>
+                                            Kỳ {semester}
+                                        </Option>
+                                    ))}
                                 </Select>
                             </Form.Item>
                         </Form>

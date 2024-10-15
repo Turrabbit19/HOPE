@@ -21,17 +21,21 @@ import moment from "moment";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import CSS cho React Quill
 
-const ListSection = () => {
+const ListSections = () => {
     const [sections, setSections] = useState([]);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] =
         useState(false);
+    const [isNotificationModalVisible, setIsNotificationModalVisible] =
+        useState(false);
     const [editingSection, setEditingSection] = useState(null);
+    const [selectedSection, setSelectedSection] = useState(null); // Danh mục đã chọn
     const [searchTerm, setSearchTerm] = useState("");
     const [form] = Form.useForm();
     const [notificationForm] = Form.useForm();
     const [description, setDescription] = useState("");
+    const [notifications, setNotifications] = useState([]); // Thông báo thuộc danh mục
 
     useEffect(() => {
         const fetchSections = async () => {
@@ -90,6 +94,7 @@ const ListSection = () => {
         try {
             const values = await form.validateFields();
             if (editingSection) {
+                // Sửa danh mục
                 setSections(
                     sections.map((section) =>
                         section.id === editingSection.id
@@ -97,8 +102,9 @@ const ListSection = () => {
                             : section
                     )
                 );
-                message.success("Cập nhật danh mục thành công!"); // Thông báo cập nhật thành công
+                message.success("Cập nhật danh mục thành công!");
             } else {
+                // Thêm mới danh mục
                 setSections([
                     ...sections,
                     {
@@ -109,12 +115,12 @@ const ListSection = () => {
                         status: "Đang hoạt động",
                     },
                 ]);
-                message.success("Thêm danh mục thành công!"); // Thông báo thêm thành công
+                message.success("Thêm danh mục thành công!");
             }
             handleModalCancel();
         } catch (errorInfo) {
             console.log("Failed:", errorInfo);
-            message.error("Đã xảy ra lỗi, vui lòng thử lại!"); // Thông báo lỗi
+            message.error("Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
@@ -153,6 +159,28 @@ const ListSection = () => {
 
     const handleNotificationModalCancel = () => {
         setIsAddNotificationModalVisible(false);
+    };
+
+    // Hiển thị danh sách thông báo
+    const showNotifications = (section) => {
+        setSelectedSection(section);
+        setNotifications([
+            {
+                id: 1,
+                title: "Thông báo 1",
+                description: "Chi tiết thông báo 1",
+            },
+            {
+                id: 2,
+                title: "Thông báo 2",
+                description: "Chi tiết thông báo 2",
+            },
+        ]);
+        setIsNotificationModalVisible(true);
+    };
+
+    const handleNotificationListCancel = () => {
+        setIsNotificationModalVisible(false);
     };
 
     // Cấu hình module cho ReactQuill để hỗ trợ chỉnh sửa nâng cao
@@ -194,6 +222,51 @@ const ListSection = () => {
         "align",
         "script",
     ];
+
+    // SỬA XÓA THÔNG BÁO
+    const [isEditNotificationModalVisible, setIsEditNotificationModalVisible] =
+        useState(false);
+    const [editForm] = Form.useForm();
+    const [editingNotification, setEditingNotification] = useState(null);
+
+    // Khi nhấn vào nút "Sửa"
+    const handleEditNotification = (notification) => {
+        setEditingNotification(notification);
+        editForm.setFieldsValue({
+            title: notification.title,
+            description: notification.description,
+        });
+        setIsEditNotificationModalVisible(true);
+    };
+
+    // Khi nhấn "Hủy" trong modal sửa
+    const handleEditNotificationCancel = () => {
+        setIsEditNotificationModalVisible(false);
+    };
+
+    // Khi nhấn "Cập nhật" để lưu thay đổi
+    const handleUpdateNotification = () => {
+        editForm.validateFields().then((values) => {
+            // Cập nhật thông báo trong danh sách
+            const updatedNotifications = notifications.map((notification) =>
+                notification.id === editingNotification.id
+                    ? { ...notification, ...values }
+                    : notification
+            );
+            setNotifications(updatedNotifications);
+            message.success("Thông báo đã được cập nhật thành công!");
+            setIsEditNotificationModalVisible(false);
+        });
+    };
+
+    // Khi nhấn "Xóa"
+    const handleDeleteNotification = (id) => {
+        const updatedNotifications = notifications.filter(
+            (notification) => notification.id !== id
+        );
+        setNotifications(updatedNotifications);
+        message.success("Thông báo đã được xóa thành công!");
+    };
 
     return (
         <div className="test__list">
@@ -307,13 +380,12 @@ const ListSection = () => {
 
                                         <div className="teaching__card-bottom">
                                             <button
-                                                to="list"
                                                 className="flex items-center gap-3 text-[#1167B4] font-bold"
+                                                onClick={() =>
+                                                    showNotifications(section)
+                                                }
                                             >
-                                                <img
-                                                    src="/assets/svg/setting.svg"
-                                                    alt="setting"
-                                                />
+                                                <BugOutlined />
                                                 Quản lý Thông Báo
                                             </button>
                                             <button
@@ -362,26 +434,97 @@ const ListSection = () => {
                 defaultPageSize={6}
                 defaultCurrent={1}
             />
+
+            {/* LIST THÔNG BÁO */}
             <Modal
                 title={
-                    editingSection
-                        ? "Sửa Thông Tin danh mục"
-                        : "Thêm Mới danh mục"
+                    <h3 className="text-2xl font-semibold ">
+                        Danh mục thông báo :
+                        <span className="text-[#1167B4]">
+                            {" "}
+                            {selectedSection?.sectionName || "Thông báo"}
+                        </span>
+                    </h3>
                 }
-                open={isEditModalVisible || isAddModalVisible}
+                open={isNotificationModalVisible}
+                onCancel={handleNotificationListCancel}
+                footer={null}
+                centered
+                width={700}
+                bodyStyle={{ padding: "20px 30px", backgroundColor: "#fafafa" }}
+                className="rounded-lg shadow-lg"
+            >
+                <div className="overflow-y-auto">
+                    {notifications.length > 0 ? (
+                        notifications.map((notification) => (
+                            <div
+                                key={notification.id}
+                                className="bg-white p-8 mb-8 rounded-lg shadow-lg"
+                            >
+                                {/* Tiêu đề thông báo */}
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                                    <span className="text-blue-600 mr-2">
+                                        Tiêu đề:{" "}
+                                    </span>
+                                    {notification.title}
+                                </h2>
+                                {/* Nội dung thông báo */}
+                                <div className="text-2xl text-gray-700">
+                                    <span className="font-semibold text-blue-600">
+                                        Nội dung:
+                                    </span>
+                                    <p className="mt-4">
+                                        {notification.description}
+                                    </p>
+                                </div>
+                                {/* Nút Sửa và Xóa */}
+                                <div className="flex justify-end mt-6">
+                                    {/* Nút Sửa */}
+                                    <Button
+                                        className="mr-4"
+                                        type="primary"
+                                        onClick={() =>
+                                            handleEditNotification(notification)
+                                        }
+                                    >
+                                        Sửa
+                                    </Button>
+
+                                    {/* Nút Xóa */}
+                                    <Popconfirm
+                                        title="Bạn có chắc chắn muốn xóa thông báo này?"
+                                        onConfirm={() =>
+                                            handleDeleteNotification(
+                                                notification.id
+                                            )
+                                        }
+                                        okText="Có"
+                                        cancelText="Không"
+                                    >
+                                        <Button type="danger">Xóa</Button>
+                                    </Popconfirm>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-center text-xl text-gray-500">
+                            Không có thông báo nào trong danh mục này
+                        </p>
+                    )}
+                </div>
+            </Modal>
+            {/* Modal Thêm/Sửa Danh Mục */}
+            <Modal
+                title={editingSection ? "Sửa Danh Mục" : "Thêm Mới Danh Mục"}
+                open={isAddModalVisible || isEditModalVisible}
                 onCancel={handleModalCancel}
                 footer={null}
                 centered
                 width={600}
             >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleModalOk}
-                    style={{ padding: "0 20px" }}
-                >
+                <Form form={form} layout="vertical">
                     <Form.Item
-                        label="Tên danh mục"
+                        label="Tên Danh Mục"
                         name="sectionName"
                         rules={[
                             {
@@ -392,18 +535,27 @@ const ListSection = () => {
                     >
                         <Input placeholder="Nhập tên danh mục" />
                     </Form.Item>
-
-                    <Form.Item>
-                        <Space>
-                            <Button onClick={handleModalCancel}>Hủy</Button>
-                            <Button type="primary" htmlType="submit">
-                                {editingSection ? "Cập nhật" : "Tạo mới"}
-                            </Button>
-                        </Space>
-                    </Form.Item>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            paddingTop: "20px",
+                        }}
+                    >
+                        <Button
+                            onClick={handleModalCancel}
+                            style={{ marginRight: 8 }}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="primary" onClick={handleModalOk}>
+                            {editingSection ? "Cập nhật" : "Tạo mới"}
+                        </Button>
+                    </div>
                 </Form>
             </Modal>
 
+            {/* THÊM THÔNG BÁO */}
             <Modal
                 title="Thêm Mới Thông Báo"
                 open={isAddNotificationModalVisible}
@@ -414,30 +566,29 @@ const ListSection = () => {
             >
                 <Form form={notificationForm} layout="vertical">
                     <Form.Item
-                        label="Tên Thông Báo"
+                        label="Tiêu đề"
                         name="name"
                         rules={[
                             {
                                 required: true,
-                                message: "Vui lòng nhập tên thông báo!",
+                                message: "Vui lòng nhập Tiêu đề!",
                             },
                         ]}
                     >
-                        <Input placeholder="Nhập tên thông báo" />
+                        <Input placeholder="Nhập Tiêu đề" />
                     </Form.Item>
 
-                    <Form.Item label="Mô tả">
+                    <Form.Item label="Nội dung">
                         <ReactQuill
                             value={description}
                             onChange={setDescription}
-                            placeholder="Nhập mô tả thông báo"
+                            placeholder="Nhập nội dung thông báo"
                             modules={quillModules}
                             formats={quillFormats}
-                            style={{ height: "250px", marginBottom: "50px" }} // Giảm chiều cao Quill
+                            style={{ height: "250px", marginBottom: "50px" }}
                         />
                     </Form.Item>
 
-                    {/* Thêm footer riêng biệt */}
                     <div
                         style={{
                             display: "flex",
@@ -457,8 +608,49 @@ const ListSection = () => {
                     </div>
                 </Form>
             </Modal>
+
+            {/* SỬA THÔNG BÁO  */}
+            {/* Modal Sửa Thông Báo */}
+            <Modal
+                title="Sửa Thông Báo"
+                open={isEditNotificationModalVisible}
+                onCancel={handleEditNotificationCancel}
+                onOk={handleUpdateNotification} // Hàm cập nhật thông báo
+                centered
+                width={600}
+            >
+                <Form form={editForm} layout="vertical">
+                    <Form.Item
+                        label="Tiêu đề"
+                        name="title"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng nhập tiêu đề!",
+                            },
+                        ]}
+                    >
+                        <Input placeholder="Nhập tiêu đề thông báo" />
+                    </Form.Item>
+                    <Form.Item
+                        label="Nội dung"
+                        name="description"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng nhập nội dung!",
+                            },
+                        ]}
+                    >
+                        <Input.TextArea
+                            rows={4}
+                            placeholder="Nhập nội dung thông báo"
+                        />
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 };
 
-export default ListSection;
+export default ListSections;

@@ -94,6 +94,7 @@ const Testing = () => {
         try {
             const values = await form.validateFields();
             if (editingSection) {
+                // Sửa danh mục
                 setSections(
                     sections.map((section) =>
                         section.id === editingSection.id
@@ -101,8 +102,9 @@ const Testing = () => {
                             : section
                     )
                 );
-                message.success("Cập nhật danh mục thành công!"); // Thông báo cập nhật thành công
+                message.success("Cập nhật danh mục thành công!");
             } else {
+                // Thêm mới danh mục
                 setSections([
                     ...sections,
                     {
@@ -113,12 +115,12 @@ const Testing = () => {
                         status: "Đang hoạt động",
                     },
                 ]);
-                message.success("Thêm danh mục thành công!"); // Thông báo thêm thành công
+                message.success("Thêm danh mục thành công!");
             }
             handleModalCancel();
         } catch (errorInfo) {
             console.log("Failed:", errorInfo);
-            message.error("Đã xảy ra lỗi, vui lòng thử lại!"); // Thông báo lỗi
+            message.error("Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
@@ -510,6 +512,47 @@ const Testing = () => {
                         </p>
                     )}
                 </div>
+            </Modal>
+            {/* Modal Thêm/Sửa Danh Mục */}
+            <Modal
+                title={editingSection ? "Sửa Danh Mục" : "Thêm Mới Danh Mục"}
+                open={isAddModalVisible || isEditModalVisible}
+                onCancel={handleModalCancel}
+                footer={null}
+                centered
+                width={600}
+            >
+                <Form form={form} layout="vertical">
+                    <Form.Item
+                        label="Tên Danh Mục"
+                        name="sectionName"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng nhập tên danh mục!",
+                            },
+                        ]}
+                    >
+                        <Input placeholder="Nhập tên danh mục" />
+                    </Form.Item>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            paddingTop: "20px",
+                        }}
+                    >
+                        <Button
+                            onClick={handleModalCancel}
+                            style={{ marginRight: 8 }}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="primary" onClick={handleModalOk}>
+                            {editingSection ? "Cập nhật" : "Tạo mới"}
+                        </Button>
+                    </div>
+                </Form>
             </Modal>
 
             {/* THÊM THÔNG BÁO */}

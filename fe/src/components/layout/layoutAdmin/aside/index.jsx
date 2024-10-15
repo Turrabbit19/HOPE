@@ -11,6 +11,7 @@ import {
     CalendarOutlined,
     BookFilled,
     ReadOutlined,
+    BellOutlined,
 } from "@ant-design/icons";
 
 const AsideAdmin = () => {
@@ -100,25 +101,11 @@ const AsideAdmin = () => {
                 label: <Link to={item.link}>{item.name}</Link>,
             })),
         },
+
         {
             key: "sub3",
-            icon: <BookOutlined />,
-            label: <Link to="/admin/majors">Quản lý ngành học</Link>,
-        },
-        {
-            key: "sub4",
-            icon: <BookOutlined />,
-            label: <Link to="/admin/courses">Quản lý khóa học</Link>,
-        },
-        {
-            key: "sub5",
-            icon: <CalendarOutlined />,
-            label: <Link to="/admin/semesters">Quản lý kỳ học</Link>,
-        },
-        {
-            key: "sub6",
-            icon: <ReadOutlined />,
-            label: <Link to="/admin/subjects">Quản lý môn học</Link>,
+            icon: <BellOutlined />,
+            label: <Link to="/admin/list-sections">Quản lý thông báo</Link>,
         },
     ];
 

@@ -36,7 +36,7 @@ export default function StudentDashboard() {
               <p className="text-indigo-300">MSV: PH38668</p>
             </div>
           </div>
-          <Link to="/student/info-student">
+          <Link to="/info-student">
           <button className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded">
             Thông tin cá nhân
           </button>

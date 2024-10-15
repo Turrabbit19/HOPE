@@ -8,7 +8,7 @@
 
     const Router = createBrowserRouter([
         {
-            path: "student",
+            path: "",
             element: <LayoutClient/>,
 
             children: [

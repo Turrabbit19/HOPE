@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react'
 import { ChevronDown, ChevronUp, BookOpen, Users, Clock } from 'lucide-react'
 
@@ -24,11 +26,15 @@ const classOptions = {
 }
 
 export default function ScheduleRegistration() {
-  const [expandedCourse, setExpandedCourse] = useState(null)
+  const [expandedCourses, setExpandedCourses] = useState([])
   const [selectedClasses, setSelectedClasses] = useState([])
 
   const toggleCourse = (courseId) => {
-    setExpandedCourse(expandedCourse === courseId ? null : courseId)
+    setExpandedCourses(prev => 
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    )
   }
 
   const toggleClassSelection = (classId) => {
@@ -40,57 +46,57 @@ export default function ScheduleRegistration() {
   }
 
   const getRandomColor = () => {
-    const colors = ['bg-pink-100', 'bg-100', 'bg-indigo-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-red-100']
+    const colors = ['bg-pink-100', 'bg-purple-100', 'bg-indigo-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-red-100']
     return colors[Math.floor(Math.random() * colors.length)]
   }
 
   return (
-    <div className="container mx-auto p-4 bg-gradient-to-br from-100 to-pink-100">
-      <h1 className="text-4xl font-bold mb-8 text-center text-800 drop-shadow-lg">Đăng ký môn học</h1>
+    <div className="container mx-auto p-4 bg-gradient-to-br from-gray-100 to-white">
+      <h1 className="text-4xl font-bold mb-8 text-center text-gray-800 drop-shadow-lg">Đăng ký môn học</h1>
       <div className="space-y-6">
         {courses.map(course => (
-          <div key={course.id} className="border-2 border-300 rounded-xl overflow-hidden shadow-lg">
+          <div key={course.id} className="border-2 border-gray-300 rounded-xl overflow-hidden shadow-lg">
             <div 
-              className={`p-4 flex justify-between items-center cursor-pointer transition-colors duration-300 ${expandedCourse === course.id ? 'bg-200' : 'bg-white hover:bg-100'}`}
+              className={`p-4 flex justify-between items-center cursor-pointer transition-colors duration-300 ${expandedCourses.includes(course.id) ? 'bg-gray-200' : 'bg-white hover:bg-gray-100'}`}
               onClick={() => toggleCourse(course.id)}
             >
               <div>
-                <h2 className="text-xl font-semibold text-800">{course.name}</h2>
-                <p className="text-sm text-600">
+                <h2 className="text-xl font-semibold text-gray-800">{course.name}</h2>
+                <p className="text-sm text-gray-600">
                   <span className="inline-flex items-center mr-4"><BookOpen size={16} className="mr-1" /> Mã môn: {course.code}</span>
                   <span className="inline-flex items-center"><Users size={16} className="mr-1" /> Tín chỉ: {course.credits}</span>
                 </p>
               </div>
-              {expandedCourse === course.id ? <ChevronUp className="text-800" /> : <ChevronDown className="text-800" />}
+              {expandedCourses.includes(course.id) ? <ChevronUp className="text-gray-800" /> : <ChevronDown className="text-gray-800" />}
             </div>
-            {expandedCourse === course.id && (
+            {expandedCourses.includes(course.id) && (
               <div className="p-4 bg-white">
-                <h3 className="font-semibold mb-4 text-lg text-800">Chọn lớp học</h3>
+                <h3 className="font-semibold mb-4 text-lg text-gray-800">Chọn lớp học</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-200">
-                        <th className="p-2 text-left text-800">STT</th>
-                        <th className="p-2 text-left text-800">Lớp học</th>
-                        <th className="p-2 text-left text-800">Số lượng</th>
-                        <th className="p-2 text-left text-800">Giảng viên</th>
-                        <th className="p-2 text-left text-800">Thứ</th>
-                        <th className="p-2 text-left text-800">Ca học</th>
-                        <th className="p-2 text-left text-800">Thời gian</th>
-                        <th className="p-2 text-left text-800">Trạng thái</th>
-                        <th className="p-2 text-left text-800">Chọn</th>
+                      <tr className="bg-gray-200">
+                        <th className="p-2 text-left text-gray-800">STT</th>
+                        <th className="p-2 text-left text-gray-800">Lớp học</th>
+                        <th className="p-2 text-left text-gray-800">Số lượng</th>
+                        <th className="p-2 text-left text-gray-800">Giảng viên</th>
+                        <th className="p-2 text-left text-gray-800">Thứ</th>
+                        <th className="p-2 text-left text-gray-800">Ca học</th>
+                        <th className="p-2 text-left text-gray-800">Thời gian</th>
+                        <th className="p-2 text-left text-gray-800">Trạng thái</th>
+                        <th className="p-2 text-left text-gray-800">Chọn</th>
                       </tr>
                     </thead>
                     <tbody>
                       {classOptions[course.id].map((option, index) => (
-                        <tr key={option.id} className={`${getRandomColor()} transition-colors duration-300 hover:bg-200`}>
-                          <td className="p-2 text-800">{index + 1}</td>
-                          <td className="p-2 text-800 font-medium">{option.code}</td>
-                          <td className="p-2 text-800">{option.enrollment}</td>
-                          <td className="p-2 text-800">{option.instructor}</td>
-                          <td className="p-2 text-800">{option.days}</td>
-                          <td className="p-2 text-800">{index + 1}</td>
-                          <td className="p-2 text-800">
+                        <tr key={option.id} className={`${getRandomColor()} transition-colors duration-300 hover:bg-gray-200`}>
+                          <td className="p-2 text-gray-800">{index + 1}</td>
+                          <td className="p-2 text-gray-800 font-medium">{option.code}</td>
+                          <td className="p-2 text-gray-800">{option.enrollment}</td>
+                          <td className="p-2 text-gray-800">{option.instructor}</td>
+                          <td className="p-2 text-gray-800">{option.days}</td>
+                          <td className="p-2 text-gray-800">{index + 1}</td>
+                          <td className="p-2 text-gray-800">
                             <span className="inline-flex items-center">
                               <Clock size={16} className="mr-1" />
                               {option.time}
@@ -107,7 +113,7 @@ export default function ScheduleRegistration() {
                               checked={selectedClasses.includes(option.id)}
                               onChange={() => toggleClassSelection(option.id)}
                               disabled={option.status === 'Hết chỗ'}
-                              className="form-checkbox h-5 w-5 text-600 rounded focus:ring-500 border-300"
+                              className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
                             />
                           </td>
                         </tr>
@@ -122,7 +128,7 @@ export default function ScheduleRegistration() {
       </div>
       <div className="mt-8 flex justify-center">
         <button 
-          className="bg-600 hover:bg-700 text-black font-bold py-2 px-6 rounded-full shadow-lg transform transition duration-300 hover:scale-105"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition duration-300 hover:scale-105"
           onClick={() => console.log('Đăng ký clicked')}
         >
           Đăng ký

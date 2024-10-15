@@ -19,3 +19,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('broadcast-notification', function () {
     return true;
 });
+Broadcast::channel('broadcast-notification-courses', function () {
+    return true;
+});

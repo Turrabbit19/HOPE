@@ -10,5 +10,6 @@
     <h1>Hello World</h1>
 
     @vite('resources/js/notification.js')
+    @vite('resources/js/notificationcourses.js')
 </body>
 </html>

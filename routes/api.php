@@ -1,23 +1,24 @@
 <?php
 
-use App\Http\Controllers\Api\Admin\ApiClassroomController;
-use App\Http\Controllers\Api\Admin\ApiCourseController;
-use App\Http\Controllers\Api\Admin\ApiLessonController;
-use App\Http\Controllers\Api\Admin\ApiMajorController;
-use App\Http\Controllers\Api\Admin\ApiNotificationController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\ApiPlanController;
 use App\Http\Controllers\Api\Admin\ApiRoleController;
 use App\Http\Controllers\Api\Admin\ApiRoomController;
-use App\Http\Controllers\Api\Admin\ApiScheduleController;
-use App\Http\Controllers\Api\Admin\ApiSectionController;
-use App\Http\Controllers\Api\Admin\ApiSemesterController;
+use App\Http\Controllers\Api\Admin\ApiUserController;
+use App\Http\Controllers\Api\Admin\ApiMajorController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
+use App\Http\Controllers\Api\Admin\ApiCourseController;
+use App\Http\Controllers\Api\Admin\ApiLessonController;
+use App\Http\Controllers\Api\Admin\ApiSectionController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
-use App\Http\Controllers\Api\Admin\ApiUserController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Admin\ApiScheduleController;
+use App\Http\Controllers\Api\Admin\ApiSemesterController;
+use App\Http\Controllers\Api\Admin\ApiClassroomController;
+use App\Http\Controllers\Api\Admin\ApiNotificationController;
+use App\Http\Controllers\Api\Admin\ApiNotificationCoursesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::apiResource('lessons', ApiLessonController::class);
         Route::apiResource('sections', ApiSectionController::class);
         Route::apiResource('notifications', ApiNotificationController::class);
+        Route::apiResource('notificationcourses', ApiNotificationCoursesController::class);
         Route::apiResource('shifts', ApiShiftController::class);
         // Route::apiResource('classrooms', ApiClassroomController::class);
         Route::apiResource('schedules', ApiScheduleController::class);

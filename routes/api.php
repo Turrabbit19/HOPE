@@ -37,6 +37,33 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::prefix('admin')->group(function () {
+        Route::apiResource('roles', ApiRoleController::class);
+        Route::apiResource('users', ApiUserController::class);
+
+        Route::apiResource('courses', ApiCourseController::class);
+        Route::apiResource('semesters', ApiSemesterController::class);
+
+        Route::apiResource('majors', ApiMajorController::class);
+
+        Route::apiResource('plans', ApiPlanController::class);
+        Route::get('major/{id}/subjects', [ApiPlanController::class, 'getSubjectsByMajor']);
+
+        Route::apiResource('subjects', ApiSubjectController::class);
+        Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
+        Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
+
+        Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
+        Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
+
+        Route::apiResource('rooms', ApiRoomController::class);
+        Route::apiResource('lessons', ApiLessonController::class);
+        Route::apiResource('sections', ApiSectionController::class);
+        Route::apiResource('notifications', ApiNotificationController::class);
+        Route::apiResource('shifts', ApiShiftController::class);
+        Route::apiResource('classrooms', ApiClassroomController::class);
+        Route::apiResource('schedules', ApiScheduleController::class);
+    });
+// });
     Route::apiResource('roles', ApiRoleController::class);
     Route::apiResource('users', ApiUserController::class);
     // Route::apiResource('students', ApiStudentController::class);

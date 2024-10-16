@@ -16,10 +16,6 @@ class Semester extends Model
         'status',
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-    ];
-
     public function courses()
     {
         return $this->belongsToMany(Course::class, 'course_semesters')

@@ -17,34 +17,60 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ApiUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $users = User::with('role')->paginate(9);
-            $data = collect($users->items())->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'avatar' => $user->avatar,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'dob' =>  Carbon::parse($user->dob)->format('d/m/Y'),
-                    'gender' => $user->gender ? "Nam" : "Nữ",
-                    'ethnicity' => $user->ethnicity,
-                    'address' => $user->address,
-                    'role' => $user->role->name,
-                ];
-            });
+            $perPage = [
+                'Quản trị viên' => $request->input('perPageAdmin', 9),
+                'Cán bộ' => $request->input('perPageOfficer', 9),
+                'Sinh viên' => $request->input('perPageStudent', 9),
+                'Giảng viên' => $request->input('perPageTeacher', 9),
+            ];
 
-            return response()->json([
-                'data' => $data,
-                'pagination' => [
-                    'total' => $users->total(),
-                    'per_page' => $users->perPage(),
-                    'current_page' => $users->currentPage(),
-                    'last_page' => $users->lastPage(),
-                ]
-            ], 200);
+            $users = User::with('role')->whereIn('role_id', [1, 2, 3, 4])->get();
+
+            $groupUsers = $users->groupBy('role_id');
+
+            $roles = [
+                1 => 'Quản trị viên',
+                2 => 'Cán bộ',
+                3 => 'Sinh viên',
+                4 => 'Giảng viên',
+            ];
+
+            $responseData = [];
+            
+            foreach ($roles as $roleId => $roleKey) {
+                $roleUsers = $groupUsers->get($roleId, collect());
+                $pageUsers = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $roleUsers->forPage($request->input("page_{$roleKey}", 1), $perPage[$roleKey]),
+                    $roleUsers->count(),
+                    $perPage[$roleKey],
+                    $request->input("page_{$roleKey}", 1),
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
+
+                $responseData[$roleKey] = [
+                    'data' => $pageUsers->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'avatar' => $user->avatar,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'phone' => $user->phone,
+                            'role' => $user->role->name,
+                        ];
+                    }),
+                    'pagination' => [
+                        'total' => $pageUsers->total(),
+                        'per_page' => $pageUsers->perPage(),
+                        'current_page' => $pageUsers->currentPage(),
+                        'last_page' => $pageUsers->lastPage(),
+                    ],
+                ];
+            }
+
+            return response()->json($responseData, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
@@ -74,7 +100,7 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
     }
-
+    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -93,10 +119,11 @@ class ApiUserController extends Controller
             'student_major_id' => 'required_if:role_id,3|exists:majors,id',
             'student_current_semester' => 'required_if:role_id,3|integer|min:1', 
             'student_code' => 'required_if:role_id,3|unique:students,student_code',
-            'student_status' => 'required_if:role_id,3|integer',
+            'student_status' => 'integer|in:0,1,2',
 
             'teacher_major_id' => 'required_if:role_id,4|exists:majors,id',
             'teacher_code' => 'required_if:role_id,4|unique:teachers,teacher_code',
+            'teacher_status' => 'integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -140,6 +167,7 @@ class ApiUserController extends Controller
                     'user_id' => $user->id,
                     'major_id' => $data['teacher_major_id'],
                     'teacher_code' => $data['teacher_code'],
+                    'status' => $data['teacher_status'],
                 ]);
             }
 
@@ -149,7 +177,6 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function show(string $id)
     {
         try {
@@ -169,16 +196,16 @@ class ApiUserController extends Controller
             ];
     
             if ($user->role_id == 3) {
-                $student = Student::where('user_id', $user->id)->first();
+                $student = Student::with('course', 'major')->where('user_id', $user->id)->first();
                 $data['student'] = [
-                    'course_id' => $student->course_id,
-                    'major_id' => $student->major_id,
+                    'course_id' => $student->course->name,
+                    'major_id' => $student->major->name,
                     'current_semester' => $student->current_semester,
                     'student_code' => $student->student_code,
                     'status' => match($student->status) {
-                        0 => "Đang học",
-                        1 => "Bảo lưu",
-                        2 => "Hoàn thành",
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
                         default => "Không xác định",
                     },
                 ];
@@ -190,9 +217,9 @@ class ApiUserController extends Controller
                     'major_id' => $teacher->major_id,
                     'teacher_code' => $teacher->teacher_code,
                     'status' => match($student->status) {
-                        0 => "Đang công tác",
-                        1 => "Tạm dừng",
-                        2 => "Kết thúc",
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
                         default => "Không xác định",
                     },
                 ];
@@ -205,8 +232,6 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
     }
-    
-
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -219,13 +244,13 @@ class ApiUserController extends Controller
             'ethnicity' => 'sometimes|string|max:100',
             'address' => 'sometimes|string|max:255',
             'password' => 'sometimes|string|min:8',
-            'role_id' => 'sometimes|exists:roles,id',
+            'role_id' => 'sometimes|exists:roles,id|',
 
             'student_course_id' => 'required_if:role_id,3|exists:courses,id',
             'student_major_id' => 'required_if:role_id,3|exists:majors,id',
             'student_current_semester' => 'required_if:role_id,3|integer|min:1', 
             'student_code' => 'required_if:role_id,3|unique:students,student_code,' . $id . ',user_id', 
-            'student_status' => 'required_if:role_id,3|integer',
+            'student_status' => 'required_if:role_id,3|integer||in:0,1,2',
 
             'teacher_major_id' => 'required_if:role_id,4|exists:majors,id',
             'teacher_code' => 'required_if:role_id,4|unique:teachers,teacher_code,' . $id . ',user_id', 
@@ -247,10 +272,10 @@ class ApiUserController extends Controller
                 $avatarPath = $request->file('avatar')->store('avatars', 'public');
                 $data['avatar'] = $avatarPath;
             }
-
+            
             $user->update($data);
 
-            if ($data['role_id'] == 3) {
+            if (isset($data['role_id']) && $data['role_id'] == 3) {
                 $student = Student::where('user_id', $user->id)->first();
                 if ($student) {
                     $student->update([
@@ -271,8 +296,8 @@ class ApiUserController extends Controller
                     ]);
                 }
             }
-
-            if ($data['role_id'] == 4) {
+            
+            if (isset($data['role_id']) && $data['role_id'] == 4) {
                 $teacher = Teacher::where('user_id', $user->id)->first();
                 if ($teacher) {
                     $teacher->update([
@@ -287,6 +312,7 @@ class ApiUserController extends Controller
                     ]);
                 }
             }
+            
 
             return response()->json(['data' => $user, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -295,13 +321,16 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
-
     public function destroy(string $id)
     {
         try {
             $user = User::findOrFail($id);
+
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
             $user->delete();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tài khoản với ID: ' . $id], 404);

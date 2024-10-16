@@ -44,9 +44,8 @@ import ListCourse from "../pages/admin/courses/list/page";
 import ListUser from "../pages/admin/userManager/list/page";
 import UserAdd from "../pages/admin/userManager/add/page";
 import DetailSubject from "../pages/admin/subjects/detail/page";
-import ListSection from "../pages/admin/section/list/page";
 import ListSections from "../pages/admin/section/list/page";
-import UserUpdate from "../pages/admin/userManager/update/page";
+import UserUpdate from "../pages/admin/userManager/edit/page";
 
 const Router = createBrowserRouter([
     {

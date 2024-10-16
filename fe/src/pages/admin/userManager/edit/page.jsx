@@ -121,7 +121,16 @@ const UserUpdate = ({ userData }) => {
                     </Form.Item>
 
                     {/* Giới tính */}
-                    <Form.Item label="Giới Tính" name="gender">
+                    <Form.Item
+                        label="Giới Tính"
+                        name="gender"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng chọn giới tính!",
+                            },
+                        ]}
+                    >
                         <Radio.Group>
                             <Radio value={true}>Nam</Radio>
                             <Radio value={false}>Nữ</Radio>

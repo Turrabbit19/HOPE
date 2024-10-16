@@ -14,8 +14,9 @@ import {
   UserOutlined,
   InfoCircleOutlined,
   PlusOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useRoutes } from "react-router-dom";
 import {
   deleteStudent,
   deleteTeacher,
@@ -59,12 +60,15 @@ const ListUser = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reload, setReload] = useState(false);
+  const [userDetail, setUserDetail] = useState({});
   const [recordType, setRecordType] = useState(""); // "teacher" hoặc "student" hoặc "classManager"
   const [accounts, setAccounts] = useState({
     classManager: [],
     teachers: [],
     students: [],
   });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     getListUser().then((res) => {
@@ -83,6 +87,9 @@ const ListUser = () => {
     setSelectedRecord(record);
     setRecordType(type);
     setIsModalVisible(true);
+    getUser(record.id).then((res) => {
+      setUserDetail(res.data.data);
+    });
   };
 
   const handleModalClose = () => {
@@ -147,6 +154,15 @@ const ListUser = () => {
             }
           >
             Chi tiết
+          </Button>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => {
+              navigate("edit/" + record.id);
+            }}
+          >
+            Sửa
           </Button>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa tài khoản này?"
@@ -238,13 +254,13 @@ const ListUser = () => {
           >
             <Avatar
               size={100}
-              src={selectedRecord.avatar || <UserOutlined />}
+              src={userDetail.avatar || <UserOutlined />}
               style={{ marginRight: 20 }}
             />
             <div>
-              <h3>{selectedRecord.name}</h3>
-              <p>Email: {selectedRecord.email}</p>
-              <p>Điện Thoại: {selectedRecord.phone}</p>
+              <h3>{userDetail.name}</h3>
+              <p>Email: {userDetail.email}</p>
+              <p>Điện Thoại: {userDetail.phone}</p>
             </div>
           </div>
           <Divider />
@@ -254,16 +270,16 @@ const ListUser = () => {
             {recordType === "classManager" && (
               <>
                 <Descriptions.Item label="Ngày Sinh">
-                  {selectedRecord.dob}
+                  {userDetail.dob}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giới Tính">
-                  {selectedRecord.gender ? "Nam" : "Nữ"}
+                  {userDetail.gender ? "Nam" : "Nữ"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Dân Tộc">
-                  {selectedRecord.ethnicity}
+                  {userDetail.ethnicity}
                 </Descriptions.Item>
                 <Descriptions.Item label="Địa Chỉ">
-                  {selectedRecord.address}
+                  {userDetail.address}
                 </Descriptions.Item>
               </>
             )}
@@ -272,25 +288,25 @@ const ListUser = () => {
             {recordType === "teacher" && (
               <>
                 <Descriptions.Item label="Mã Giảng Viên">
-                  {selectedRecord.teacher_code}
+                  {userDetail.teacher_code}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngành Học">
-                  {selectedRecord.major}
+                  {userDetail.major}
                 </Descriptions.Item>
                 <Descriptions.Item label="Trạng Thái">
-                  {getTeacherStatus(selectedRecord.status)}
+                  {getTeacherStatus(userDetail.status)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày Sinh">
-                  {selectedRecord.dob}
+                  {userDetail.dob}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giới Tính">
-                  {selectedRecord.gender ? "Nam" : "Nữ"}
+                  {userDetail.gender ? "Nam" : "Nữ"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Dân Tộc">
-                  {selectedRecord.ethnicity}
+                  {userDetail.ethnicity}
                 </Descriptions.Item>
                 <Descriptions.Item label="Địa Chỉ">
-                  {selectedRecord.address}
+                  {userDetail.address}
                 </Descriptions.Item>
               </>
             )}
@@ -299,34 +315,34 @@ const ListUser = () => {
             {recordType === "student" && (
               <>
                 <Descriptions.Item label="Mã Sinh Viên">
-                  {selectedRecord.student_code}
+                  {userDetail.student_code}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngành Học">
-                  {selectedRecord.major}
+                  {userDetail.major}
                 </Descriptions.Item>
                 <Descriptions.Item label="Khóa Học">
-                  {selectedRecord.course}
+                  {userDetail.course}
                 </Descriptions.Item>
                 <Descriptions.Item label="Học Kỳ Hiện Tại">
-                  {selectedRecord.current_semester}
+                  {userDetail.current_semester}
                 </Descriptions.Item>
                 <Descriptions.Item label="Trạng Thái">
-                  {getStudentStatus(selectedRecord.status)}
+                  {getStudentStatus(userDetail.status)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Phụ Huynh">
-                  {selectedRecord.parent}
+                  {userDetail.parent}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày Sinh">
-                  {selectedRecord.dob}
+                  {userDetail.dob}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giới Tính">
-                  {selectedRecord.gender ? "Nam" : "Nữ"}
+                  {userDetail.gender ? "Nam" : "Nữ"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Dân Tộc">
-                  {selectedRecord.ethnicity}
+                  {userDetail.ethnicity}
                 </Descriptions.Item>
                 <Descriptions.Item label="Địa Chỉ">
-                  {selectedRecord.address}
+                  {userDetail.address}
                 </Descriptions.Item>
               </>
             )}

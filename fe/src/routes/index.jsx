@@ -43,277 +43,282 @@ import SyllabusEdit from "../pages/admin/syllabus/edit/page";
 import ListCourse from "../pages/admin/courses/list/page";
 import ListUser from "../pages/admin/userManager/list/page";
 import UserAdd from "../pages/admin/userManager/add/page";
+import UserEdit from "../pages/admin/userManager/edit/page";
 
 const Router = createBrowserRouter([
-    {
+  {
+    path: "",
+    element: <LandingPage />,
+  },
+  {
+    path: "admin",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <LayoutAdmin />
+        <ScrollToTopButton />
+      </Suspense>
+    ),
+    children: [
+      {
         path: "",
-        element: <LandingPage />,
-    },
-    {
-        path: "admin",
         element: (
-            <Suspense fallback={<Loading />}>
-                <LayoutAdmin />
-                <ScrollToTopButton />
-            </Suspense>
+          <>
+            <BreadCrumb />
+            <NotificationManage />
+          </>
         ),
-        children: [
-            {
-                path: "",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <NotificationManage />
-                    </>
-                ),
-            },
-            {
-                path: "test",
-                element: <Testing />,
-            },
-            {
-                path: "list-syllabus",
-                element: <SyllabusList />,
-            },
-            {
-                path: "list-syllabus/add",
-                element: <SyllabusAdd />,
-            },
-            {
-                path: "list-syllabus/edit/:id",
-                element: <SyllabusEdit />,
-            },
-            {
-                path: "list",
-                element: (
-                    <Suspense fallback={<Loading />}>
-                        <List />
-                    </Suspense>
-                ),
-            },
-            {
-                path: "list-rooms",
-                element: (
-                    <Suspense fallback={<Loading />}>
-                        <ListRooms />
-                    </Suspense>
-                ),
-            },
-            {
-                path: "teaching",
-                element: (
-                    <>
-                        <Teach />
-                    </>
-                ),
-            },
-            {
-                path: "teaching/add",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <TeachAdd />
-                    </>
-                ),
-            },
-            {
-                path: "teaching/list",
-                element: (
-                    <>
-                        <ListCourse />
-                    </>
-                ),
-            },
-            {
-                path: "class-student",
-                element: <ClassStudent />,
-            },
-            {
-                path: "class-student/add",
-                element: <AddClassStudent />,
-            },
-            {
-                path: "class-student/:classId",
-                element: <ClassDetailLayout />,
-                children: [
-                    {
-                        path: "",
-                        element: <ClassStudentDetail />,
-                    },
-                    {
-                        path: "schedule/add-manual",
-                        element: <AddScheduleManual />,
-                    },
-                    {
-                        path: "schedule/add-series",
-                        element: <AddScheduleSeries />,
-                    },
-                    {
-                        path: "account-manage",
-                        element: <AccountManage />,
-                    },
-                    {
-                        path: "resource",
-                        element: <Resource />,
-                    },
-                ],
-            },
-
-            {
-                path: "majors",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <MajorManagement />
-                    </>
-                ),
-            },
-            {
-                path: "roles",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <Role />
-                    </>
-                ),
-            },
-            {
-                path: "user-manager",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <UserManager />
-                    </>
-                ),
-            },
-
-            // giao diện list môn học
-            {
-                path: "list-subject",
-                element: (
-                    <>
-                        <ListSubjects />
-                    </>
-                ),
-            },
-            //
-            {
-                path: "courses",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <CoursesManager />
-                    </>
-                ),
-            },
-
-            //
-            {
-                path: "semesters",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <SemesterManage />
-                    </>
-                ),
-            },
-            // Giao diện list semester
-            {
-                path: "list-semesters",
-                element: (
-                    <>
-                        <ListSemester />
-                    </>
-                ),
-            },
-            //
-
-            {
-                path: "subjects",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <SubjectManager />
-                    </>
-                ),
-            },
-            {
-                path: "list-course",
-                element: (
-                    <>
-                        <ListCourse />
-                    </>
-                ),
-            },
-            {
-                path: "sections",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <SectionManage />
-                    </>
-                ),
-            },
-            {
-                path: "student_manager",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <StudentManager />
-                    </>
-                ),
-            },
-
-            {
-                path: "classrooms",
-                element: (
-                    <>
-                        <ClassRoom />
-                    </>
-                ),
-            },
-
-            {
-                path: "list-users",
-                element: <ListUser />,
-            },
-            {
-                path: "list-users/add",
-                element: <UserAdd />,
-            },
-        ],
-    },
-    {
-        path: "student",
+      },
+      {
+        path: "test",
+        element: <Testing />,
+      },
+      {
+        path: "list-syllabus",
+        element: <SyllabusList />,
+      },
+      {
+        path: "list-syllabus/add",
+        element: <SyllabusAdd />,
+      },
+      {
+        path: "list-syllabus/edit/:id",
+        element: <SyllabusEdit />,
+      },
+      {
+        path: "list",
         element: (
-            <Suspense fallback={<Loading />}>
-                <LayoutStudent />
-                <ScrollToTopButton />
-            </Suspense>
+          <Suspense fallback={<Loading />}>
+            <List />
+          </Suspense>
         ),
+      },
+      {
+        path: "list-rooms",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ListRooms />
+          </Suspense>
+        ),
+      },
+      {
+        path: "teaching",
+        element: (
+          <>
+            <Teach />
+          </>
+        ),
+      },
+      {
+        path: "teaching/add",
+        element: (
+          <>
+            <BreadCrumb />
+            <TeachAdd />
+          </>
+        ),
+      },
+      {
+        path: "teaching/list",
+        element: (
+          <>
+            <ListCourse />
+          </>
+        ),
+      },
+      {
+        path: "class-student",
+        element: <ClassStudent />,
+      },
+      {
+        path: "class-student/add",
+        element: <AddClassStudent />,
+      },
+      {
+        path: "class-student/:classId",
+        element: <ClassDetailLayout />,
         children: [
-            {
-                path: "information",
-                element: (
-                    <Suspense fallback={<Loading />}>
-                        <StudentInformation />
-                    </Suspense>
-                ),
-            },
-            {
-                path: "schedule",
-                element: (
-                    <Suspense fallback={<Loading />}>
-                        <Schedule />
-                    </Suspense>
-                ),
-            },
+          {
+            path: "",
+            element: <ClassStudentDetail />,
+          },
+          {
+            path: "schedule/add-manual",
+            element: <AddScheduleManual />,
+          },
+          {
+            path: "schedule/add-series",
+            element: <AddScheduleSeries />,
+          },
+          {
+            path: "account-manage",
+            element: <AccountManage />,
+          },
+          {
+            path: "resource",
+            element: <Resource />,
+          },
         ],
-    },
-    {
-        path: "*",
-        element: <NotFound />,
-    },
+      },
+
+      {
+        path: "majors",
+        element: (
+          <>
+            <BreadCrumb />
+            <MajorManagement />
+          </>
+        ),
+      },
+      {
+        path: "roles",
+        element: (
+          <>
+            <BreadCrumb />
+            <Role />
+          </>
+        ),
+      },
+      {
+        path: "user-manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <UserManager />
+          </>
+        ),
+      },
+
+      // giao diện list môn học
+      {
+        path: "list-subject",
+        element: (
+          <>
+            <ListSubjects />
+          </>
+        ),
+      },
+      //
+      {
+        path: "courses",
+        element: (
+          <>
+            <BreadCrumb />
+            <CoursesManager />
+          </>
+        ),
+      },
+
+      //
+      {
+        path: "semesters",
+        element: (
+          <>
+            <BreadCrumb />
+            <SemesterManage />
+          </>
+        ),
+      },
+      // Giao diện list semester
+      {
+        path: "list-semesters",
+        element: (
+          <>
+            <ListSemester />
+          </>
+        ),
+      },
+      //
+
+      {
+        path: "subjects",
+        element: (
+          <>
+            <BreadCrumb />
+            <SubjectManager />
+          </>
+        ),
+      },
+      {
+        path: "list-course",
+        element: (
+          <>
+            <ListCourse />
+          </>
+        ),
+      },
+      {
+        path: "sections",
+        element: (
+          <>
+            <BreadCrumb />
+            <SectionManage />
+          </>
+        ),
+      },
+      {
+        path: "student_manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <StudentManager />
+          </>
+        ),
+      },
+
+      {
+        path: "classrooms",
+        element: (
+          <>
+            <ClassRoom />
+          </>
+        ),
+      },
+
+      {
+        path: "list-users",
+        element: <ListUser />,
+      },
+      {
+        path: "list-users/add",
+        element: <UserAdd />,
+      },
+      {
+        path: "list-users/edit/:id",
+        element: <UserEdit />,
+      },
+    ],
+  },
+  {
+    path: "student",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <LayoutStudent />
+        <ScrollToTopButton />
+      </Suspense>
+    ),
+    children: [
+      {
+        path: "information",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <StudentInformation />
+          </Suspense>
+        ),
+      },
+      {
+        path: "schedule",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Schedule />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
 ]);
 
 export default Router;

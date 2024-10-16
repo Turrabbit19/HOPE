@@ -20,14 +20,27 @@ import {
   createUser,
   createTeacher,
 } from "../../../../services/user-service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 const { Option } = Select;
+import moment from "moment";
+import {
+  deleteStudent,
+  deleteTeacher,
+  deleteUser,
+  getUser,
+  getTeacher,
+  getStudent,
+  getListUser,
+  editUser,
+} from "../../../../services/user-service";
 
-const UserAdd = () => {
+const UserEdit = () => {
   const [role, setRole] = useState(""); // Không có vai trò nào chọn ban đầu
   const [roleNumber, setRoleNumber] = useState(0); // Không có vai trò nào chọn ban đầu
   const [listMajor, setListMajor] = useState([]);
   const [listCourse, setListCourse] = useState([]);
+  const [user, setUser] = useState({});
+  const params = useParams();
   const navigate = useNavigate();
   useEffect(() => {
     getListCourse().then((res) => {
@@ -36,7 +49,48 @@ const UserAdd = () => {
     getListMajor().then((res) => {
       setListMajor(res.data.data);
     });
+    getUser(params.id).then((res) => {
+      setUser(res.data.data);
+
+      for (const key of Object.keys(res.data.data)) {
+        if (key === "gender")
+          form.setFieldValue("gender", res.data.data[key] === "Nam");
+        if (key === "dob") {
+          console.log(res.data.data[key]);
+          console.log(moment(res.data.data[key]));
+          form.setFieldValue(key, moment(res.data.data[key], "DD/MM/YYYY"));
+        } else form.setFieldValue(key, res.data.data[key]);
+      }
+      form.setFieldValue("gender", res.data.data["gender"] === "Nam");
+
+      switch (res.data.data.role) {
+        case "officer":
+          setRoleNumber(2);
+          form.setFieldValue("role", "admin1");
+          setRole("admin1");
+          break;
+        case "admin":
+          setRoleNumber(1);
+          form.setFieldValue("role", "admin");
+
+          break;
+        case "student":
+          setRoleNumber(3);
+          form.setFieldValue("role", "student");
+
+          break;
+        case "teacher":
+          setRoleNumber(4);
+          form.setFieldValue("role", "teacher");
+
+          break;
+
+        default:
+          break;
+      }
+    });
   }, []);
+  const [form] = Form.useForm();
 
   // Xử lý khi thay đổi vai trò
   const handleRoleChange = (e) => {
@@ -62,58 +116,37 @@ const UserAdd = () => {
 
   const onFinish = async (values) => {
     try {
-      try {
-        values.dob = values.dob.format("YYYY-MM-DD HH:mm:ss");
-        const user = await createUser({
-          ...values,
-          password: "123123123",
-          role_id: roleNumber,
-          student_course_id: values?.course,
-          student_major_id: values?.major,
-          teacher_major_id: values?.major,
-          student_current_semester: 1,
-          student_status: 1,
-          teacher_status: 1,
-        });
-        message.success(`Đã tạo tài khoản thành công`);
-        navigate("/admin/list-users");
-      } catch (error) {
-        for (const key of Object.keys(error?.response?.data?.errors)) {
-          message.error(error.response.data.errors[key][0]);
-        }
+      values.dob = values.dob.format("YYYY-MM-DD HH:mm:ss");
+      console.log(values);
+      const user = await editUser(params.id, {
+        ...values,
+        role_id: roleNumber,
+        gender: values.gender === "Name",
+        student_course_id: values?.course,
+        student_major_id: values?.major,
+        teacher_major_id: values?.major,
+        student_current_semester: 1,
+        student_status: 1,
+        teacher_status: 1,
+      });
+      message.success(`Đã sửa khoản thành công`);
+      navigate("/admin/list-users");
+    } catch (error) {
+      for (const key of Object.keys(error?.response?.data?.errors)) {
+        message.error(error.response.data.errors[key][0]);
       }
-      switch (role) {
-        case "teacher":
-          await createTeacher({
-            user_id: user.id,
-            major_id: values.major,
-            teacher_code: values.teacher_code,
-          });
-          break;
-        case "student":
-          await createStudent({
-            user_id: user.id,
-            major_id: values.major,
-            course_id: values.course,
-            student_code: values.student_code,
-          });
-          break;
-
-        default:
-          break;
-      }
-    } catch (error) {}
+    }
   };
-
+  console.log(user);
   return (
     <Card hoverable>
       <Form
         layout="vertical"
         onFinish={onFinish}
-        initialValues={{ gender: true }}
         style={{ margin: "0 100px" }}
+        form={form}
       >
-        <h2 className="syllabus-title">Thêm Mới User</h2>
+        <h2 className="syllabus-title">Sửa User</h2>
 
         {/* Dùng Row và Col để chia làm 2 cột */}
         <Row style={{ width: "100%" }} gutter={100}>
@@ -219,7 +252,7 @@ const UserAdd = () => {
               name="role"
               rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
             >
-              <Radio.Group onChange={handleRoleChange}>
+              <Radio.Group value={role} onChange={handleRoleChange}>
                 <Radio value="student">Sinh Viên</Radio>
                 <Radio value="teacher">Giáo Viên</Radio>
                 <Radio value="admin">Cán Bộ</Radio>
@@ -332,7 +365,7 @@ const UserAdd = () => {
         <div className="flex items-center justify-center">
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              Thêm Mới
+              Sửa
             </Button>
           </Form.Item>
         </div>
@@ -341,4 +374,4 @@ const UserAdd = () => {
   );
 };
 
-export default UserAdd;
+export default UserEdit;

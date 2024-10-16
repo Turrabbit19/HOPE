@@ -30,6 +30,9 @@ const getListCourse = async () => {
 const getUser = async (id) => {
   return instance.get("/admin/users/" + id);
 };
+const editUser = async (id, data) => {
+  return instance.put("/admin/users/" + id, data);
+};
 const getStudent = async (id) => {
   return instance.get("/admin/users/" + id);
 };
@@ -60,4 +63,5 @@ export {
   deleteStudent,
   deleteTeacher,
   deleteUser,
+  editUser,
 };

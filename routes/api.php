@@ -57,7 +57,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
         Route::apiResource('rooms', ApiRoomController::class);
         Route::apiResource('lessons', ApiLessonController::class);
+
         Route::apiResource('sections', ApiSectionController::class);
+        Route::get('section/{id}/notifications', [ApiSectionController::class, 'getNotifications']);
+        Route::post('section/{id}/addNotice', [ApiSectionController::class, 'addNotification']);
+
         Route::apiResource('notifications', ApiNotificationController::class);
         Route::apiResource('shifts', ApiShiftController::class);
         Route::apiResource('classrooms', ApiClassroomController::class);

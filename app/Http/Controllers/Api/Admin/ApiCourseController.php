@@ -24,9 +24,9 @@ class ApiCourseController extends Controller
                     'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
                     'status' => match($course->status) {
-                        0 => "Chờ diễn ra",
-                        1 => "Đang diễn ra",
-                        2 => "Kết thúc",
+                        "0" => "Chờ diễn ra",
+                        "1" => "Đang diễn ra",
+                        "2" => "Kết thúc",
                         default => "Không xác định",
                     },
                 ];
@@ -72,9 +72,9 @@ class ApiCourseController extends Controller
                     'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
                     'status' => match($course->status) {
-                        0 => "Chờ diễn ra",
-                        1 => "Đang diễn ra",
-                        2 => "Kết thúc",
+                        "0" => "Chờ diễn ra",
+                        "1" => "Đang diễn ra",
+                        "2" => "Kết thúc",
                         default => "Không xác định",
                     },
                 ];

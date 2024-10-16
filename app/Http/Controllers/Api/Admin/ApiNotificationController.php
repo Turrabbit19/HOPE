@@ -90,13 +90,19 @@ class ApiNotificationController extends Controller
     public function show(string $id)
     {
         try {
-            $notification = Notification::with('section')->findOrFail($id);
+            $notification = Notification::with('section', 'courses')->findOrFail($id);
             $data = [
                     'id' => $notification->id,
                     'section_name' => $notification->section->name,
                     'name' => $notification->name,
                     'description' => $notification->description,
                     'time' => $notification->time,
+                    'courses' => $notification->courses->map(function ($course) {
+                        return [
+                            "id" => $course->id,
+                            "name" => $course->name
+                        ];
+                    }),
                 ];
 
             return response()->json(['data' => $data], 200);

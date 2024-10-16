@@ -214,10 +214,10 @@ class ApiUserController extends Controller
                 $data['teacher'] = [
                     'major_id' => $teacher->major_id,
                     'teacher_code' => $teacher->teacher_code,
-                    'status' => match($student->status) {
-                        '0' => "Đang học",
-                        '1' => "Bảo lưu",
-                        '2' => "Hoàn thành",
+                    'status' => match($teacher->status) {
+                        '0' => "Đang dạy",
+                        '1' => "Tạm dừng",
+                        '2' => "Kết thúc",
                         default => "Không xác định",
                     },
                 ];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Course;
+use App\Models\Notification;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,13 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('semesters', function (Blueprint $table) {
+        Schema::create('notification_courses', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->date('start_date'); 
-            $table->date('end_date'); 
-            $table->enum('status', [0, 1, 2])->default(0); // 0: Chờ diễn ra, 1: Đang diễn ra, 2: Kết thúc
-            $table->softDeletes();
+            $table->foreignIdFor(Notification::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('semesters');
+        Schema::dropIfExists('notification_courses');
     }
 };

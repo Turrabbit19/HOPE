@@ -50,7 +50,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
+        Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
+
         Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
+        Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
 
         Route::apiResource('rooms', ApiRoomController::class);
         Route::apiResource('lessons', ApiLessonController::class);

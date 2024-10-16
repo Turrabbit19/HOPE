@@ -11,9 +11,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiClassroomController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
@@ -64,9 +61,6 @@ class ApiClassroomController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -91,9 +85,6 @@ class ApiClassroomController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
@@ -113,9 +104,6 @@ class ApiClassroomController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -143,9 +131,6 @@ class ApiClassroomController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {

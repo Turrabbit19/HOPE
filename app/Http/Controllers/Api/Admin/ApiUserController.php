@@ -98,7 +98,7 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
     }
-
+    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -175,7 +175,6 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function show(string $id)
     {
         try {
@@ -231,7 +230,6 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Users', 'message' => $e->getMessage()], 500);
         }
     }
-    
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -272,10 +270,10 @@ class ApiUserController extends Controller
                 $avatarPath = $request->file('avatar')->store('avatars', 'public');
                 $data['avatar'] = $avatarPath;
             }
-
+            
             $user->update($data);
 
-            if ($data['role_id'] == 3) {
+            if (isset($data['role_id']) && $data['role_id'] == 3) {
                 $student = Student::where('user_id', $user->id)->first();
                 if ($student) {
                     $student->update([
@@ -296,8 +294,8 @@ class ApiUserController extends Controller
                     ]);
                 }
             }
-
-            if ($data['role_id'] == 4) {
+            
+            if (isset($data['role_id']) && $data['role_id'] == 4) {
                 $teacher = Teacher::where('user_id', $user->id)->first();
                 if ($teacher) {
                     $teacher->update([
@@ -312,6 +310,7 @@ class ApiUserController extends Controller
                     ]);
                 }
             }
+            
 
             return response()->json(['data' => $user, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -320,7 +319,6 @@ class ApiUserController extends Controller
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function destroy(string $id)
     {
         try {

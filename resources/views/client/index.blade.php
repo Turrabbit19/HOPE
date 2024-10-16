@@ -17,6 +17,7 @@
                                         <h3 class="text-truncate text-white mb-1">Phạm Quốc Khanh</h3>
                                         <div class="d-flex align-items-center flex-wrap row-gap-2 text-gray-2">
                                             <span>MSV : PH38668</span>
+                                            <a href=""></a>
                                         </div>
                                     </div>
                                 </div>

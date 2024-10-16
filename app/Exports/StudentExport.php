@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Student;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -63,15 +64,20 @@ class StudentExport implements FromCollection, WithHeadings, WithEvents
                 'name' => $student->user->name,
                 'email' => $student->user->email,
                 'phone' => $student->user->phone,
-                'dob' => $student->user->dob,
-                'gender' => $student->user->gender,
+                'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
+                'gender' => $student->user->gender ? "Nam" : "Nữ",
                 'ethnicity' => $student->user->ethnicity,
                 'address' => $student->user->address,
                 'course_name' => $student->course->name,
                 'major_name' => $student->major->name,
                 'student_code' => $student->student_code,
                 'current_semester' => $student->current_semester,
-                'status' => $student->status,
+                'status' => match($student->status) {
+                    '0' => "Đang học",
+                    '1' => "Bảo lưu",
+                    '2' => "Hoàn thành",
+                    default => "Không xác định",
+                }
             ];
         });
         foreach($data as $key => $value){
@@ -140,7 +146,7 @@ class StudentExport implements FromCollection, WithHeadings, WithEvents
                 $event->sheet->getDelegate()->getStyle("H")->getActiveSheet()->getColumnDimension('H')->setWidth(15);
                 $event->sheet->getDelegate()->getStyle("I")->getActiveSheet()->getColumnDimension('I')->setWidth(15);
                 $event->sheet->getDelegate()->getStyle("J")->getActiveSheet()->getColumnDimension('J')->setWidth(30);
-                $event->sheet->getDelegate()->getStyle("K")->getActiveSheet()->getColumnDimension('K')->setWidth(12);
+                $event->sheet->getDelegate()->getStyle("K")->getActiveSheet()->getColumnDimension('K')->setWidth(18);
                 $event->sheet->getDelegate()->getStyle("L")->getActiveSheet()->getColumnDimension('L')->setWidth(20);
                 $event->sheet->getDelegate()->getStyle("M")->getActiveSheet()->getColumnDimension('M')->setWidth(15);
                 $event->sheet->getDelegate()->getStyle("N")->getActiveSheet()->getColumnDimension('N')->setWidth(15);

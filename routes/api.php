@@ -64,22 +64,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::apiResource('schedules', ApiScheduleController::class);
     });
 // });
-    Route::apiResource('roles', ApiRoleController::class);
-    Route::apiResource('users', ApiUserController::class);
-    // Route::apiResource('students', ApiStudentController::class);
-    // Route::apiResource('teachers', ApiTeacherController::class);
-    Route::apiResource('courses', ApiCourseController::class);
-    Route::apiResource('semesters', ApiSemesterController::class);
-    Route::apiResource('majors', ApiMajorController::class);
-    Route::apiResource('plans', ApiPlanController::class);
-    Route::apiResource('subjects', ApiSubjectController::class);
-    Route::apiResource('rooms', ApiRoomController::class);
-    Route::apiResource('lessons', ApiLessonController::class);
-    Route::apiResource('sections', ApiSectionController::class);
-    Route::apiResource('notifications', ApiNotificationController::class);
-    Route::apiResource('shifts', ApiShiftController::class);
-    Route::apiResource('classrooms', ApiClassroomController::class);
-    Route::apiResource('schedules', ApiScheduleController::class);
 
     // test api subject (lesson + classroom)
     Route::get('/subject/lessons/{id}', [ApiSubjectController::class, 'getAllLesson']);
@@ -89,5 +73,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
     // test api export file excel students + teachers
     Route::get('export-students', [ApiUserController::class, 'exportStudent']);
+    Route::get('export-teachers', [ApiUserController::class, 'exportTeacher']);
     // });
-});
+// });

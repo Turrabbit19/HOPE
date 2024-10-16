@@ -91,6 +91,7 @@ const AsideClient = () => {
                         </svg>
                         Đăng kí lịch học
                     </Link>
+                    <Link to="notification"> 
                     <a
                         href="#"
                         className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200"
@@ -112,8 +113,9 @@ const AsideClient = () => {
                             <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
                             <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
                         </svg>
-                        Mini
+                        Thông báo
                     </a>
+                    </Link>
                     <a
                         href="#"
                         className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200"

@@ -16,7 +16,6 @@ export default function InfoStudent() {
             <div className="text-center sm:text-left">
               <h2 className="text-2xl font-bold text-gray-800 mb-1">Pham Quoc Khanh</h2>
               <p className="text-blue-600 font-semibold mb-2">PH38668</p>
-              <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-medium">Active</span>
             </div>
           </div>
           <div className="space-y-6">
@@ -39,7 +38,7 @@ export default function InfoStudent() {
         </div>
 
         {/* Right Column - Parents Information */}
-        <div className="w-full lg:w-7/10 bg-white rounded-lg shadow-md p-6">
+        {/* <div className="w-full lg:w-7/10 bg-white rounded-lg shadow-md p-6">
           <div className="flex gap-4 mb-8 border-b">
             <button className="text-purple-600 font-medium pb-2 border-b-2 border-purple-600 transition duration-300 hover:text-purple-700">
               <Eye className="w-4 h-4 inline mr-2" />
@@ -49,8 +48,8 @@ export default function InfoStudent() {
               <Pencil className="w-4 h-4 inline mr-2" />
               Chỉnh sửa thông tin cá nhân
             </button>
-          </div>
-          <h3 className="text-xl font-semibold mb-6 text-gray-800">Parents Information</h3>
+          </div> */}
+          {/* <h3 className="text-xl font-semibold mb-6 text-gray-800">Parents Information</h3>
           <div className="space-y-8">
             {[
               {
@@ -94,9 +93,9 @@ export default function InfoStudent() {
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
-    </div>
+    // </div>
   )
 }

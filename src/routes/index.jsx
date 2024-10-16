@@ -5,6 +5,7 @@
     import ScheduleRegistration from "../pages/classRegitration/page"
     import StudentDashboard from "../pages/studentDashboard/page"
     import InfoStudent from "../pages/studentDashboard/infoStudnent/page"
+import NotificationPage from "../pages/notification/page"
 
     const Router = createBrowserRouter([
         {
@@ -33,6 +34,10 @@
                 {
                     path: "info-student",
                     element: <InfoStudent />
+                },
+                {
+                    path: "notification",
+                    element: <NotificationPage />
                 }
             ]
             

@@ -10,6 +10,8 @@ class Notification extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = "notifications";
+
     protected $fillable = [
         'section_id',
         'name',
@@ -22,6 +24,6 @@ class Notification extends Model
     }
 
     public function notification_courses() {
-        return $this->belongsToMany(Notification_Course::class);
+        return $this->belongsToMany(Course::class, 'notification_courses', 'notification_id', 'course_id');
     }
 }

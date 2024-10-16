@@ -18,10 +18,10 @@ class Notification_Course extends Model
     ];
 
     public function notifications() {
-        return $this->belongsToMany(Notification::class);
+        return $this->belongsTo(Notification::class,'notification_courses');
     }
 
     public function courses() {
-        return $this->belongsToMany(Course::class);
+        return $this->belongsTo(Course::class);
     }
 }

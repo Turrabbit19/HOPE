@@ -41,36 +41,37 @@ class ApiNotificationController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'section_id' => 'required|exists:sections,id',   
-            'name' => 'required|string|max:255|unique:notifications',   
-            'description' => 'required|string',  
+            'section_id' => 'required|exists:sections,id',
+            'name' => 'required|string|max:255|unique:notifications',
+            'description' => 'required|string',
             'time' => 'required|date_format:Y-m-d H:i:s',
             'notification_courses' => 'required|array',
             'notification_courses.*.id' => 'required|exists:notification_courses,id',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-
+    
         try {
             $data = $validator->validated();
-            $notifications = Notification::create($data);
+            $notification = Notification::create($data);
+    
 
-            $notification_courses = collect($data['notification_courses'])->mapWithKeys(function ($notification_courses) {
-                return [$notification_courses['id'] => []];
+            $notification_courses = collect($data['courses'])->mapWithKeys(function ($notification_course) {
+                return [$notification_course['id'] => []];
             });
             
-            $notifications->notifications()->sync($notification_courses);
-            
-            broadcast(new NotificationEvent($notifications));
-
-            return response()->json(['data' => $notifications, 'message' => 'Tạo mới thành công'], 201);
+            $notification->notification_courses()->sync($notification_courses);
+    
+            broadcast(new NotificationEvent($notification));
+    
+            return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
+    
     /**
      * Display the specified resource.
      */

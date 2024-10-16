@@ -15,4 +15,8 @@ class Course extends Model
         'start_date',
         'end_date'
     ];
+
+    public function notifications() {
+        return $this->belongsToMany(Notification::class, 'notification_courses', 'course_id', 'notification_id');
+    }
 }

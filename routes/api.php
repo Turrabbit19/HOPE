@@ -39,8 +39,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     Route::prefix('admin')->group(function () {
     Route::apiResource('roles', ApiRoleController::class);
     Route::apiResource('users', ApiUserController::class);
-    Route::apiResource('students', ApiStudentController::class);
-    Route::apiResource('teachers', ApiTeacherController::class);
+    // Route::apiResource('students', ApiStudentController::class);
+    // Route::apiResource('teachers', ApiTeacherController::class);
     Route::apiResource('courses', ApiCourseController::class);
     Route::apiResource('semesters', ApiSemesterController::class);
     Route::apiResource('majors', ApiMajorController::class);
@@ -60,5 +60,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     Route::get('/subject/classrooms/{id}', [ApiSubjectController::class, 'getAllClassroom']);
     Route::post('/subject/classrooms/add/{id}', [ApiSubjectController::class, 'addClassroom']); // Thêm nhiều bản ghi
 
+    // test api export file excel students + teachers
+    Route::get('export-students', [ApiUserController::class, 'exportStudent']);
     // });
 });

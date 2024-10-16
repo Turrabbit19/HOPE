@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Exports\StudentExport;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ApiUserController extends Controller
 {
@@ -306,5 +308,9 @@ class ApiUserController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function exportStudent(){
+        return Excel::download(new StudentExport, 'students.xlsx');
     }
 }

@@ -16,7 +16,7 @@ import moment from "moment";
 
 const { Option } = Select;
 
-const Testing = ({ userData }) => {
+const UserUpdate = ({ userData }) => {
     const [role, setRole] = useState("");
 
     useEffect(() => {
@@ -73,7 +73,7 @@ const Testing = ({ userData }) => {
                             { type: "email", message: "Email không hợp lệ!" },
                         ]}
                     >
-                        <Input placeholder="Nhập email" disabled />
+                        <Input placeholder="Nhập email" />
                     </Form.Item>
 
                     {/* Số điện thoại */}
@@ -290,4 +290,4 @@ const Testing = ({ userData }) => {
     );
 };
 
-export default Testing;
+export default UserUpdate;

@@ -32,7 +32,7 @@ const UserAdd = () => {
             layout="vertical"
             onFinish={onFinish}
             initialValues={{ gender: true }}
-            style={{ maxWidth: 800, margin: "0 auto" }}
+            style={{ maxWidth: 1000, margin: "0 auto" }}
         >
             <h2 className="syllabus-title">Thêm Mới User</h2>
 

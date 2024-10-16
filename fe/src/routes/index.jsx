@@ -46,6 +46,7 @@ import UserAdd from "../pages/admin/userManager/add/page";
 import DetailSubject from "../pages/admin/subjects/detail/page";
 import ListSection from "../pages/admin/section/list/page";
 import ListSections from "../pages/admin/section/list/page";
+import UserUpdate from "../pages/admin/userManager/update/page";
 
 const Router = createBrowserRouter([
     {
@@ -301,6 +302,10 @@ const Router = createBrowserRouter([
             {
                 path: "list-users/add",
                 element: <UserAdd />,
+            },
+            {
+                path: "list-users/update/:id",
+                element: <UserUpdate />,
             },
         ],
     },

@@ -14,6 +14,7 @@ import {
     UserOutlined,
     InfoCircleOutlined,
     PlusOutlined,
+    EditOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -184,7 +185,7 @@ const ListUser = () => {
             title: "Hành Động",
             key: "actions",
             render: (text, record) => (
-                <>
+                <div style={{ display: "flex", gap: "10px" }}>
                     <Button
                         type="link"
                         icon={<InfoCircleOutlined />}
@@ -201,6 +202,10 @@ const ListUser = () => {
                     >
                         Chi tiết
                     </Button>
+
+                    <Button type="link" icon={<EditOutlined />}>
+                        <Link to={`update/${record.id}`}>Sửa</Link>
+                    </Button>
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa tài khoản này?"
                         onConfirm={() => handleDelete(record)} // Xóa tài khoản
@@ -209,7 +214,7 @@ const ListUser = () => {
                     >
                         <Button type="link" icon={<DeleteOutlined />} />
                     </Popconfirm>
-                </>
+                </div>
             ),
         };
 
@@ -217,7 +222,7 @@ const ListUser = () => {
     };
 
     return (
-        <div>
+        <div style={{ padding: "0 20px" }}>
             <div className="col-12 pb-8">
                 <div className="col-12 justify-between flex">
                     <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
@@ -246,6 +251,7 @@ const ListUser = () => {
                 columns={getColumns("classManager")}
                 rowKey="id"
                 pagination={false}
+                style={{ marginBottom: "20px" }}
             />
 
             {/* Tài Khoản Giảng Viên */}
@@ -255,6 +261,7 @@ const ListUser = () => {
                 columns={getColumns("teachers")}
                 rowKey="id"
                 pagination={false}
+                style={{ marginBottom: "20px" }}
             />
 
             {/* Tài Khoản Học Viên */}
@@ -264,6 +271,7 @@ const ListUser = () => {
                 columns={getColumns("students")}
                 rowKey="id"
                 pagination={false}
+                style={{ marginBottom: "20px" }}
             />
 
             {/* Modal hiển thị chi tiết tài khoản */}
@@ -363,7 +371,7 @@ const ListUser = () => {
                                 <Descriptions.Item label="Khóa Học">
                                     {selectedRecord.course}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Học Kỳ Hiện Tại">
+                                <Descriptions.Item label="Học Ký Hiện Tại">
                                     {selectedRecord.current_semester}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Trạng Thái">

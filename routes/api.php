@@ -57,3 +57,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::apiResource('schedules', ApiScheduleController::class);
     // });
 });
+Route::get('/major/subjects/{id}', [ApiMajorController::class, 'getSubjectsByMajor']);

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Major;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\Major;
+use App\Models\MajorSubject;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ApiMajorController extends Controller
 {
@@ -90,4 +91,25 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    public function getSubjectsByMajor(string $majorId) {
+        try {
+            
+            $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject') ->get();
+    
+            $data = $majorSubjects->map(function ($majorSubject) {
+                return [
+                    'id' => $majorSubject->subject->id,
+                    'name' => $majorSubject->subject->name,
+                    'description' => $majorSubject->subject->description,
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy chuyên ngành với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
+        }
+    }
+    
 }

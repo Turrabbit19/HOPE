@@ -17,12 +17,12 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Course::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Major::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Semester::class)->constrained()->onDelete('cascade');
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
+            $table->tinyInteger('current_semester')->default(1);
             $table->string('student_code')->unique();
-            $table->tinyInteger('status');
+            $table->enum('status', [0, 1, 2])->default(0); // 'Đang học', 'Bảo lưu', 'Hoàn thành'
             $table->softDeletes();
             $table->timestamps();
         });

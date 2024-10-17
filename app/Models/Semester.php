@@ -9,19 +9,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Semester extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $fillable = [
         'name',
-        'number',
-        'course_id',
         'start_date',
         'end_date',
+        'status',
     ];
 
-    public function course() {
-        return $this->belongsTo(Course::class);
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'course_semesters')
+                    ->withPivot('order');
     }
-    public function plan() {
-        return $this->belongsTo(Plan::class);
-    }
+
 }

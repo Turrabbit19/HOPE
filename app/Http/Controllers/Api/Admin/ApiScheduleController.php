@@ -190,6 +190,7 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+<<<<<<< HEAD
 
     // public function getAllSchedules() {
     //     try {
@@ -221,4 +222,6 @@ class ApiScheduleController extends Controller
     //     }
     // }
     
+=======
+>>>>>>> khanh
 }

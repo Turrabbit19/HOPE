@@ -25,10 +25,16 @@ class ApiSemesterController extends Controller
                     'name' => $semester->name,
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'courses' => $semester->orders->map(function ($order) {
+                        return [
+                            'id' => $order->course->id,
+                            'order' => $order->order,
+                        ];
+                    }),
                     'status' => match($semester->status) {
-                        0 => "Chờ diễn ra",
-                        1 => "Đang diễn ra",
-                        2 => "Kết thúc",
+                        "0" => "Chờ diễn ra",
+                        "1" => "Đang diễn ra",
+                        "2" => "Kết thúc",
                         default => "Không xác định",
                     },
                 ];
@@ -113,18 +119,18 @@ class ApiSemesterController extends Controller
             $data = [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'courses' => $semester->courses->map(function ($course) {
-                        return [
-                            'id' => $course->id,
-                            'name' => $course->name,
-                        ];
-                    }),
                     'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'courses' => $semester->orders->map(function ($order) {
+                        return [
+                            'id' => $order->course->id,
+                            'order' => $order->order,
+                        ];
+                    }),
                     'status' => match($semester->status) {
-                        0 => "Chờ diễn ra",
-                        1 => "Đang diễn ra",
-                        2 => "Kết thúc",
+                        "0" => "Chờ diễn ra",
+                        "1" => "Đang diễn ra",
+                        "2" => "Kết thúc",
                         default => "Không xác định",
                     },
                 ];

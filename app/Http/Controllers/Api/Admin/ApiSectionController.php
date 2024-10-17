@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use Carbon\Carbon;
 use App\Models\Section;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -112,4 +113,32 @@ class ApiSectionController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getNotificationsBySection(string $sectionId)
+{
+    try {
+        // Truy vấn notifications dựa trên section_id và load quan hệ 'sections'
+        $notifications = Notification::where('section_id', $sectionId)->with('sections')->get();
+        
+        // Lọc và định dạng dữ liệu
+        $data = $notifications->map(function ($notification) {
+            return [
+                'id' => $notification->id,
+                'name' => $notification->name,
+                'description' => $notification->description,
+                'time' => $notification->time ? $notification->time->format('Y-m-d H:i:s') : null,
+                'section' => $notification->sections ? $notification->sections->name : null, // Lấy tên của section liên quan
+            ];
+        });
+
+        // Trả về kết quả JSON
+        return response()->json(['data' => $data], 200);
+    } catch (ModelNotFoundException $e) {
+        return response()->json(['error' => 'Không tìm thấy danh mục với ID: ' . $sectionId], 404);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
+    }
+}
+
+    
 }

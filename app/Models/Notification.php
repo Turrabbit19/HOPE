@@ -12,6 +12,10 @@ class Notification extends Model
 
     protected $table = "notifications";
 
+    protected $casts = [
+        'time' => 'datetime',
+    ];
+
     protected $fillable = [
         'section_id',
         'name',
@@ -20,7 +24,7 @@ class Notification extends Model
     ];
 
     public function sections() {
-        return $this->belongsTo(Section::class);
+        return $this->belongsTo(Section::class , 'section_id');
     }
 
     public function notification_courses() {

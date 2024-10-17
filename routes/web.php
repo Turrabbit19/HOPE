@@ -24,14 +24,12 @@ Route::prefix('/')->group( function () {
     Route::get('schedules', function () {
         return view('client.schedule');
     });
-<<<<<<< HEAD
     Route::get('schedules-registers', function () {
         return view('client.schedule-register  ');
     });
     Route::get('users', function () {
         return view('client.user');
     });
-=======
     Route::get('student-details', function () {
         return view('client.student-detail');
     });
@@ -39,5 +37,4 @@ Route::prefix('/')->group( function () {
         return view('client.add-schedule');
     });
 
->>>>>>> khanh
 });

@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     // });
 });
 Route::get('/major/subjects/{id}', [ApiMajorController::class, 'getSubjectsByMajor']);
+Route::get('/section/notifications/{id}', [ApiSectionController::class, 'getNotificationsBySection']);
 
     // test api subject (lesson + classroom)
     Route::get('/subject/lessons/{id}', [ApiSubjectController::class, 'getAllLesson']);

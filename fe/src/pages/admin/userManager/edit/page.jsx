@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Form,
   Input,
@@ -11,8 +11,9 @@ import {
   Col,
   message,
   Card,
+  Image,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import {
   getListCourse,
   getListMajor,
@@ -33,6 +34,7 @@ import {
   getListUser,
   editUser,
 } from "../../../../services/user-service";
+import { uploadMultipleFiles } from "../../../../utils/upload";
 
 const UserEdit = () => {
   const [role, setRole] = useState(""); // Không có vai trò nào chọn ban đầu
@@ -42,6 +44,9 @@ const UserEdit = () => {
   const [user, setUser] = useState({});
   const params = useParams();
   const navigate = useNavigate();
+  const [avatar, setAvatar] = useState(null)
+  const [isHovered, setIsHovered] = useState(false);
+  const fileInputRef = useRef()
   useEffect(() => {
     getListCourse().then((res) => {
       setListCourse(res.data.data);
@@ -117,8 +122,12 @@ const UserEdit = () => {
   const onFinish = async (values) => {
     try {
       values.dob = values.dob.format("YYYY-MM-DD HH:mm:ss");
-      console.log(values);
-      const user = await editUser(params.id, {
+      const uploadResults = await uploadMultipleFiles(
+        'images',
+        URL.createObjectURL(avatar),
+        '/public'
+     )
+      await editUser(params.id, {
         ...values,
         role_id: roleNumber,
         gender: values.gender === "Name",
@@ -128,6 +137,7 @@ const UserEdit = () => {
         student_current_semester: 1,
         student_status: 1,
         teacher_status: 1,
+        avatar: uploadResults[0]?.data?.fullPath ?? null
       });
       message.success(`Đã sửa khoản thành công`);
       navigate("/admin/list-users");
@@ -241,11 +251,61 @@ const UserEdit = () => {
               </Radio.Group>
             </Form.Item>
             {/* Avatar Upload */}
-            <Form.Item label="Avatar" name="avatar">
-              <Upload listType="picture" maxCount={1}>
-                <Button icon={<UploadOutlined />}>Tải lên Avatar</Button>
-              </Upload>
-            </Form.Item>{" "}
+            <Form.Item
+              label="Avatar"
+              name="avatar"
+            >
+              <Button onClick={() => fileInputRef?.current?.click()} icon={<UploadOutlined />}>Tải lên Avatar</Button>
+              <input style={{display: 'none'}} ref={fileInputRef} onChange={(e) => setAvatar(e.target.files[0] ?? null)} type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" />
+              {avatar && (
+                <div
+                  style={{ position: 'relative', display: 'inline-block' }}
+                  onMouseEnter={() => setIsHovered(true)}
+                  onMouseLeave={() => setIsHovered(false)}
+                >
+                  <Image
+                    alt={'avatar'}
+                    src={URL.createObjectURL(avatar)}
+                    preview={false}
+                    style={{
+                      width: '140px',
+                      height: '140px',
+                      aspectRatio: '1/1',
+                      objectFit: 'cover',
+                      borderRadius: '6px',
+                      margin: '6px 0px 10px',
+                    }}
+                  />
+                  {isHovered && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '6px',
+                        left: 0,
+                        width: '140px',
+                        height: '140px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: '6px',
+                      }}
+                    >
+                      <DeleteOutlined
+                        style={{ fontSize: '16px', color: 'white', cursor: 'pointer' }}
+                        onClick={() => {
+                          setAvatar(null);
+                          setIsHovered(false)
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </Form.Item>
             {/* Vai trò */}
             <Form.Item
               label="Vai Trò"

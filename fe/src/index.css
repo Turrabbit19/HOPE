@@ -1707,3 +1707,7 @@ strong {
 }
 
 /*# sourceMappingURL=index.css.map */
+
+.anticon.anticon-eye {
+  display: none !important;
+}

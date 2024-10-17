@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Table,
   Avatar,
@@ -25,6 +25,8 @@ import {
   getTeacher,
   getStudent,
   getListUser,
+  getListMajor,
+  getListCourse,
 } from "../../../../services/user-service";
 // Dữ liệu mẫu
 
@@ -67,6 +69,7 @@ const ListUser = () => {
     teachers: [],
     students: [],
   });
+  const [studentPagination, setStudentPagination] = useState(null)
 
   const navigate = useNavigate();
 
@@ -80,8 +83,10 @@ const ListUser = () => {
         teachers: res.data["Giảng viên"].data,
         students: res.data["Sinh viên"].data,
       });
+      setStudentPagination(res.data["Sinh viên"].pagination)
     });
   }, []);
+
   // Hàm hiển thị thông tin chi tiết của tài khoản
   const handleDetailClick = (record, type) => {
     setSelectedRecord(record);
@@ -113,7 +118,9 @@ const ListUser = () => {
         dataIndex: "avatar",
         key: "avatar",
         render: (avatar) => (
-          <Avatar src={avatar} icon={!avatar && <UserOutlined />} />
+          <Avatar 
+          src={`https://qrrhjldgdidplxjzixkd.supabase.co/storage/v1/object/public/${avatar}` || <UserOutlined />}
+          icon={!avatar && <UserOutlined />} />
         ),
       },
       {
@@ -214,7 +221,7 @@ const ListUser = () => {
         dataSource={accounts.teachers}
         columns={getColumns("teachers")}
         rowKey="id"
-        pagination={false}
+        pagination={true}
       />
 
       {/* Tài Khoản Học Viên */}
@@ -223,7 +230,7 @@ const ListUser = () => {
         dataSource={accounts.students}
         columns={getColumns("students")}
         rowKey="id"
-        pagination={false}
+        pagination={true}
       />
 
       {/* Modal hiển thị chi tiết tài khoản */}
@@ -254,7 +261,7 @@ const ListUser = () => {
           >
             <Avatar
               size={100}
-              src={userDetail.avatar || <UserOutlined />}
+              src={`https://qrrhjldgdidplxjzixkd.supabase.co/storage/v1/object/public/${userDetail?.avatar}` || <UserOutlined />}
               style={{ marginRight: 20 }}
             />
             <div>
@@ -288,13 +295,13 @@ const ListUser = () => {
             {recordType === "teacher" && (
               <>
                 <Descriptions.Item label="Mã Giảng Viên">
-                  {userDetail.teacher_code}
+                  {userDetail?.teacher?.teacher_code ?? ''}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngành Học">
-                  {userDetail.major}
+                  {userDetail.teacher?.major_name}
                 </Descriptions.Item>
                 <Descriptions.Item label="Trạng Thái">
-                  {getTeacherStatus(userDetail.status)}
+                  {(userDetail.teacher?.status)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày Sinh">
                   {userDetail.dob}
@@ -315,19 +322,19 @@ const ListUser = () => {
             {recordType === "student" && (
               <>
                 <Descriptions.Item label="Mã Sinh Viên">
-                  {userDetail.student_code}
+                  {userDetail?.student?.student_code}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngành Học">
-                  {userDetail.major}
+                  {userDetail.student?.major_name}
                 </Descriptions.Item>
                 <Descriptions.Item label="Khóa Học">
-                  {userDetail.course}
+                  {userDetail.student?.course_name}
                 </Descriptions.Item>
                 <Descriptions.Item label="Học Kỳ Hiện Tại">
-                  {userDetail.current_semester}
+                  {userDetail.student?.current_semester}
                 </Descriptions.Item>
                 <Descriptions.Item label="Trạng Thái">
-                  {getStudentStatus(userDetail.status)}
+                  {(userDetail.student?.status)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Phụ Huynh">
                   {userDetail.parent}

@@ -60,7 +60,7 @@ export const AddUserModal = ({
             style={{ border: "1px solid #f0f0f0" }}
           >
             <Space>
-              <Avatar />
+              <Avatar  />
               <div>
                 <div className="text-primary text-base font-medium">
                   Nguyễn Văn A

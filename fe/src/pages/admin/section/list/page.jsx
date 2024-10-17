@@ -483,7 +483,7 @@ const ListSections = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-6">
+                                                {/* <div className="flex gap-6">
                                                     <p className="text-[#9E9E9E]">
                                                         Ngày khởi tạo:
                                                     </p>
@@ -500,7 +500,7 @@ const ListSections = () => {
                                                         {section.startDate ||
                                                             "N/A"}
                                                     </p>
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
 

@@ -63,16 +63,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::apiResource('classrooms', ApiClassroomController::class);
         Route::apiResource('schedules', ApiScheduleController::class);
     });
-// });
-
-    // test api subject (lesson + classroom)
-    Route::get('/subject/lessons/{id}', [ApiSubjectController::class, 'getAllLesson']);
-    Route::post('/subject/lessons/add/{id}', [ApiSubjectController::class, 'addLesson']); // Thêm nhiều bản ghi
-    Route::get('/subject/classrooms/{id}', [ApiSubjectController::class, 'getAllClassroom']);
-    Route::post('/subject/classrooms/add/{id}', [ApiSubjectController::class, 'addClassroom']); // Thêm nhiều bản ghi
 
     // test api export file excel students + teachers
     Route::get('export-students', [ApiUserController::class, 'exportStudent']);
     Route::get('export-teachers', [ApiUserController::class, 'exportTeacher']);
-    // });
+
+    // test api import file excel students + teachers
+    Route::post('import-students', [ApiUserController::class, 'importStudent']);
+
 // });

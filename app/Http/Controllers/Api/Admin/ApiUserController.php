@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Exports\StudentExport;
 use App\Exports\TeacherExport;
 use App\Http\Controllers\Controller;
+use App\Imports\StudentImport;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -342,6 +343,16 @@ class ApiUserController extends Controller
 
     public function exportStudent(){
         return Excel::download(new StudentExport, 'students.xlsx');
+    }
+
+    public function importStudent(Request $request){
+        try {
+            Excel::import(new StudentImport, $request->file('file'));
+        
+            return response()->json(['message' => 'Dữ liệu được import thành công'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function exportTeacher(){

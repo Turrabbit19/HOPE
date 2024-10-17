@@ -130,14 +130,9 @@ class ApiUserController extends Controller
 
         try {
             $data = $validator->validated();
-            
-            $avatarPath = null;
-            if ($request->hasFile('avatar')) {
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            }
 
             $user = User::create([
-                'avatar' => $avatarPath,
+                'avatar' => $data['avatar'],
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],
@@ -261,14 +256,6 @@ class ApiUserController extends Controller
             $user = User::findOrFail($id);
             
             $data = $validator->validated();
-
-            if ($request->hasFile('avatar')) {
-                if ($user->avatar) {
-                    Storage::disk('public')->delete($user->avatar);
-                }
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-                $data['avatar'] = $avatarPath;
-            }
             
             $user->update($data);
 

@@ -69,14 +69,9 @@ class ApiTeacherController extends Controller
 
         try {
             $data = $validator->validated();
-            
-            $avatarPath = null;
-            if ($request->hasFile('avatar')) {
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            }
 
             $user = User::create([
-                'avatar' => $avatarPath,
+                'avatar' => $data['avatar'],
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],
@@ -95,7 +90,7 @@ class ApiTeacherController extends Controller
             ]);    
 
             $teacherData = [
-                'avatar' => $avatarPath,
+                'avatar' => $data['avatar'],
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
@@ -174,16 +169,8 @@ class ApiTeacherController extends Controller
 
             $teacher = Teacher::findOrFail($id);
             $user = $teacher->user;
-
-            $avatarPath = $user->avatar; 
-            if ($request->hasFile('avatar')) {
-                if ($user->avatar) {
-                    Storage::disk('public')->delete($user->avatar);
-                }
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            }
             
-            $user->update(array_filter(array_merge($data, ['avatar' => $avatarPath])));
+            $user->update(array_filter(array_merge($data)));
 
             $teacher->update(array_filter([
                 'major_id' => $data['teacher_major_id'] ?? $teacher->major_id,
@@ -191,7 +178,7 @@ class ApiTeacherController extends Controller
             ]));
 
             $teacherData = [
-                'avatar' => $avatarPath,
+                'avatar' => $data['avatar'],
                 'name' => $teacher->user->name,
                 'email' => $teacher->user->email,
                 'phone' => $teacher->user->phone,

@@ -102,7 +102,7 @@ class ApiUserController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'nullable|file|mimes:jpeg,png,jpg|max:5120', 
+            'avatar' => 'nullable|string', 
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:10|unique:users',
@@ -232,7 +232,7 @@ class ApiUserController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'nullable|file|mimes:jpeg,png,jpg|max:5120', 
+            'avatar' => 'nullable|string', 
             'name' => 'sometimes|string|max:100',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
@@ -327,7 +327,7 @@ class ApiUserController extends Controller
             }
             $user->delete();
 
-            return response()->json(['message' => 'Xóa mềm thành công'], 200);
+            return response()->json(['message' => 'Xóa thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tài khoản với ID: ' . $id], 404);
         } catch (\Exception $e) {

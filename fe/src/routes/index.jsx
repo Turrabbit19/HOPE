@@ -46,6 +46,7 @@ import UserAdd from "../pages/admin/userManager/add/page";
 import DetailSubject from "../pages/admin/subjects/detail/page";
 import ListSections from "../pages/admin/section/list/page";
 import UserUpdate from "../pages/admin/userManager/edit/page";
+import SyllabusDetail from "../pages/admin/syllabus/detail/page";
 
 const Router = createBrowserRouter([
     {
@@ -85,6 +86,10 @@ const Router = createBrowserRouter([
             {
                 path: "list-syllabus/edit/:id",
                 element: <SyllabusEdit />,
+            },
+            {
+                path: "list-syllabus/detail/:id",
+                element: <SyllabusDetail />,
             },
             {
                 path: "list",

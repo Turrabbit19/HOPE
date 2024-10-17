@@ -196,6 +196,9 @@ const SyllabusList = () => {
                                             <EditOutlined />
                                             Sửa Thông Tin
                                         </Link>
+                                        <Link to={`detail/${syllabus.id}`}>
+                                            detail
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

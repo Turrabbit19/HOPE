@@ -32,9 +32,9 @@ class Schedule extends Model
         return $this->belongsTo(CourseSemester::class);
     }
 
-    public function majorSubject()
+    public function plan()
     {
-        return $this->belongsTo(MajorSubject::class);
+        return $this->belongsTo(Plan::class);
     }
 
     public function classroom()

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ApiUserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,4 +30,5 @@ Route::prefix('/')->group( function () {
     Route::get('add-schedules', function () {
         return view('client.add-schedule');
     });
+
 });

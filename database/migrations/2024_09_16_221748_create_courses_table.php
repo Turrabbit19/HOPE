@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(Plan::class)->constrained()->cascadeOnDelete();
             $table->date('start_date');
             $table->date('end_date');
-            $table->tinyInteger('status')->default(0); // 0: Chờ diễn ra, 1: Đang diễn ra, 2: Kết thúc
+            $table->enum('status', [0, 1, 2])->default(0); // 0: Chờ diễn ra, 1: Đang diễn ra, 2: Kết thúc
             $table->softDeletes();
             $table->timestamps();
         });

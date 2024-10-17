@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Lesson;
+use App\Models\Major;
 use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -13,10 +14,12 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiSubjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $subjects = Subject::paginate(9);
+            $perPage = $request->input('per_page', 9); 
+
+            $subjects = Subject::paginate($perPage);
 
             $data = collect($subjects->items())->map(function ($subject) {
                 return [
@@ -99,7 +102,7 @@ class ApiSubjectController extends Controller
     public function show(string $id)
     {
         try {
-            $subject = Subject::findOrFail($id);
+            $subject = Subject::with('majors')->findOrFail($id);
             $data = [
                 'id' => $subject->id,
                 'code' => $subject->code,
@@ -140,8 +143,8 @@ class ApiSubjectController extends Controller
         }
 
         try {
-            $subject = Subject::findOrFail($id);
-
+            $subject = Subject::with('majors')->findOrFail($id);
+            
             $data = $validator->validated();
             $subject->update($data);
 
@@ -149,11 +152,10 @@ class ApiSubjectController extends Controller
                 $majors = collect($data['majors'])->mapWithKeys(function ($major) {
                     return [$major['id'] => []];
                 });
-
                 $subject->majors()->sync($majors);
             }
 
-            return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
+            return response()->json(['data' => $data, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
@@ -174,76 +176,57 @@ class ApiSubjectController extends Controller
         }
     }
 
-    public function getAllLesson(string $id)
-    {
+    public function getAllLessons(string $id) {
         try {
             $lessons = Lesson::where('subject_id', $id)->get();
 
-            $data = $lessons->map(function ($lesson) {
+            $data = $lessons->map(function ($lesson){
                 return [
                     'id' => $lesson->id,
                     'name' => $lesson->name,
-                    'description' => $lesson->description,
+                    'description' =>$lesson->description,
                 ];
             });
 
             return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function addLesson(string $id, Request $request)
-    {
-        $data = $request->input('lessons');
-        $success = [];
-        $errors = [];
-
-        if (is_null($data) || !is_array($data)) {
-            return response()->json(['error' => 'Dữ liệu không phù hợp với định dạng'], 400);
+    public function addLessons(Request $request, string $id) {
+        $validator = Validator::make($request->all(), [
+            'lessons' => 'required|array',
+            'lessons.*.name' => 'required|string|max:50',
+            'lessons.*.description' => 'required',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
         }
-
-        foreach ($data as $index => $value) {
-            $validator = Validator::make($value, [
-                'name' => 'required|string|max:50',
-                'description' => 'required'
-            ]);
-
-            if ($validator->fails()) {
-                $errors[$index] = $validator->errors();
-                continue;
+    
+        try {
+            $validatedData = $validator->validated();
+            $lessons = [];
+    
+            foreach ($validatedData['lessons'] as $lessonData) {
+                $lessonData['subject_id'] = $id; 
+                $lesson = Lesson::create($lessonData);
+                $lessons[] = $lesson;
             }
-
-            try {
-                $value['subject_id'] = $id; 
-
-                $lesson = Lesson::create($value);
-                $success[] = $lesson; 
-            } catch (\Exception $e) {
-                return response()->json([
-                    'error' => 'Tạo mới thất bại cho một bản ghi',
-                    'message' => $e->getMessage(),
-                ], 500);
-            }
+    
+            return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-
-        if (!empty($errors)) {
-            return response()->json(['errors' => $errors], 400);
-        }
-
-        return response()->json([
-            'data' => $success,
-            'message' => 'Tạo mới thành công tất cả'
-        ], 201);
     }
 
-
-    public function getAllClassroom(string $id)
-    {
+    public function getAllClassrooms(string $id) {
         try {
             $classrooms = Classroom::where('subject_id', $id)->get();
 
-            $data = $classrooms->map(function ($classroom) {
+            $data = $classrooms->map(function($classroom) {
                 return [
                     'id' => $classroom->id,
                     'code' => $classroom->code,
@@ -252,46 +235,38 @@ class ApiSubjectController extends Controller
                 ];
             });
 
-            return response()->json(['data' => $data], 200);
+            return response()->json(['data' =>$data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function addClassroom(string $id, Request $request){
-        $data = $request->input('classrooms');
-        $errors = [];
-        $success = [];
-
-        foreach($data as $index => $value){
-            $validator = Validator::make($value, [
-                'code' => 'required|string|max:10|unique:classrooms',
-                'max_students' => 'required|integer|min:1',
-                'status' => 'boolean',
-            ]);
+    public function addClassrooms(Request $request, string $id) {
+        $validator = Validator::make($request->all(), [
+            'classrooms' => 'required|array',
+            'classrooms.*.code' => 'required|string|max:10|unique:classrooms',
+            'classrooms.*.max_students' => 'required||integer|min:1',
+            'classrooms.*.status' => 'boolean',
+        ]);
     
-            if ($validator->fails()) {
-                $errors[$index] = $validator->errors();
-                continue;
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+    
+        try {
+            $validatedData = $validator->validated();
+            $classrooms = [];
+    
+            foreach ($validatedData['classrooms'] as $classroomData) {
+                $classroomData['subject_id'] = $id; 
+                $classroom = Classroom::create($classroomData);
+                $classrooms[] = $classroom;
             }
     
-            try {
-                $value['subject_id'] = $id;
-                $classroom = Classroom::create($value);
-                $success[] = $classroom;
-               
-            } catch (\Exception $e) {
-                return response()->json([
-                    'error' => 'Tạo mới thất bại một bản ghi', 
-                    'message' => $e->getMessage()
-                ], 500);
-            }
+            return response()->json(['data' => $classrooms, 'message' => 'Tạo mới thành công'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-        if(!empty($errors)){
-            return response()->json(['errors' => $errors], 400);
-        }
-        return response()->json([
-            'data' => $success, 'message' => 'Tạo mới thành công tất cả'
-            ], 201);
     }
 }

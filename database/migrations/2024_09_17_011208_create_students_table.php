@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
-            $table->tinyInteger('current_semester');
+            $table->tinyInteger('current_semester')->default(1);
             $table->string('student_code')->unique();
             $table->enum('status', [0, 1, 2])->default(0); // 'Đang học', 'Bảo lưu', 'Hoàn thành'
             $table->softDeletes();

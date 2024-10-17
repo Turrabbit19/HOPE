@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
     Button,
     Popconfirm,
     Modal,
     Form,
     Input,
-    Space,
     Pagination,
     message,
     Tooltip,
@@ -17,258 +16,377 @@ import {
     PlusCircleOutlined,
     BugOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import moment from "moment";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import CSS cho React Quill
+import instance from "../../config/axios";
+import moment from "moment";
 
 const ListSections = () => {
+    // Khai báo các state cần thiết
     const [sections, setSections] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // State cho các modal
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-    const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] =
-        useState(false);
     const [isNotificationModalVisible, setIsNotificationModalVisible] =
         useState(false);
+    const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] =
+        useState(false);
+    const [isEditNotificationModalVisible, setIsEditNotificationModalVisible] =
+        useState(false);
+
+    // State cho việc chỉnh sửa và lựa chọn
     const [editingSection, setEditingSection] = useState(null);
-    const [selectedSection, setSelectedSection] = useState(null); // Danh mục đã chọn
-    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedSection, setSelectedSection] = useState(null);
+    const [notifications, setNotifications] = useState([]);
+    const [editingNotification, setEditingNotification] = useState(null);
+
+    const [description, setDescription] = useState("");
+    const [expandedNotificationId, setExpandedNotificationId] = useState(null);
+
+    // Khởi tạo form của Ant Design
     const [form] = Form.useForm();
     const [notificationForm] = Form.useForm();
-    const [description, setDescription] = useState("");
-    const [notifications, setNotifications] = useState([]); // Thông báo thuộc danh mục
+    const [editForm] = Form.useForm();
 
+    // State cho phân trang
+    const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+    const pageSize = 4; // Số danh mục hiển thị mỗi trang
+
+    // Lấy danh sách khóa học
     useEffect(() => {
-        const fetchSections = async () => {
-            const data = [
-                {
-                    id: 1,
-                    sectionName: "Học Tập",
-                    creationDate: "2024-01-01",
-                    startDate: "2024-01-05",
-                    status: "Đang hoạt động",
-                },
-                {
-                    id: 2,
-                    sectionName: "Học Phí",
-                    creationDate: "2024-02-01",
-                    startDate: "2024-02-05",
-                    status: "Ngừng hoạt động",
-                },
-                {
-                    id: 3,
-                    sectionName: "Thi Cử",
-                    creationDate: "2024-03-01",
-                    startDate: "2024-03-05",
-                    status: "Đang hoạt động",
-                },
-            ];
-            setSections(data);
-        };
-
-        fetchSections();
+        // Giả lập việc lấy dữ liệu khóa học từ API
+        setCourses([
+            { id: 1, name: "Khóa Học 18.1" },
+            { id: 2, name: "Khóa Học 17.3" },
+        ]);
     }, []);
 
-    const handleSearch = (value) => {
+    // Lấy danh sách danh mục
+    const fetchSections = useCallback(async () => {
+        try {
+            const response = await instance.get("admin/sections");
+            const sectionsData =
+                response.data.data || response.data.sections || response.data;
+
+            if (Array.isArray(sectionsData)) {
+                setSections(sectionsData);
+            } else {
+                console.error("Dữ liệu danh mục không hợp lệ:", sectionsData);
+                setSections([]);
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải danh mục:", error);
+            message.error("Không thể tải danh mục, vui lòng thử lại!");
+        }
+    }, []);
+
+    // Gọi hàm fetchSections khi component được mount
+    useEffect(() => {
+        fetchSections();
+    }, [fetchSections]);
+
+    // Hàm xử lý tìm kiếm danh mục
+    const handleSearch = useCallback((value) => {
         setSearchTerm(value.toLowerCase());
+    }, []);
+
+    // Lọc danh mục dựa trên từ khóa tìm kiếm
+    const filteredSections = useMemo(() => {
+        return sections.filter((section) =>
+            (section.name || section.sectionName || "")
+                .toLowerCase()
+                .includes(searchTerm)
+        );
+    }, [sections, searchTerm]);
+
+    // Reset trang hiện tại khi tìm kiếm thay đổi
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    // Tính toán các danh mục sẽ hiển thị trên trang hiện tại
+    const currentItems = useMemo(() => {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return filteredSections.slice(startIndex, endIndex);
+    }, [filteredSections, currentPage, pageSize]);
+
+    // Hàm xử lý khi thay đổi trang
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
     };
 
-    const filteredSections = sections.filter((section) =>
-        section.sectionName.toLowerCase().includes(searchTerm)
+    // Hiển thị modal chỉnh sửa danh mục
+    const showEditModal = useCallback(
+        (section) => {
+            setEditingSection(section);
+            form.setFieldsValue({
+                name: section.name || section.sectionName,
+            });
+            setIsEditModalVisible(true);
+        },
+        [form]
     );
 
-    const showEditModal = (section) => {
-        setEditingSection(section);
-        form.setFieldsValue({
-            sectionName: section.sectionName,
-        });
-        setIsEditModalVisible(true);
-    };
-
-    const showAddModal = () => {
+    // Hiển thị modal thêm mới danh mục
+    const showAddModal = useCallback(() => {
         setEditingSection(null);
         form.resetFields();
         setIsAddModalVisible(true);
-    };
+    }, [form]);
 
+    // Thêm mới danh mục
+    const addCategory = useCallback(
+        async (values) => {
+            try {
+                await instance.post("admin/sections", {
+                    name: values.name,
+                });
+                await fetchSections();
+                message.success("Thêm danh mục thành công!");
+                handleModalCancel();
+            } catch (error) {
+                console.error("Lỗi khi thêm danh mục:", error);
+                message.error("Không thể thêm danh mục, vui lòng thử lại!");
+            }
+        },
+        [fetchSections]
+    );
+
+    // Chỉnh sửa danh mục
+    const editCategory = useCallback(
+        async (values) => {
+            try {
+                await instance.put(`admin/sections/${editingSection.id}`, {
+                    name: values.name,
+                });
+                await fetchSections();
+                message.success("Cập nhật danh mục thành công!");
+                handleModalCancel();
+            } catch (error) {
+                console.error("Lỗi khi cập nhật danh mục:", error);
+                message.error("Không thể cập nhật danh mục, vui lòng thử lại!");
+            }
+        },
+        [editingSection, fetchSections]
+    );
+
+    // Xử lý khi nhấn nút OK trong modal thêm/sửa danh mục
     const handleModalOk = async () => {
         try {
             const values = await form.validateFields();
             if (editingSection) {
-                // Sửa danh mục
-                setSections(
-                    sections.map((section) =>
-                        section.id === editingSection.id
-                            ? { ...section, sectionName: values.sectionName }
-                            : section
-                    )
-                );
-                message.success("Cập nhật danh mục thành công!");
+                // Nếu đang chỉnh sửa danh mục
+                await editCategory(values);
             } else {
-                // Thêm mới danh mục
-                setSections([
-                    ...sections,
-                    {
-                        id: sections.length + 1,
-                        sectionName: values.sectionName,
-                        creationDate: moment().format("YYYY-MM-DD"),
-                        startDate: moment().format("YYYY-MM-DD"),
-                        status: "Đang hoạt động",
-                    },
-                ]);
-                message.success("Thêm danh mục thành công!");
+                // Nếu đang thêm mới danh mục
+                await addCategory(values);
             }
-            handleModalCancel();
         } catch (errorInfo) {
-            console.log("Failed:", errorInfo);
+            console.error("Lỗi khi xác thực form:", errorInfo);
             message.error("Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
+    // Hủy modal thêm/sửa danh mục
     const handleModalCancel = () => {
         setIsEditModalVisible(false);
         setIsAddModalVisible(false);
         form.resetFields();
     };
 
-    const confirmDelete = (id) => {
-        setSections(sections.filter((section) => section.id !== id));
-        message.success("Xóa danh mục thành công!"); // Thông báo xóa thành công
-    };
+    // Xác nhận xóa danh mục
+    const confirmDelete = useCallback(
+        async (id) => {
+            try {
+                await instance.delete(`admin/sections/${id}`);
+                await fetchSections();
+                message.success("Xóa danh mục thành công!");
+            } catch (error) {
+                console.error("Lỗi khi xóa danh mục:", error);
+                message.error("Không thể xóa danh mục, vui lòng thử lại!");
+            }
+        },
+        [fetchSections]
+    );
 
-    const showAddNotificationModal = () => {
-        notificationForm.resetFields();
-        setDescription(""); // Reset description khi mở popup
-        setIsAddNotificationModalVisible(true);
-    };
+    // Hiển thị danh sách thông báo của một danh mục
+    const showNotifications = useCallback(async (section) => {
+        setSelectedSection(section);
+        try {
+            const response = await instance.get(
+                `admin/section/${section.id}/notifications`
+            );
+            const notificationsData =
+                response.data.data ||
+                response.data.notifications ||
+                response.data;
+            setNotifications(notificationsData);
+            setIsNotificationModalVisible(true);
+        } catch (error) {
+            console.error("Lỗi khi tải thông báo:", error);
+            message.error("Không thể tải thông báo, vui lòng thử lại!");
+        }
+    }, []);
 
-    const handleAddNotification = async () => {
+    // Hiển thị modal thêm mới thông báo
+    const showAddNotificationModal = useCallback(
+        (section) => {
+            setSelectedSection(section);
+            notificationForm.resetFields();
+            setDescription("");
+            setIsAddNotificationModalVisible(true);
+        },
+        [notificationForm]
+    );
+
+    // Thêm mới thông báo
+    const handleAddNotification = useCallback(async () => {
         try {
             const values = await notificationForm.validateFields();
             const notificationData = {
-                ...values,
-                description,
-                courses: values.courses, // Lưu thông tin các khóa học đã chọn
+                name: values.name,
+                description: description,
+                section_id: selectedSection.id,
+                courses: values.courses, // Gửi dưới dạng mảng các ID
             };
-            console.log("Notification Data:", notificationData);
+
+            await instance.post(
+                `admin/section/${selectedSection.id}/addNotice`,
+                notificationData
+            );
             message.success("Thêm thông báo thành công!");
             setIsAddNotificationModalVisible(false);
-        } catch (errorInfo) {
-            console.log("Failed:", errorInfo);
-            message.error("Vui lòng điền đầy đủ thông tin!");
+            await showNotifications(selectedSection); // Cập nhật danh sách thông báo
+        } catch (error) {
+            message.error("Không thể thêm thông báo, vui lòng thử lại!");
         }
-    };
+    }, [notificationForm, description, selectedSection, showNotifications]);
 
+    // Hủy modal thêm mới thông báo
     const handleNotificationModalCancel = () => {
         setIsAddNotificationModalVisible(false);
     };
 
-    // Hiển thị danh sách thông báo
-    const showNotifications = (section) => {
-        setSelectedSection(section);
-        setNotifications([
-            {
-                id: 1,
-                title: "Thông báo 1",
-                description: "Chi tiết thông báo 1",
-            },
-            {
-                id: 2,
-                title: "Thông báo 2",
-                description: "Chi tiết thông báo 2",
-            },
-        ]);
-        setIsNotificationModalVisible(true);
-    };
-
+    // Hủy modal danh sách thông báo
     const handleNotificationListCancel = () => {
         setIsNotificationModalVisible(false);
     };
 
     // Cấu hình module cho ReactQuill để hỗ trợ chỉnh sửa nâng cao
-    const quillModules = {
-        toolbar: [
-            [{ font: [] }],
-            [{ header: [1, 2, false] }],
-            ["bold", "italic", "underline", "strike"],
-            [{ color: [] }, { background: [] }],
-            [{ script: "sub" }, { script: "super" }],
-            ["blockquote", "code-block"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            [{ indent: "-1" }, { indent: "+1" }],
-            [{ direction: "rtl" }],
-            [{ align: [] }],
-            ["link", "image", "video"],
-            ["clean"],
-        ],
-    };
+    const quillModules = useMemo(
+        () => ({
+            toolbar: [
+                [{ font: [] }],
+                [{ header: [1, 2, false] }],
+                ["bold", "italic", "underline", "strike"],
+                [{ color: [] }, { background: [] }],
+                [{ script: "sub" }, { script: "super" }],
+                ["blockquote", "code-block"],
+                [{ list: "ordered" }, { list: "bullet" }],
+                [{ indent: "-1" }, { indent: "+1" }],
+                [{ direction: "rtl" }],
+                [{ align: [] }],
+                ["link", "image", "video"],
+                ["clean"],
+            ],
+        }),
+        []
+    );
 
     // Cấu hình format cho ReactQuill để hỗ trợ định dạng phức tạp
-    const quillFormats = [
-        "header",
-        "font",
-        "size",
-        "bold",
-        "italic",
-        "underline",
-        "strike",
-        "blockquote",
-        "list",
-        "bullet",
-        "indent",
-        "link",
-        "image",
-        "video",
-        "color",
-        "background",
-        "align",
-        "script",
-    ];
+    const quillFormats = useMemo(
+        () => [
+            "header",
+            "font",
+            "size",
+            "bold",
+            "italic",
+            "underline",
+            "strike",
+            "blockquote",
+            "list",
+            "bullet",
+            "indent",
+            "link",
+            "image",
+            "video",
+            "color",
+            "background",
+            "align",
+            "script",
+        ],
+        []
+    );
 
-    // SỬA XÓA THÔNG BÁO
-    const [isEditNotificationModalVisible, setIsEditNotificationModalVisible] =
-        useState(false);
-    const [editForm] = Form.useForm();
-    const [editingNotification, setEditingNotification] = useState(null);
+    // Hàm xử lý khi bấm "Xem thêm" trong thông báo
+    const toggleExpanded = useCallback((notificationId) => {
+        setExpandedNotificationId((prevId) =>
+            prevId === notificationId ? null : notificationId
+        );
+    }, []);
 
-    // Khi nhấn vào nút "Sửa"
-    const handleEditNotification = (notification) => {
-        setEditingNotification(notification);
-        editForm.setFieldsValue({
-            title: notification.title,
-            description: notification.description,
-        });
-        setIsEditNotificationModalVisible(true);
-    };
+    // Khi nhấn vào nút "Sửa" thông báo
+    const handleEditNotification = useCallback(
+        (notification) => {
+            setEditingNotification(notification);
+            editForm.setFieldsValue({
+                name: notification.name,
+                description: notification.description,
+                courses: notification.courses.map((course) => course.id), // Đảm bảo đây là mảng các ID
+            });
+            setIsEditNotificationModalVisible(true);
+        },
+        [editForm]
+    );
 
-    // Khi nhấn "Hủy" trong modal sửa
+    // Hủy modal sửa thông báo
     const handleEditNotificationCancel = () => {
         setIsEditNotificationModalVisible(false);
     };
 
-    // Khi nhấn "Cập nhật" để lưu thay đổi
-    const handleUpdateNotification = () => {
-        editForm.validateFields().then((values) => {
-            // Cập nhật thông báo trong danh sách
-            const updatedNotifications = notifications.map((notification) =>
-                notification.id === editingNotification.id
-                    ? { ...notification, ...values }
-                    : notification
+    // Cập nhật thông báo sau khi chỉnh sửa
+    const handleUpdateNotification = useCallback(async () => {
+        try {
+            const values = await editForm.validateFields();
+            const notificationData = {
+                name: values.name,
+                description: values.description,
+                courses: values.courses, // Gửi dưới dạng mảng các ID
+            };
+
+            await instance.put(
+                `admin/notifications/${editingNotification.id}`,
+                notificationData
             );
-            setNotifications(updatedNotifications);
             message.success("Thông báo đã được cập nhật thành công!");
             setIsEditNotificationModalVisible(false);
-        });
-    };
+            await showNotifications(selectedSection); // Cập nhật danh sách thông báo
+        } catch (error) {
+            console.error("Lỗi khi cập nhật thông báo:", error);
+            message.error("Không thể cập nhật thông báo, vui lòng thử lại!");
+        }
+    }, [editForm, editingNotification, selectedSection, showNotifications]);
 
-    // Khi nhấn "Xóa"
-    const handleDeleteNotification = (id) => {
-        const updatedNotifications = notifications.filter(
-            (notification) => notification.id !== id
-        );
-        setNotifications(updatedNotifications);
-        message.success("Thông báo đã được xóa thành công!");
-    };
+    // Xóa thông báo
+    const handleDeleteNotification = useCallback(async (id) => {
+        try {
+            await instance.delete(`admin/notifications/${id}`);
+            message.success("Thông báo đã được xóa thành công!");
+            // Cập nhật danh sách thông báo
+            setNotifications((prevNotifications) =>
+                prevNotifications.filter(
+                    (notification) => notification.id !== id
+                )
+            );
+        } catch (error) {
+            console.error("Lỗi khi xóa thông báo:", error);
+            message.error("Không thể xóa thông báo, vui lòng thử lại!");
+        }
+    }, []);
 
     return (
         <div className="test__list">
@@ -314,8 +432,8 @@ const ListSections = () => {
                         </div>
                     </div>
                     <div className="row row-cols-2 g-3">
-                        {filteredSections.length > 0 ? (
-                            filteredSections.map((section) => (
+                        {currentItems.length > 0 ? (
+                            currentItems.map((section) => (
                                 <div className="col" key={section.id}>
                                     <div className="teaching__card">
                                         <div className="teaching__card-top">
@@ -324,9 +442,10 @@ const ListSections = () => {
                                                     src="/assets/svg/share.svg"
                                                     alt=""
                                                 />
-                                                Thông báo danh mục:{" "}
+                                                Thông báo danh mục:
                                                 <p className="text-red-300 uppercase ml-2 font-bold">
-                                                    {section.sectionName}
+                                                    {section.name ||
+                                                        section.sectionName}
                                                 </p>
                                             </h2>
                                             <Tooltip
@@ -337,8 +456,10 @@ const ListSections = () => {
                                                     icon={
                                                         <PlusCircleOutlined />
                                                     }
-                                                    onClick={
-                                                        showAddNotificationModal
+                                                    onClick={() =>
+                                                        showAddNotificationModal(
+                                                            section
+                                                        )
                                                     }
                                                 />
                                             </Tooltip>
@@ -357,7 +478,8 @@ const ListSections = () => {
                                                             alt="status"
                                                         />
                                                         <span className="text-[#44CC15] text-[12px]">
-                                                            {section.status}
+                                                            {section.status ||
+                                                                "Đang hoạt động"}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -366,7 +488,8 @@ const ListSections = () => {
                                                         Ngày khởi tạo:
                                                     </p>
                                                     <p className="font-bold text-[#000]">
-                                                        {section.creationDate}
+                                                        {section.creationDate ||
+                                                            "N/A"}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-6">
@@ -374,7 +497,8 @@ const ListSections = () => {
                                                         Ngày bắt đầu:
                                                     </p>
                                                     <p className="font-bold text-[#000]">
-                                                        {section.startDate}
+                                                        {section.startDate ||
+                                                            "N/A"}
                                                     </p>
                                                 </div>
                                             </div>
@@ -429,22 +553,26 @@ const ListSections = () => {
                     </div>
                 </div>
             </div>
+            {/* Component Pagination đã được cập nhật */}
             <Pagination
                 className="mt-12"
                 align="center"
                 total={filteredSections.length}
-                defaultPageSize={6}
-                defaultCurrent={1}
+                current={currentPage}
+                pageSize={pageSize}
+                onChange={handlePageChange}
+                showSizeChanger={false} // Ẩn thay đổi kích thước trang
             />
 
-            {/* LIST THÔNG BÁO */}
+            {/* Modal Danh Sách Thông Báo */}
             <Modal
                 title={
-                    <h3 className="text-2xl font-semibold ">
-                        Danh mục thông báo :
-                        <span className="text-[#1167B4]">
-                            {" "}
-                            {selectedSection?.sectionName || "Thông báo"}
+                    <h3 className="text-4xl font-bold text-gray-900">
+                        Danh mục thông báo:{" "}
+                        <span className="text-blue-600">
+                            {selectedSection?.name ||
+                                selectedSection?.sectionName ||
+                                "Thông báo"}
                         </span>
                     </h3>
                 }
@@ -452,39 +580,118 @@ const ListSections = () => {
                 onCancel={handleNotificationListCancel}
                 footer={null}
                 centered
-                width={700}
-                bodyStyle={{ padding: "20px 30px", backgroundColor: "#fafafa" }}
-                className="rounded-lg shadow-lg"
+                width={900}
+                bodyStyle={{
+                    padding: "10px 20px",
+                    backgroundColor: "#fff",
+                    borderRadius: "15px",
+                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
+                }}
+                className="rounded-lg shadow-xl transition-transform duration-300"
             >
-                <div className="overflow-y-auto">
+                <div className="overflow-y-auto max-h-[90vh]">
                     {notifications.length > 0 ? (
                         notifications.map((notification) => (
                             <div
                                 key={notification.id}
-                                className="bg-white p-8 mb-8 rounded-lg shadow-lg"
+                                className="bg-white p-8 mb-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out"
+                                style={{
+                                    border: "1px solid #E5E7EB",
+                                    fontSize: "18px",
+                                    lineHeight: "1.8",
+                                    backgroundColor: "#f9f9f9",
+                                    padding: "20px",
+                                }}
                             >
                                 {/* Tiêu đề thông báo */}
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                                <h2 className="text-3xl font-semibold text-gray-800 mb-4">
                                     <span className="text-blue-600 mr-2">
-                                        Tiêu đề:{" "}
+                                        Tiêu đề:
                                     </span>
-                                    {notification.title}
+                                    {notification.name}
                                 </h2>
+
                                 {/* Nội dung thông báo */}
-                                <div className="text-2xl text-gray-700">
+                                <div className="text-2xl text-gray-700 mb-4 leading-relaxed">
                                     <span className="font-semibold text-blue-600">
-                                        Nội dung:
+                                        Nội dung:{" "}
                                     </span>
-                                    <p className="mt-4">
-                                        {notification.description}
+                                    <p
+                                        className={`mt-2 overflow-hidden ${
+                                            expandedNotificationId ===
+                                            notification.id
+                                                ? ""
+                                                : "line-clamp-2"
+                                        }`}
+                                        dangerouslySetInnerHTML={{
+                                            __html: notification.description,
+                                        }}
+                                    ></p>
+
+                                    {/* Nút "Xem thêm" */}
+                                    {notification.description.length > 100 && (
+                                        <button
+                                            className="text-blue-600 font-semibold mt-2"
+                                            onClick={() =>
+                                                toggleExpanded(notification.id)
+                                            }
+                                        >
+                                            {expandedNotificationId ===
+                                            notification.id
+                                                ? "Thu gọn"
+                                                : "Xem thêm"}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Khóa học */}
+                                <div className="mt-4 text-2xl text-gray-700 mb-4">
+                                    <span className="font-semibold text-blue-600">
+                                        Khóa học:{" "}
+                                    </span>
+                                    {notification.courses &&
+                                    notification.courses.length > 0 ? (
+                                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                                            {notification.courses.map(
+                                                (course) => (
+                                                    <li key={course.id}>
+                                                        {course.name}
+                                                    </li>
+                                                )
+                                            )}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-gray-500">
+                                            Không có khóa học nào.
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Ngày khởi tạo */}
+                                <div className="py-4 text-2xl text-gray-700">
+                                    <span className="font-semibold text-blue-600">
+                                        Ngày khởi tạo:{" "}
+                                    </span>
+                                    <p>
+                                        {moment(notification.created_at).format(
+                                            "DD/MM/YYYY"
+                                        )}
                                     </p>
                                 </div>
+
                                 {/* Nút Sửa và Xóa */}
-                                <div className="flex justify-end mt-6">
+                                <div className="flex justify-end mt-6 space-x-4">
                                     {/* Nút Sửa */}
                                     <Button
                                         className="mr-4"
                                         type="primary"
+                                        style={{
+                                            backgroundColor: "#007BFF",
+                                            borderColor: "#007BFF",
+                                            borderRadius: "8px",
+                                            padding: "10px 20px",
+                                            fontSize: "16px",
+                                        }}
                                         onClick={() =>
                                             handleEditNotification(notification)
                                         }
@@ -503,7 +710,18 @@ const ListSections = () => {
                                         okText="Có"
                                         cancelText="Không"
                                     >
-                                        <Button type="danger">Xóa</Button>
+                                        <Button
+                                            danger
+                                            style={{
+                                                borderRadius: "8px",
+                                                padding: "10px 20px",
+                                                fontSize: "16px",
+                                                borderColor: "#FF4D4F",
+                                                color: "#FF4D4F",
+                                            }}
+                                        >
+                                            Xóa
+                                        </Button>
                                     </Popconfirm>
                                 </div>
                             </div>
@@ -515,6 +733,7 @@ const ListSections = () => {
                     )}
                 </div>
             </Modal>
+
             {/* Modal Thêm/Sửa Danh Mục */}
             <Modal
                 title={editingSection ? "Sửa Danh Mục" : "Thêm Mới Danh Mục"}
@@ -527,7 +746,7 @@ const ListSections = () => {
                 <Form form={form} layout="vertical">
                     <Form.Item
                         label="Tên Danh Mục"
-                        name="sectionName"
+                        name="name"
                         rules={[
                             {
                                 required: true,
@@ -557,11 +776,12 @@ const ListSections = () => {
                 </Form>
             </Modal>
 
+            {/* Modal Thêm Mới Thông Báo */}
             <Modal
                 title="Thêm Mới Thông Báo"
                 open={isAddNotificationModalVisible}
                 onCancel={handleNotificationModalCancel}
-                footer={null} // Loại bỏ footer mặc định
+                footer={null}
                 centered
                 width={700}
             >
@@ -595,13 +815,16 @@ const ListSections = () => {
                             placeholder="Chọn khóa học"
                             allowClear
                             style={{ width: "100%" }}
-                            options={[
-                                { value: "course1", label: "Khóa Học 18.1" },
-                                { value: "course2", label: "Khóa Học 17.3" },
-                                { value: "course3", label: "Khóa Học 16.5" },
-                                { value: "course4", label: "Khóa Học 15.6" },
-                            ]}
-                        />
+                        >
+                            {courses.map((course) => (
+                                <Select.Option
+                                    key={course.id}
+                                    value={course.id}
+                                >
+                                    {course.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
                     </Form.Item>
 
                     <Form.Item label="Nội dung">
@@ -611,7 +834,10 @@ const ListSections = () => {
                             placeholder="Nhập nội dung thông báo"
                             modules={quillModules}
                             formats={quillFormats}
-                            style={{ height: "250px", marginBottom: "50px" }}
+                            style={{
+                                height: "250px",
+                                marginBottom: "50px",
+                            }}
                         />
                     </Form.Item>
 
@@ -635,20 +861,19 @@ const ListSections = () => {
                 </Form>
             </Modal>
 
-            {/* SỬA THÔNG BÁO  */}
             {/* Modal Sửa Thông Báo */}
             <Modal
                 title="Sửa Thông Báo"
                 open={isEditNotificationModalVisible}
                 onCancel={handleEditNotificationCancel}
-                onOk={handleUpdateNotification} // Hàm cập nhật thông báo
+                footer={null}
                 centered
                 width={600}
             >
                 <Form form={editForm} layout="vertical">
                     <Form.Item
                         label="Tiêu đề"
-                        name="title"
+                        name="name"
                         rules={[
                             {
                                 required: true,
@@ -658,6 +883,35 @@ const ListSections = () => {
                     >
                         <Input placeholder="Nhập tiêu đề thông báo" />
                     </Form.Item>
+
+                    {/* Trường Khóa Học dạng Multiple Select */}
+                    <Form.Item
+                        label="Khóa Học"
+                        name="courses"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng chọn ít nhất một khóa học!",
+                            },
+                        ]}
+                    >
+                        <Select
+                            mode="multiple"
+                            placeholder="Chọn khóa học"
+                            allowClear
+                            style={{ width: "100%" }}
+                        >
+                            {courses.map((course) => (
+                                <Select.Option
+                                    key={course.id}
+                                    value={course.id}
+                                >
+                                    {course.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
                     <Form.Item
                         label="Nội dung"
                         name="description"
@@ -668,11 +922,40 @@ const ListSections = () => {
                             },
                         ]}
                     >
-                        <Input.TextArea
-                            rows={4}
+                        <ReactQuill
+                            value={editForm.getFieldValue("description")}
+                            onChange={(value) =>
+                                editForm.setFieldsValue({ description: value })
+                            }
                             placeholder="Nhập nội dung thông báo"
+                            modules={quillModules}
+                            formats={quillFormats}
+                            style={{
+                                height: "250px",
+                                marginBottom: "50px",
+                            }}
                         />
                     </Form.Item>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            paddingTop: "20px",
+                        }}
+                    >
+                        <Button
+                            onClick={handleEditNotificationCancel}
+                            style={{ marginRight: 8 }}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="primary"
+                            onClick={handleUpdateNotification}
+                        >
+                            Cập nhật
+                        </Button>
+                    </div>
                 </Form>
             </Modal>
         </div>

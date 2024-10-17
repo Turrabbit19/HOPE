@@ -6,20 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Semester extends Model
+class Classroom extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'start_date',
-        'end_date',
+        'subject_id',
+        'code',
+        'max_students',
         'status',
     ];
 
-    public function courses()
-    {
-        return $this->belongsToMany(Course::class, 'course_semesters')
-                    ->withPivot('order');
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+
+    public function subject() {
+        return $this->belongsTo(Subject::class);
     }
 }

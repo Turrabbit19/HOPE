@@ -11,14 +11,30 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ApiNotificationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
-            $notifications = Notification::select('id', 'section_id', 'description', 'time')->paginate(9);
-            return response()->json(['data' => $notifications], 200);
+            $notifications = Notification::with('section')->paginate(9);
+    
+            $data = collect($notifications->items())->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                ];
+            });
+    
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $notifications->total(),
+                    'per_page' => $notifications->perPage(),
+                    'current_page' => $notifications->currentPage(),
+                    'last_page' => $notifications->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
@@ -27,16 +43,24 @@ class ApiNotificationController extends Controller
     public function getAll()
     {
         try {
-            $notifications = Notification::select('id', 'section_id', 'description', 'time')->get();
-            return response()->json(['data' => $notifications], 200);
+            $notifications = Notification::with('section')->get();
+    
+            $data = $notifications->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -66,10 +90,24 @@ class ApiNotificationController extends Controller
     public function show(string $id)
     {
         try {
-            $notification = Notification::findOrFail($id);
-            return response()->json(['data' => $notification], 200);
+            $notification = Notification::with('section', 'courses')->findOrFail($id);
+            $data = [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                    'courses' => $notification->courses->map(function ($course) {
+                        return [
+                            "id" => $course->id,
+                            "name" => $course->name
+                        ];
+                    }),
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
@@ -95,12 +133,11 @@ class ApiNotificationController extends Controller
             $notification = Notification::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $notification->update($data);
 
             return response()->json(['data' => $notification, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -116,7 +153,7 @@ class ApiNotificationController extends Controller
             $notification->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

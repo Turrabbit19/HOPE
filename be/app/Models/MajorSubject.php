@@ -6,19 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Subject extends Model
+class MajorSubject extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'code',
-        'name',
-        'description',
-        'credit',
+        'major_id',
+        'subject_id',
     ];
-    
-    public function majors()
-    {
-        return $this->belongsToMany(Major::class, 'major_subjects');
+
+    public function major() {
+        return $this->belongsTo(Major::class);
+    }
+    public function subject() {
+        return $this->belongsTo(Subject::class);
     }
 }

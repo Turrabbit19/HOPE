@@ -14,8 +14,16 @@ class ApiRoomController extends Controller
     public function index()
     {
         try {
-            $rooms = Room::select('id', 'name', 'slot', 'status')->get();
-            return response()->json(['data' => $rooms], 200);
+            $rooms = Room::get();
+
+            $data = $rooms->map(function ($room){
+                return [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'status' => $room->status ? "Đang trống" : "Đang hoạt động",
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
@@ -24,9 +32,8 @@ class ApiRoomController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:rooms',
-            'slot' => 'required|integer|min:1', 
-            'status' => 'required|boolean',
+            'name' => 'required|string|max:19|unique:rooms',
+            'status' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -47,9 +54,15 @@ class ApiRoomController extends Controller
     {
         try {
             $room = Room::findOrFail($id);
-            return response()->json(['data' => $room], 200);
+            $data = [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'status' => $room->status ? "Đang trống" : "Đang hoạt động",
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
@@ -58,8 +71,7 @@ class ApiRoomController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:50|unique:rooms,name,' . $id,
-            'slot' => 'sometimes|integer|min:1', 
+            'name' => 'sometimes|string|max:19|unique:rooms,name,' . $id,
             'status' => 'sometimes|boolean',
         ]);
 
@@ -71,12 +83,11 @@ class ApiRoomController extends Controller
             $room = Room::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $room->update($data);
 
             return response()->json(['data' => $room, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -89,7 +100,7 @@ class ApiRoomController extends Controller
             $room->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

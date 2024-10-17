@@ -8,12 +8,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Major extends Model
 {
-    use HasFactory;
-    public function subject()
-    {
-        return $this->hasMany(Subject::class);
-    }
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
-        'name'
+        'code',
+        'name',
+        'description',
+        'status',
     ];
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'major_subjects');
+    }
 }

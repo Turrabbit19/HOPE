@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Section;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -17,8 +18,15 @@ class ApiSectionController extends Controller
     public function index()
     {
         try {
-            $sections = Section::select('id', 'name')->get();
-            return response()->json(['data' => $sections], 200);
+            $sections = Section::get();
+
+            $data = $sections->map(function($section) {
+                return [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error'=>'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
         }
@@ -54,17 +62,19 @@ class ApiSectionController extends Controller
     {
         try {
             $section = Section::findOrFail($id);
-            return response()->json(['data' => $section], 200);
+            $data = [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phần mục với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Sections', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
          $validator = Validator::make($request->all(), [
@@ -79,12 +89,11 @@ class ApiSectionController extends Controller
             $section = Section::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $section->update($data);
 
             return response()->json(['data' => $section, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phần mục với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -100,9 +109,78 @@ class ApiSectionController extends Controller
             $section->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy phần mục với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getNotifications(Request $request, string $id){
+        try {
+            $perPage = $request->input('perPage', 9);
+
+            $notifications = Notification::with('section', 'courses')->where('section_id',$id)->paginate($perPage);
+    
+            $data = collect($notifications->items())->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => Carbon::parse($notification->time)->format('H:i, d/m/Y'),
+                    'courses' => $notification->courses->map(function ($course) {
+                        return [
+                            "id" => $course->id,
+                            "name" => $course->name
+                        ];
+                    }),
+                ];
+            });
+    
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $notifications->total(),
+                    'per_page' => $notifications->perPage(),
+                    'current_page' => $notifications->currentPage(),
+                    'last_page' => $notifications->lastPage(),
+                ]
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function addNotification(Request $request, string $id){
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:notifications',   
+            'description' => 'required|string',
+            'courses' => 'required|array',
+            'courses.*.id' => 'required|exists:courses,id',  
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        try {
+            $data = $validator->validated();
+
+            $data['section_id'] = $id;
+            $data['time'] = Carbon::now();
+
+            $notification = Notification::create($data);
+
+            $courses = collect($data['courses'])->mapWithKeys(function ($course) {
+                return [$course['id'] => []];
+            });
+            
+            $notification->courses()->sync($courses);
+            
+            return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 }

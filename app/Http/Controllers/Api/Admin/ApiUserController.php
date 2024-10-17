@@ -145,7 +145,7 @@ class ApiUserController extends Controller
                 'gender' => $data['gender'],
                 'ethnicity' => $data['ethnicity'],
                 'address' => $data['address'],
-                'password' => Hash::make($data['password']),
+                'password' => Hash::make("123456789"),
                 'role_id' => $data['role_id'],
             ]);
 
@@ -168,7 +168,6 @@ class ApiUserController extends Controller
                     'status' => $data['teacher_status'],
                 ]);
             }
-
             
             return response()->json(['data' => $user, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -196,8 +195,8 @@ class ApiUserController extends Controller
             if ($user->role_id == 3) {
                 $student = Student::with('course', 'major')->where('user_id', $user->id)->first();
                 $data['student'] = [
-                    'course_id' => $student->course->name,
-                    'major_id' => $student->major->name,
+                    'course_name' => $student->course->name,
+                    'major_name' => $student->major->name,
                     'current_semester' => $student->current_semester,
                     'student_code' => $student->student_code,
                     'status' => match($student->status) {
@@ -212,7 +211,7 @@ class ApiUserController extends Controller
             if ($user->role_id == 4) {
                 $teacher = Teacher::where('user_id', $user->id)->first();
                 $data['teacher'] = [
-                    'major_id' => $teacher->major_id,
+                    'major_id' => $teacher->major->name,
                     'teacher_code' => $teacher->teacher_code,
                     'status' => match($teacher->status) {
                         '0' => "Đang dạy",
@@ -310,7 +309,6 @@ class ApiUserController extends Controller
                     ]);
                 }
             }
-            
 
             return response()->json(['data' => $user, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {

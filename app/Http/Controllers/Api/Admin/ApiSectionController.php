@@ -140,10 +140,17 @@ class ApiSectionController extends Controller
             return response()->json([
                 'data' => $data,
                 'pagination' => [
-                    'total' => $notifications->total(),
-                    'per_page' => $notifications->perPage(),
-                    'current_page' => $notifications->currentPage(),
-                    'last_page' => $notifications->lastPage(),
+                    'total' => $notifications->total(),               
+                    'per_page' => $notifications->perPage(),     
+                    'first_page' => 1,             
+                    'current_page' => $notifications->currentPage(),  
+                    'last_page' => $notifications->lastPage(),        
+                    'first_page_url' => $notifications->url(1),       
+                    'last_page_url' => $notifications->url($notifications->lastPage()),  
+                    'next_page_url' => $notifications->nextPageUrl(), 
+                    'prev_page_url' => $notifications->previousPageUrl(),  
+                    'from' => $notifications->firstItem(),            
+                    'to' => $notifications->lastItem(),              
                 ]
             ], 200);
         } catch (ModelNotFoundException $e) {

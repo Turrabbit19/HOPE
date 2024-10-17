@@ -14,14 +14,21 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
-            $courses = Course::get();
+            $courses = Course::with('plan')->get();
 
             $data = $courses->map(function ($course) {
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
+                    'plan' => $course->plan->name,
                     'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'status' => match($course->status) {
+                        0 => "Chờ diễn ra",
+                        1 => "Đang diễn ra",
+                        2 => "Kết thúc",
+                        default => "Không xác định",
+                    },
                 ];
             });
             return response()->json(['data' => $data], 200);
@@ -34,8 +41,10 @@ class ApiCourseController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:courses',
+            'plan_id' => 'required|exists:plans,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'status' => 'integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -55,10 +64,24 @@ class ApiCourseController extends Controller
     public function show(string $id)
     {
         try {
-            $course = Course::findOrFail($id);
-            return response()->json(['data' => $course], 200);
+            $course = Course::with('plan')->findOrFail($id);
+            $data = [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'plan' => $course->plan->name,
+                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'status' => match($course->status) {
+                        0 => "Chờ diễn ra",
+                        1 => "Đang diễn ra",
+                        2 => "Kết thúc",
+                        default => "Không xác định",
+                    },
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
@@ -68,8 +91,10 @@ class ApiCourseController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:50|unique:courses,name,' . $id,
+            'plan_id' => 'sometimes|exists:plans,id',
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date',
+            'status' => 'sometimes|integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -80,12 +105,11 @@ class ApiCourseController extends Controller
             $course = Course::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $course->update($data);
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -96,9 +120,10 @@ class ApiCourseController extends Controller
         try {
             $course = Course::findOrFail($id);
             $course->delete();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

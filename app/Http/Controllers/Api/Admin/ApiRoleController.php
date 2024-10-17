@@ -14,8 +14,15 @@ class ApiRoleController extends Controller
     public function index()
     {
         try {
-            $roles = Role::select('id', 'name')->get();
-            return response()->json(['data' => $roles], 200);
+            $roles = Role::get();
+
+            $data = $roles->map(function($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ];
+            });
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
         }
@@ -45,9 +52,14 @@ class ApiRoleController extends Controller
     {
         try {
             $role = Role::findOrFail($id);
-            return response()->json(['data' => $role], 200);
+            $data = [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy vai trò với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Roles', 'message' => $e->getMessage()], 500);
         }
@@ -67,12 +79,11 @@ class ApiRoleController extends Controller
             $role = Role::findOrFail($id);
             
             $data = $validator->validated();
-            $data['updated_at'] = Carbon::now();
             $role->update($data);
 
             return response()->json(['data' => $role, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy vai trò với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -85,7 +96,7 @@ class ApiRoleController extends Controller
             $role->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy vai trò với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

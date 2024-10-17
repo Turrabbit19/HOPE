@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ApiUserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,10 +24,20 @@ Route::prefix('/')->group( function () {
     Route::get('schedules', function () {
         return view('client.schedule');
     });
+<<<<<<< HEAD
     Route::get('schedules-registers', function () {
         return view('client.schedule-register  ');
     });
     Route::get('users', function () {
         return view('client.user');
     });
+=======
+    Route::get('student-details', function () {
+        return view('client.student-detail');
+    });
+    Route::get('add-schedules', function () {
+        return view('client.add-schedule');
+    });
+
+>>>>>>> khanh
 });

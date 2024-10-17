@@ -12,11 +12,16 @@ class Course extends Model
 
     protected $fillable = [
         'name',
+        'plan_id',
         'start_date',
-        'end_date'
+        'end_date',
+        'status'
     ];
 
     public function notifications() {
         return $this->belongsToMany(Notification::class, 'notification_courses', 'course_id', 'notification_id');
+    }
+    public function plan() {
+        return $this->belongsTo(Plan::class);
     }
 }

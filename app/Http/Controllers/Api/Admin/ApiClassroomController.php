@@ -11,9 +11,12 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiClassroomController extends Controller
 {
+<<<<<<< HEAD
     /**
      * Display a listing of the resource.
      */
+=======
+>>>>>>> khanh
     public function index()
     {
         try {
@@ -64,9 +67,12 @@ class ApiClassroomController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Store a newly created resource in storage.
      */
+=======
+>>>>>>> khanh
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -91,9 +97,12 @@ class ApiClassroomController extends Controller
 
     }
 
+<<<<<<< HEAD
     /**
      * Display the specified resource.
      */
+=======
+>>>>>>> khanh
     public function show(string $id)
     {
         try {
@@ -113,9 +122,12 @@ class ApiClassroomController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Update the specified resource in storage.
      */
+=======
+>>>>>>> khanh
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -143,9 +155,12 @@ class ApiClassroomController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Remove the specified resource from storage.
      */
+=======
+>>>>>>> khanh
     public function destroy(string $id)
     {
         try {
@@ -159,4 +174,8 @@ class ApiClassroomController extends Controller
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> khanh

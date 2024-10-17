@@ -211,7 +211,7 @@ class ApiUserController extends Controller
             if ($user->role_id == 4) {
                 $teacher = Teacher::where('user_id', $user->id)->first();
                 $data['teacher'] = [
-                    'major_id' => $teacher->major->name,
+                    'major_name' => $teacher->major->name,
                     'teacher_code' => $teacher->teacher_code,
                     'status' => match($teacher->status) {
                         '0' => "Đang dạy",

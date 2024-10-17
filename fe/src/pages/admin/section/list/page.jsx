@@ -18,8 +18,8 @@ import {
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import CSS cho React Quill
-import instance from "../../config/axios";
 import moment from "moment";
+import instance from "../../../../config/axios";
 
 const ListSections = () => {
     // Khai báo các state cần thiết
@@ -251,7 +251,7 @@ const ListSections = () => {
                 name: values.name,
                 description: description,
                 section_id: selectedSection.id,
-                courses: values.courses, // Gửi dưới dạng mảng các ID
+                courses: values.courses.map((courseId) => ({ id: courseId })), // Đảm bảo định dạng đúng
             };
 
             await instance.post(
@@ -355,7 +355,7 @@ const ListSections = () => {
             const notificationData = {
                 name: values.name,
                 description: values.description,
-                courses: values.courses, // Gửi dưới dạng mảng các ID
+                courses: values.courses.map((courseId) => ({ id: courseId })), // Sửa lại định dạng đúng
             };
 
             await instance.put(

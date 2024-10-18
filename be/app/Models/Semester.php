@@ -26,4 +26,8 @@ class Semester extends Model
         return $this->belongsToMany(Course::class, 'course_semesters')
                     ->withPivot('order');
     }
+    public function orders()
+    {
+        return $this->hasMany(CourseSemester::class);
+    }
 }

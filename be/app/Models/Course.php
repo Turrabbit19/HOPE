@@ -12,12 +12,13 @@ class Course extends Model
 
     protected $fillable = [
         'name',
+        'plan_id',
         'start_date',
         'end_date',
         'status'
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-    ];
+    public function plan() {
+        return $this->belongsTo(Plan::class);
+    }
 }

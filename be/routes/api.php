@@ -41,6 +41,8 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('students', ApiStudentController::class);
     Route::apiResource('teachers', ApiTeacherController::class);
     Route::apiResource('semesters', ApiSemesterController::class);
+    Route::post('/semesters/{id}/restore', [ApiSemesterController::class, 'restore']);
+
 
     Route::apiResource('plans', ApiPlanController::class);
     Route::post('/plans/{id}/restore', [ApiPlanController::class, 'restore']);

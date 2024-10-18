@@ -6,6 +6,7 @@ use App\Exports\StudentExport;
 use App\Exports\TeacherExport;
 use App\Http\Controllers\Controller;
 use App\Imports\StudentImport;
+use App\Imports\TeacherImport;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -342,20 +343,40 @@ class ApiUserController extends Controller
     }
 
     public function exportStudent(){
-        return Excel::download(new StudentExport, 'students.xlsx');
+        try {
+            return Excel::download(new StudentExport, 'students.xlsx');
+        
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function importStudent(Request $request){
         try {
             Excel::import(new StudentImport, $request->file('file'));
         
-            return response()->json(['message' => 'Dữ liệu được import thành công'], 200);
+            return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
     public function exportTeacher(){
-        return Excel::download(new TeacherExport, 'students.xlsx');
+        try {
+            return Excel::download(new TeacherExport, 'teachers123.xlsx');
+        
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function importTeacher(Request $request){
+        try {
+            Excel::import(new TeacherImport, $request->file('file'));
+        
+            return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
+        }
     }
 }

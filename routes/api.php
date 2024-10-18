@@ -70,5 +70,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
     // test api import file excel students + teachers
     Route::post('import-students', [ApiUserController::class, 'importStudent']);
+    Route::post('import-teachers', [ApiUserController::class, 'importTeacher']);
 
 // });

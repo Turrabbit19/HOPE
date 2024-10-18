@@ -124,7 +124,7 @@ class StudentExport implements FromCollection, WithHeadings, WithEvents
         return [
             AfterSheet::class    => function(AfterSheet $event) {
                 //Sheet name
-                $event->sheet->getDelegate()->setTitle("List User");
+                $event->sheet->getDelegate()->setTitle("List Student");
 
                 // All headers
                 $event->sheet->getDelegate()->getStyle("A1:N1")->getActiveSheet()->getRowDimension('1')->setRowHeight(35);

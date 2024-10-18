@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\NewNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -66,8 +67,9 @@ class ApiNotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'section_id' => 'required|exists:sections,id',   
             'name' => 'required|string|max:255|unique:notifications',   
-            'description' => 'required|string',  
-            'time' => 'required|date_format:Y-m-d H:i:s',
+            'description' => 'required|string', 
+            'courses' => 'required|array',
+            'courses.*.id' => 'required|exists:courses,id',   
         ]);
 
         if ($validator->fails()) {
@@ -76,7 +78,17 @@ class ApiNotificationController extends Controller
 
         try {
             $data = $validator->validated();
+            $data['time'] = Carbon::now();
+
             $notification = Notification::create($data);
+
+            $courses = collect($data['courses'])->mapWithKeys(function ($course) {
+                return [$course['id'] => []];
+            });
+            
+            $notification->courses()->sync($courses);
+
+            broadcast(new NewNotification($notification));
             
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {

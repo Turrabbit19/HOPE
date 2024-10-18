@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\NewNotification;
 use Carbon\Carbon;
 use App\Models\Section;
 use Illuminate\Http\Request;
@@ -184,6 +185,8 @@ class ApiSectionController extends Controller
             });
             
             $notification->courses()->sync($courses);
+
+            broadcast(new NewNotification($notification));
             
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {

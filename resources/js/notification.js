@@ -1,6 +1,6 @@
 import "./bootstrap";
 window.Echo.channel("broadcast-notification").listen(
-    "NotificationEvent",
+    "NewNotification",
     function (event) {
         console.log(event);
     }

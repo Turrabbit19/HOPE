@@ -25,7 +25,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'gender'   => $row['gioi_tinh'] == "Nam" ? "1" : "0", 
             'ethnicity'=> $row['dan_toc'],   
             'address'  => $row['dia_chi'],   
-            'password' => Hash::make($row['password']),
+            // 'password' => Hash::make($row['password']),
             'role_id'  => 3, 
         ]);
 
@@ -55,7 +55,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             '*.gioi_tinh' => 'required',
             '*.dan_toc' => 'required|string|max:100',
             '*.dia_chi' => 'required|string|max:255',
-            '*.password' => 'required|min:8',
+            // '*.password' => 'required|min:8',
 
             '*.khoa' => 'required|exists:courses,id',
             '*.nganh' => 'required|exists:majors,id',

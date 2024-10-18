@@ -344,7 +344,7 @@ class ApiUserController extends Controller
 
     public function exportStudent(){
         try {
-            return Excel::download(new StudentExport, 'students.xlsx');
+            return Excel::download(new StudentExport, 'students123.xlsx');
         
         } catch (\Exception $e) {
             return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);

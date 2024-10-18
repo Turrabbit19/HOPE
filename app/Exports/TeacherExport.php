@@ -60,7 +60,6 @@ class TeacherExport implements FromCollection, WithHeadings, WithEvents
         $teachers = Teacher::with(['user', 'major'])->get();
         $data = $teachers->map(function($teacher){
             return [
-                'avatar' => $teacher->user->avatar,
                 'name' => $teacher->user->name,
                 'email' => $teacher->user->email,
                 'phone' => $teacher->user->phone,
@@ -81,9 +80,8 @@ class TeacherExport implements FromCollection, WithHeadings, WithEvents
         foreach($data as $key => $value){
             array_push($outputArr, [
                 $key + 1,
-                $value['avatar'],
-                $value['name'],
                 $value['teacher_code'],
+                $value['name'],
                 $value['email'],
                 $value['phone'],
                 $value['dob'],
@@ -100,9 +98,8 @@ class TeacherExport implements FromCollection, WithHeadings, WithEvents
     public function headings() :array {
         return [
             'STT',
-            'Ảnh GV',
-            'Họ và tên',
             'MGV',
+            'Họ và tên',
             'Email',
             'SĐT',
             'Ngày sinh',
@@ -121,7 +118,7 @@ class TeacherExport implements FromCollection, WithHeadings, WithEvents
                 $event->sheet->getDelegate()->setTitle("List Teacher");
 
                 // All headers
-                $event->sheet->getDelegate()->getStyle("A1:L1")->getActiveSheet()->getRowDimension('1')->setRowHeight(35);
+                $event->sheet->getDelegate()->getStyle("A1:K1")->getActiveSheet()->getRowDimension('1')->setRowHeight(35);
 
                 // Merge
                 // $event->sheet->getDelegate()->getStyle("C1:D1")->getActiveSheet()->mergeCells('C1:D1');
@@ -131,20 +128,19 @@ class TeacherExport implements FromCollection, WithHeadings, WithEvents
 
                 // Set width column
                 $event->sheet->getDelegate()->getStyle("A")->getActiveSheet()->getColumnDimension('A')->setWidth(10);
-                $event->sheet->getDelegate()->getStyle("B")->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $event->sheet->getDelegate()->getStyle("B")->getActiveSheet()->getColumnDimension('B')->setWidth(15);
                 $event->sheet->getDelegate()->getStyle("C")->getActiveSheet()->getColumnDimension('C')->setWidth(30);
-                $event->sheet->getDelegate()->getStyle("D")->getActiveSheet()->getColumnDimension('D')->setWidth(12);
-                $event->sheet->getDelegate()->getStyle("E")->getActiveSheet()->getColumnDimension('E')->setWidth(30);
+                $event->sheet->getDelegate()->getStyle("D")->getActiveSheet()->getColumnDimension('D')->setWidth(35);
+                $event->sheet->getDelegate()->getStyle("E")->getActiveSheet()->getColumnDimension('E')->setWidth(20);
                 $event->sheet->getDelegate()->getStyle("F")->getActiveSheet()->getColumnDimension('F')->setWidth(25);
-                $event->sheet->getDelegate()->getStyle("G")->getActiveSheet()->getColumnDimension('G')->setWidth(25);
+                $event->sheet->getDelegate()->getStyle("G")->getActiveSheet()->getColumnDimension('G')->setWidth(15);
                 $event->sheet->getDelegate()->getStyle("H")->getActiveSheet()->getColumnDimension('H')->setWidth(15);
-                $event->sheet->getDelegate()->getStyle("I")->getActiveSheet()->getColumnDimension('I')->setWidth(15);
-                $event->sheet->getDelegate()->getStyle("J")->getActiveSheet()->getColumnDimension('J')->setWidth(30);
-                $event->sheet->getDelegate()->getStyle("K")->getActiveSheet()->getColumnDimension('K')->setWidth(18);
-                $event->sheet->getDelegate()->getStyle("L")->getActiveSheet()->getColumnDimension('L')->setWidth(15);
-
+                $event->sheet->getDelegate()->getStyle("I")->getActiveSheet()->getColumnDimension('I')->setWidth(35);
+                $event->sheet->getDelegate()->getStyle("J")->getActiveSheet()->getColumnDimension('J')->setWidth(15);
+                $event->sheet->getDelegate()->getStyle("K")->getActiveSheet()->getColumnDimension('K')->setWidth(22);
+               
                 // Gán style
-                $event->sheet->getDelegate()->getStyle("A1:L1")
+                $event->sheet->getDelegate()->getStyle("A1:K1")
                     ->applyFromArray($this->styleHeader);
 
 

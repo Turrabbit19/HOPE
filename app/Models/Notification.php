@@ -27,7 +27,7 @@ class Notification extends Model
         return $this->belongsTo(Section::class , 'section_id');
     }
 
-    public function notification_courses() {
-        return $this->belongsToMany(Course::class, 'notification_courses', 'notification_id', 'course_id');
+    public function courses() {
+        return $this->belongsToMany(Course::class, 'notification_courses');
     }
 }

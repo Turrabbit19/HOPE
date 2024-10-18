@@ -15,12 +15,12 @@ class ApiNotificationController extends Controller
     public function index()
     {
         try {
-            $notifications = Notification::with('section')->paginate(9);
+            $notifications = Notification::with('sections')->paginate(9);
     
             $data = collect($notifications->items())->map(function ($notification) {
                 return [
                     'id' => $notification->id,
-                    'section_name' => $notification->section->name,
+                    'section_name' => $notification->sections->name,
                     'name' => $notification->name,
                     'description' => $notification->description,
                     'time' => $notification->time,
@@ -69,8 +69,8 @@ class ApiNotificationController extends Controller
             'name' => 'required|string|max:255|unique:notifications',
             'description' => 'required|string',
             'time' => 'required|date_format:Y-m-d H:i:s',
-            'notification_courses' => 'required|array',
-            'notification_courses.*.id' => 'required|exists:notification_courses,id',
+            'courses' => 'required|array',
+            'courses.*.id' => 'required|exists:notification_courses,id',
         ]);
     
         if ($validator->fails()) {
@@ -86,7 +86,7 @@ class ApiNotificationController extends Controller
                 return [$notification_course['id'] => []];
             });
             
-            $notification->notification_courses()->sync($notification_courses);
+            $notification->courses()->sync($notification_courses);
     
             broadcast(new NotificationEvent($notification));
     

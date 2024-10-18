@@ -31,6 +31,12 @@ class NotificationEvent implements ShouldBroadcast
     {
         return [
             'section_id' => $this->notifications->section_id,
+            'course_id' => $this->notifications->courses->map(function ($course){
+                return [
+                    "id" => $course->id,
+                    "name" => $course->name,
+                ];
+            }),
             'name' => $this->notifications->name,
             'description' => $this->notifications->description,
             'time' => $this->notifications->time,

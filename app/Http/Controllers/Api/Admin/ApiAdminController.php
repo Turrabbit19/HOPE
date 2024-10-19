@@ -18,11 +18,6 @@ class ApiAdminController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = [
-                'Quản trị viên' => $request->input('perPageAdmin', 9),
-                'Cán bộ' => $request->input('perPageOfficer', 9),
-            ];
-
             $users = User::with('role')->whereIn('role_id', [1, 2])->get();
 
             $groupUsers = $users->groupBy('role_id');
@@ -33,19 +28,12 @@ class ApiAdminController extends Controller
             ];
 
             $responseData = [];
-            
+
             foreach ($roles as $roleId => $roleKey) {
                 $roleUsers = $groupUsers->get($roleId, collect());
-                $pageUsers = new \Illuminate\Pagination\LengthAwarePaginator(
-                    $roleUsers->forPage($request->input("page_{$roleKey}", 1), $perPage[$roleKey]),
-                    $roleUsers->count(),
-                    $perPage[$roleKey],
-                    $request->input("page_{$roleKey}", 1),
-                    ['path' => $request->url(), 'query' => $request->query()]
-                );
 
                 $responseData[$roleKey] = [
-                    'data' => $pageUsers->map(function ($user) {
+                    'data' => $roleUsers->map(function ($user) {
                         return [
                             'id' => $user->id,
                             'avatar' => $user->avatar,
@@ -54,19 +42,6 @@ class ApiAdminController extends Controller
                             'phone' => $user->phone,
                         ];
                     }),
-                    'pagination' => [
-                        'total' => $users->total(),               
-                        'per_page' => $users->perPage(),     
-                        'first_page' => 1,             
-                        'current_page' => $users->currentPage(),  
-                        'last_page' => $users->lastPage(),        
-                        'first_page_url' => $users->url(1),       
-                        'last_page_url' => $users->url($users->lastPage()),  
-                        'next_page_url' => $users->nextPageUrl(), 
-                        'prev_page_url' => $users->previousPageUrl(),  
-                        'from' => $users->firstItem(),            
-                        'to' => $users->lastItem(),     
-                    ],
                 ];
             }
 

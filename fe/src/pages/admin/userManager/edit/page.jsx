@@ -21,7 +21,7 @@ import {
   createUser,
   createTeacher,
 } from "../../../../services/user-service";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 const { Option } = Select;
 import moment from "moment";
 import {
@@ -32,11 +32,17 @@ import {
   getTeacher,
   getStudent,
   getListUser,
-  editUser,
+  editAdmin,
+  editStudents,
+  editTeachers
 } from "../../../../services/user-service";
 import { uploadMultipleFiles } from "../../../../utils/upload";
 
 const UserEdit = () => {
+
+  
+  const {state} = useLocation();
+ 
   const [role, setRole] = useState(""); // Không có vai trò nào chọn ban đầu
   const [roleNumber, setRoleNumber] = useState(0); // Không có vai trò nào chọn ban đầu
   const [listMajor, setListMajor] = useState([]);
@@ -54,47 +60,62 @@ const UserEdit = () => {
     getListMajor().then((res) => {
       setListMajor(res.data.data);
     });
-    getUser(params.id).then((res) => {
-      setUser(res.data.data);
-
-      for (const key of Object.keys(res.data.data)) {
-        if (key === "gender")
-          form.setFieldValue("gender", res.data.data[key] === "Nam");
-        if (key === "dob") {
-          console.log(res.data.data[key]);
-          console.log(moment(res.data.data[key]));
-          form.setFieldValue(key, moment(res.data.data[key], "DD/MM/YYYY"));
-        } else form.setFieldValue(key, res.data.data[key]);
+   
+   
+      if(state.type === 'students'){
+     getStudent(params.id).then((res) => initValue(res))
+      } else if(state.type === 'teachers'){
+       getTeacher(params.id).then((res) => initValue(res))
+      } else if(state.type === 'admins'){
+     getUser(params.id).then((res) => initValue(res))
       }
-      form.setFieldValue("gender", res.data.data["gender"] === "Nam");
 
-      switch (res.data.data.role) {
-        case "officer":
-          setRoleNumber(2);
-          form.setFieldValue("role", "admin1");
-          setRole("admin1");
-          break;
-        case "admin":
-          setRoleNumber(1);
-          form.setFieldValue("role", "admin");
 
-          break;
-        case "student":
-          setRoleNumber(3);
-          form.setFieldValue("role", "student");
 
-          break;
-        case "teacher":
-          setRoleNumber(4);
-          form.setFieldValue("role", "teacher");
-
-          break;
-
-        default:
-          break;
-      }
-    });
   }, []);
+
+
+  function initValue(res){
+    setUser(res.data.data);
+  
+    for (const key of Object.keys(res.data.data)) {
+      if (key === "gender")
+        form.setFieldValue("gender", res.data.data[key] === "Nam");
+      if (key === "dob") {
+        console.log(res.data.data[key]);
+        console.log(moment(res.data.data[key]));
+        form.setFieldValue(key, moment(res.data.data[key], "DD/MM/YYYY"));
+      } else form.setFieldValue(key, res.data.data[key]);
+    }
+    form.setFieldValue("gender", res.data.data["gender"] === "Nam");
+
+    switch (res.data.data.role) {
+      case "officer":
+        setRoleNumber(2);
+        form.setFieldValue("role", "admin1");
+        setRole("admin1");
+        break;
+      case "admin":
+        setRoleNumber(1);
+        form.setFieldValue("role", "admin");
+
+        break;
+      case "student":
+        setRoleNumber(3);
+        form.setFieldValue("role", "student");
+
+        break;
+      case "teacher":
+        setRoleNumber(4);
+        form.setFieldValue("role", "teacher");
+
+        break;
+
+      default:
+        break;
+    }
+  }
+
   const [form] = Form.useForm();
 
   // Xử lý khi thay đổi vai trò
@@ -127,27 +148,47 @@ const UserEdit = () => {
         URL.createObjectURL(avatar),
         '/public'
      )
-      await editUser(params.id, {
-        ...values,
-        role_id: roleNumber,
-        gender: values.gender === "Name",
-        student_course_id: values?.course,
-        student_major_id: values?.major,
-        teacher_major_id: values?.major,
+     let data = {
+      ...values,
+      role_id: roleNumber,
+      gender: values.gender === "Name",
+      avatar: uploadResults[0]?.data?.fullPath ?? null
+     }
+
+     if(roleNumber === 3){
+      editStudents(params.id, {
+        ...data,
+        user_id: user.id,
+        major_id: values.major,
+        course_id: values.course,
+        student_code: values.student_code,
         student_current_semester: 1,
         student_status: 1,
-        teacher_status: 1,
-        avatar: uploadResults[0]?.data?.fullPath ?? null
-      });
+     
+      })
+      navigate("/admin/all-student");
+       } else if(roleNumber === 4){
+        editTeachers(params.id, {
+          ...data,
+          user_id: user.id,
+          major_id: values.major,
+          teacher_code: values.teacher_code,
+          teacher_status: 1,
+        })
+        navigate("/admin/teacher-manager");
+       } else if(roleNumber === 2 || roleNumber === 1){
+        editAdmin(params.id, data)
+        navigate("/admin/admin-manager");
+       }
+   
       message.success(`Đã sửa khoản thành công`);
-      navigate("/admin/list-users");
     } catch (error) {
       for (const key of Object.keys(error?.response?.data?.errors)) {
         message.error(error.response.data.errors[key][0]);
       }
     }
   };
-  console.log(user);
+ 
   return (
     <Card hoverable>
       <Form

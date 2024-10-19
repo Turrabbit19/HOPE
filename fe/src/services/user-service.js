@@ -1,7 +1,7 @@
 import instance from "../config/axios";
 
 const createUser = async (data) => {
-  return instance.post("/admin/users", data);
+  return instance.post("/admin/officers", data);
 };
 
 const createStudent = async (data) => {
@@ -28,25 +28,31 @@ const getListCourse = async () => {
 };
 
 const getUser = async (id) => {
-  return instance.get("/admin/users/" + id);
+  return instance.get("/admin/officers/" + id);
 };
-const editUser = async (id, data) => {
-  return instance.put("/admin/users/" + id, data);
+const editAdmin = async (id, data) => {
+  return instance.put("/admin/officers/" + id, data);
+};
+const editStudents = async (id, data) => {
+  return instance.put("/admin/admins/" + id, data);
+};
+const editTeachers = async (id, data) => {
+  return instance.put("/admin/admins/" + id, data);
 };
 const getStudent = async (id) => {
-  return instance.get("/admin/users/" + id);
+  return instance.get("/admin/students/" + id);
 };
 const getTeacher = async (id) => {
-  return instance.get("/admin/users/" + id);
+  return instance.get("/admin/teachers/" + id);
 };
 const deleteUser = async (id) => {
-  return instance.delete("/admin/users/" + id);
+  return instance.delete("/admin/officers/" + id);
 };
 const deleteStudent = async (id) => {
-  return instance.delete("/admin/users/" + id);
+  return instance.delete("/admin/students/" + id);
 };
 const deleteTeacher = async (id) => {
-  return instance.delete("/admin/users/" + id);
+  return instance.delete("/admin/teachers/" + id);
 };
 
 export {
@@ -63,5 +69,7 @@ export {
   deleteStudent,
   deleteTeacher,
   deleteUser,
-  editUser,
+  editAdmin,
+  editStudents,
+  editTeachers,
 };

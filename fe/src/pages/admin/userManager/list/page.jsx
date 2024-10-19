@@ -69,12 +69,23 @@ const ListUser = () => {
     teachers: [],
     students: [],
   });
-  const [studentPagination, setStudentPagination] = useState(null)
+
+  console.log(accounts);
+  
+ 
+  
+  const [studentPagination, setStudentPagination] = useState({
+    current_page: 1,
+    page_size: 5,
+    total: 10
+  })
 
   const navigate = useNavigate();
 
   useEffect(() => {
     getListUser().then((res) => {
+      console.log(res);
+      
       setAccounts({
         classManager: [
           ...res.data["Quản trị viên"].data,
@@ -186,6 +197,8 @@ const ListUser = () => {
     return [...commonColumns, actionColumn];
   };
 
+
+
   return (
     <div>
       <div className="col-12 pb-8">
@@ -227,10 +240,21 @@ const ListUser = () => {
       {/* Tài Khoản Học Viên */}
       <Divider orientation="left">#3. Sinh Viên</Divider>
       <Table
-        dataSource={accounts.students}
+        dataSource={accounts.students.slice(studentPagination.current_page - 1, 5 * studentPagination.current_page)}
         columns={getColumns("students")}
         rowKey="id"
-        pagination={true}
+        onChange={(e) => {
+          setStudentPagination((pre) => ({
+            ...pre,
+            current_page: e.current
+          }))
+          
+        }}
+        pagination={{
+          current: studentPagination.current_page,
+          pageSize: 5,
+          total: studentPagination.total
+        }}
       />
 
       {/* Modal hiển thị chi tiết tài khoản */}

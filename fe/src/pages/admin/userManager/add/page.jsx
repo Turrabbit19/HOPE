@@ -76,20 +76,43 @@ const UserAdd = () => {
           URL.createObjectURL(avatar),
           '/public'
        )
-        await createUser({
-          ...values,
-          password: "123123123",
-          role_id: roleNumber,
-          student_course_id: values?.course,
-          student_major_id: values?.major,
-          teacher_major_id: values?.major,
+       const data = {
+        ...values,
+        password: "123123123",
+        role_id: roleNumber,
+        avatar: uploadResults[0]?.data?.fullPath ?? null
+       }
+
+       console.log("tới đây chưa");
+       
+       
+       if(roleNumber === 3){
+        createStudent({
+          ...data,
+          user_id: user.id,
+          major_id: values.major,
+          course_id: values.course,
+          student_code: values.student_code,
           student_current_semester: 1,
           student_status: 1,
-          teacher_status: 1,
-          avatar: uploadResults[0]?.data?.fullPath ?? null
-        });
-        message.success(`Đã tạo tài khoản thành công`);
-        navigate("/admin/list-users");
+       
+        })
+        navigate("/admin/all-student");
+         } else if(roleNumber === 4){
+          createTeacher({
+            ...data,
+            user_id: user.id,
+            major_id: values.major,
+            teacher_code: values.teacher_code,
+            teacher_status: 1,
+          })
+          navigate("/admin/teacher-manager");
+         } else if(roleNumber === 2 || roleNumber === 1){
+          createUser(data)
+          navigate("/admin/admin-manager");
+         }
+       
+         message.success('Thêm thành công!');
       } catch (error) {
         for (const key of Object.keys(error?.response?.data?.errors)) {
           message.error(error.response.data.errors[key][0]);
@@ -98,6 +121,7 @@ const UserAdd = () => {
       switch (role) {
         case "teacher":
           await createTeacher({
+            ...values,
             user_id: user.id,
             major_id: values.major,
             teacher_code: values.teacher_code,
@@ -105,6 +129,7 @@ const UserAdd = () => {
           break;
         case "student":
           await createStudent({
+            ...values,
             user_id: user.id,
             major_id: values.major,
             course_id: values.course,

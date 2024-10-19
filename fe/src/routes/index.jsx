@@ -44,6 +44,8 @@ import ListCourse from "../pages/admin/courses/list/page";
 import ListUser from "../pages/admin/userManager/list/page";
 import UserAdd from "../pages/admin/userManager/add/page";
 import UserEdit from "../pages/admin/userManager/edit/page";
+import TeacherManager from "../pages/admin/userManager/teacher";
+import AdminManager from "../pages/admin/userManager/Admin";
 
 const Router = createBrowserRouter([
   {
@@ -261,6 +263,33 @@ const Router = createBrowserRouter([
           <>
             <BreadCrumb />
             <StudentManager />
+          </>
+        ),
+      },
+      {
+        path: "all-student",
+        element: (
+          <>
+            <BreadCrumb />
+            <StudentManager />
+          </>
+        ),
+      },
+      {
+        path: "teacher-manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <TeacherManager />
+          </>
+        ),
+      },
+      {
+        path: "admin-manager",
+        element: (
+          <>
+            <BreadCrumb />
+            <AdminManager />
           </>
         ),
       },

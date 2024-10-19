@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading";
+import { add } from "date-fns";
+
 import {
   DeleteOutlined,
   UserOutlined,
@@ -10,46 +12,29 @@ import {
   PlusOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
-import { deleteTeacher, getTeacher } from "../../../../services/user-service";
+import { getUser } from "../../../../services/user-service";
 
-const TeacherManager = () => {
+const AdminManager = () => {
+  const navigate = useNavigate();
+  const [admins, setAdmins] = useState([]);
 
-  const navigate = useNavigate()
-
-  const [data, setData] = useState([]);
-
-  const [loading, setLoading] = useState(true);
-
-  const [reload, setReload] = useState(false);
 
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userDetail, setUserDetail] = useState({});
   const [recordType, setRecordType] = useState(""); 
+  const [reload, setReload] = useState(false);
 
-  const [panigation, setPanigation] = useState({
-    current_page: 1,
-    total: 12,
-  })
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     (async () => {
       try {
-        axios
-        const { data } = await 
-        axios.get("http://localhost:8000/api/admin/teachers", {
-          params: {
-            per_page: 100
-          }
-        });
-        console.log(data)
-        let pa = data.pagination
-        setData(data.data);
-        setPanigation((pre) => ({
-          ...pre,
-          total: pa?.total || 10,
-        }))
+        setLoading(true);
+        const { data } = await instance.get("admin/officers");
+        console.log(data);
+        
+        setAdmins(data.Admin.data)
+        // setLoading();
       } catch (error) {
         console.log(error.message);
       } finally {
@@ -57,6 +42,8 @@ const TeacherManager = () => {
       }
     })();
   }, [reload]);
+
+  
   if (loading) {
     return <Loading />;
   }
@@ -79,29 +66,12 @@ const TeacherManager = () => {
       ),
     },
     {
-      title: "Mã giáo viên",
-      dataIndex: "teacher_code",
-      key: "teacher_code",
-      fixed: "left",
-      width: 150,
-      render: (_, res) => {
-        return (
-          <div >
-            {/* <img src="https://media.istockphoto.com/vectors/student-avatar-flat-icon-flat-vector-illustration-symbol-design-vector-id1212812078?k=20&m=1212812078&s=170667a&w=0&h=Pl6TaYY87D2nWwRSWmdtJJ0DKeD5vPowomY9fyeqNOs=" style={{width: 50, height: 50, borderRadius: 100}}/> */}
-            <span>{res.teacher_code}</span>
-          </div>
-        )
-        
-      }
-    },
-    {
       title: "Họ và tên",
       dataIndex: "fullname",
       key: "fullname",
       width: 200,
       fixed: "left",
     },
-   
     {
       title: "Email",
       dataIndex: "email",
@@ -114,43 +84,6 @@ const TeacherManager = () => {
       width: 150,
       key: "2",
     },
-    // {
-    //   title: "Giới tính",
-    //   dataIndex: "gender",
-    //   key: "4",
-    // },
-    // {
-    //   title: "Dân tộc",
-    //   dataIndex: "ethnicity",
-    //   key: "5",
-    // },
-    // {
-    //   title: "Địa chỉ",
-    //   dataIndex: "address",
-    //   key: "6",
-    // },
-    // {
-    //   title: "Chứ vụ",
-    //   dataIndex: "role_name",
-    //   key: "7",
-    // },
-    {
-      title: "Ngành dậy",
-      dataIndex: "major_name",
-      key: "8",
-      width: 200
-    },
-    // {
-    //   title: "Môn học",
-    //   dataIndex: "semester_name",
-    //   key: "8",
-    // },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "8",
-      width: 100
-    },
     {
       title: "Action",
       key: "operation",
@@ -160,68 +93,59 @@ const TeacherManager = () => {
        
 
 <div className="flex flex-row items-center justify-between">
-          <Button
-            type="link"
-            icon={<InfoCircleOutlined />}
-            onClick={() =>
-              handleDetailClick(
-                record
-              )
-            }
-          >
-            Chi tiết
-          </Button>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`${`/admin/list-users/edit/${record.id}`}`, {
-              state: {
-                type: 'teachers'
-              }
-            })}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa tài khoản này?"
-            onConfirm={() => handleDelete(record)} // Xóa tài khoản
-            okText="Có"
-            cancelText="Không"
-          >
-            <Button type="link" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </div>
-    
-  
+<Button
+  type="link"
+  icon={<InfoCircleOutlined />}
+  onClick={() =>
+    handleDetailClick(
+      record
+    )
+  }
+>
+  Chi tiết
+</Button>
+<Button
+  type="link"
+  icon={<EditOutlined />}
+  onClick={() => navigate(`${`/admin/list-users/edit/${record.id}`}`, {
+    state: {
+      type: 'admins'
+    }
+  })}
+>
+  Sửa
+</Button>
+<Popconfirm
+  title="Bạn có chắc chắn muốn xóa tài khoản này?"
+  onConfirm={() => handleDelete(record)} // Xóa tài khoản
+  okText="Có"
+  cancelText="Không"
+>
+  <Button type="link" icon={<DeleteOutlined />} />
+</Popconfirm>
+</div>
+
       ),
     },
   ];
-
-  const teachers = data.map((item, index) => {
+  const data = admins.map((item, index) => {
+    console.log(item);
     return {
       key: item.id,
       id: item.id,
       stt: index + 1,
       fullname: item.name,
-      teacher_code: item.code,  
       email: item.email,
       phone: item.phone,
-      // dob: item.dob,
-      // gender: item.gender ? "Nam" : "Nữ",
-      // ethnicity: item.user.ethnicity,
-      // address: item.user.address,
-      // role: item.user.role.name,
-      // semester_name: item.semester.name,
-      major_name: item.major_name,
-      status: item.status,
       avatar: item.avatar
     };
   });
 
   const handleDetailClick = (record, type) => {
     setSelectedRecord(record);
+ 
     setIsModalVisible(true);
-    getTeacher(record.id).then((res) => {
+    getUser(record.id).then((res) => {
       setUserDetail(res.data.data);
     });
   };
@@ -234,33 +158,20 @@ const TeacherManager = () => {
   };
 
   const handleAdd = () =>{
-    navigate(`/admin/list-users/add/`)
+    navigate(`/admin/list-users/add`)
   }
-  
+
+
   return (
     <>
       <div className="flex justify-between mb-2">
-        <h1>Giảng viên</h1>
-      
-         <Button onClick={handleAdd}>Thêm giảng viên</Button>
-   
+        <h1>Quản trị viên</h1>
+        <Button onClick={handleAdd}>Thêm quản trị viên</Button>
       </div>
       <Table
         columns={columns}
-        dataSource={teachers.slice(panigation.current_page > 1 ?  (panigation.current_page - 1) * 10 : panigation.current_page - 1, panigation.current_page * 10)}
-        onChange={(e) => {
-          setPanigation((pre) => ({
-            ...pre,
-            current_page: e.current
-          }))
-        }}
+        dataSource={data}
         scroll={{
-          x: 2000,
-        }}
-        pagination={{
-          current: panigation.current_page,
-          pageSize: 10,
-          total: panigation.total
         }}
       />
 
@@ -308,16 +219,7 @@ const TeacherManager = () => {
             {/* Thông tin cho Học Viên */}
             
               <>
-              <Descriptions.Item label="Mã Giảng Viên">
-                  {userDetail?.teacher_code ?? ''}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ngành Học">
-                  {userDetail?.major_name}
-                </Descriptions.Item>
-                <Descriptions.Item label="Trạng Thái">
-                  {(userDetail?.status)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ngày Sinh">
+              <Descriptions.Item label="Ngày Sinh">
                   {userDetail.dob}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giới Tính">
@@ -335,9 +237,7 @@ const TeacherManager = () => {
         </Modal>
       )}
     </>
-
-    
   );
 };
 
-export default TeacherManager;
+export default AdminManager;

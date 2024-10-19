@@ -29,6 +29,14 @@ class ApiTeacherController extends Controller
                     "name" => $teacher->user->name,
                     "email" => $teacher->user->email,
                     "phone" => $teacher->user->phone,
+
+                    'major_name' => $teacher->major->name,
+                    'status' => match($teacher->status) {
+                        "0" => "Đang dạy",
+                        "1" => "Tạm dừng",
+                        "2" => "Kết thúc",
+                        default => "Không xác định"
+                    },
                 ];
             });
 
@@ -187,8 +195,7 @@ class ApiTeacherController extends Controller
                 'ethnicity' => $teacher->user->ethnicity,
                 'address' => $teacher->user->address,
                 'teacher_code' => $teacher->teacher_code,
-                'major_name' => optional($teacher->major)->name,
-                'current_semester' => $teacher->current_semester,
+                'major_name' => $teacher->major->name,
             ];
 
             return response()->json(['data' => $teacherData, 'message' => 'Cập nhật thành công'], 200);

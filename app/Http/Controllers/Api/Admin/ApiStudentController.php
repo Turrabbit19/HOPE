@@ -29,6 +29,16 @@ class ApiStudentController extends Controller
                     "name" => $student->user->name,
                     "email" => $student->user->email,
                     "phone" => $student->user->phone,
+
+                    'course_name' => $student->course->name,
+                    'major_name' => $student->major->name,
+                    'current_semester' => $student->current_semester,
+                    'status' => match($student->status) {
+                        "0" => "Đang học",
+                        "1" => "Bảo lưu",
+                        "2" => "Hoàn thành",
+                        default => "Không xác định"
+                    },
                 ];
             });
 
@@ -196,8 +206,8 @@ class ApiStudentController extends Controller
                 'ethnicity' => $student->user->ethnicity,
                 'address' => $student->user->address,
                 'student_code' => $student->student_code,
-                'course_name' => optional($student->course)->name,
-                'major_name' => optional($student->major)->name,
+                'course_name' => $student->course->name,
+                'major_name' => $student->major->name,
                 'current_semester' => $student->current_semester,
             ];
 

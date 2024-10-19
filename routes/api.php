@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ApiAdminController;
 use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\Api\Admin\ApiShiftController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
-use App\Http\Controllers\Api\Admin\ApiUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -38,8 +38,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
-        Route::apiResource('users', ApiUserController::class);
+        Route::apiResource('admins', ApiAdminController::class);
         Route::apiResource('students', ApiStudentController::class);
+        Route::apiResource('teachers', ApiTeacherController::class);
 
         Route::apiResource('courses', ApiCourseController::class);
         Route::apiResource('semesters', ApiSemesterController::class);

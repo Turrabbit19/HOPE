@@ -1,9 +1,11 @@
-import { Calendar, Clock } from "lucide-react"
+'use client'
+
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom';
+import { Calendar, Clock, Eye, Pencil, Phone, Mail, MapPin, User, Briefcase, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function StudentDashboard() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
+  const [showPersonalInfo, setShowPersonalInfo] = useState(false)
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
@@ -19,8 +21,12 @@ export default function StudentDashboard() {
   const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
+  const togglePersonalInfo = () => {
+    setShowPersonalInfo(!showPersonalInfo)
+  }
+
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 min-h-screen">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 min-h-screen w-full">
       {/* Left Column */}
       <div className="w-full lg:w-1/4 space-y-6">
         {/* User Profile Card */}
@@ -36,11 +42,34 @@ export default function StudentDashboard() {
               <p className="text-indigo-300">MSV: PH38668</p>
             </div>
           </div>
-          <Link to="/info-student">
-          <button className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded">
-            Thông tin cá nhân
+          <button
+            className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded flex justify-between items-center"
+            onClick={togglePersonalInfo}
+          >
+            <span>Thông tin cá nhân</span>
+            {showPersonalInfo ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
-          </Link>
+          {showPersonalInfo && (
+            <div className="mt-4 bg-indigo-800 p-4 rounded-lg">
+              {[
+                { icon: Calendar, label: 'Ngày sinh', value: '11/02/2004' },
+                { icon: User, label: 'Giới tính', value: 'Nam' },
+                { icon: Mail, label: 'Email', value: 'khanhpqph38668@fpt.edu.vn' },
+                { icon: Phone, label: 'Số điện thoại', value: '0334675867' },
+                { icon: MapPin, label: 'Địa chỉ', value: '54 Mỹ Đình 2, Hà Nội' },
+                { icon: User, label: 'Dân tộc', value: 'Kinh' },
+                { icon: Briefcase, label: 'Trạng thái', value: 'Đang học' },
+              ].map((item, index) => (
+                <div key={index} className="flex items-start mt-2 space-x-3">
+                  <item.icon className="w-5 h-5 text-indigo-300 flex-shrink-0 mt-1" />
+                  <div className="flex-grow grid grid-cols-2 gap-x-2">
+                    <span className="text-indigo-200 font-medium">{item.label}:</span>
+                    <span className="text-white break-all">{item.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Today's Classes */}
@@ -75,9 +104,8 @@ export default function StudentDashboard() {
                     </p>
                   </div>
                 </div>
-                <span className={`text-sm ${
-                  cls.status === "Hoàn Thành" ? "text-green-500" : "text-yellow-500"
-                }`}>
+                <span className={`text-sm ${cls.status === "Hoàn Thành" ? "text-green-500" : "text-yellow-500"
+                  }`}>
                   {cls.status}
                 </span>
               </li>
@@ -153,9 +181,8 @@ export default function StudentDashboard() {
           <p className="text-sm text-gray-500 mb-4">14 May 2024 - 21 May 2024</p>
           <div className="flex justify-between">
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
-              <div key={index} className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${
-                index === 4 ? 'bg-red-500' : index < 4 ? 'bg-green-500' : 'bg-gray-300'
-              }`}>
+              <div key={index} className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${index === 4 ? 'bg-red-500' : index < 4 ? 'bg-green-500' : 'bg-gray-300'
+                }`}>
                 {day}
               </div>
             ))}
@@ -195,11 +222,10 @@ export default function StudentDashboard() {
                 return (
                   <div
                     key={day}
-                    className={`text-sm p-2 rounded-full ${
-                      isToday
+                    className={`text-sm p-2 rounded-full ${isToday
                         ? 'bg-blue-500 text-white'
                         : 'hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     {day}
                   </div>
@@ -237,7 +263,7 @@ export default function StudentDashboard() {
                     <Clock className="w-4 h-4 mr-1" />
                     {assignment.time}
                     <span className="mx-2">•</span>
-                    Room No : {assignment.room}
+                    Room  No : {assignment.room}
                   </div>
                 )}
               </li>

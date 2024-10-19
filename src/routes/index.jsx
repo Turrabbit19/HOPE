@@ -4,8 +4,7 @@
     import LayoutClient from "../components/layout/layoutClient"
     import ScheduleRegistration from "../pages/classRegitration/page"
     import StudentDashboard from "../pages/studentDashboard/page"
-    import InfoStudent from "../pages/studentDashboard/infoStudnent/page"
-import NotificationPage from "../pages/notification/page"
+    import NotificationPage from "../pages/notification/page"
 
     const Router = createBrowserRouter([
         {
@@ -30,10 +29,6 @@ import NotificationPage from "../pages/notification/page"
                 {
                     path: "home",
                     element: <StudentDashboard/>
-                },
-                {
-                    path: "info-student",
-                    element: <InfoStudent />
                 },
                 {
                     path: "notification",

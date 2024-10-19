@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class ApiAdminController extends Controller
+class ApiOfficerController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         try {
             $users = User::with('role')->whereIn('role_id', [1, 2])->get();

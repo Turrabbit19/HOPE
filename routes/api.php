@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
 use App\Http\Controllers\Api\Admin\ApiMajorController;
 use App\Http\Controllers\Api\Admin\ApiNotificationController;
+use App\Http\Controllers\Api\Admin\ApiOfficerController;
 use App\Http\Controllers\Api\Admin\ApiPlanController;
 use App\Http\Controllers\Api\Admin\ApiRoleController;
 use App\Http\Controllers\Api\Admin\ApiRoomController;
@@ -38,7 +39,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
-        Route::apiResource('admins', ApiAdminController::class);
+        Route::apiResource('officers', ApiOfficerController::class);
         Route::apiResource('students', ApiStudentController::class);
         Route::apiResource('teachers', ApiTeacherController::class);
 

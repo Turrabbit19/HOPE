@@ -23,8 +23,8 @@ class ApiAdminController extends Controller
             $groupUsers = $users->groupBy('role_id');
 
             $roles = [
-                1 => 'Quản trị viên',
-                2 => 'Cán bộ'
+                1 => 'Admin',
+                2 => 'Officers'
             ];
 
             $responseData = [];

@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignIdFor(Plan::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(MajorSubject::class)->constrained()->cascadeOnDelete();
             $table->tinyInteger('semester_order');
-            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Admin\ApiSectionController;
 use App\Http\Controllers\Api\Admin\ApiSemesterController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
+use App\Http\Controllers\Api\Client\Student\ApiStudentController as ApiClientStudent;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
 use App\Http\Controllers\Api\Admin\ApiUserController;
@@ -71,5 +72,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     // test api import file excel students + teachers
     Route::post('import-students', [ApiUserController::class, 'importStudent']);
     Route::post('import-teachers', [ApiUserController::class, 'importTeacher']);
+
+    // test api detail-student
+    Route::get('detail-student/{id}', [ApiClientStudent::class, 'detailStudent']);
 
 // });

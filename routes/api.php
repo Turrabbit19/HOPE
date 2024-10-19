@@ -75,6 +75,13 @@ Route::get('/section/notifications/{id}', [ApiSectionController::class, 'getNoti
     // test api export file excel students + teachers
     Route::get('export-students', [ApiUserController::class, 'exportStudent']);
     Route::get('export-teachers', [ApiUserController::class, 'exportTeacher']);
+
+
+    // Route để lấy tất cả học sinh chưa đọc thông báo
+    Route::get('/unread-students', [ApiNotificationController::class, 'getUnreadStudents']);
+
+    // Route để lấy tất cả học sinh đã đọc thông báo
+    Route::get('/read-students', [ApiNotificationController::class, 'getReadStudents']);
     // });
 // });
 

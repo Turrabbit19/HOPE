@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Admin\ApiSemesterController;
 use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiNotificationController;
 use App\Http\Controllers\Api\Admin\ApiNotificationCoursesController;
+use App\Http\Controllers\Api\Student\ApiStudentNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,11 +78,13 @@ Route::get('/section/notifications/{id}', [ApiSectionController::class, 'getNoti
     Route::get('export-teachers', [ApiUserController::class, 'exportTeacher']);
 
 
-    // Route để lấy tất cả học sinh chưa đọc thông báo
-    Route::get('/unread-students', [ApiNotificationController::class, 'getUnreadStudents']);
 
+
+    Route::apiResource('student_notifications', ApiStudentNotificationController::class);
+    // Route để lấy tất cả học sinh chưa đọc thông báo
+    Route::get('/unread-students', [ApiStudentNotificationController::class, 'getUnreadStudents']);
     // Route để lấy tất cả học sinh đã đọc thông báo
-    Route::get('/read-students', [ApiNotificationController::class, 'getReadStudents']);
+    Route::get('/read-students', [ApiStudentNotificationController::class, 'getReadStudents']);
     // });
 // });
 

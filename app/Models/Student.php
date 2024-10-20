@@ -43,4 +43,8 @@ class Student extends Model
     {
         return $this->belongsToMany(Schedule::class);
     }
+    public function notifications()
+{
+    return $this->belongsToMany(StudentNotification::class);
+}
 }

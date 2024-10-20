@@ -30,4 +30,8 @@ class Notification extends Model
     public function courses() {
         return $this->belongsToMany(Course::class, 'notification_courses');
     }
+    public function notification()
+{
+    return $this->belongsTo(Notification::class, 'notification_id');
+}
 }

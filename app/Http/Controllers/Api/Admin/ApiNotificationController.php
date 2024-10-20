@@ -166,24 +166,4 @@ class ApiNotificationController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function getUnreadStudents()
-    {
-        try {
-            $notifications = StudentNotification::where('status', 0)->get();
-            return response()->json($notifications, 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Student_Notifications', 'message' => $e->getMessage()], 500);
-        }
-    }
-    
-      public function getReadStudents()
-    {
-        try {
-            $notifications = StudentNotification::where('status', 1)->get();
-            return response()->json($notifications, 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Student_Notifications', 'message' => $e->getMessage()], 500);
-        }
-    }
 }

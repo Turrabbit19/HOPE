@@ -44,7 +44,6 @@ class ApiCourseController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -53,6 +52,15 @@ class ApiCourseController extends Controller
 
         try {
             $data = $validator->validated();
+            if($data['start_date'] >= Carbon::now()) {
+
+            }
+            elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                $data['status'] = "1";
+            } else {
+                $data['status'] = "2";
+            }
+
             $course = Course::create($data);
             
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
@@ -105,6 +113,17 @@ class ApiCourseController extends Controller
             $course = Course::findOrFail($id);
             
             $data = $validator->validated();
+            if(isset($data['start_date'])) {
+                if($data['start_date'] >= Carbon::now()) {
+
+                }
+                elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                    $data['status'] = "1";
+                } else {
+                    $data['status'] = "2";
+                }
+            }
+
             $course->update($data);
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);

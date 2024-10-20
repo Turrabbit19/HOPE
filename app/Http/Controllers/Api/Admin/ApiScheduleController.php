@@ -80,12 +80,14 @@ class ApiScheduleController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'course_semester_id' => 'required|exists:course_semesters,id',
-            'major_subject_id' => 'required|exists:major_subjects,id',
+            'course_id' => 'required|exists:courses,id',
+            'semester_id' => 'required|exists:semesters,id',
+            'major_id' => 'required|exists:majors,id',
+            'subject_id' => 'required|exists:subjects,id',
             'classroom_id' => 'required|exists:classrooms,id',
             'teacher_id' => 'required|exists:teachers,id',
             'shift_id' => 'required|exists:shifts,id',
-            'room_id' => 'required|exists:rooms,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'link' => 'nullable|url',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
@@ -142,12 +144,14 @@ class ApiScheduleController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'course_semester_id' => 'sometimes|required|exists:course_semesters,id',
-            'major_subject_id' => 'sometimes|required|exists:major_subjects,id',
+            'course_id' => 'sometimes|exists:courses,id',
+            'semester_id' => 'sometimes|exists:semesters,id',
+            'major_id' => 'sometimes|exists:majors,id',
+            'subject_id' => 'sometimes|exists:subjects,id',
             'classroom_id' => 'sometimes|required|exists:classrooms,id',
             'teacher_id' => 'sometimes|required|exists:teachers,id',
             'shift_id' => 'sometimes|required|exists:shifts,id',
-            'room_id' => 'sometimes|required|exists:rooms,id',
+            'room_id' => 'nullable|required|exists:rooms,id',
             'link' => 'nullable|url',
             'start_date' => 'sometimes|required|date|after_or_equal:today',
             'end_date' => 'sometimes|required|date|after:start_date',

@@ -98,6 +98,15 @@ class ApiSemesterController extends Controller
 
         try {
             $data = $validator->validated();
+            if($data['start_date'] >= Carbon::now()) {
+
+            }
+            elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                $data['status'] = "1";
+            } else {
+                $data['status'] = "2";
+            }
+
             $semester = Semester::create($data);
             
             $coursesWithOrder = collect($data['courses'])->mapWithKeys(function ($course) {
@@ -163,6 +172,17 @@ class ApiSemesterController extends Controller
             $semester = Semester::findOrFail($id);
             
             $data = $validator->validated();
+            if(isset($data['start_date'])) {
+                if($data['start_date'] >= Carbon::now()) {
+
+                }
+                elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                    $data['status'] = "1";
+                } else {
+                    $data['status'] = "2";
+                }
+            }
+
             $semester->update($data);
 
             if (isset($data['courses'])) {

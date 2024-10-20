@@ -98,7 +98,7 @@ class ApiTeacherController extends Controller
             ]);    
 
             $teacherData = [
-                'avatar' => $data['avatar'],
+                'avatar' => $user->avatar,
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
@@ -157,7 +157,7 @@ class ApiTeacherController extends Controller
             'avatar' => 'nullable|string', 
             'name' => 'sometimes|string|max:50',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'sometimes|string|max:10|unique:users,phone' . $id,
+            'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
             'dob' => 'sometimes|date|before:today',
             'gender' => 'sometimes|boolean',
             'ethnicity' => 'sometimes|string|max:50',
@@ -184,16 +184,17 @@ class ApiTeacherController extends Controller
                 'major_id' => $data['teacher_major_id'] ?? $teacher->major_id,
                 'teacher_code' => $data['teacher_code'] ?? $teacher->teacher_code,
             ]));
-
+            
             $teacherData = [
-                'avatar' => $data['avatar'],
-                'name' => $teacher->user->name,
-                'email' => $teacher->user->email,
-                'phone' => $teacher->user->phone,
-                'dob' => Carbon::parse($teacher->user->dob)->format('d/m/Y'),
-                'gender' => $teacher->user->gender ? "Nam" : "Nữ",
-                'ethnicity' => $teacher->user->ethnicity,
-                'address' => $teacher->user->address,
+                'avatar' => $user->avatar,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'dob' => Carbon::parse($user->dob)->format('d/m/Y'),
+                'gender' => $user->gender ? "Nam" : "Nữ",
+                'ethnicity' => $user->ethnicity,
+                'address' => $user->address,
+
                 'teacher_code' => $teacher->teacher_code,
                 'major_name' => $teacher->major->name,
             ];

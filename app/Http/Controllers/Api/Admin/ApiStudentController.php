@@ -103,7 +103,7 @@ class ApiStudentController extends Controller
             ]);    
 
             $studentData = [
-                'avatar' => $data['avatar'],
+                'avatar' => $user->avatar,
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
@@ -166,7 +166,7 @@ class ApiStudentController extends Controller
             'avatar' => 'nullable|string', 
             'name' => 'sometimes|string|max:50',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'sometimes|string|max:10|unique:users,phone' . $id,
+            'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
             'dob' => 'sometimes|date|before:today',
             'gender' => 'sometimes|boolean',
             'ethnicity' => 'sometimes|string|max:50',
@@ -197,14 +197,15 @@ class ApiStudentController extends Controller
             ]));
 
             $studentData = [
-                'avatar' => $data['avatar'],
-                'name' => $student->user->name,
-                'email' => $student->user->email,
-                'phone' => $student->user->phone,
-                'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
-                'gender' => $student->user->gender ? "Nam" : "Nữ",
-                'ethnicity' => $student->user->ethnicity,
-                'address' => $student->user->address,
+                'avatar' => $user->avatar,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'dob' => Carbon::parse($user->dob)->format('d/m/Y'),
+                'gender' => $user->gender ? "Nam" : "Nữ",
+                'ethnicity' => $user->ethnicity,
+                'address' => $user->address,
+
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
                 'major_name' => $student->major->name,
@@ -218,7 +219,6 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function destroy(string $id)
     {
         try {

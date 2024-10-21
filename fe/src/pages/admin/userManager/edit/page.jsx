@@ -40,9 +40,11 @@ import { uploadMultipleFiles } from "../../../../utils/upload";
 
 const UserEdit = () => {
 
+
+  const { state } = useLocation();
+
+  console.log(state);
   
-  const {state} = useLocation();
- 
   const [role, setRole] = useState(""); // Không có vai trò nào chọn ban đầu
   const [roleNumber, setRoleNumber] = useState(0); // Không có vai trò nào chọn ban đầu
   const [listMajor, setListMajor] = useState([]);
@@ -53,31 +55,45 @@ const UserEdit = () => {
   const [avatar, setAvatar] = useState(null)
   const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef()
+
+  const [loadValue, setLoadValue] = useState(false)
   useEffect(() => {
-    getListCourse().then((res) => {
-      setListCourse(res.data.data);
-    });
-    getListMajor().then((res) => {
-      setListMajor(res.data.data);
-    });
-   
-   
-      if(state.type === 'students'){
-     getStudent(params.id).then((res) => initValue(res))
-      } else if(state.type === 'teachers'){
-       getTeacher(params.id).then((res) => initValue(res))
-      } else if(state.type === 'admins'){
-     getUser(params.id).then((res) => initValue(res))
-      }
+    async function handleGetValue(){
+     await getListCourse().then((res) => {
+        setListCourse(res.data.data);
+      });
+     await getListMajor().then((res) => {
+        setListMajor(res.data.data);
+      });
+
+      setLoadValue(true)
+    }
 
 
+    handleGetValue()
 
   }, []);
 
+  useEffect(() => {
+    if(loadValue){
+    if (state.type === 'students') {
+      getStudent(params.id).then((res) => initValue(res))
+      handleRoleChange('student')
+    } else if (state.type === 'teachers') {
+      getTeacher(params.id).then((res) => initValue(res))
+      handleRoleChange('teacher')
+    }  else {
+      getUser(params.id).then((res) => initValue(res))
+    }
+    }
+  }, [loadValue])
 
-  function initValue(res){
+
+  function initValue(res) {
+    console.log(res);
+    
     setUser(res.data.data);
-  
+
     for (const key of Object.keys(res.data.data)) {
       if (key === "gender")
         form.setFieldValue("gender", res.data.data[key] === "Nam");
@@ -87,9 +103,13 @@ const UserEdit = () => {
         form.setFieldValue(key, moment(res.data.data[key], "DD/MM/YYYY"));
       } else form.setFieldValue(key, res.data.data[key]);
     }
-    form.setFieldValue("gender", res.data.data["gender"] === "Nam");
-
-    switch (res.data.data.role) {
+    if(state.type === 'students'){
+      form.setFieldValue("course", listCourse.find((e) => e.name = res.data.data["course_name"]).id);
+    
+    } else if(state.type === 'teachers'){
+      form.setFieldValue("major", listMajor.find((e) => e.name = res.data.data["major_name"]).id);
+    } else {
+ switch (res.data.data.role) {
       case "officer":
         setRoleNumber(2);
         form.setFieldValue("role", "admin1");
@@ -114,14 +134,19 @@ const UserEdit = () => {
       default:
         break;
     }
+    }
+   
+    form.setFieldValue("gender", res.data.data["gender"] === "Nam");
+    // console.log(res.data)
+   
   }
 
   const [form] = Form.useForm();
 
   // Xử lý khi thay đổi vai trò
   const handleRoleChange = (e) => {
-    setRole(e.target.value);
-    switch (e.target.value) {
+    setRole(e);
+    switch (e) {
       case "admin1":
         setRoleNumber(1);
         break;
@@ -140,47 +165,100 @@ const UserEdit = () => {
     }
   };
 
+
+  console.log(avatar);
   const onFinish = async (values) => {
     try {
       values.dob = values.dob.format("YYYY-MM-DD HH:mm:ss");
-      const uploadResults = await uploadMultipleFiles(
-        'images',
-        URL.createObjectURL(avatar),
-        '/public'
-     )
-     let data = {
-      ...values,
-      role_id: roleNumber,
-      gender: values.gender === "Name",
-      avatar: uploadResults[0]?.data?.fullPath ?? null
-     }
+    
+      
+      let data = {
+        ...values,
+        role_id: roleNumber,
+        gender: values?.gender === "Name",
+       
+      }
+      if(avatar){
+        let uploadResults = await uploadMultipleFiles(
+          'images',
+          URL.createObjectURL(avatar),
+          '/public'
+        )
+        data = {...data, avatar: uploadResults ? uploadResults[0]?.data?.fullPath : null}
+      }
 
-     if(roleNumber === 3){
-      editStudents(params.id, {
-        ...data,
-        user_id: user.id,
-        major_id: values.major,
-        course_id: values.course,
-        student_code: values.student_code,
-        student_current_semester: 1,
-        student_status: 1,
-     
-      })
-      navigate("/admin/all-student");
-       } else if(roleNumber === 4){
-        editTeachers(params.id, {
-          ...data,
-          user_id: user.id,
-          major_id: values.major,
-          teacher_code: values.teacher_code,
-          teacher_status: 1,
+      if(roleNumber === 3){
+        data = { ...data,
+           
+              major_id: values.major,
+              course_id: values.course,
+              student_code: values.student_code,
+              student_current_semester: 1,
+              student_status: 1,}
+      } else if(roleNumber === 4){
+        data = {...data,
+             
+              major_id: values.major,
+              teacher_code: values.teacher_code,
+         teacher_status: 1,}
+      }
+
+  
+      if(state.type === 'students'){
+        editStudents(params.id , data).then((res) => {
+          navigate("/admin/all-student");
+        }).catch((err) => {
+          message.error('Đã xảy ra lỗi vui lòng kiểm tra lại!')
+          return
         })
-        navigate("/admin/teacher-manager");
-       } else if(roleNumber === 2 || roleNumber === 1){
-        editAdmin(params.id, data)
-        navigate("/admin/admin-manager");
-       }
-   
+       
+      } else if(state.type === 'teachers'){
+        editTeachers(params.id , data).then((res) => {
+          navigate("/admin/teacher-manager");
+        }).catch((err) => {
+          message.error('Đã xảy ra lỗi vui lòng kiểm tra lại!')
+          return
+        })
+      
+      } else {
+        editAdmin(params.id, data).then((res) => {
+          navigate("/admin/admin-manager");
+        }).catch((err) => {
+          message.error('Đã xảy ra lỗi vui lòng kiểm tra lại!')
+          return
+        })
+       
+      }
+    
+
+      // if (roleNumber === 3) {
+      //   editStudents(params.id, {
+      //     ...data,
+      //     user_id: user.id,
+      //     major_id: values.major,
+      //     course_id: values.course,
+      //     student_code: values.student_code,
+      //     student_current_semester: 1,
+      //     student_status: 1,
+
+      //   })
+      //   navigate("/admin/all-student");
+      // } else if (roleNumber === 4) {
+      //   editTeachers(params.id, {
+      //     ...data,
+      //     user_id: user.id,
+      //     major_id: values.major,
+      //     teacher_code: values.teacher_code,
+      //     teacher_status: 1,
+      //   })
+      //   navigate("/admin/teacher-manager");
+      // } else if (roleNumber === 2 || roleNumber === 1) {
+      //   console.log("Dô đây kh");
+        
+      //   editAdmin(params.id, data)
+      //   navigate("/admin/admin-manager");
+      // }
+
       message.success(`Đã sửa khoản thành công`);
     } catch (error) {
       for (const key of Object.keys(error?.response?.data?.errors)) {
@@ -188,7 +266,7 @@ const UserEdit = () => {
       }
     }
   };
- 
+
   return (
     <Card hoverable>
       <Form
@@ -296,59 +374,62 @@ const UserEdit = () => {
               label="Avatar"
               name="avatar"
             >
-              <Button onClick={() => fileInputRef?.current?.click()} icon={<UploadOutlined />}>Tải lên Avatar</Button>
-              <input style={{display: 'none'}} ref={fileInputRef} onChange={(e) => setAvatar(e.target.files[0] ?? null)} type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" />
-              {avatar && (
-                <div
-                  style={{ position: 'relative', display: 'inline-block' }}
-                  onMouseEnter={() => setIsHovered(true)}
-                  onMouseLeave={() => setIsHovered(false)}
-                >
-                  <Image
-                    alt={'avatar'}
-                    src={URL.createObjectURL(avatar)}
-                    preview={false}
-                    style={{
-                      width: '140px',
-                      height: '140px',
-                      aspectRatio: '1/1',
-                      objectFit: 'cover',
-                      borderRadius: '6px',
-                      margin: '6px 0px 10px',
-                    }}
-                  />
-                  {isHovered && (
-                    <div
+              <div className="flex flex-col items-start">
+                <Button onClick={() => fileInputRef?.current?.click()} icon={<UploadOutlined />}>Tải lên Avatar</Button>
+                <input style={{ display: 'none' }} ref={fileInputRef} onChange={(e) => setAvatar(e.target.files[0] ?? null)} type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" />
+                {avatar && (
+                  <div
+                    style={{ position: 'relative', display: 'inline-block' }}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                  >
+                    <Image
+                      alt={'avatar'}
+                      src={URL.createObjectURL(avatar)}
+                      preview={false}
                       style={{
-                        position: 'absolute',
-                        top: '6px',
-                        left: 0,
                         width: '140px',
                         height: '140px',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        aspectRatio: '1/1',
+                        objectFit: 'cover',
                         borderRadius: '6px',
+                        margin: '6px 0px 10px',
                       }}
-                    >
-                      <DeleteOutlined
-                        style={{ fontSize: '16px', color: 'white', cursor: 'pointer' }}
-                        onClick={() => {
-                          setAvatar(null);
-                          setIsHovered(false)
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = '';
-                          }
+                    />
+                    {isHovered && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '6px',
+                          left: 0,
+                          width: '140px',
+                          height: '140px',
+                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          borderRadius: '6px',
                         }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+                      >
+                        <DeleteOutlined
+                          style={{ fontSize: '16px', color: 'white', cursor: 'pointer' }}
+                          onClick={() => {
+                            setAvatar(null);
+                            setIsHovered(false)
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
             </Form.Item>
             {/* Vai trò */}
-            <Form.Item
+            {/* <Form.Item
               label="Vai Trò"
               name="role"
               rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
@@ -359,7 +440,7 @@ const UserEdit = () => {
                 <Radio value="admin">Cán Bộ</Radio>
                 <Radio value="admin1">Quản Trị Viên</Radio>
               </Radio.Group>
-            </Form.Item>
+            </Form.Item> */}
             {/* Các trường hiển thị theo vai trò */}
             {role === "student" && (
               <Row gutter={16}>

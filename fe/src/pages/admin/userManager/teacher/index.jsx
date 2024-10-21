@@ -1,4 +1,4 @@
-import { Avatar, Button, Descriptions, Divider, Modal, Popconfirm, Table } from "antd";
+import { Avatar, Button, Descriptions, Divider, Input, Modal, Popconfirm, Table } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
@@ -26,7 +26,9 @@ const TeacherManager = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userDetail, setUserDetail] = useState({});
-  const [recordType, setRecordType] = useState(""); 
+  const [recordType, setRecordType] = useState("");
+
+  const [textSearch, setTextSearch] = useState('')
 
   const [panigation, setPanigation] = useState({
     current_page: 1,
@@ -37,12 +39,12 @@ const TeacherManager = () => {
     (async () => {
       try {
         axios
-        const { data } = await 
-        axios.get("http://localhost:8000/api/admin/teachers", {
-          params: {
-            per_page: 100
-          }
-        });
+        const { data } = await
+          axios.get("http://localhost:8000/api/admin/teachers", {
+            params: {
+              per_page: 100
+            }
+          });
         console.log(data)
         let pa = data.pagination
         setData(data.data);
@@ -73,9 +75,9 @@ const TeacherManager = () => {
       key: "avatar",
       width: 80,
       render: (avatar) => (
-        <Avatar 
-        src={`https://qrrhjldgdidplxjzixkd.supabase.co/storage/v1/object/public/${avatar}` || <UserOutlined />}
-        icon={!avatar && <UserOutlined />} />
+        <Avatar
+          src={`https://qrrhjldgdidplxjzixkd.supabase.co/storage/v1/object/public/${avatar}` || <UserOutlined />}
+          icon={!avatar && <UserOutlined />} />
       ),
     },
     {
@@ -91,7 +93,7 @@ const TeacherManager = () => {
             <span>{res.teacher_code}</span>
           </div>
         )
-        
+
       }
     },
     {
@@ -101,7 +103,7 @@ const TeacherManager = () => {
       width: 200,
       fixed: "left",
     },
-   
+
     {
       title: "Email",
       dataIndex: "email",
@@ -114,37 +116,12 @@ const TeacherManager = () => {
       width: 150,
       key: "2",
     },
-    // {
-    //   title: "Giới tính",
-    //   dataIndex: "gender",
-    //   key: "4",
-    // },
-    // {
-    //   title: "Dân tộc",
-    //   dataIndex: "ethnicity",
-    //   key: "5",
-    // },
-    // {
-    //   title: "Địa chỉ",
-    //   dataIndex: "address",
-    //   key: "6",
-    // },
-    // {
-    //   title: "Chứ vụ",
-    //   dataIndex: "role_name",
-    //   key: "7",
-    // },
     {
       title: "Ngành dậy",
       dataIndex: "major_name",
       key: "8",
       width: 200
     },
-    // {
-    //   title: "Môn học",
-    //   dataIndex: "semester_name",
-    //   key: "8",
-    // },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -157,9 +134,9 @@ const TeacherManager = () => {
       fixed: "right",
       width: 170,
       render: (_, record) => (
-       
 
-<div className="flex flex-row items-center justify-between">
+
+        <div className="flex flex-row items-center justify-between">
           <Button
             type="link"
             icon={<InfoCircleOutlined />}
@@ -191,8 +168,8 @@ const TeacherManager = () => {
             <Button type="link" icon={<DeleteOutlined />} />
           </Popconfirm>
         </div>
-    
-  
+
+
       ),
     },
   ];
@@ -203,15 +180,9 @@ const TeacherManager = () => {
       id: item.id,
       stt: index + 1,
       fullname: item.name,
-      teacher_code: item.code,  
+      teacher_code: item.code,
       email: item.email,
       phone: item.phone,
-      // dob: item.dob,
-      // gender: item.gender ? "Nam" : "Nữ",
-      // ethnicity: item.user.ethnicity,
-      // address: item.user.address,
-      // role: item.user.role.name,
-      // semester_name: item.semester.name,
       major_name: item.major_name,
       status: item.status,
       avatar: item.avatar
@@ -233,21 +204,57 @@ const TeacherManager = () => {
     message.success(`Đã xóa tài khoản: ${record.name}`);
   };
 
-  const handleAdd = () =>{
-    navigate(`/admin/list-users/add/`)
+  const handleAdd = () => {
+    navigate(`/admin/list-users/add/`, {
+      state: {
+        type: 'teachers'
+      }
+    })
   }
-  
+
+  let dataSearch = teachers.filter((e) => {
+    let fullname = e?.fullname || ''
+    let teacher_code = e.teacher_code || ''
+    if(textSearch === ''){
+      return true
+    }
+
+    return fullname.search(textSearch) > -1 || teacher_code.search(textSearch) > -1
+
+  })
+
+
   return (
     <>
-      <div className="flex justify-between mb-2">
-        <h1>Giảng viên</h1>
-      
-         <Button onClick={handleAdd}>Thêm giảng viên</Button>
-   
+     <div>
+        <div className="flex justify-between mb-2">
+          <h1>Giảng viên</h1>
+          <Button onClick={handleAdd}>Thêm giảng viên</Button>
+        </div>
+        <div className="relative">
+          <Input
+            value={textSearch}
+            allowClear={true}
+            onChange={(e) => {
+              setTextSearch(e.target.value)
+              if(panigation.page !== 1){
+                setPanigation((pre) => ({
+                  ...pre,
+                  current_page: 1
+                }))
+              } 
+            }}
+            onClear={() => setTextSearch('')}
+            placeholder="Tìm kiếm theo mã hoặc tên giảng viên ...."
+            className="xl:w-[300px] md:w-[180px] max-[767px]:w-[120px]"
+          />
+        </div>
       </div>
+
+      <Divider />
       <Table
         columns={columns}
-        dataSource={teachers.slice(panigation.current_page > 1 ?  (panigation.current_page - 1) * 10 : panigation.current_page - 1, panigation.current_page * 10)}
+        dataSource={dataSearch.slice(panigation.current_page > 1 ? (panigation.current_page - 1) * 10 : panigation.current_page - 1, panigation.current_page * 10)}
         onChange={(e) => {
           setPanigation((pre) => ({
             ...pre,
@@ -264,15 +271,14 @@ const TeacherManager = () => {
         }}
       />
 
-{selectedRecord && (
+      {selectedRecord && (
         <Modal
-          title={`Chi tiết ${
-            recordType === "teacher"
-              ? "Giảng Viên"
-              : recordType === "classManager"
+          title={`Chi tiết ${recordType === "teacher"
+            ? "Giảng Viên"
+            : recordType === "classManager"
               ? "Quản Trị Viên"
               : "Học Viên"
-          }`}
+            }`}
           visible={isModalVisible}
           onCancel={() => setIsModalVisible(false)}
           footer={[
@@ -306,37 +312,37 @@ const TeacherManager = () => {
             {/* Thông tin cho Quản Trị Viên */}
 
             {/* Thông tin cho Học Viên */}
-            
-              <>
+
+            <>
               <Descriptions.Item label="Mã Giảng Viên">
-                  {userDetail?.teacher_code ?? ''}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ngành Học">
-                  {userDetail?.major_name}
-                </Descriptions.Item>
-                <Descriptions.Item label="Trạng Thái">
-                  {(userDetail?.status)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ngày Sinh">
-                  {userDetail.dob}
-                </Descriptions.Item>
-                <Descriptions.Item label="Giới Tính">
-                  {userDetail.gender ? "Nam" : "Nữ"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Dân Tộc">
-                  {userDetail.ethnicity}
-                </Descriptions.Item>
-                <Descriptions.Item label="Địa Chỉ">
-                  {userDetail.address}
-                </Descriptions.Item>
-              </>
-           
+                {userDetail?.teacher_code ?? ''}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngành Học">
+                {userDetail?.major_name}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng Thái">
+                {(userDetail?.status)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày Sinh">
+                {userDetail.dob}
+              </Descriptions.Item>
+              <Descriptions.Item label="Giới Tính">
+                {userDetail.gender ? "Nam" : "Nữ"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Dân Tộc">
+                {userDetail.ethnicity}
+              </Descriptions.Item>
+              <Descriptions.Item label="Địa Chỉ">
+                {userDetail.address}
+              </Descriptions.Item>
+            </>
+
           </Descriptions>
         </Modal>
       )}
     </>
 
-    
+
   );
 };
 

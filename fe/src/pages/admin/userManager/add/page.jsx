@@ -21,12 +21,16 @@ import {
   createUser,
   createTeacher,
 } from "../../../../services/user-service";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { uploadMultipleFiles } from "../../../../utils/upload";
 
 const { Option } = Select;
 
 const UserAdd = () => {
+
+  const {state} = useLocation();
+  
+
   const [role, setRole] = useState(""); // Không có vai trò nào chọn ban đầu
   const [roleNumber, setRoleNumber] = useState(0); // Không có vai trò nào chọn ban đầu
   const [listMajor, setListMajor] = useState([]);
@@ -37,6 +41,11 @@ const UserAdd = () => {
 
   const navigate = useNavigate();
   useEffect(() => {
+    if(state?.type === 'students'){
+      handleRoleChange('student')
+    } else if(state?.type === 'teachers'){
+      handleRoleChange('teacher')
+    } 
     getListCourse().then((res) => {
       setListCourse(res.data.data);
     });
@@ -47,6 +56,27 @@ const UserAdd = () => {
 
   // Xử lý khi thay đổi vai trò
   const handleRoleChange = (e) => {
+    setRole(e);
+    switch (e) {
+      case "admin1":
+        setRoleNumber(1);
+        break;
+      case "admin":
+        setRoleNumber(2);
+        break;
+      case "student":
+        setRoleNumber(3);
+        break;
+      case "teacher":
+        setRoleNumber(4);
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  const handleRoleChangeByValue = (e) => {
     setRole(e.target.value);
     switch (e.target.value) {
       case "admin1":
@@ -67,6 +97,7 @@ const UserAdd = () => {
     }
   };
 
+  console.log(roleNumber)
   const onSubmit = async (values) => {
     try {
       try {
@@ -76,6 +107,8 @@ const UserAdd = () => {
           URL.createObjectURL(avatar),
           '/public'
        )
+       console.log(uploadResults[0]?.data?.fullPath);
+       
        const data = {
         ...values,
         password: "123123123",
@@ -83,33 +116,47 @@ const UserAdd = () => {
         avatar: uploadResults[0]?.data?.fullPath ?? null
        }
 
-       console.log("tới đây chưa");
-       
-       
+    
        if(roleNumber === 3){
         createStudent({
           ...data,
-          user_id: user.id,
-          major_id: values.major,
-          course_id: values.course,
+          student_major_id: values.major,
+          student_course_id: values.course,
           student_code: values.student_code,
           student_current_semester: 1,
           student_status: 1,
        
+        }).then((res) => {
+          navigate("/admin/all-student");
+        }).catch((error) => {
+           message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+           return
+          // message.error
         })
-        navigate("/admin/all-student");
+    
          } else if(roleNumber === 4){
           createTeacher({
             ...data,
-            user_id: user.id,
-            major_id: values.major,
+            teacher_major_id: values.major,
             teacher_code: values.teacher_code,
             teacher_status: 1,
           })
-          navigate("/admin/teacher-manager");
+          .then((res) => {
+            navigate("/admin/teacher-manager");
+          }).catch((error) => {
+             message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+             return
+            // message.error
+          })
+         
          } else if(roleNumber === 2 || roleNumber === 1){
-          createUser(data)
-          navigate("/admin/admin-manager");
+          createUser(data).then((res) => {
+            navigate("/admin/admin-manager");
+          }).catch((error) => {
+             message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+             return
+            // message.error
+          })
          }
        
          message.success('Thêm thành công!');
@@ -118,28 +165,28 @@ const UserAdd = () => {
           message.error(error.response.data.errors[key][0]);
         }
       }
-      switch (role) {
-        case "teacher":
-          await createTeacher({
-            ...values,
-            user_id: user.id,
-            major_id: values.major,
-            teacher_code: values.teacher_code,
-          });
-          break;
-        case "student":
-          await createStudent({
-            ...values,
-            user_id: user.id,
-            major_id: values.major,
-            course_id: values.course,
-            student_code: values.student_code,
-          });
-          break;
+      // switch (role) {
+      //   case "teacher":
+      //     await createTeacher({
+      //       ...values,
+      //       user_id: user.id,
+      //       major_id: values.major,
+      //       teacher_code: values.teacher_code,
+      //     });
+      //     break;
+      //   case "student":
+      //     await createStudent({
+      //       ...values,
+      //       user_id: user.id,
+      //       major_id: values.major,
+      //       course_id: values.course,
+      //       student_code: values.student_code,
+      //     });
+      //     break;
 
-        default:
-          break;
-      }
+      //   default:
+      //     break;
+      // }
     } catch (error) {}
   };
 
@@ -250,11 +297,12 @@ const UserAdd = () => {
               label="Avatar"
               name="avatar"
             >
-              <Button onClick={() => fileInputRef?.current?.click()} icon={<UploadOutlined />}>Tải lên Avatar</Button>
+             <div className="flex flex-col items-start">
+             <Button onClick={() => fileInputRef?.current?.click()} icon={<UploadOutlined />}>Tải lên Avatar</Button>
               <input style={{display: 'none'}} ref={fileInputRef} onChange={(e) => setAvatar(e.target.files[0] ?? null)} type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" />
               {avatar && (
                 <div
-                  style={{ position: 'relative', display: 'inline-block' }}
+                  style={{ position: 'relative', display: 'inline-block'}}
                   onMouseEnter={() => setIsHovered(true)}
                   onMouseLeave={() => setIsHovered(false)}
                 >
@@ -266,8 +314,8 @@ const UserAdd = () => {
                       width: '140px',
                       height: '140px',
                       aspectRatio: '1/1',
-                      objectFit: 'cover',
-                      borderRadius: '6px',
+                      objectFit: 'fill',
+                      borderRadius: 10,
                       margin: '6px 0px 10px',
                     }}
                   />
@@ -300,20 +348,19 @@ const UserAdd = () => {
                   )}
                 </div>
               )}
+             </div>
             </Form.Item>
             {/* Vai trò */}
-            <Form.Item
+            {state?.type === 'admin' && <Form.Item
               label="Vai Trò"
               name="role"
               rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
             >
-              <Radio.Group onChange={handleRoleChange}>
-                <Radio value="student">Sinh Viên</Radio>
-                <Radio value="teacher">Giáo Viên</Radio>
+              <Radio.Group onChange={handleRoleChangeByValue}>
                 <Radio value="admin">Cán Bộ</Radio>
                 <Radio value="admin1">Quản Trị Viên</Radio>
               </Radio.Group>
-            </Form.Item>
+            </Form.Item>}
             {/* Các trường hiển thị theo vai trò */}
             {role === "student" && (
               <Row gutter={16}>

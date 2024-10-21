@@ -1,3 +1,4 @@
+import axios from "axios";
 import instance from "../config/axios";
 
 const createUser = async (data) => {
@@ -34,10 +35,10 @@ const editAdmin = async (id, data) => {
   return instance.put("/admin/officers/" + id, data);
 };
 const editStudents = async (id, data) => {
-  return instance.put("/admin/admins/" + id, data);
+  return axios.put(`http://localhost:8000/api/admin/students/${id}`, data)
 };
 const editTeachers = async (id, data) => {
-  return instance.put("/admin/admins/" + id, data);
+  return instance.put("/admin/teachers/" + id, data);
 };
 const getStudent = async (id) => {
   return instance.get("/admin/students/" + id);

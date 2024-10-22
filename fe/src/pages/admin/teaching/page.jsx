@@ -417,11 +417,11 @@ const Teach = () => {
                                             placeholder="Chọn trạng thái"
                                             options={[
                                                 {
-                                                    value: "1",
+                                                    value: "Đang hoạt động",
                                                     label: "Đang hoạt động",
                                                 },
                                                 {
-                                                    value: "2",
+                                                    value: "Tạm dừng",
                                                     label: "Tạm dừng",
                                                 },
                                             ]}

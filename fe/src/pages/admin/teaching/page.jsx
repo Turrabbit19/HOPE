@@ -27,8 +27,6 @@ const Teach = () => {
   const [initialValues, setInitialValues] = useState({});
   const [form] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
-  const [isUnique, setIsUnique] = useState(null);
-  const [name, setName] = useState('');
   const pageSize = 8;
 
   useEffect(() => {
@@ -46,25 +44,7 @@ const Teach = () => {
     fetchMajors();
   }, []);
 
-  const checkUniqueName = debounce(async (name) => {
-    if (name) {
-        try {
-            const response = await instance.get(`/admin/majors/check-unique/${name}`);
-            setIsUnique(response.data.is_unique);
-        } catch (error) {
-            console.error(error);
-            message.error('Có lỗi xảy ra.');
-        }
-    } else {
-        setIsUnique(null);
-    }
-}, 2000);
 
-const handleNameChange = (e) => {
-  const newName = e.target.value;
-  setName(newName);
-  checkUniqueName(newName);
-};
 
   const onHandleSubmit = async (values) => {
     setLoading(true);
@@ -165,7 +145,6 @@ const handleNameChange = (e) => {
     setIsModalVisible(true);
   };
 
-  // Tính toán các chỉ số cho phân trang
   const indexOfLastMajor = currentPage * pageSize;
   const indexOfFirstMajor = indexOfLastMajor - pageSize;
   const currentMajors = (filterMajors.length > 0 ? filterMajors : majors).slice(
@@ -212,7 +191,6 @@ const handleNameChange = (e) => {
             </span>
           </div>
 
-          {/* Hiển thị danh sách ngành học */}
           <div className="row row-cols-2 g-3">
             {currentMajors.length > 0 ? (
               currentMajors.map((item) => (
@@ -334,9 +312,6 @@ const handleNameChange = (e) => {
                     <div className="teaching__add-form-group mt-14">
                       <Form.Item
                         name="name"
-                        onChange={handleNameChange}
-                        validateStatus={isUnique === false ? 'error' : ''}
-                        help={isUnique === false ? 'Tên đã tồn tại!' : ''}
                         rules={[
                           {
                             required: true,
@@ -404,7 +379,7 @@ const handleNameChange = (e) => {
                 <button type="reset" className="btn btn--cancel">
                   Reset
                 </button>
-                <button className="btn btn--primary" disabled={isUnique === false}>
+                <button className="btn btn--primary">
                   {update ? "Cập nhật" : "Thêm mới"}
                 </button>
               </div>

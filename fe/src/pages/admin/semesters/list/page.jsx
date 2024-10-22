@@ -29,6 +29,7 @@ const ListSemester = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [form] = Form.useForm();
   const [additionalVariants, setAdditionalVariants] = useState([]);
+  const [id, setId] = useState()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +40,7 @@ const ListSemester = () => {
         ]);
         setCourses(coursesResponse.data.data);
         setSemesters(semestersResponse.data.data);
+        console.log(semestersResponse.data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -53,12 +55,8 @@ const ListSemester = () => {
     setSearchTerm(value.toLowerCase());
   };
 
-  //   const filteredSemesters = semesters.filter((semester) =>
-  //     semester.name.toLowerCase().includes(searchTerm)
-  //   );
-
   const showEditModal = (semester) => {
-    console.log(semester);
+    debugger
     setEditingSemester(semester);
     form.setFieldsValue({
       name: semester.name,
@@ -66,18 +64,24 @@ const ListSemester = () => {
       end_date: moment(semester.end_date),
       status: semester.status,
     });
-    setAdditionalVariants(
-      semester.courses.map((course, index) => ({
-        id: course.id,
-        order: course.order,
-      }))
-    );
-    console.log(additionalVariants);
-
+    const variants = semester.courses.map((course, index) => ({
+      course: course.id,
+      order: course.order,
+    }));
+    setId(semester.id);
+    setAdditionalVariants(variants);
+  
+    variants.forEach((variant, index) => {
+      form.setFieldsValue({
+        [`course_${index}`]: variant.course,
+        [`order_${index}`]: variant.order,
+      });
+    });
     setIsEditModalVisible(true);
   };
-
+  console.log(additionalVariants);
   const showAddModal = () => {
+    debugger
     setEditingSemester(null);
     form.resetFields();
     setAdditionalVariants([
@@ -90,6 +94,7 @@ const ListSemester = () => {
   };
 
   const handleModalOk = async (values) => {
+    console.log(values);
     console.log(values);
     const formattedValues = {
       name: values.name,
@@ -169,7 +174,42 @@ const ListSemester = () => {
     }
   };
 
+  const onHandleUpdate = async (values) => {
+    console.log(values);
+    const formattedValues = {
+      name: values.name,
+      start_date: values.start_date.format("YYYY-MM-DD"),
+      end_date: values.end_date.format("YYYY-MM-DD"),
+      status: 1,
+      courses: [],
+    };
+
+    additionalVariants.forEach((variant) => {
+      formattedValues.courses.push({
+        id: variant.course,
+        order: variant.order,
+      });
+    });
+    try {
+      setLoading(true);
+      const response = await instance.put(`admin/semesters/${id}`, formattedValues);
+      const updatedSemester = response.data.data;
+      setSemesters((prev) =>
+        prev.map((semester) => (semester.id === updatedSemester.id ? updatedSemester : semester))
+      );
+      notification.success({ message: "Cập nhật kỳ học thành công" });
+      form.resetFields();
+      handleModalCancel();
+    } catch (error) {
+      console.log(error.message);
+      notification.error("Cập nhật thất bại");
+    }finally {
+      setLoading(false);
+    }
+  }
+
   const handleCourseChange = (value, index) => {
+    debugger
     const updatedVariants = [...additionalVariants];
     updatedVariants[index].course = value;
     setAdditionalVariants(updatedVariants);
@@ -362,7 +402,7 @@ const ListSemester = () => {
             <Form
               form={form}
               layout="vertical"
-              onFinish={handleModalOk}
+              onFinish={isEditModalVisible ? onHandleUpdate : handleModalOk}
               autoComplete="off"
             >
               <Row gutter={30}>
@@ -488,7 +528,7 @@ const ListSemester = () => {
 
               <div className="flex justify-center items-center mt-4">
                 <Button type="primary" htmlType="submit">
-                  Tạo Kỳ Học
+                  {isEditModalVisible ? "Cập nhật kỳ học" : "Tạo kỳ học"}
                 </Button>
               </div>
             </Form>

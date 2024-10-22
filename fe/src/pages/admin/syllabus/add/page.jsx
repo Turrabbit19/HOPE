@@ -22,7 +22,7 @@ const SyllabusAdd = () => {
   const [subjectsByMajorAndSemester, setSubjectsByMajorAndSemester] = useState({});
   const [totalSemesters, setTotalSemesters] = useState(1); 
   const [majors, setMajors] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [subjects, setSubjects] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -30,16 +30,12 @@ const SyllabusAdd = () => {
     (async () => {
       try {
         setLoading(true);
-        const [subjectsData, majorsData] = await Promise.all([
-          instance.get(`admin/subjects`),
-          instance.get(`admin/majors`),
-        ]);
-        setSubjects(subjectsData.data.data);
+        const majorsData = await instance.get(`admin/majors`);
         setMajors(majorsData.data.data);
       } catch (error) {
         notification.error({
-          message: "Lối khi fetch data",
-          description: "thử lại sau",
+          message: "Lỗi khi fetch dữ liệu",
+          description: "Thử lại sau",
         });
         console.error(error);
       } finally {
@@ -48,10 +44,33 @@ const SyllabusAdd = () => {
     })();
   }, []);
 
-  const handleMajorsChange = (value) => {
+  const handleMajorsChange = async (value) => {
     setSelectedMajors(value);
     setSubjectsByMajorAndSemester({});
+    setTotalSemesters(1);
+    setSubjects({});
 
+
+    try {
+      setLoading(true);
+      const subjectsData = await Promise.all(value.map((majorId) =>
+        instance.get(`admin/majors/${majorId}/subjects`)
+      ));
+
+      const subjectsMap = {};
+      subjectsData.forEach((res, index) => {
+        subjectsMap[value[index]] = res.data.data;
+      });
+      setSubjects(subjectsMap);
+    } catch (error) {
+      notification.error({
+        message: "Lỗi khi fetch dữ liệu môn học",
+        description: "Thử lại sau",
+      });
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSemesterNumberChange = (value) => {
@@ -69,24 +88,25 @@ const SyllabusAdd = () => {
   };
 
   const getAvailableSubjectsForSemester = (majorId, semesterIndex) => {
-    
-    const selectedSubjects = Object.keys(subjectsByMajorAndSemester).flatMap((key) =>
-      Object.values(subjectsByMajorAndSemester[key] || {}).flat()
+    const selectedSubjectsInCurrentMajor = Object.entries(subjectsByMajorAndSemester[majorId] || {})
+    .flatMap(([index, subjects]) => 
+      Number(index) < semesterIndex ? subjects : []
     );
 
-    return subjects
-      .filter(subject => !selectedSubjects.includes(subject.id)) 
-      .map(subject => ({
-        label: subject.name,
-        value: subject.id,
-      }));
+  return (subjects[majorId] || []).filter(subject => 
+    !selectedSubjectsInCurrentMajor.includes(subject.id)
+  ).map(subject => ({
+    label: subject.name,
+    value: subject.id,
+  }));
   };
+  
 
   const transformData = (values, subjectsByMajorAndSemester) => {
     return {
       name: values.name,
       status: true, 
-      majors: Object.entries(subjectsByMajorAndSemester).map(([majorId, semesters], index) => ({
+      majors: Object.entries(subjectsByMajorAndSemester).map(([majorId, semesters]) => ({
         id: parseInt(majorId),
         semesters: Object.entries(semesters).map(([semesterIndex, subjects]) => ({
           order: parseInt(semesterIndex) + 1, 
@@ -97,24 +117,24 @@ const SyllabusAdd = () => {
   };
 
   const handleFormSubmit = async (values) => {
+    console.log(values);
     const finalData = transformData(values, subjectsByMajorAndSemester);
     console.log(finalData);
     try {
       setLoading(true);
       await instance.post(`admin/plans`, finalData);
       message.success("Thêm thành công kế hoạch học tập");
-      form.setFieldsValue();
+      form.resetFields();
       navigate(`/admin/list-syllabus`);
     } catch (error) {
       notification.error({
-        message: "Lối khi fetch data",
-        description: "thử lại sau",
+        message: "Lỗi khi lưu kế hoạch",
+        description: "Thử lại sau",
       });
       console.error(error);
-    }finally{
+    } finally {
       setLoading(false);
     }
-  
   };
 
   if (loading) {
@@ -178,7 +198,6 @@ const SyllabusAdd = () => {
                           options={getAvailableSubjectsForSemester(majorId, semesterIndex)}
                           onChange={(value) => handleCoursesChange(value, majorId, semesterIndex)}
                           style={{ width: "100%" }}
-                          // value={subjectsByMajorAndSemester[majorId]?.[semesterIndex] || []}
                         />
                       </Col>
                     </div>

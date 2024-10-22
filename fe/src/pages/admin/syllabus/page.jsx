@@ -194,7 +194,6 @@ const SyllabusList = () => {
                     </Link>
                     <Button
                       className="text-[#1167B4] font-bold flex items-center gap-2 justify-center border-none"
-                      // onClick={() => handleEdit(syllabus.id)}
                     >
                       <EditOutlined />
                       Chi tiết

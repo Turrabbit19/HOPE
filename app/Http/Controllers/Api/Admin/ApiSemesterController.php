@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
 use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

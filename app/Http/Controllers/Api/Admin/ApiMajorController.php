@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Major;
 use App\Models\MajorSubject;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -117,8 +116,7 @@ class ApiMajorController extends Controller
     }
 
     public function getAllSubjects(string $majorId) {
-        try {
-            
+        try {    
             $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject')->get();
     
             $data = $majorSubjects->map(function ($majorSubject) {

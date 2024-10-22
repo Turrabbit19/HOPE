@@ -1,0 +1,147 @@
+.teaching__card {
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #fff;
+    padding: 8px 16px;
+
+    &-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        margin: 0 -16px;
+        padding-bottom: 8px;
+        padding-left: 16px;
+    }
+
+    &-body {
+        padding-top: 8px;
+    }
+
+    &-thumb {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 310px;
+        padding: 0px 16px;
+        gap: 32px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    &-status {
+        display: flex;
+        height: 22px;
+        align-items: center;
+        padding: 4px 8px;
+        gap: 4px;
+        border-radius: 999px;
+        background: rgba(68, 204, 21, 0.1);
+
+        img {
+            height: 18px;
+            width: 18px;
+        }
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    &-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        padding-top: 6px;
+        border-top: 1px solid #0000001f;
+        margin: 0 -16px;
+    }
+}
+
+// display: flex;
+
+.listCourse {
+    &__left {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding-top: 18px;
+    }
+
+    &__item {
+        border: 1px solid #0000001f;
+        border-radius: 4px;
+
+        &-top {
+            padding: 6px;
+        }
+        &-body {
+            padding: 12px 18px;
+            border-top: 1px solid #0000001f;
+        }
+
+        &-bottom {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 8px 0;
+            border-top: 1px solid #0000001f;
+        }
+
+        &-status {
+            display: flex;
+
+            div {
+                align-items: center;
+                border-radius: 999px;
+                padding: 2px 6px;
+            }
+            img {
+                height: 18px;
+                width: 18px;
+            }
+
+            &:hover {
+                cursor: pointer;
+            }
+        }
+    }
+
+    &__popup {
+        border: 1px solid #0000001f;
+        position: fixed;
+        padding: 20px 24px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40%;
+        z-index: 9;
+        transition: 0.5s;
+        background: #fff;
+        overflow-y: auto;
+
+        &-list {
+            display: flex;
+            gap: 16px;
+            flex-direction: column;
+        }
+        &-item {
+            border: 1px solid #0000001f;
+            padding: 12px;
+        }
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        z-index: 8;
+        background: rgba(0, 0, 0, 0.4);
+        transition: 0.5s;
+    }
+}

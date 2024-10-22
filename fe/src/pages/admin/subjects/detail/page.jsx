@@ -8,8 +8,11 @@ import {
     Form,
     InputNumber,
     message,
+    Tabs,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+
+const { TabPane } = Tabs;
 
 const DetailSubject = () => {
     // Các biến trạng thái hiện tại
@@ -78,6 +81,9 @@ const DetailSubject = () => {
         setIsEditing(lecture !== null); // Nếu có dữ liệu, đang ở chế độ sửa
         setCurrentLecture(lecture); // Cập nhật bài giảng hiện tại (null nếu thêm mới)
         setIsLectureModalVisible(true); // Mở modal
+        if (lecture) {
+            setLectureCount(1);
+        }
     };
 
     // Hiển thị modal thêm mới/sửa lớp học
@@ -85,6 +91,9 @@ const DetailSubject = () => {
         setIsEditing(classroom !== null); // Nếu có dữ liệu, đang ở chế độ sửa
         setCurrentClassroom(classroom); // Cập nhật lớp học hiện tại (null nếu thêm mới)
         setIsClassroomModalVisible(true); // Mở modal
+        if (classroom) {
+            setClassroomCount(1);
+        }
     };
 
     // Đóng modal bài giảng
@@ -378,10 +387,14 @@ const DetailSubject = () => {
                                 </Form.Item>
                             </Form>
                         ) : (
-                            // Form Thêm Nhiều Bài Giảng
+                            // Form Thêm Nhiều Bài Giảng với Tabs và Card
                             <Form
                                 layout="vertical"
                                 onFinish={handleAddLectures}
+                                initialValues={{
+                                    lectureCount: lectureCount,
+                                    lectures: [],
+                                }}
                             >
                                 {/* Trường nhập số lượng bài học */}
                                 <Form.Item
@@ -411,50 +424,64 @@ const DetailSubject = () => {
                                     />
                                 </Form.Item>
 
-                                {/* Tạo các trường nhập tên và mô tả cho từng bài giảng */}
-                                {[...Array(lectureCount)].map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="border p-4 mb-4 rounded shadow-sm bg-gray-50"
-                                    >
-                                        <h3 className="mb-2 text-2xl font-semibold">
-                                            Bài học {index + 1}
-                                        </h3>
-                                        <Form.Item
-                                            name={["lectures", index, "name"]}
-                                            label="Tên Bài Giảng"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng nhập tên bài giảng!",
-                                                },
-                                            ]}
-                                        >
-                                            <Input placeholder="Nhập tên bài giảng" />
-                                        </Form.Item>
-                                        <Form.Item
-                                            name={[
-                                                "lectures",
-                                                index,
-                                                "description",
-                                            ]}
-                                            label="Mô Tả"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng nhập mô tả!",
-                                                },
-                                            ]}
-                                        >
-                                            <Input.TextArea
-                                                rows={3}
-                                                placeholder="Nhập mô tả bài giảng"
-                                            />
-                                        </Form.Item>
-                                    </div>
-                                ))}
+                                {lectureCount > 0 && (
+                                    <Tabs defaultActiveKey="1" type="card">
+                                        {[...Array(lectureCount)].map(
+                                            (_, index) => (
+                                                <TabPane
+                                                    tab={`Bài học ${index + 1}`}
+                                                    key={index + 1}
+                                                >
+                                                    <Card
+                                                        type="inner"
+                                                        title={`Thông tin Bài học ${
+                                                            index + 1
+                                                        }`}
+                                                        className="mb-4"
+                                                    >
+                                                        <Form.Item
+                                                            name={[
+                                                                "lectures",
+                                                                index,
+                                                                "name",
+                                                            ]}
+                                                            label="Tên Bài Giảng"
+                                                            rules={[
+                                                                {
+                                                                    required: true,
+                                                                    message:
+                                                                        "Vui lòng nhập tên bài giảng!",
+                                                                },
+                                                            ]}
+                                                        >
+                                                            <Input placeholder="Nhập tên bài giảng" />
+                                                        </Form.Item>
+                                                        <Form.Item
+                                                            name={[
+                                                                "lectures",
+                                                                index,
+                                                                "description",
+                                                            ]}
+                                                            label="Mô Tả"
+                                                            rules={[
+                                                                {
+                                                                    required: true,
+                                                                    message:
+                                                                        "Vui lòng nhập mô tả!",
+                                                                },
+                                                            ]}
+                                                        >
+                                                            <Input.TextArea
+                                                                rows={3}
+                                                                placeholder="Nhập mô tả bài giảng"
+                                                            />
+                                                        </Form.Item>
+                                                    </Card>
+                                                </TabPane>
+                                            )
+                                        )}
+                                    </Tabs>
+                                )}
 
                                 <Form.Item>
                                     <Button
@@ -561,10 +588,14 @@ const DetailSubject = () => {
                                 </Form.Item>
                             </Form>
                         ) : (
-                            // Form Thêm Nhiều Lớp Học
+                            // Form Thêm Nhiều Lớp Học với Tabs và Card
                             <Form
                                 layout="vertical"
                                 onFinish={handleAddClassrooms}
+                                initialValues={{
+                                    classroomCount: classroomCount,
+                                    classrooms: [],
+                                }}
                             >
                                 {/* Trường nhập số lượng lớp học */}
                                 <Form.Item
@@ -594,60 +625,74 @@ const DetailSubject = () => {
                                     />
                                 </Form.Item>
 
-                                {/* Tạo các trường nhập tên và số học sinh cho từng lớp học */}
-                                {[...Array(classroomCount)].map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="border border-gray-500 p-6 mb-6 rounded-lg shadow-lg bg-white"
-                                    >
-                                        <h3 className="mb-2 text-2xl font-semibold">
-                                            Lớp học {index + 1}
-                                        </h3>
-                                        <Form.Item
-                                            name={["classrooms", index, "name"]}
-                                            label="Tên Lớp"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng nhập tên lớp!",
-                                                },
-                                            ]}
-                                        >
-                                            <Input placeholder="Nhập tên lớp" />
-                                        </Form.Item>
+                                {classroomCount > 0 && (
+                                    <Tabs defaultActiveKey="1" type="card">
+                                        {[...Array(classroomCount)].map(
+                                            (_, index) => (
+                                                <TabPane
+                                                    tab={`Lớp học ${index + 1}`}
+                                                    key={index + 1}
+                                                >
+                                                    <Card
+                                                        type="inner"
+                                                        title={`Thông tin Lớp học ${
+                                                            index + 1
+                                                        }`}
+                                                        className="mb-4"
+                                                    >
+                                                        <Form.Item
+                                                            name={[
+                                                                "classrooms",
+                                                                index,
+                                                                "name",
+                                                            ]}
+                                                            label="Tên Lớp"
+                                                            rules={[
+                                                                {
+                                                                    required: true,
+                                                                    message:
+                                                                        "Vui lòng nhập tên lớp!",
+                                                                },
+                                                            ]}
+                                                        >
+                                                            <Input placeholder="Nhập tên lớp" />
+                                                        </Form.Item>
 
-                                        <Form.Item
-                                            name={[
-                                                "classrooms",
-                                                index,
-                                                "students",
-                                            ]}
-                                            label="Số Học Sinh"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng nhập số học sinh!",
-                                                },
-                                                {
-                                                    type: "number",
-                                                    min: 1,
-                                                    max: 40,
-                                                    message:
-                                                        "Số học sinh phải từ 1 đến 40",
-                                                },
-                                            ]}
-                                        >
-                                            <InputNumber
-                                                min={1}
-                                                max={40}
-                                                placeholder="Nhập số học sinh (tối đa 40)"
-                                                className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </Form.Item>
-                                    </div>
-                                ))}
+                                                        <Form.Item
+                                                            name={[
+                                                                "classrooms",
+                                                                index,
+                                                                "students",
+                                                            ]}
+                                                            label="Số Học Sinh"
+                                                            rules={[
+                                                                {
+                                                                    required: true,
+                                                                    message:
+                                                                        "Vui lòng nhập số học sinh!",
+                                                                },
+                                                                {
+                                                                    type: "number",
+                                                                    min: 1,
+                                                                    max: 40,
+                                                                    message:
+                                                                        "Số học sinh phải từ 1 đến 40",
+                                                                },
+                                                            ]}
+                                                        >
+                                                            <InputNumber
+                                                                min={1}
+                                                                max={40}
+                                                                placeholder="Nhập số học sinh (tối đa 40)"
+                                                                className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            />
+                                                        </Form.Item>
+                                                    </Card>
+                                                </TabPane>
+                                            )
+                                        )}
+                                    </Tabs>
+                                )}
 
                                 <Form.Item>
                                     <Button

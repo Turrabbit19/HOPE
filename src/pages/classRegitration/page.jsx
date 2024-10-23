@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ChevronDown, ChevronUp, BookOpen, Users, Clock } from 'lucide-react'
+import { ChevronDown, ChevronUp, BookOpen, Users, Clock, CheckCircle } from 'lucide-react'
 
 const courses = [
   { id: '1', name: 'Nhập môn lập trình', code: 'NMLT', credits: 4 },
@@ -11,23 +11,50 @@ const courses = [
 
 const classOptions = {
   '1': [
-    { id: '1', code: 'NMLT.01', enrollment: '40/40', instructor: 'khanhpq01', days: '2,4,6', time: '7:00 - 9:00', status: 'Hết chỗ' },
-    { id: '2', code: 'NMLT.02', enrollment: '30/40', instructor: 'baovv04', days: '3,5,7', time: '9:00 - 11:00', status: 'Còn chỗ' },
-    { id: '3', code: 'NMLT.03', enrollment: '32/40', instructor: 'khangtd01', days: '2,4,6', time: '12:00 - 14:00', status: 'Còn chỗ' },
+    { id: '1', code: 'NMLT.01', instructor: 'khanhpq01', timeSlots: [
+      { day: '2', time: '7:00 - 9:00', available: false },
+      { day: '3', time: '7:00 - 9:00', available: true },
+      { day: '4', time: '7:00 - 9:00', available: false },
+      { day: '5', time: '7:00 - 9:00', available: true },
+      { day: '6', time: '7:00 - 9:00', available: false },
+      { day: '7', time: '7:00 - 9:00', available: true },
+    ]},
+    { id: '2', code: 'NMLT.02', instructor: 'baovv04', timeSlots: [
+      { day: '2', time: '9:00 - 11:00', available: true },
+      { day: '3', time: '9:00 - 11:00', available: true },
+      { day: '4', time: '9:00 - 11:00', available: false },
+      { day: '5', time: '9:00 - 11:00', available: true },
+      { day: '6', time: '9:00 - 11:00', available: true },
+      { day: '7', time: '9:00 - 11:00', available: false },
+    ]},
   ],
   '2': [
-    { id: '4', code: 'LTPHP3.01', enrollment: '35/40', instructor: 'thuannn', days: '2,4,6', time: '13:00 - 15:00', status: 'Còn chỗ' },
-    { id: '5', code: 'LTPHP3.02', enrollment: '38/40', instructor: 'hoanglm', days: '3,5,7', time: '15:00 - 17:00', status: 'Còn chỗ' },
+    { id: '3', code: 'LTPHP3.01', instructor: 'thuannn', timeSlots: [
+      { day: '2', time: '13:00 - 15:00', available: true },
+      { day: '3', time: '13:00 - 15:00', available: false },
+      { day: '4', time: '13:00 - 15:00', available: true },
+      { day: '5', time: '13:00 - 15:00', available: false },
+      { day: '6', time: '13:00 - 15:00', available: true },
+      { day: '7', time: '13:00 - 15:00', available: false },
+    ]},
   ],
   '3': [
-    { id: '6', code: 'LTPHP2.01', enrollment: '33/40', instructor: 'ducnv', days: '2,4,6', time: '9:00 - 11:00', status: 'Còn chỗ' },
-    { id: '7', code: 'LTPHP2.02', enrollment: '40/40', instructor: 'thanhnt', days: '3,5,7', time: '13:00 - 15:00', status: 'Hết chỗ' },
+    { id: '4', code: 'LTPHP2.01', instructor: 'ducnv', timeSlots: [
+      { day: '2', time: '9:00 - 11:00', available: true },
+      { day: '3', time: '9:00 - 11:00', available: true },
+      { day: '4', time: '9:00 - 11:00', available: false },
+      { day: '5', time: '9:00 - 11:00', available: true },
+      { day: '6', time: '9:00 - 11:00', available: false },
+      { day: '7', time: '9:00 - 11:00', available: true },
+    ]},
   ],
 }
 
-export default function ScheduleRegistration() {
+export default function CourseRegistration() {
   const [expandedCourses, setExpandedCourses] = useState([])
-  const [selectedClasses, setSelectedClasses] = useState([])
+  const [selectedClass, setSelectedClass] = useState(null)
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null)
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
   const toggleCourse = (courseId) => {
     setExpandedCourses(prev => 
@@ -35,105 +62,141 @@ export default function ScheduleRegistration() {
         ? prev.filter(id => id !== courseId)
         : [...prev, courseId]
     )
+    setSelectedClass(null)
+    setSelectedTimeSlot(null)
   }
 
-  const toggleClassSelection = (classId) => {
-    setSelectedClasses(prev => 
-      prev.includes(classId) 
-        ? prev.filter(id => id !== classId)
-        : [...prev, classId]
-    )
+  const selectClass = (classId) => {
+    setSelectedClass(classId)
+    setSelectedTimeSlot(null)
   }
 
-  const getRandomColor = () => {
-    const colors = ['bg-pink-100', 'bg-purple-100', 'bg-indigo-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-red-100']
-    return colors[Math.floor(Math.random() * colors.length)]
+  const selectTimeSlot = (slotId) => {
+    setSelectedTimeSlot(slotId)
+  }
+
+  const handleRegister = () => {
+    if (selectedClass && selectedTimeSlot) {
+      setShowConfirmation(true)
+    } else {
+      alert('Vui lòng chọn lớp học và ca học trước khi đăng ký.')
+    }
+  }
+
+  const confirmRegistration = () => {
+    console.log('Đăng ký thành công:', { class: selectedClass, timeSlot: selectedTimeSlot })
+    setShowConfirmation(false)
+    // Here you would typically send the registration data to your backend
   }
 
   return (
-    <div className="container mx-auto p-4 bg-gradient-to-br from-gray-100 to-white">
-      <h1 className="text-4xl font-bold mb-8 text-center text-gray-800 drop-shadow-lg">Đăng ký môn học</h1>
-      <div className="space-y-6">
-        {courses.map(course => (
-          <div key={course.id} className="border-2 border-gray-300 rounded-xl overflow-hidden shadow-lg">
-            <div 
-              className={`p-4 flex justify-between items-center cursor-pointer transition-colors duration-300 ${expandedCourses.includes(course.id) ? 'bg-gray-200' : 'bg-white hover:bg-gray-100'}`}
-              onClick={() => toggleCourse(course.id)}
-            >
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">{course.name}</h2>
-                <p className="text-sm text-gray-600">
-                  <span className="inline-flex items-center mr-4"><BookOpen size={16} className="mr-1" /> Mã môn: {course.code}</span>
-                  <span className="inline-flex items-center"><Users size={16} className="mr-1" /> Tín chỉ: {course.credits}</span>
-                </p>
-              </div>
-              {expandedCourses.includes(course.id) ? <ChevronUp className="text-gray-800" /> : <ChevronDown className="text-gray-800" />}
-            </div>
-            {expandedCourses.includes(course.id) && (
-              <div className="p-4 bg-white">
-                <h3 className="font-semibold mb-4 text-lg text-gray-800">Chọn lớp học</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="p-2 text-left text-gray-800">STT</th>
-                        <th className="p-2 text-left text-gray-800">Lớp học</th>
-                        <th className="p-2 text-left text-gray-800">Số lượng</th>
-                        <th className="p-2 text-left text-gray-800">Giảng viên</th>
-                        <th className="p-2 text-left text-gray-800">Thứ</th>
-                        <th className="p-2 text-left text-gray-800">Ca học</th>
-                        <th className="p-2 text-left text-gray-800">Thời gian</th>
-                        <th className="p-2 text-left text-gray-800">Trạng thái</th>
-                        <th className="p-2 text-left text-gray-800">Chọn</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {classOptions[course.id].map((option, index) => (
-                        <tr key={option.id} className={`${getRandomColor()} transition-colors duration-300 hover:bg-gray-200`}>
-                          <td className="p-2 text-gray-800">{index + 1}</td>
-                          <td className="p-2 text-gray-800 font-medium">{option.code}</td>
-                          <td className="p-2 text-gray-800">{option.enrollment}</td>
-                          <td className="p-2 text-gray-800">{option.instructor}</td>
-                          <td className="p-2 text-gray-800">{option.days}</td>
-                          <td className="p-2 text-gray-800">{index + 1}</td>
-                          <td className="p-2 text-gray-800">
-                            <span className="inline-flex items-center">
-                              <Clock size={16} className="mr-1" />
-                              {option.time}
-                            </span>
-                          </td>
-                          <td className="p-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${option.status === 'Còn chỗ' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-                              {option.status}
-                            </span>
-                          </td>
-                          <td className="p-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedClasses.includes(option.id)}
-                              onChange={() => toggleClassSelection(option.id)}
-                              disabled={option.status === 'Hết chỗ'}
-                              className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+    <div className="flex flex-col bg-gradient-to-br from-blue-100 to-white mx-auto w-full max-w-full">
+      <div className="flex-grow py-12 px-4 sm:px-6 lg:px-8 w-full max-w-full">
+        <div className="mx-auto w-full max-w-full">
+          <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-12">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
+              Đăng ký môn học
+            </span>
+          </h1>
+          <div className="space-y-8">
+            {courses.map(course => (
+              <div key={course.id} className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl w-full">
+                <div 
+                  className={`p-6 cursor-pointer transition-colors duration-300 ${expandedCourses.includes(course.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                  onClick={() => toggleCourse(course.id)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">{course.name}</h2>
+                      <p className="text-sm text-gray-600 mt-2">
+                        <span className="inline-flex items-center mr-4"><BookOpen size={16} className="mr-1" /> Mã môn: {course.code}</span>
+                        <span className="inline-flex items-center"><Users size={16} className="mr-1" /> Tín chỉ: {course.credits}</span>
+                      </p>
+                    </div>
+                    {expandedCourses.includes(course.id) ? <ChevronUp className="text-gray-400" size={24} /> : <ChevronDown className="text-gray-400" size={24} />}
+                  </div>
                 </div>
+                {expandedCourses.includes(course.id) && (
+                  <div className="p-6 bg-gray-50 border-t border-gray-200">
+                    <h3 className="font-semibold mb-4 text-lg text-gray-800">Chọn lớp học</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {classOptions[course.id].map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => selectClass(option.id)}
+                          className={`w-full text-left p-4 rounded-lg transition-all duration-200 ${selectedClass === option.id ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-500' : 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow'}`}
+                        >
+                          <div className="font-medium text-lg">{option.code}</div>
+                          <div className="text-sm text-gray-600 mt-1">{option.instructor}</div>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedClass && (
+                      <div className="mt-8">
+                        <h4 className="font-semibold mb-4 text-lg text-gray-800">Chọn ca học</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                          {classOptions[course.id]
+                            .find(c => c.id === selectedClass).timeSlots
+                            .map((slot, index) => (
+                              <button
+                                key={index}
+                                onClick={() => selectTimeSlot(`${selectedClass}-${index}`)}
+                                disabled={!slot.available}
+                                className={`w-full h-auto flex flex-col items-center p-3 rounded-lg transition-all duration-200 ${selectedTimeSlot === `${selectedClass}-${index}` ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-500' : slot.available ? 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                              >
+                                <div className="font-medium text-lg">Thứ {slot.day}</div>
+                                <div className="text-sm flex items-center mt-1">
+                                  <Clock size={14} className="mr-1" />
+                                  {slot.time}
+                                </div>
+                                <span className={`mt-2 text-xs px-2 py-1 rounded-full ${slot.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {slot.available ? "Còn chỗ" : "Hết chỗ"}
+                                </span>
+                              </button>
+                            ))
+                          }
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
+          <div className="mt-12 flex justify-center">
+            <button 
+              onClick={handleRegister}
+              className="bg-gradient-to-r from-blue-500 to-teal-400 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Đăng ký
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="mt-8 flex justify-center">
-        <button 
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition duration-300 hover:scale-105"
-          onClick={() => console.log('Đăng ký clicked')}
-        >
-          Đăng ký
-        </button>
-      </div>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">Xác nhận đăng ký</h2>
+            <p className="text-gray-700 mb-6">Bạn có chắc chắn muốn đăng ký lớp này không?</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmRegistration}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center"
+              >
+                <CheckCircle size={18} className="mr-2" />
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

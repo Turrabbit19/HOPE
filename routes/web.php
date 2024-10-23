@@ -14,21 +14,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('/')->group( function () {
-    Route::get('/', function () {
-        return view('client.index');
-    });
-    Route::get('notifications', function () {
-        return view('client.notification');
-    });
-    Route::get('schedules', function () {
-        return view('client.schedule');
-    });
-    Route::get('student-details', function () {
-        return view('client.student-detail');
-    });
-    Route::get('add-schedules', function () {
-        return view('client.add-schedule');
-    });
-
+Route::get('/', function () {
+    return view('welcome');
 });
+
+Route::get('users', function () {
+    return view('user');
+});
+

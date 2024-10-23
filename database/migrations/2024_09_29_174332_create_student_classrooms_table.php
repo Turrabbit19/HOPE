@@ -17,7 +17,6 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Classroom::class)->constrained()->cascadeOnDelete();
-            $table->softDeletes();
             $table->timestamps();
         });
     }

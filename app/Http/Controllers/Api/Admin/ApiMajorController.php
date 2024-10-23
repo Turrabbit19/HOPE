@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Major;
-use Carbon\Carbon;
+use App\Models\MajorSubject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -112,6 +112,29 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAllSubjects(string $majorId) {
+        try {    
+            $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject')->get();
+    
+            $data = $majorSubjects->map(function ($majorSubject) {
+                return [
+                    'id' => $majorSubject->subject->id,
+                    'code' => $majorSubject->subject->code,
+                    'name' => $majorSubject->subject->name,
+                    'description' => $majorSubject->subject->description,
+                    'credit' => $majorSubject->subject->credit,
+                    'status' => $majorSubject->subject->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy chuyên ngành với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }
     }
 }

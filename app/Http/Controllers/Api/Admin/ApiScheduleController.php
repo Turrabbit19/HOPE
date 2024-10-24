@@ -242,7 +242,15 @@ class ApiScheduleController extends Controller
             $schedule = Schedule::findOrFail($id);
 
             $data = $validator->validated();
+            
             $schedule->update($data);
+
+            if(isset($data['days_of_week'])) {
+                $days = collect($data['days_of_week'])->mapWithKeys(function ($day) {
+                    return [$day['id'] => []];
+                });
+                $schedule->days()->sync($days);
+            }
 
             return response()->json(['data' => $schedule, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {

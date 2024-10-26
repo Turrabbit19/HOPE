@@ -197,7 +197,7 @@ class ApiSubjectController extends Controller
     }
     public function addLessons(Request $request, string $id) {
         $validator = Validator::make($request->all(), [
-            '*.name' => 'required|string|max:50|unique:lessons,name',
+            '*.name' => 'required|string|max:50',
             '*.description' => 'required|string',
         ]);
     

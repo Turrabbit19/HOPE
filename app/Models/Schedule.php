@@ -52,6 +52,12 @@ class Schedule extends Model
                     ->select('days.id'); 
     }
 
+    public function lessons()
+    {
+        return $this->belongsToMany(Lesson::class, 'schedule_lessons')
+                    ->withPivot('study_date');
+    }
+
     public function classroom()
     {
         return $this->belongsTo(Classroom::class);

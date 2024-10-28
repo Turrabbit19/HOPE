@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ApiSemesterController extends Controller
@@ -86,9 +88,9 @@ class ApiSemesterController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date', 
             'status' => 'integer|in:0,1,2',
-            'courses' => 'required|array', 
-            'courses.*.id' => 'required|exists:courses,id', 
-            'courses.*.order' => 'required|integer|min:1', 
+            // 'courses' => 'required|array', 
+            // 'courses.*.id' => 'required|exists:courses,id', 
+            // 'courses.*.order' => 'required|integer|min:1', 
         ]);
 
         if ($validator->fails()) {
@@ -108,8 +110,26 @@ class ApiSemesterController extends Controller
 
             $semester = Semester::create($data);
             
-            $coursesWithOrder = collect($data['courses'])->mapWithKeys(function ($course) {
-                return [$course['id'] => ['order' => $course['order']]];
+            // lấy ra hết các khóa trong khoảng thời gian kì nè
+            $sameCourses = Course::where(function ($query) use ($data) {
+                $query->where(function ($query) use ($data) {
+                    $query->where('start_date', '<=', $data['end_date'])
+                          ->where('end_date', '>=', $data['start_date']);
+                });
+            })->get();
+
+
+            // thứ tự kì tối đa nè
+            $maxOrder = 7;
+
+            // truy vấn tới kì có order lớn nhất rồi +1 :v
+            $coursesWithOrder = $sameCourses->mapWithKeys(function ($course) use ($maxOrder) {
+                $currentMaxOrder = DB::table('course_semesters')
+                    ->where('course_id', $course->id)
+                    ->max('order');
+                $newOrder = min($currentMaxOrder + 1, $maxOrder);
+    
+                return [$course->id => ['order' => $newOrder]];
             });
             
             $semester->courses()->sync($coursesWithOrder);

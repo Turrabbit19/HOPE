@@ -29,7 +29,8 @@ class ApiCourseController extends Controller
             $data = $semesters->map(function($value){
                 return [
                     "id" => $value->semester->id,
-                    "name" => $value->semester->name
+                    "name" => $value->semester->name,
+                    "order" => "Kì hiện tại"." ".$value->order
                 ];
             });
 

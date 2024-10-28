@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { addWeeks, subWeeks, format, startOfWeek, endOfWeek } from 'date-fns'
+import { vi } from 'date-fns/locale'
 import ProductCard from './ProductCard'
 
 export default function DashboardActions() {
@@ -27,34 +28,39 @@ export default function DashboardActions() {
   const startOfCurrentWeek = startOfWeek(currentWeek, { weekStartsOn: 1 })
   const endOfCurrentWeek = endOfWeek(currentWeek, { weekStartsOn: 1 })
 
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  const daysOfWeek = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật']
   const shifts = [1, 2, 3, 4, 5, 6]
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-xl p-8 transition-all duration-300 ease-in-out">
       {/* Header with Week Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-        <div className="flex space-x-2">
+        <div className="flex items-center justify-center bg-blue-500 text-white rounded-full shadow-lg p-1 space-x-2 w-fit">
           <button
             onClick={handlePreviousWeek}
-            className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+            className="p-2 rounded-full hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Tuần trước"
           >
             &#8592;
           </button>
+
           <button
             onClick={handleGoToCurrentWeek}
-            className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 flex items-center space-x-2"
+            className="flex items-center px-4 py-2 bg-blue-600 rounded-full hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-white"
           >
-            <span className="mr-2">&#128197;</span>
-            <span>Tuần hiện tại</span>
+            <span className="text-lg" aria-hidden="true">&#128197;</span>
+            <span className="ml-2">Tuần hiện tại</span>
           </button>
+
           <button
             onClick={handleNextWeek}
-            className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+            className="p-2 rounded-full hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Tuần sau"
           >
             &#8594;
           </button>
         </div>
+
         <div className="flex items-center space-x-2">
           <label htmlFor="dayFilter" className="text-sm font-medium text-gray-700">
             Lọc theo ngày:
@@ -77,7 +83,7 @@ export default function DashboardActions() {
 
       {/* Week Range Display */}
       <div className="text-center font-bold text-xl text-blue-700 bg-blue-100 py-3 px-4 rounded-lg shadow-inner">
-        Tuần: {format(startOfCurrentWeek, 'dd/MM/yyyy')} - {format(endOfCurrentWeek, 'dd/MM/yyyy')}
+        Tuần: {format(startOfCurrentWeek, 'dd/MM/yyyy', { locale: vi })} - {format(endOfCurrentWeek, 'dd/MM/yyyy', { locale: vi })}
       </div>
 
       {/* Display Based on Day Filter */}
@@ -91,7 +97,11 @@ export default function DashboardActions() {
               <div className="absolute top-0 left-0 bg-blue-500 text-white px-3 py-1 text-sm font-semibold rounded-br-lg rounded-tl-lg">
                 Ca {shift}
               </div>
-              <ProductCard day={selectedDay} shift={shift} />
+              <ProductCard 
+                day={selectedDay} 
+                shift={shift} 
+                isBottomRow={shift === 5 || shift === 6}
+              />
             </div>
           ))}
         </div>
@@ -109,9 +119,9 @@ export default function DashboardActions() {
                     className="border-b p-3 text-left text-sm font-semibold text-gray-700"
                   >
                     <div className="flex flex-col">
-                      <span>{index === 6 ? 'Chủ Nhật' : `Thứ ${index + 2}`}</span>
+                      <span>{day}</span>
                       <span className="text-xs text-blue-500 font-normal">
-                        {format(addWeeks(startOfCurrentWeek, index), 'dd/MM')}
+                        {format(addWeeks(startOfCurrentWeek, index), 'dd/MM', { locale: vi })}
                       </span>
                     </div>
                   </th>
@@ -119,14 +129,20 @@ export default function DashboardActions() {
               </tr>
             </thead>
             <tbody>
-              {shifts.map(shift => (
+              {shifts.map((shift, shiftIndex) => (
                 <tr key={shift} className="hover:bg-gray-50 transition-colors duration-150">
                   <td className="border-b p-3 text-gray-700 font-medium">
                     {`Ca ${shift}`}
                   </td>
-                  {daysOfWeek.map((day, index) => (
+                  {daysOfWeek.map((day, dayIndex) => (
                     <td key={day} className="border-b p-3 text-center">
-                      {index !== 6 && <ProductCard day={day} shift={shift} />}
+                      {dayIndex !== 6 && (
+                        <ProductCard 
+                          day={day} 
+                          shift={shift} 
+                          isBottomRow={shift === 5 || shift === 6}
+                        />
+                      )}
                     </td>
                   ))}
                 </tr>

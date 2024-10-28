@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Major;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -11,6 +12,33 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCourseController extends Controller
 {
+    public function getMajorsByCourse($courseId)
+    {
+        try {
+            // Tìm majors thông qua planSubjects có liên kết với plan và course
+            $majors = Major::whereHas('planSubjects.plan', function ($query) use ($courseId) {
+                //function query để định nghĩa các điều kiện cho truy vấn trên bảng plans.
+                //use (courseId) cho phép sử dụng biến $courseId từ phạm vi bên ngoài của closure truy vấn.
+                $query->where('course_id', $courseId);
+            })->get();
+
+            if ($majors->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy ngành học nào liên quan'], 404);
+            }
+
+            $data = $majors->map(function ($major) {
+                return [
+                    "id" => $major->id,
+                    "name" => $major->name,
+                ];
+            });
+
+            return response()->json(['majors' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn majors', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function index()
     {
         try {
@@ -23,7 +51,7 @@ class ApiCourseController extends Controller
                     'plan' => $course->plan->name,
                     'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
-                    'status' => match($course->status) {
+                    'status' => match ($course->status) {
                         0 => "Chờ diễn ra",
                         1 => "Đang diễn ra",
                         2 => "Kết thúc",
@@ -54,7 +82,7 @@ class ApiCourseController extends Controller
         try {
             $data = $validator->validated();
             $course = Course::create($data);
-            
+
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -66,18 +94,18 @@ class ApiCourseController extends Controller
         try {
             $course = Course::with('plan')->findOrFail($id);
             $data = [
-                    'id' => $course->id,
-                    'name' => $course->name,
-                    'plan' => $course->plan->name,
-                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
-                    'status' => match($course->status) {
-                        0 => "Chờ diễn ra",
-                        1 => "Đang diễn ra",
-                        2 => "Kết thúc",
-                        default => "Không xác định",
-                    },
-                ];
+                'id' => $course->id,
+                'name' => $course->name,
+                'plan' => $course->plan->name,
+                'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
+                'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                'status' => match ($course->status) {
+                    0 => "Chờ diễn ra",
+                    1 => "Đang diễn ra",
+                    2 => "Kết thúc",
+                    default => "Không xác định",
+                },
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -103,7 +131,7 @@ class ApiCourseController extends Controller
 
         try {
             $course = Course::findOrFail($id);
-            
+
             $data = $validator->validated();
             $course->update($data);
 

@@ -10,6 +10,8 @@ class Major extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'majors'; 
+
     protected $fillable = [
         'code',
         'name',
@@ -24,4 +26,9 @@ class Major extends Model
     {
         return $this->belongsToMany(Subject::class, 'major_subjects');
     }
+
+    public function planSubjects()
+{
+    return $this->hasMany(PlanSubject::class);
+}
 }

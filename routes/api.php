@@ -87,4 +87,4 @@ Route::get('/section/notifications/{id}', [ApiSectionController::class, 'getNoti
     Route::get('/read-students', [ApiStudentNotificationController::class, 'getReadStudents']);
     // });
 // });
-
+    Route::get('course/{courseId}/majors', [ApiCourseController::class, 'getMajorsByCourse']);

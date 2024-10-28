@@ -22,4 +22,8 @@ class PlanSubject extends Model
     public function majorSubject() {
         return $this->belongsTo(MajorSubject::class);
     }
+    public function major()
+{
+    return $this->belongsTo(Major::class);
+}
 }

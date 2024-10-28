@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\Admin\ApiAdminController;
 use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
@@ -17,6 +16,9 @@ use App\Http\Controllers\Api\Admin\ApiShiftController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
+
+use App\Http\Controllers\Api\Client\ApiClientController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -73,7 +75,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
         Route::get('course/{courseId}/semesters', [ApiScheduleController::class, 'getSemestersByCourse']);
+        Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
+    });
+
+    Route::prefix('student')->group(function () {
+        Route::get('detail/{id}', [ApiClientController::class, 'detail']);
     });
 // });

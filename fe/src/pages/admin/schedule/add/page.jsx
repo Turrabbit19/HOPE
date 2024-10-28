@@ -143,44 +143,6 @@ const ScheduleAdd = () => {
                 onFinish={handleFinish}
                 className="bg-white p-6 rounded-lg shadow-md"
             >
-                {/* Ngày Bắt Đầu, Ngày Kết Thúc */}
-                <Row gutter={16}>
-                    <Col span={12}>
-                        <Form.Item
-                            label="Ngày Bắt Đầu"
-                            name="startDate"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn ngày bắt đầu!",
-                                },
-                            ]}
-                        >
-                            <DatePicker
-                                format="DD-MM-YYYY"
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item
-                            label="Ngày Kết Thúc"
-                            name="endDate"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn ngày kết thúc!",
-                                },
-                            ]}
-                        >
-                            <DatePicker
-                                format="DD-MM-YYYY"
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
-                    </Col>
-                </Row>
-
                 {/* Hàng 1: Khóa Học, Kỳ Học, Ngành Học */}
                 <Row gutter={16}>
                     <Col span={8}>
@@ -320,6 +282,44 @@ const ScheduleAdd = () => {
                                     </Option>
                                 ))}
                             </Select>
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                {/* Ngày Bắt Đầu, Ngày Kết Thúc */}
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item
+                            label="Ngày Bắt Đầu"
+                            name="startDate"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Vui lòng chọn ngày bắt đầu!",
+                                },
+                            ]}
+                        >
+                            <DatePicker
+                                format="DD-MM-YYYY"
+                                style={{ width: "100%" }}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item
+                            label="Ngày Kết Thúc"
+                            name="endDate"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Vui lòng chọn ngày kết thúc!",
+                                },
+                            ]}
+                        >
+                            <DatePicker
+                                format="DD-MM-YYYY"
+                                style={{ width: "100%" }}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>

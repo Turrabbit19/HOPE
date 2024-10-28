@@ -47,6 +47,10 @@ import DetailSubject from "../pages/admin/subjects/detail/page";
 import ListSections from "../pages/admin/section/list/page";
 import UserUpdate from "../pages/admin/userManager/edit/page";
 import SyllabusDetail from "../pages/admin/syllabus/detail/page";
+import ScheduleAdd from "../pages/admin/schedule/add/page";
+import ScheduleList from "../pages/admin/schedule/list/page";
+import ScheduleDetail from "../pages/admin/schedule/detail/page";
+import ScheduleEdit from "../pages/admin/schedule/edit/page";
 
 const Router = createBrowserRouter([
     {
@@ -165,6 +169,23 @@ const Router = createBrowserRouter([
                         element: <Resource />,
                     },
                 ],
+            },
+            {
+                path: "list-schedule",
+                element: <ScheduleList />,
+            },
+
+            {
+                path: "list-schedule/add",
+                element: <ScheduleAdd />,
+            },
+            {
+                path: "list-schedule/edit/:id",
+                element: <ScheduleEdit />,
+            },
+            {
+                path: "list-schedule/detail/:id",
+                element: <ScheduleDetail />,
             },
 
             {

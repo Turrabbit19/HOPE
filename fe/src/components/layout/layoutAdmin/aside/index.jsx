@@ -76,6 +76,11 @@ const AsideAdmin = () => {
             link: "/admin/classrooms",
             icon: <ReadOutlined />,
         },
+        {
+            name: "Quản lý lịch học",
+            link: "/admin/list-schedule",
+            icon: <ReadOutlined />,
+        },
     ];
 
     const { Sider } = Layout;

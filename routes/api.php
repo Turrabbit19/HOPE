@@ -89,4 +89,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     // test api detail-student
     Route::get('detail-student/{id}', [ApiClientStudent::class, 'detailStudent']);
 
+    Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
+
+
 // });

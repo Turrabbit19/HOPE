@@ -180,7 +180,7 @@ const Router = createBrowserRouter([
                 element: <ScheduleAdd />,
             },
             {
-                path: "list-schedule/edit/:id",
+                path: "list-schedule/details/:id/edit",
                 element: <ScheduleEdit />,
             },
             {

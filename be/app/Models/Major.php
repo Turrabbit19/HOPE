@@ -16,9 +16,12 @@ class Major extends Model
         'description',
         'status',
     ];
+    protected $casts = [
+        'status' => 'boolean',
+    ];
 
-
-    public function subjects() {
-        return $this->belongsToMany(Subject::class);
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'major_subjects');
     }
 }

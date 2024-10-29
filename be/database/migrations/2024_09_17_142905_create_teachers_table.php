@@ -15,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Major::class)->constrained()->onDelete('cascade');
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
             $table->string('teacher_code')->unique();
+            $table->enum('status', [0, 1, 2])->default(0); // 'Đang công tác', 'Tạm dừng', 'Kết thúc'
             $table->softDeletes();
             $table->timestamps();
         });

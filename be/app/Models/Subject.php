@@ -16,10 +16,14 @@ class Subject extends Model
         'description',
         'credit',
     ];
-
+    
     public function majors()
     {
-        return $this->belongsToMany(Major::class, 'major_subjects')
-                    ->withTimestamps();;
+        return $this->belongsToMany(Major::class, 'major_subjects');
+    }
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class);
     }
 }

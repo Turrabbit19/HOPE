@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+// Nhận thông báo bên FE
+Broadcast::channel('broadcast-notification', function () {
+    return true;
+});

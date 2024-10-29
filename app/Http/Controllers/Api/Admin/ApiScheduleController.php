@@ -15,20 +15,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiScheduleController extends Controller
 {
-    public function getSemestersByCourse($courseId)
-    {
-        try {
-            $semesters = CourseSemester::where('course_id', $courseId)
-            ->with('semester') 
-            ->get();
-
-        return response()->json(["semesters" => $semesters], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng CourseSemester', 'message' => $e->getMessage()], 500);
-        }
-    }
     public function getMajorsByCourse($courseId)
     {
         try {

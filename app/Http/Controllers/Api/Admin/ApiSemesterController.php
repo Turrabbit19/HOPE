@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\CourseSemester;
 use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -85,10 +87,7 @@ class ApiSemesterController extends Controller
             'name' => 'required|string|max:255|unique:semesters', 
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date', 
-            'status' => 'integer|in:0,1,2',
-            'courses' => 'required|array', 
-            'courses.*.id' => 'required|exists:courses,id', 
-            'courses.*.order' => 'required|integer|min:1', 
+            'status' => 'integer|in:0,1,2'
         ]);
 
         if ($validator->fails()) {
@@ -108,11 +107,26 @@ class ApiSemesterController extends Controller
 
             $semester = Semester::create($data);
             
-            $coursesWithOrder = collect($data['courses'])->mapWithKeys(function ($course) {
-                return [$course['id'] => ['order' => $course['order']]];
+            $activeCourses = Course::where(function ($query) use ($data) {
+                $query->where(function ($query) use ($data) {
+                    $query->where('start_date', '<=', $data['end_date'])
+                          ->where('end_date', '>=', $data['start_date']);
+                });
+            })->get();
+
+
+            $maxOrder = $activeCourses->first()->plan->semester_total;
+
+            $coursesWithOrder = $activeCourses->mapWithKeys(function ($course) use ($maxOrder) {
+                $currentMaxOrder = CourseSemester::where('course_id', $course->id)
+                    ->max('order');
+                $newOrder = min($currentMaxOrder + 1, $maxOrder);
+            
+                return [$course->id => ['order' => $newOrder]];
             });
             
-            $semester->courses()->sync($coursesWithOrder);
+            
+            $semester->courses()->syncWithoutDetaching($coursesWithOrder);
 
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {

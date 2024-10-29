@@ -82,7 +82,7 @@ class ApiOfficerController extends Controller
                 'gender' => $data['gender'],
                 'ethnicity' => $data['ethnicity'],
                 'address' => $data['address'],
-                'password' => Hash::make("123456789"),
+                'password' => Hash::make($data['password']),
                 'role_id' => $data['role_id'],
             ]);
 

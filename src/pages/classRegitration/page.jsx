@@ -3,87 +3,43 @@
 import React, { useState, useMemo } from 'react'
 import { BookOpen, Users, Clock, CheckCircle } from 'lucide-react'
 
+// Danh sách các khóa học
 const courses = [
   { id: '1', name: 'Nhập môn lập trình', code: 'NMLT', credits: 4 },
   { id: '2', name: 'Lập trình PHP 3', code: 'LTPHP3', credits: 3 },
   { id: '3', name: 'Lập trình PHP 2', code: 'LTPHP2', credits: 3 },
+  { id: '4', name: 'Cơ sở dữ liệu', code: 'CSDL', credits: 3 },
+  { id: '5', name: 'Lập trình web', code: 'LTWEB', credits: 3 },
+  { id: '6', name: 'Khoa học máy tính', code: 'KHMT', credits: 3 },
 ]
 
+// Thông tin các lớp học và ca học
 const classOptions = {
   '1': [
-    { id: '1', code: 'NMLT.01', instructor: 'khanhpq01', timeSlots: [
-      { day: '2', time: '7:00 - 9:00', available: false },
-      { day: '3', time: '7:00 - 9:00', available: true },
-      { day: '4', time: '7:00 - 9:00', available: false },
-      { day: '5', time: '7:00 - 9:00', available: true },
-      { day: '6', time: '7:00 - 9:00', available: false },
-      { day: '7', time: '7:00 - 9:00', available: true },
-    ]},
-    { id: '2', code: 'NMLT.02', instructor: 'baovv04', timeSlots: [
-      { day: '2', time: '9:00 - 11:00', available: true },
-      { day: '3', time: '9:00 - 11:00', available: true },
-      { day: '4', time: '9:00 - 11:00', available: false },
-      { day: '5', time: '9:00 - 11:00', available: true },
-      { day: '6', time: '9:00 - 11:00', available: true },
-      { day: '7', time: '9:00 - 11:00', available: false },
-    ]},
-    { id: '5', code: 'NMLT.03', instructor: 'minhhn', timeSlots: [
-      { day: '2', time: '13:00 - 15:00', available: true },
-      { day: '3', time: '13:00 - 15:00', available: false },
-      { day: '4', time: '13:00 - 15:00', available: true },
-      { day: '5', time: '13:00 - 15:00', available: false },
-      { day: '6', time: '13:00 - 15:00', available: true },
-      { day: '7', time: '13:00 - 15:00', available: false },
-    ]},
+    { id: '1-1', code: 'Lớp 1A', instructor: 'Giáo viên A', room: '101', registeredStudents: 25, timeSlots: [{ id: '1', available: true }, { id: '2', available: true }] },
+    { id: '1-2', code: 'Lớp 1B', instructor: 'Giáo viên B', room: '102', registeredStudents: 30, timeSlots: [{ id: '3', available: true }] },
   ],
   '2': [
-    { id: '3', code: 'LTPHP3.01', instructor: 'thuannn', timeSlots: [
-      { day: '2', time: '13:00 - 15:00', available: true },
-      { day: '3', time: '13:00 - 15:00', available: false },
-      { day: '4', time: '13:00 - 15:00', available: true },
-      { day: '5', time: '13:00 - 15:00', available: false },
-      { day: '6', time: '13:00 - 15:00', available: true },
-      { day: '7', time: '13:00 - 15:00', available: false },
-    ]},
-    { id: '6', code: 'LTPHP3.02', instructor: 'hoangtv', timeSlots: [
-      { day: '2', time: '15:00 - 17:00', available: true },
-      { day: '3', time: '15:00 - 17:00', available: true },
-      { day: '4', time: '15:00 - 17:00', available: false },
-      { day: '5', time: '15:00 - 17:00', available: true },
-      { day: '6', time: '15:00 - 17:00', available: false },
-      { day: '7', time: '15:00 - 17:00', available: true },
-    ]},
+    { id: '2-1', code: 'Lớp 2A', instructor: 'Giáo viên C', room: '201', registeredStudents: 0, timeSlots: [{ id: '4', available: false }] },
+    { id: '2-2', code: 'Lớp 2B', instructor: 'Giáo viên D', room: '202', registeredStudents: 10, timeSlots: [{ id: '5', available: true }] },
   ],
   '3': [
-    { id: '4', code: 'LTPHP2.01', instructor: 'ducnv', timeSlots: [
-      { day: '2', time: '9:00 - 11:00', available: true },
-      { day: '3', time: '9:00 - 11:00', available: true },
-      { day: '4', time: '9:00 - 11:00', available: false },
-      { day: '5', time: '9:00 - 11:00', available: true },
-      { day: '6', time: '9:00 - 11:00', available: false },
-      { day: '7', time: '9:00 - 11:00', available: true },
-    ]},
-    { id: '7', code: 'LTPHP2.02', instructor: 'anhhn', timeSlots: [
-      { day: '2', time: '10:00 - 12:00', available: false },
-      { day: '3', time: '10:00 - 12:00', available: true },
-      { day: '4', time: '10:00 - 12:00', available: true },
-      { day: '5', time: '10:00 - 12:00', available: false },
-      { day: '6', time: '10:00 - 12:00', available: true },
-      { day: '7', time: '10:00 - 12:00', available: false },
-    ]},
+    { id: '3-1', code: 'Lớp 3A', instructor: 'Giáo viên E', room: '301', registeredStudents: 5, timeSlots: [{ id: '6', available: true }] },
+    { id: '3-2', code: 'Lớp 3B', instructor: 'Giáo viên F', room: '302', registeredStudents: 0, timeSlots: [] },
   ],
   '4': [
-    { id: '8', code: 'HTPT.01', instructor: 'sonnt', timeSlots: [
-      { day: '2', time: '14:00 - 16:00', available: true },
-      { day: '3', time: '14:00 - 16:00', available: false },
-      { day: '4', time: '14:00 - 16:00', available: true },
-      { day: '5', time: '14:00 - 16:00', available: false },
-      { day: '6', time: '14:00 - 16:00', available: true },
-      { day: '7', time: '14:00 - 16:00', available: false },
-    ]},
+    { id: '4-1', code: 'Lớp 4A', instructor: 'Giáo viên G', room: '401', registeredStudents: 15, timeSlots: [{ id: '1', available: true }] },
+    { id: '4-2', code: 'Lớp 4B', instructor: 'Giáo viên H', room: '402', registeredStudents: 20, timeSlots: [{ id: '2', available: true }] },
+  ],
+  '5': [
+    { id: '5-1', code: 'Lớp 5A', instructor: 'Giáo viên I', room: '501', registeredStudents: 8, timeSlots: [{ id: '3', available: true }] },
+    { id: '5-2', code: 'Lớp 5B', instructor: 'Giáo viên J', room: '502', registeredStudents: 0, timeSlots: [] },
+  ],
+  '6': [
+    { id: '6-1', code: 'Lớp 6A', instructor: 'Giáo viên K', room: '601', registeredStudents: 18, timeSlots: [{ id: '4', available: true }] },
+    { id: '6-2', code: 'Lớp 6B', instructor: 'Giáo viên L', room: '602', registeredStudents: 25, timeSlots: [{ id: '5', available: true }] },
   ],
 };
-
 
 export default function CourseRegistration() {
   const [selectedCourse, setSelectedCourse] = useState(null)
@@ -91,28 +47,21 @@ export default function CourseRegistration() {
   const [selectedClass, setSelectedClass] = useState(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
 
+  // Thời gian ca học cố định
   const availableTimeSlots = useMemo(() => {
     if (!selectedCourse) return []
-    const allTimeSlots = classOptions[selectedCourse].flatMap(classOption => 
-      classOption.timeSlots.map((slot, index) => ({
-        ...slot,
-        id: `${classOption.id}-${index}`,
-        classId: classOption.id
-      }))
-    )
-    return allTimeSlots.filter((slot, index, self) => 
-      index === self.findIndex(t => t.day === slot.day && t.time === slot.time && t.available)
-    )
+    return Array.from({ length: 6 }, (_, index) => ({
+      id: (index + 1).toString(),
+      time: `Ca ${index + 1}`,
+      available: true,
+    }))
   }, [selectedCourse])
 
   const availableClasses = useMemo(() => {
     if (!selectedCourse || !selectedTimeSlot) return []
+    // Lọc lớp học theo ca học đã chọn
     return classOptions[selectedCourse].filter(classOption => 
-      classOption.timeSlots.some(slot => 
-        slot.day === selectedTimeSlot.day && 
-        slot.time === selectedTimeSlot.time && 
-        slot.available
-      )
+      classOption.timeSlots.some(slot => slot.id === selectedTimeSlot.id && slot.available)
     )
   }, [selectedCourse, selectedTimeSlot])
 
@@ -142,7 +91,7 @@ export default function CourseRegistration() {
   const confirmRegistration = () => {
     console.log('Đăng ký thành công:', { course: selectedCourse, timeSlot: selectedTimeSlot, class: selectedClass })
     setShowConfirmation(false)
-    // Here you would typically send the registration data to your backend
+    // Gửi dữ liệu đăng ký đến backend tại đây
   }
 
   return (
@@ -154,8 +103,8 @@ export default function CourseRegistration() {
               Đăng ký môn học
             </span>
           </h1>
-          
-          {/* Course Selection */}
+
+          {/* Chọn môn học */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Chọn môn học</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -183,38 +132,44 @@ export default function CourseRegistration() {
             </div>
           </div>
 
-          {/* Time Slot Selection */}
+          {/* Chọn ca học */}
           {selectedCourse && (
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Chọn ca học</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {availableTimeSlots.map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => selectTimeSlot(slot)}
-                    className={`w-full h-auto flex flex-col items-center p-3 rounded-lg transition-all duration-200 ${
-                      selectedTimeSlot && selectedTimeSlot.day === slot.day && selectedTimeSlot.time === slot.time
-                        ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-500'
-                        : 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow'
-                    }`}
-                  >
-                    <div className="font-medium text-lg">Thứ {slot.day}</div>
-                    <div className="text-sm flex items-center mt-1">
-                      <Clock size={14} className="mr-1" />
-                      {slot.time}
-                    </div>
-                  </button>
-                ))}
+                {availableTimeSlots.map((slot) => {
+                  // Kiểm tra xem ca học có lớp nào khả dụng không
+                  const isDisabled = !classOptions[selectedCourse].some(classOption => 
+                    classOption.timeSlots.some(timeSlot => timeSlot.id === slot.id && timeSlot.available)
+                  );
+                  return (
+                    <button
+                      key={slot.id}
+                      onClick={() => !isDisabled && selectTimeSlot(slot)}
+                      disabled={isDisabled}
+                      className={`w-full h-auto flex flex-col items-center p-3 rounded-lg transition-all duration-200 ${
+                        selectedTimeSlot && selectedTimeSlot.id === slot.id
+                          ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-500'
+                          : isDisabled
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow'
+                      }`}
+                    >
+                      <Clock size={24} />
+                      <span className="mt-2">{slot.time}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Class Selection */}
-          {selectedTimeSlot && (
+          {/* Chọn lớp học */}
+          {selectedCourse && selectedTimeSlot && (
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Chọn lớp học</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableClasses.map((classOption) => (
+                {availableClasses.map(classOption => (
                   <button
                     key={classOption.id}
                     onClick={() => selectClass(classOption.id)}
@@ -224,19 +179,26 @@ export default function CourseRegistration() {
                         : 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow'
                     }`}
                   >
-                    <div className="font-medium text-lg">{classOption.code}</div>
-                    <div className="text-sm text-gray-600 mt-1">{classOption.instructor}</div>
+                    <h3 className="font-bold text-lg">{classOption.code}</h3>
+                    <p className="text-sm text-gray-600 mt-2">
+                      <span className="inline-flex items-center mr-4">
+                        <Users size={16} className="mr-1" /> Số sinh viên đã đăng ký: {classOption.registeredStudents}
+                      </span>
+                      <span className="inline-flex items-center">
+                        <Clock size={16} className="mr-1" /> Phòng học: {classOption.room}
+                      </span>
+                    </p>
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Register Button */}
-          <div className="mt-12 flex justify-center">
-            <button 
+          {/* Nút đăng ký */}
+          <div className="mt-8">
+            <button
               onClick={handleRegister}
-              className="bg-gradient-to-r from-blue-500 to-teal-400 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
             >
               Đăng ký
             </button>
@@ -244,27 +206,24 @@ export default function CourseRegistration() {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Xác nhận đăng ký */}
       {showConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">Xác nhận đăng ký</h2>
-            <p className="text-gray-700 mb-6">Bạn có chắc chắn muốn đăng ký lớp này không?</p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowConfirmation(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmRegistration}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center"
-              >
-                <CheckCircle size={18} className="mr-2" />
-                Xác nhận
-              </button>
-            </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-8 shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Xác nhận đăng ký</h2>
+            <p className="mb-4">Bạn có chắc chắn muốn đăng ký môn học này?</p>
+            <button 
+              onClick={confirmRegistration}
+              className="bg-blue-500 text-white font-bold py-2 px-4 rounded mr-2"
+            >
+              Xác nhận
+            </button>
+            <button 
+              onClick={() => setShowConfirmation(false)}
+              className="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
+            >
+              Hủy
+            </button>
           </div>
         </div>
       )}

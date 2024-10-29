@@ -14,7 +14,7 @@ const AsideClient = () => {
                 />
             </div>
             <div className="mb-4">
-                <h2 className="mb-2 text-sm font-semibold">Menu</h2>
+                <h2 className="mb-2 text-sm font-semibold">Trang chủ</h2>
                 <nav className="space-y-2">
                     <Link to="home">
                     <a
@@ -41,56 +41,6 @@ const AsideClient = () => {
                         Trang chủ
                     </a>
                     </Link>
-                    <Link to="schedule"
-                        
-                        className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition duration-300"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#FF3B30"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5 h-5 mr-2"
-                        >
-                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                            <path d="M10 4v4"></path>
-                            <path d="M2 8h20"></path>
-                            <path d="M6 4v4"></path>
-                        </svg>
-                        Lịch học
-                    </Link>
-                </nav>
-            </div>
-            <div className="mb-4">
-                <h2 className="mb-2 text-sm font-semibold">LAYOUT</h2>
-                <nav className="space-y-2">
-                    <Link to="class-registration"
-                        className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#FF9500"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5 h-5 mr-2"
-                        >
-                            <path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"></path>
-                            <path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"></path>
-                            <path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"></path>
-                            <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
-                        </svg>
-                        Đăng kí lịch học
-                    </Link>
                     <Link to="notification"> 
                     <a
                         href="#"
@@ -116,7 +66,59 @@ const AsideClient = () => {
                         Thông báo
                     </a>
                     </Link>
-                    <a
+                    
+                </nav>
+            </div>
+            <div className="mb-4">
+                <h2 className="mb-2 text-sm font-semibold">Lịch học</h2>
+                <nav className="space-y-2">
+                <Link to="schedule"
+                        
+                        className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition duration-300"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#FF3B30"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-5 h-5 mr-2"
+                        >
+                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                            <path d="M10 4v4"></path>
+                            <path d="M2 8h20"></path>
+                            <path d="M6 4v4"></path>
+                        </svg>
+                        Lịch học
+                    </Link>
+                    <Link to="class-registration"
+                        className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#FF9500"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-5 h-5 mr-2"
+                        >
+                            <path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"></path>
+                            <path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"></path>
+                            <path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"></path>
+                            <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
+                        </svg>
+                        Đăng kí lịch học
+                    </Link>
+                    
+                    {/* <a
                         href="#"
                         className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200"
                     >
@@ -192,7 +194,7 @@ const AsideClient = () => {
                             <path d="M6.343 6.343h.01"></path>
                         </svg>
                         Float
-                    </a>
+                    </a> */}
                 </nav>
             </div>
             <div>
@@ -220,7 +222,7 @@ const AsideClient = () => {
                         </svg>
                         User
                     </a>
-                    <a
+                    {/* <a
                         href="#"
                         className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-200"
                     >
@@ -241,7 +243,7 @@ const AsideClient = () => {
                             <path d="M8 8v4"></path>
                         </svg>
                         Users
-                    </a>
+                    </a> */}
                 </nav>
             </div>
         </aside>

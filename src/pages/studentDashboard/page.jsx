@@ -2,8 +2,19 @@
 
 import React, { useState } from 'react'
 import { Calendar, Clock, Eye, Pencil, Phone, Mail, MapPin, User, Briefcase, ChevronDown, ChevronUp } from 'lucide-react'
+import { useNavigate } from 'react-router-dom';
 
 export default function StudentDashboard() {
+
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
   const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
   const [showPersonalInfo, setShowPersonalInfo] = useState(false)
 

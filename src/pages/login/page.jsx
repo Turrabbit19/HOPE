@@ -1,63 +1,89 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function SchoolLogin() {
-  const [isStudent, setIsStudent] = useState(true)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
+  // Kiểm tra nếu người dùng đã đăng nhập
   useEffect(() => {
-    setIsLoaded(true)
-  }, [])
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/home');
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    console.log('Submitting login with email:', email);
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+        console.log('Login response:', data);
+
+        if (!response.ok) {
+            if (data.errors) {
+                const errorMessage = typeof data.errors === 'object'
+                    ? Object.values(data.errors).join(', ')
+                    : data.errors;
+                setError(errorMessage);
+            } else {
+                setError(data.error || 'Đăng nhập thất bại');
+            }
+            return;
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.user.role);
+
+        const userRole = data.user.role;
+        console.log('User role:', userRole);
+
+        if (userRole === 'Sinh viên') {
+            navigate('/home');
+            console.log("Đã chuyển hướng tới trang /home");
+        } else {
+            navigate('/');
+            console.log('Đã chuyển hướng tới trang /');
+        }
+    } catch (err) {
+        console.error('Error during login:', err);
+        setError('Có lỗi xảy ra trong quá trình đăng nhập');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
-      <div className={`bg-white p-8 rounded-lg shadow-2xl w-96 max-w-md transform transition-all duration-700 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-        <div className="text-center mb-8">
-          <div className="mb-4 flex justify-center">
-            <div className={`w-20 h-20 bg-blue-500 rounded-full overflow-hidden transform transition-all duration-700 ${isLoaded ? 'rotate-0 scale-100' : 'rotate-180 scale-0'}`}>
-              {/* Placeholder for logo */}
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-blue-800 mb-2">Trường Đại học XYZ</h1>
-          <p className="text-gray-600">Hệ thống đăng nhập</p>
-        </div>
-
-        <div className="flex mb-6 bg-gray-100 rounded-md p-1 relative overflow-hidden">
-          <button
-            className={`flex-1 py-2 px-4 rounded-md transition-all duration-300 relative overflow-hidden ${
-              isStudent ? 'text-white' : 'text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => setIsStudent(true)}
-          >
-            <span className="relative z-10">Sinh viên</span>
-            {isStudent && (
-              <span className="absolute inset-0 bg-blue-500 animate-ripple"></span>
-            )}
-          </button>
-          <button
-            className={`flex-1 py-2 px-4 rounded-md transition-all duration-300 relative overflow-hidden ${
-              !isStudent ? 'text-white' : 'text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => setIsStudent(false)}
-          >
-            <span className="relative z-10">Giảng viên</span>
-            {!isStudent && (
-              <span className="absolute inset-0 bg-blue-500 animate-ripple"></span>
-            )}
-          </button>
-        </div>
-
-        <form>
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-96 max-w-md transform transition-all duration-700">
+        <h1 className="text-3xl font-bold text-blue-800 mb-2 text-center">Đăng nhập</h1>
+        {error && <p className="text-red-500 mb-4 text-center">{typeof error === 'string' ? error : JSON.stringify(error)}</p>}
+        
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username" className="block text-gray-700 text-sm font-semibold mb-2">
-              {isStudent ? 'Mã số sinh viên' : 'Mã số giảng viên'}
+            <label htmlFor="email" className="block text-gray-700 text-sm font-semibold mb-2">
+              Email
             </label>
             <input
-              type="text"
-              id="username"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 transform focus:scale-105"
-              placeholder={isStudent ? 'Nhập mã số sinh viên' : 'Nhập mã số giảng viên'}
+              type="email"
+              id="email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nhập email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div className="mb-6">
@@ -67,27 +93,27 @@ export default function SchoolLogin() {
             <input
               type="password"
               id="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 transform focus:scale-105"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Nhập mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-3 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-300 transform hover:scale-105 hover:rotate-1 hover:shadow-lg"
+            className="w-full bg-blue-500 text-white py-3 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Đăng nhập
           </button>
         </form>
 
         <div className="mt-4 text-center">
-          <a href="#" className="text-sm text-blue-500 hover:underline hover:text-blue-700 transition-colors duration-300">
+          <a href="#" className="text-sm text-blue-500 hover:underline">
             Quên mật khẩu?
           </a>
         </div>
       </div>
-      <footer className="mt-8 text-center text-white text-sm">
-        <p>&copy; 2024 Trường Đại học XYZ. Tất cả quyền được bảo lưu.</p>
-      </footer>
     </div>
-  )
+  );
 }

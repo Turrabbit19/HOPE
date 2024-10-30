@@ -310,7 +310,8 @@ class ApiScheduleController extends Controller
         }
     }
 
-    public function getAllSchedules() {
+    public function getAllSchedules()
+    {
         try {
             $schedules = Schedule::with(['courseSemester', 'planSubject', 'classroom', 'teacher', 'shift', 'room'])
                 ->get();
@@ -334,16 +335,59 @@ class ApiScheduleController extends Controller
             });
 
             return response()->json(['data' => $data], 200);
-
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedules', 'message' => $e->getMessage()], 500);
         }
     }
 
+    // public function getDetailSchedule(string $id)
+    // {
+    //     try {
+    //         $schedule = Schedule::with(['courseSemester', 'classroom', 'teacher', 'shift', 'room'])->findOrFail($id);
+
+    //         $lessonDates = [];
+    //         $startDate = Carbon::parse($schedule->start_date);
+    //         $endDate = Carbon::parse($schedule->end_date);
+
+    //         // Giả sử trường hợp nhà trường xếp lịch vào các ngày: Thứ Ba, Thứ Năm, Thứ Bảy
+    //         $lessonDays = $schedule->getLessonDays();
+
+    //         // Tạo các ngày học trong khoảng thời gian đã tạo
+    //         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+    //             if (in_array($date->format('l'), $lessonDays)) {
+    //                 $lessonDates[] = [
+    //                     'date' => $date->format('d/m/Y'),
+    //                     'status' => $date->lt(Carbon::now()) ? 'Đã học' : 'Chưa học',
+    //                 ];
+    //             }
+    //         }
+
+    //         $data = [
+    //             'id' => $schedule->id,
+    //             'course_name' => $schedule->courseSemester->course->name,
+    //             'semester_name' => $schedule->courseSemester->semester->name,
+    //             'teacher_name' => $schedule->teacher->user->name,
+    //             'shift_name' => $schedule->shift->name,
+    //             'room_name' => $schedule->room->name,
+    //             'link' => $schedule->link ?? "NULL",
+    //             'start_date' => $startDate->format('d/m/Y'),
+    //             'end_date' => $endDate->format('d/m/Y'),
+    //             'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
+    //             'lesson_dates' => $lessonDates,
+    //         ];
+
+    //         return response()->json(['data' => $data], 200);
+    //     } catch (ModelNotFoundException $e) {
+    //         return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Không thể truy vấn tới lịch học', 'message' => $e->getMessage()], 500);
+    //     }
+    // }    
     public function getDetailSchedule(string $id)
     {
         try {
-            $schedule = Schedule::with(['courseSemester', 'classroom', 'teacher', 'shift', 'room'])->findOrFail($id);
+            $schedule = Schedule::with(['courseSemester', 'classroom', 'teacher', 'shift', 'room', 'lessons'])
+                ->findOrFail($id);
 
             $data = [
                 'id' => $schedule->id,
@@ -355,7 +399,14 @@ class ApiScheduleController extends Controller
                 'link' => $schedule->link ?? "NULL",
                 'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
                 'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
-                'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
+                'status' => $schedule->lessons->isNotEmpty() && Carbon::parse($schedule->lessons->first()->date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
+                'schedule_lessons' => $schedule->scheduleLessons->map(function ($lesson) {
+                    return [
+                        'date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
+                        'status' => Carbon::parse($lesson->study_date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
+                    ];
+                }),
+
             ];
 
             return response()->json(['data' => $data], 200);

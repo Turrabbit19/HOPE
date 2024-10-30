@@ -56,4 +56,13 @@ class Schedule extends Model
     {
         return $this->belongsTo(Room::class);
     }
+
+    public function lessons()
+    {
+        return $this->hasMany(ScheduleLesson::class);
+    }
+    public function scheduleLessons()
+    {
+        return $this->hasMany(ScheduleLesson::class, 'schedule_id');
+    }
 }

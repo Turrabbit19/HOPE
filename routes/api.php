@@ -19,7 +19,7 @@ use App\Http\Controllers\Api\Admin\ApiTeacherController;
 
 use App\Http\Controllers\Api\Auth\ApiAuthController;
 
-use App\Http\Controllers\Api\Client\ApiClientController;
+use App\Http\Controllers\Api\Student\ApiClientController;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -86,6 +86,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
     });
 
-    Route::prefix('student')->group(function () {
-        Route::get('detail/{id}', [ApiClientController::class, 'detail']);
+    Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')->group(function () {
+        Route::get('/', [ApiClientController::class, 'getStudentDetail']);
+        Route::get('notifications', [ApiClientController::class, 'getStudentNotifications']);
     });

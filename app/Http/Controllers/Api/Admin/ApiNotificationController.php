@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Events\NewNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\Student;
+use App\Models\StudentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -82,11 +84,16 @@ class ApiNotificationController extends Controller
 
             $notification = Notification::create($data);
 
-            $courses = collect($data['courses'])->mapWithKeys(function ($course) {
-                return [$course['id'] => []];
-            });
-            
-            $notification->courses()->sync($courses);
+            foreach ($data['courses'] as $course) {
+                $students = Student::where('course_id', $course['id'])->get();
+    
+                foreach ($students as $student) {
+                    StudentNotification::create([
+                        'student_id' => $student->id,
+                        'notification_id' => $notification->id,
+                    ]);
+                }
+            }
 
             broadcast(new NewNotification($notification));
             

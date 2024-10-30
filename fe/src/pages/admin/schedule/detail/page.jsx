@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { Button } from "antd";
+import { Button, Modal, Typography, Card, Divider } from "antd";
 import { Link } from "react-router-dom";
+import {
+    BookOutlined,
+    UserOutlined,
+    ClockCircleOutlined,
+} from "@ant-design/icons";
 dayjs.locale("vi");
+
+const { Title, Paragraph, Text } = Typography;
 
 const classesData = [
     {
@@ -34,6 +41,8 @@ const ScheduleDetail = () => {
     const [selectedClassId, setSelectedClassId] = useState(classesData[0].id);
     const [currentMonth, setCurrentMonth] = useState(dayjs());
     const [completedSessions, setCompletedSessions] = useState(0);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedSession, setSelectedSession] = useState(null);
 
     const selectedClass = classesData.find((cls) => cls.id === selectedClassId);
     const { schedule } = selectedClass;
@@ -74,6 +83,24 @@ const ScheduleDetail = () => {
 
     const handleNextMonth = () => {
         setCurrentMonth(currentMonth.add(1, "month"));
+    };
+
+    const getSessionDetails = (date) => {
+        // Giả lập dữ liệu buổi học
+        return {
+            sessionName: `Buổi học ngày ${date.format("DD/MM/YYYY")}`,
+            content: "Giới thiệu về lập trình React.",
+            instructor: "Giảng viên: Nguyễn Văn A",
+            classPeriod: "Ca học: Sáng",
+        };
+    };
+
+    const onDateClick = (date) => {
+        if (isClassDay(date)) {
+            const sessionDetails = getSessionDetails(date);
+            setSelectedSession(sessionDetails);
+            setIsModalVisible(true);
+        }
     };
 
     return (
@@ -136,13 +163,14 @@ const ScheduleDetail = () => {
                     {daysInMonth.map((date, index) => (
                         <div
                             key={index}
-                            className={`p-4 border rounded-lg text-center ${
+                            className={`p-4 border rounded-lg text-center cursor-pointer transition duration-200 ease-in-out transform hover:-translate-y-1 ${
                                 isClassDay(date)
                                     ? date.isBefore(dayjs(), "day")
-                                        ? "bg-green-200"
-                                        : "bg-blue-100"
+                                        ? "bg-green-200 hover:bg-green-300"
+                                        : "bg-blue-100 hover:bg-blue-200"
                                     : "bg-gray-100"
                             }`}
+                            onClick={() => onDateClick(date)}
                         >
                             <p
                                 className={`font-bold text-xl ${
@@ -170,6 +198,38 @@ const ScheduleDetail = () => {
                     <Link to={`edit`}>Sửa lịch học</Link>
                 </Button>
             </div>
+
+            {/* Popup hiển thị chi tiết buổi học */}
+            <Modal
+                title={<Title level={4}>{selectedSession?.sessionName}</Title>}
+                visible={isModalVisible}
+                onOk={() => setIsModalVisible(false)}
+                onCancel={() => setIsModalVisible(false)}
+                footer={[
+                    <Button key="back" onClick={() => setIsModalVisible(false)}>
+                        Đóng
+                    </Button>,
+                ]}
+            >
+                <Card bordered={false}>
+                    <Paragraph>
+                        <BookOutlined style={{ marginRight: 8 }} />
+                        <Text strong>Nội dung:</Text> {selectedSession?.content}
+                    </Paragraph>
+                    <Divider />
+                    <Paragraph>
+                        <UserOutlined style={{ marginRight: 8 }} />
+                        <Text strong>Giảng viên:</Text>{" "}
+                        {selectedSession?.instructor}
+                    </Paragraph>
+                    <Divider />
+                    <Paragraph>
+                        <ClockCircleOutlined style={{ marginRight: 8 }} />
+                        <Text strong>Ca học:</Text>{" "}
+                        {selectedSession?.classPeriod}
+                    </Paragraph>
+                </Card>
+            </Modal>
         </div>
     );
 };

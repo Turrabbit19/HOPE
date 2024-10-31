@@ -1,6 +1,5 @@
-"use client"
-
 import React, { useState, useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { Search, Bell, MessageCircle, BarChart2, Maximize, Minimize } from "lucide-react"
 
 export default function HeaderClient() {
@@ -8,7 +7,8 @@ export default function HeaderClient() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const notificationRef = useRef(null)
   const buttonRef = useRef(null)
-  const unreadNotificationsCount = 3; // Số lượng thông báo chưa đọc
+  const navigate = useNavigate()
+  const unreadNotificationsCount = 3 // Số lượng thông báo chưa đọc
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -51,6 +51,16 @@ export default function HeaderClient() {
         document.exitFullscreen()
       }
     }
+  }
+
+  const handleLogout = () => {
+    // Xóa token khỏi localStorage
+    localStorage.removeItem("token")
+    localStorage.removeItem("role")
+    console.log("Đã đăng xuất và xóa token")
+
+    // Điều hướng về trang đăng nhập
+    navigate("/login")
   }
 
   return (
@@ -141,14 +151,8 @@ export default function HeaderClient() {
             <Maximize className="h-5 w-5 text-gray-600" />
           )}
         </button>
-        <button className="p-1 hover:bg-gray-100 rounded-full border">
-          <img
-            src="/placeholder.svg?height=32&width=32"
-            alt="User avatar"
-            className="rounded-full"
-            width={32}
-            height={32}
-          />
+        <button onClick={handleLogout} className="p-2 hover:bg-gray-100 rounded-full border flex items-center">
+          <span className="mr-2 text-gray-600">Đăng xuất</span>
         </button>
       </div>
     </header>

@@ -13,26 +13,26 @@ const Router = createBrowserRouter([
         children: [
             {
                 path: "/schedule",
-                element: <DashboardActions />
+                element: <DashboardActions />,
             },
             {
                 path: "/class-registration",
-                element: <ScheduleRegistration />
+                element: <ScheduleRegistration />,
             },
             {
                 path: "/home",
-                element: <StudentDashboard />  // Đảm bảo `/home` liên kết với `StudentDashboard`
+                element: <StudentDashboard />,
             },
             {
                 path: "/notification",
-                element: <NotificationPage />
-            }
-        ]
+                element: <NotificationPage />,
+            },
+        ],
     },
     {
         path: "/login",
-        element: <SchoolLogin />
-    }
+        element: <SchoolLogin />,
+    },
 ]);
 
 export default Router;

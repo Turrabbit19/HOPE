@@ -53,12 +53,10 @@ export default function SchoolLogin() {
         console.log('User role:', userRole);
 
         if (userRole === 'Sinh viên') {
-            navigate('/home');
-            console.log("Đã chuyển hướng tới trang /home");
-        } else {
-            navigate('/');
-            console.log('Đã chuyển hướng tới trang /');
-        }
+          navigate('/home'); // Điều hướng đến trang sinh viên
+      } else {
+          navigate('/'); // Điều hướng đến trang khác nếu là vai trò khác
+      }
     } catch (err) {
         console.error('Error during login:', err);
         setError('Có lỗi xảy ra trong quá trình đăng nhập');

@@ -1,162 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Calendar,
-  Clock,
-  Phone,
-  Mail,
-  MapPin,
-  User,
-  Briefcase,
-  ChevronDown,
-  ChevronUp,
-  AlertCircle,
-  RefreshCw,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react'
+import { Calendar, Clock, Eye, Pencil, Phone, Mail, MapPin, User, Briefcase, ChevronDown, ChevronUp } from 'lucide-react'
+import { useNavigate } from 'react-router-dom';
 
 export default function StudentDashboard() {
+
+
   const navigate = useNavigate();
-  const [studentInfo, setStudentInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [tokenDebugInfo, setTokenDebugInfo] = useState('');
-  const [showPersonalInfo, setShowPersonalInfo] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)); // October 2024
-
-  const checkAndRetrieveToken = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setTokenDebugInfo("No token found in localStorage");
-      return null;
-    }
-    setTokenDebugInfo(`Token found: ${token.substring(0, 10)}...`);
-    return token;
-  };
-
-  const fetchStudentInfo = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const token = checkAndRetrieveToken();
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch('http://127.0.0.1:8000/api/student', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Failed to fetch student information: ${errorData.message || response.statusText}`);
-      }
-
-      const data = await response.json();
-      setStudentInfo(data);
-    } catch (err) {
-      console.error('Error fetching student info:', err);
-      setError(err.message || 'Failed to load student information');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchStudentInfo();
-  }, []);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
+  const [showPersonalInfo, setShowPersonalInfo] = useState(false)
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
-  const handleRetry = () => {
-    fetchStudentInfo();
-  };
-
-  const daysInMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  ).getDate();
-  const firstDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  ).getDay();
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
 
   const prevMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    );
-  };
-
-  const nextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
-  };
-
-  const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-  const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="text-center">
-          <RefreshCw className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-lg font-semibold text-gray-700">Loading student information...</p>
-        </div>
-      </div>
-    );
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
   }
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">Error Loading Data</h2>
-          <p className="text-center text-gray-600 mb-6">{error}</p>
-          <div className="bg-gray-100 p-4 rounded-md mb-6">
-            <h3 className="font-semibold mb-2">Token Debug Info:</h3>
-            <p className="text-sm">{tokenDebugInfo}</p>
-          </div>
-          <div className="space-y-4">
-            <button
-              onClick={handleRetry}
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition duration-200"
-            >
-              Retry
-            </button>
-            <button
-              onClick={handleLogout}
-              className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition duration-200"
-            >
-              Back to Login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+  }
+
+  const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+  const togglePersonalInfo = () => {
+    setShowPersonalInfo(!showPersonalInfo)
   }
 
   return (
@@ -167,20 +44,18 @@ export default function StudentDashboard() {
         <div className="bg-indigo-900 text-white p-6 rounded-lg">
           <div className="flex items-center space-x-4 mb-4">
             <img
-              src={studentInfo.avatar || "/placeholder.svg?height=80&width=80"}
-              alt={studentInfo.name}
+              src="/placeholder.svg?height=80&width=80"
+              alt="Pham Quoc Khanh"
               className="w-20 h-20 rounded-full"
             />
             <div>
-              <h2 className="text-xl font-bold">
-                {studentInfo.name}
-              </h2>
-              <p className="text-indigo-300">MSV: {studentInfo.student_id}</p>
+              <h2 className="text-xl font-bold">Pham Quoc Khanh</h2>
+              <p className="text-indigo-300">MSV: PH38668</p>
             </div>
           </div>
           <button
             className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded flex justify-between items-center"
-            onClick={() => setShowPersonalInfo(!showPersonalInfo)}
+            onClick={togglePersonalInfo}
           >
             <span>Thông tin cá nhân</span>
             {showPersonalInfo ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -188,13 +63,13 @@ export default function StudentDashboard() {
           {showPersonalInfo && (
             <div className="mt-4 bg-indigo-800 p-4 rounded-lg">
               {[
-                { icon: Calendar, label: "Ngày sinh", value: studentInfo.date_of_birth },
-                { icon: User, label: "Giới tính", value: studentInfo.gender },
-                { icon: Mail, label: "Email", value: studentInfo.email },
-                { icon: Phone, label: "Số điện thoại", value: studentInfo.phone },
-                { icon: MapPin, label: "Địa chỉ", value: studentInfo.address },
-                { icon: User, label: "Dân tộc", value: studentInfo.ethnicity },
-                { icon: Briefcase, label: "Trạng thái", value: studentInfo.status },
+                { icon: Calendar, label: 'Ngày sinh', value: '11/02/2004' },
+                { icon: User, label: 'Giới tính', value: 'Nam' },
+                { icon: Mail, label: 'Email', value: 'khanhpqph38668@fpt.edu.vn' },
+                { icon: Phone, label: 'Số điện thoại', value: '0334675867' },
+                { icon: MapPin, label: 'Địa chỉ', value: '54 Mỹ Đình 2, Hà Nội' },
+                { icon: User, label: 'Dân tộc', value: 'Kinh' },
+                { icon: Briefcase, label: 'Trạng thái', value: 'Đang học' },
               ].map((item, index) => (
                 <div key={index} className="flex items-start mt-2 space-x-3">
                   <item.icon className="w-5 h-5 text-indigo-300 flex-shrink-0 mt-1" />
@@ -214,7 +89,9 @@ export default function StudentDashboard() {
             <h3 className="text-lg font-semibold">Lớp Học Hôm Nay</h3>
             <div className="flex items-center text-gray-500">
               <span className="mr-2">16 May 2024</span>
-              <Calendar className="w-4 h-4" />
+              <button className="p-1 hover:bg-gray-100 rounded-full">
+                <Calendar className="w-4 h-4" />
+              </button>
             </div>
           </div>
           <ul className="space-y-4">
@@ -225,7 +102,11 @@ export default function StudentDashboard() {
             ].map((cls, index) => (
               <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
                 <div className="flex items-center space-x-3">
-                  <img src="/placeholder.svg?height=40&width=40" alt={cls.name} className="w-10 h-10 rounded-full" />
+                  <img
+                    src="/placeholder.svg?height=40&width=40"
+                    alt={cls.name}
+                    className="w-10 h-10 rounded-full"
+                  />
                   <div>
                     <p className="font-medium">{cls.name}</p>
                     <p className="text-sm text-gray-500 flex items-center">
@@ -234,7 +115,8 @@ export default function StudentDashboard() {
                     </p>
                   </div>
                 </div>
-                <span className={`text-sm ${cls.status === "Hoàn Thành" ? "text-green-500" : "text-yellow-500"}`}>
+                <span className={`text-sm ${cls.status === "Hoàn Thành" ? "text-green-500" : "text-yellow-500"
+                  }`}>
                   {cls.status}
                 </span>
               </li>
@@ -277,43 +159,10 @@ export default function StudentDashboard() {
           {/* Attendance Chart */}
           <div className="w-48 h-48 mx-auto relative">
             <svg viewBox="0 0 100 100" className="w-full h-full">
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="#e5e7eb"
-                strokeWidth="10"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="#22c55e"
-                strokeWidth="10"
-                strokeDasharray="220 283"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="#ef4444"
-                strokeWidth="10"
-                strokeDasharray="20 283"
-                strokeDashoffset="-220"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="10"
-                strokeDasharray="10 283"
-                strokeDashoffset="-240"
-              />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="10" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#22c55e" strokeWidth="10" strokeDasharray="220 283" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" strokeWidth="10" strokeDasharray="20 283" strokeDashoffset="-220" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" strokeWidth="10" strokeDasharray="10 283" strokeDashoffset="-240" />
               <circle cx="50" cy="50" r="38" fill="white" />
             </svg>
           </div>
@@ -340,26 +189,14 @@ export default function StudentDashboard() {
         {/* Last 7 Days */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-4">Last 7 Days</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            14 May 2024 - 21 May 2024
-          </p>
+          <p className="text-sm text-gray-500 mb-4">14 May 2024 - 21 May 2024</p>
           <div className="flex justify-between">
-            {["M", "T", "W", "T",
-              "F", "S", "S"].map(
-                (day, index) => (
-                  <div
-                    key={index}
-                    className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${index === 4
-                      ? "bg-red-500"
-                      : index < 4
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                      }`}
-                  >
-                    {day}
-                  </div>
-                )
-              )}
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
+              <div key={index} className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${index === 4 ? 'bg-red-500' : index < 4 ? 'bg-green-500' : 'bg-gray-300'
+                }`}>
+                {day}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -371,57 +208,40 @@ export default function StudentDashboard() {
           <h3 className="text-lg font-semibold mb-4">Lịch</h3>
           <div className="bg-gray-100 p-4 rounded">
             <div className="flex justify-between items-center mb-4">
-              <button
-                onClick={prevMonth}
-                className="p-1 hover:bg-gray-200 rounded-full"
-              >
+              <button onClick={prevMonth} className="p-1 hover:bg-gray-200 rounded-full">
                 <Calendar className="w-5 h-5" />
               </button>
               <h4 className="text-lg font-medium">
-                {MONTHS[currentDate.getMonth()]}{" "}
-                {currentDate.getFullYear()}
+                {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h4>
-              <button
-                onClick={nextMonth}
-                className="p-1 hover:bg-gray-200 rounded-full"
-              >
+              <button onClick={nextMonth} className="p-1 hover:bg-gray-200 rounded-full">
                 <Calendar className="w-5 h-5" />
               </button>
             </div>
             <div className="grid grid-cols-7 gap-2 text-center">
-              {DAYS.map((day) => (
-                <div
-                  key={day}
-                  className="text-sm font-medium text-gray-500"
-                >
+              {DAYS.map(day => (
+                <div key={day} className="text-sm font-medium text-gray-500">
                   {day}
                 </div>
               ))}
-              {Array.from({ length: firstDayOfMonth }).map(
-                (_, index) => (
+              {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+                <div key={`empty-${index}`} className="text-sm p-2"></div>
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1
+                const isToday = day === 10 // Assuming 10th is the current day as shown in the image
+                return (
                   <div
-                    key={`empty-${index}`}
-                    className="text-sm p-2"
-                  ></div>
+                    key={day}
+                    className={`text-sm p-2 rounded-full ${isToday
+                        ? 'bg-blue-500 text-white'
+                        : 'hover:bg-gray-200'
+                      }`}
+                  >
+                    {day}
+                  </div>
                 )
-              )}
-              {Array.from({ length: daysInMonth }).map(
-                (_, index) => {
-                  const day = index + 1;
-                  const isToday = day === 10; // Assuming 10th is the current day as shown in the image
-                  return (
-                    <div
-                      key={day}
-                      className={`text-sm p-2 rounded-full ${isToday
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-200"
-                        }`}
-                    >
-                      {day}
-                    </div>
-                  );
-                }
-              )}
+              })}
             </div>
           </div>
         </div>
@@ -431,29 +251,15 @@ export default function StudentDashboard() {
           <h3 className="text-lg font-semibold mb-4">Bài tập</h3>
           <ul className="space-y-4">
             {[
-              {
-                name: "1st Quarterly",
-                subject: "Mathematics",
-                date: "06 May 2024",
-                time: "01:30 - 02:15 PM",
-                room: "15",
-                daysLeft: 19,
-              },
+              { name: "1st Quarterly", subject: "Mathematics", date: "06 May 2024", time: "01:30 - 02:15 PM", room: "15", daysLeft: 19 },
               { name: "2nd Quarterly", daysLeft: 20 },
             ].map((assignment, index) => (
-              <li
-                key={index}
-                className="border-b pb-4 last:border-b-0"
-              >
+              <li key={index} className="border-b pb-4 last:border-b-0">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">
-                      {assignment.name}
-                    </p>
+                    <p className="font-medium">{assignment.name}</p>
                     {assignment.subject && (
-                      <p className="text-sm text-gray-500">
-                        {assignment.subject}
-                      </p>
+                      <p className="text-sm text-gray-500">{assignment.subject}</p>
                     )}
                   </div>
                   <span className="text-xs text-red-500 font-medium">
@@ -468,7 +274,7 @@ export default function StudentDashboard() {
                     <Clock className="w-4 h-4 mr-1" />
                     {assignment.time}
                     <span className="mx-2">•</span>
-                    Room No : {assignment.room}
+                    Room  No : {assignment.room}
                   </div>
                 )}
               </li>
@@ -477,5 +283,5 @@ export default function StudentDashboard() {
         </div>
       </div>
     </div>
-  );
+  )
 }

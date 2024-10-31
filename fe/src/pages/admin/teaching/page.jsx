@@ -241,14 +241,14 @@ const Teach = () => {
 
                                     <div className="teaching__card-bottom">
                                         <Link
-                                            to="list"
+                                            to={`${major.id}/subjects`}
                                             className="flex items-center gap-3 text-[#1167B4] font-bold"
                                         >
                                             <img
                                                 src="/assets/svg/setting.svg"
                                                 alt="setting"
                                             />
-                                            Quản Lý Chuyên Ngành
+                                            Quản lý môn học
                                         </Link>
 
                                         <Popconfirm

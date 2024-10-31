@@ -51,6 +51,8 @@ import ScheduleAdd from "../pages/admin/schedule/add/page";
 import ScheduleList from "../pages/admin/schedule/list/page";
 import ScheduleDetail from "../pages/admin/schedule/detail/page";
 import ScheduleEdit from "../pages/admin/schedule/edit/page";
+import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
+import MajorSubject from "../pages/admin/teaching/Subject/page";
 
 const Router = createBrowserRouter([
     {
@@ -112,7 +114,7 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "teaching",
+                path: "major",
                 element: (
                     <>
                         <Teach />
@@ -120,7 +122,7 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "teaching/add",
+                path: "major/add",
                 element: (
                     <>
                         <BreadCrumb />
@@ -129,13 +131,30 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "teaching/list",
+                path: "major/list",
                 element: (
                     <>
                         <ListCourse />
                     </>
                 ),
             },
+            {
+                path: "major/:id/subjects",
+                element: (
+                    <>
+                        <MajorSubject />
+                    </>
+                ),
+            },
+            {
+                path: "major/:majorId/subjects/detail/:subjectId",
+                element: (
+                    <>
+                        <MajorDetailSubject />
+                    </>
+                ),
+            },
+
             {
                 path: "class-student",
                 element: <ClassStudent />,

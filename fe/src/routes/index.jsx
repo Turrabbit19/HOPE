@@ -53,6 +53,7 @@ import ScheduleDetail from "../pages/admin/schedule/detail/page";
 import ScheduleEdit from "../pages/admin/schedule/edit/page";
 import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
 import MajorSubject from "../pages/admin/teaching/Subject/page";
+import CourseDetail from "../pages/admin/courses/detail/page";
 
 const Router = createBrowserRouter([
     {
@@ -308,6 +309,14 @@ const Router = createBrowserRouter([
                 element: (
                     <>
                         <ListCourse />
+                    </>
+                ),
+            },
+            {
+                path: "list-course/:courseId/detail",
+                element: (
+                    <>
+                        <CourseDetail />
                     </>
                 ),
             },

@@ -207,7 +207,7 @@ const ListCourse = () => {
 
                                     <div className="teaching__card-bottom">
                                         <Link
-                                            to="list"
+                                            to={`${course.id}/detail`}
                                             className="flex items-center gap-3 text-[#1167B4] font-bold"
                                         >
                                             <img

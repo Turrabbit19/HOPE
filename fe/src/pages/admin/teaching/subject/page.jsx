@@ -21,16 +21,14 @@ const MajorSubject = () => {
         const allMajors = [
             { id: 1, name: "Công nghệ thông tin" },
             { id: 2, name: "Quản trị kinh doanh" },
-            // Thêm các chuyên ngành khác
         ];
 
-        // Dữ liệu môn học với các trường mới
         const allCourses = [
             {
                 id: 1,
                 code: "MTH101",
-                name: "Toán Cao Cấp",
-                description: "Môn học về toán cao cấp",
+                name: "Reactjs",
+                description: "Môn học về Reactjs",
                 semester: 1,
                 majorId: 1,
                 status: "Bắt buộc",
@@ -39,8 +37,8 @@ const MajorSubject = () => {
             {
                 id: 2,
                 code: "CS101",
-                name: "Lập Trình Cơ Bản",
-                description: "Nhập môn lập trình",
+                name: "Nodejs",
+                description: "Nhập môn nodejs",
                 semester: 1,
                 majorId: 1,
                 status: "Bắt buộc",

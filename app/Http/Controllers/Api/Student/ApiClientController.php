@@ -49,40 +49,4 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function getStudentNotifications()
-    {
-        $user = Auth::user();
-
-        try {
-            $student = Student::where('user_id', $user->id)->firstOrFail();
-
-            $studentNotifications = StudentNotification::where('student_id', $student->id)
-                ->with('notification') 
-                ->paginate(9);
-
-            $data = collect($studentNotifications->items())->map(function ($notificationCourse) {
-                return [
-                    'id' => $notificationCourse->notification->id,
-                    'notification' => $notificationCourse->notification->name,
-                    'description' => $notificationCourse->notification->description,
-                    'status' => $notificationCourse->status ? "Đã xem" : "Chưa xem", 
-                ];
-            });
-
-            return response()->json([
-                'data' => $data,
-                'pagination' => [
-                    'total' => $studentNotifications->total(),
-                    'per_page' => $studentNotifications->perPage(),
-                    'current_page' => $studentNotifications->currentPage(),
-                    'last_page' => $studentNotifications->lastPage(),
-                ]
-            ], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy thông tin sinh viên'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Notification_Courses', 'message' => $e->getMessage()], 500);
-        }
-    }
 }

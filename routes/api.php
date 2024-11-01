@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Admin\ApiTeacherController;
 use App\Http\Controllers\Api\Auth\ApiAuthController;
 
 use App\Http\Controllers\Api\Student\ApiClientController;
+use App\Http\Controllers\Api\Student\ApiClientNoticeController;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -89,5 +90,13 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
     Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')->group(function () {
         Route::get('/', [ApiClientController::class, 'getStudentDetail']);
-        Route::get('notifications', [ApiClientController::class, 'getStudentNotifications']);
+
+        Route::get('notifications', [ApiClientNoticeController::class, 'getStudentNotifications']);
+        Route::get('notification/{id}', [ApiClientNoticeController::class, 'detailNotification']);
+
+        Route::get('notifications/unread', [ApiClientNoticeController::class, 'getUnreadNotifications']);
+        Route::get('notification/unread/{id}', [ApiClientNoticeController::class, 'detailNotification']);
+
+        Route::get('notifications/read', [ApiClientNoticeController::class, 'getReadNotifications']);
+        Route::get('notification/read/{id}', [ApiClientNoticeController::class, 'detailNotification']);
     });

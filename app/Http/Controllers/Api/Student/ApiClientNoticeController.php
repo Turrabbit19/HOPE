@@ -95,32 +95,32 @@ class ApiClientNoticeController extends Controller
     }
 
     public function detailNotification($id)
-{
-    try {
-        $student = $this->getStudent();
-        
-        $notification = StudentNotification::where('student_id', $student->id)
-            ->where('notification_id', $id)
-            ->firstOrFail();
+    {
+        try {
+            $student = $this->getStudent();
+            
+            $notification = StudentNotification::where('student_id', $student->id)
+                ->where('notification_id', $id)
+                ->firstOrFail();
 
-        if ($notification->status == 0) { 
-            $notification->status = 1;
-            $notification->save(); 
+            if ($notification->status == 0) { 
+                $notification->status = 1;
+                $notification->save(); 
+            }
+
+            $data = [
+                'id' => $notification->notification->id,
+                'notification' => $notification->notification->name,
+                'description' => $notification->notification->description,
+                'status' => $notification->status ? "Đã xem" : "Chưa xem",
+            ];
+
+            return response()->json(['notification' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin sinh viên'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Student_Notifications', 'message' => $e->getMessage()], 500);
         }
-
-        $data = [
-            'id' => $notification->notification->id,
-            'notification' => $notification->notification->name,
-            'description' => $notification->notification->description,
-            'status' => $notification->status ? "Đã xem" : "Chưa xem",
-        ];
-
-        return response()->json(['notification' => $data], 200);
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['error' => 'Không tìm thấy thông tin sinh viên'], 404);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Không thể truy vấn tới bảng Student_Notifications', 'message' => $e->getMessage()], 500);
     }
-}
 
 }

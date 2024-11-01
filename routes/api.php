@@ -86,10 +86,16 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
+
+        Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
+        Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
+
     });
 
     Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')->group(function () {
         Route::get('/', [ApiClientController::class, 'getStudentDetail']);
+        Route::get('schedules', [ApiClientController::class, 'getSchedules']);
+        Route::post('schedule/{id}/register', [ApiClientController::class, 'registerSchedule']);
 
         Route::get('notifications', [ApiClientNoticeController::class, 'getStudentNotifications']);
         Route::get('notification/{id}', [ApiClientNoticeController::class, 'detailNotification']);

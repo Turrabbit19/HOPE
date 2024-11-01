@@ -7,6 +7,7 @@ use App\Models\CourseSemester;
 use App\Models\NotificationCourse;
 use App\Models\Schedule;
 use App\Models\Student;
+use App\Models\StudentClassroom;
 use App\Models\StudentNotification;
 use App\Models\StudentSchedule;
 use Carbon\Carbon;
@@ -120,6 +121,12 @@ class ApiClientController extends Controller
                     'student_id' => $student->id,
                     'schedule_id' => $id
                 ]);
+            
+                
+            StudentClassroom::create([
+                'student_id' => $student->id,
+                'classroom_id' => $rschedule->schedule->classroom_id
+            ]);
 
             $data = [
                     'id' => $rschedule->id,

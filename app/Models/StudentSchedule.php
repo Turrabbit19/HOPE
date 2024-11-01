@@ -14,6 +14,9 @@ class StudentSchedule extends Model
         'schedule_id'
     ];
 
+    public function student() {
+        return $this->belongsTo(Student::class);
+    }
     public function schedule() {
         return $this->belongsTo(Schedule::class);
     }

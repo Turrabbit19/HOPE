@@ -60,7 +60,7 @@ class ApiStudentController extends Controller
         try {
             $data = $validator->validated();
             $student = Student::create($data);
-            
+
             return response()->json(['data' => $student, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -96,7 +96,7 @@ class ApiStudentController extends Controller
 
         try {
             $student = Student::findOrFail($id);
-            
+
             $data = $validator->validated();
             $data['updated_at'] = Carbon::now();
             $student->update($data);
@@ -119,6 +119,34 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Không tìm thấy id'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getStudentByMajorAndSemester($major_id, $current_semester)
+    {
+        try {
+            $students = Student::with('major', 'semester')
+                ->where('major_id', $major_id)
+                ->where('current_semester', $current_semester)
+                ->get();
+
+            $data = $students->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'user_id' => $student->user_id,
+                    'course_id' => $student->course->name,
+                    'major_id' => $student->major->name,
+                    'current_semester' => $student->current_semester,
+                    'student_code' => $student->student_code,
+                    'status' => $student->status,
+                ];
+            });
+
+            return response()->json($data, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy học sinh nào thông qua ngành và kỳ'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới học sinh', 'message' => $e->getMessage()], 500);
         }
     }
 }

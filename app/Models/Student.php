@@ -33,6 +33,10 @@ class Student extends Model
     {
         return $this->belongsTo(Major::class);
     }
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class);
+    }
 
     public function classrooms()
     {

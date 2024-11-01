@@ -12,11 +12,7 @@ class StudentNotification extends Model
     protected $fillable = [
         'student_id',
         'notification_id',
-        'status',
-    ];
-    
-    protected $casts = [
-        'status' => 'boolean',
+        'status'
     ];
 
     public function student() {

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Events\NewNotification;
+use App\Models\StudentNotification;
 use Carbon\Carbon;
 use App\Models\Section;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\Student;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -185,6 +187,18 @@ class ApiSectionController extends Controller
             });
             
             $notification->courses()->sync($courses);
+
+            foreach ($data['courses'] as $course) {
+                $students = Student::where('course_id', $course['id'])->get();
+    
+                foreach ($students as $student) {
+                    StudentNotification::create([
+                        'student_id' => $student->id,
+                        'notification_id' => $notification->id,
+                        'status' => 0
+                    ]);
+                }
+            }
 
             broadcast(new NewNotification($notification));
             

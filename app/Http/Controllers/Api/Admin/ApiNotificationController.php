@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Events\NewNotification;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 use App\Models\Notification;
 use App\Models\Student;
 use App\Models\StudentNotification;
@@ -91,6 +92,7 @@ class ApiNotificationController extends Controller
                     StudentNotification::create([
                         'student_id' => $student->id,
                         'notification_id' => $notification->id,
+                        'status' => 0
                     ]);
                 }
             }
@@ -99,13 +101,11 @@ class ApiNotificationController extends Controller
             
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
+            Log::error('Error creating StudentNotification: ' . $e->getMessage());
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {

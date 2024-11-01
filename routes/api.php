@@ -52,6 +52,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::apiResource('courses', ApiCourseController::class);
         Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
+        Route::get('course/{courseId}/students', [ApiStudentController::class, 'getStudentsByCourse']);
 
         Route::apiResource('semesters', ApiSemesterController::class);
 

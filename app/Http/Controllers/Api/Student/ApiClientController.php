@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Student;
 use App\Http\Controllers\Controller;
 use App\Models\NotificationCourse;
 use App\Models\Student;
+use App\Models\StudentNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
@@ -43,7 +44,7 @@ class ApiClientController extends Controller
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy sinh viên cho người dùng đã đăng nhập.'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
@@ -55,9 +56,8 @@ class ApiClientController extends Controller
 
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
-            $courseId = $student->course_id; 
 
-            $studentNotifications = NotificationCourse::where('course_id', $courseId)
+            $studentNotifications = StudentNotification::where('student_id', $student->id)
                 ->with('notification') 
                 ->paginate(9);
 
@@ -66,7 +66,7 @@ class ApiClientController extends Controller
                     'id' => $notificationCourse->notification->id,
                     'notification' => $notificationCourse->notification->name,
                     'description' => $notificationCourse->notification->description,
-                    'status' => $notificationCourse->notification->status ? "Đã xem" : "Chưa xem", 
+                    'status' => $notificationCourse->status ? "Đã xem" : "Chưa xem", 
                 ];
             });
 

@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Events\NewNotification;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 use App\Models\Notification;
+use App\Models\Student;
+use App\Models\StudentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -82,23 +85,27 @@ class ApiNotificationController extends Controller
 
             $notification = Notification::create($data);
 
-            $courses = collect($data['courses'])->mapWithKeys(function ($course) {
-                return [$course['id'] => []];
-            });
-            
-            $notification->courses()->sync($courses);
+            foreach ($data['courses'] as $course) {
+                $students = Student::where('course_id', $course['id'])->get();
+    
+                foreach ($students as $student) {
+                    StudentNotification::create([
+                        'student_id' => $student->id,
+                        'notification_id' => $notification->id,
+                        'status' => 0
+                    ]);
+                }
+            }
 
             broadcast(new NewNotification($notification));
             
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
+            Log::error('Error creating StudentNotification: ' . $e->getMessage());
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {

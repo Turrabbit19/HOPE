@@ -1,22 +1,54 @@
-"use client";
+'use client'
 
-import React, { useEffect, useState } from 'react'
-import { Calendar, Clock, Eye, Pencil, Phone, Mail, MapPin, User, Briefcase, ChevronDown, ChevronUp } from 'lucide-react'
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import {
+  Calendar,
+  Clock,
+  Phone,
+  Mail,
+  MapPin,
+  User,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react'
 
-export default function StudentDashboard() {
-
-
-  const navigate = useNavigate();
+export default function Component() {
+  const [student, setStudent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [showPersonalInfo, setShowPersonalInfo] = useState(false)
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
+    const fetchStudentData = async () => {
+      const token = localStorage.getItem('token')
+
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/student', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setStudent(response.data.data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [navigate]);
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
-  const [showPersonalInfo, setShowPersonalInfo] = useState(false)
+
+    fetchStudentData()
+  }, [])
+
+  const handleRetry = () => {
+    setLoading(true)
+    setError(null)
+    fetchStudentData()
+  }
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
@@ -30,10 +62,48 @@ export default function StudentDashboard() {
   }
 
   const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const MONTHS = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ]
 
-  const togglePersonalInfo = () => {
-    setShowPersonalInfo(!showPersonalInfo)
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-100">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
+          <p className="text-lg font-semibold text-gray-700">Loading student information...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">Error Loading Data</h2>
+          <p className="text-center text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition duration-200"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -44,18 +114,18 @@ export default function StudentDashboard() {
         <div className="bg-indigo-900 text-white p-6 rounded-lg">
           <div className="flex items-center space-x-4 mb-4">
             <img
-              src="/placeholder.svg?height=80&width=80"
-              alt="Pham Quoc Khanh"
+              src={student.avatar || '/placeholder.svg?height=80&width=80'}
+              alt={student.name}
               className="w-20 h-20 rounded-full"
             />
             <div>
-              <h2 className="text-xl font-bold">Pham Quoc Khanh</h2>
-              <p className="text-indigo-300">MSV: PH38668</p>
+              <h2 className="text-xl font-bold">{student.name}</h2>
+              <p className="text-indigo-300">MSV: {student.student_code}</p>
             </div>
           </div>
           <button
             className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded flex justify-between items-center"
-            onClick={togglePersonalInfo}
+            onClick={() => setShowPersonalInfo(!showPersonalInfo)}
           >
             <span>Thông tin cá nhân</span>
             {showPersonalInfo ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -63,13 +133,13 @@ export default function StudentDashboard() {
           {showPersonalInfo && (
             <div className="mt-4 bg-indigo-800 p-4 rounded-lg">
               {[
-                { icon: Calendar, label: 'Ngày sinh', value: '11/02/2004' },
-                { icon: User, label: 'Giới tính', value: 'Nam' },
-                { icon: Mail, label: 'Email', value: 'khanhpqph38668@fpt.edu.vn' },
-                { icon: Phone, label: 'Số điện thoại', value: '0334675867' },
-                { icon: MapPin, label: 'Địa chỉ', value: '54 Mỹ Đình 2, Hà Nội' },
-                { icon: User, label: 'Dân tộc', value: 'Kinh' },
-                { icon: Briefcase, label: 'Trạng thái', value: 'Đang học' },
+                { icon: Calendar, label: 'Ngày sinh', value: student.dob },
+                { icon: User, label: 'Giới tính', value: student.gender },
+                { icon: Mail, label: 'Email', value: student.email },
+                { icon: Phone, label: 'Số điện thoại', value: student.phone },
+                { icon: MapPin, label: 'Địa chỉ', value: student.address },
+                { icon: User, label: 'Dân tộc', value: student.ethnicity },
+                { icon: Briefcase, label: 'Trạng thái', value: student.status },
               ].map((item, index) => (
                 <div key={index} className="flex items-start mt-2 space-x-3">
                   <item.icon className="w-5 h-5 text-indigo-300 flex-shrink-0 mt-1" />
@@ -89,24 +159,18 @@ export default function StudentDashboard() {
             <h3 className="text-lg font-semibold">Lớp Học Hôm Nay</h3>
             <div className="flex items-center text-gray-500">
               <span className="mr-2">16 May 2024</span>
-              <button className="p-1 hover:bg-gray-100 rounded-full">
-                <Calendar className="w-4 h-4" />
-              </button>
+              <Calendar className="w-4 h-4" />
             </div>
           </div>
           <ul className="space-y-4">
             {[
-              { name: "PHP3", time: "09:00 - 09:45 AM", status: "Hoàn Thành" },
-              { name: "PTCN2", time: "10:45 - 11:30 AM", status: "Hoàn Thành" },
-              { name: "JS Nâng Cao", time: "11:30 - 12:15 AM", status: "Sắp Tới" },
+              { name: 'PHP3', time: '09:00 - 09:45 AM', status: 'Hoàn Thành' },
+              { name: 'PTCN2', time: '10:45 - 11:30 AM', status: 'Hoàn Thành' },
+              { name: 'JS Nâng Cao', time: '11:30 - 12:15 AM', status: 'Sắp Tới' },
             ].map((cls, index) => (
               <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
                 <div className="flex items-center space-x-3">
-                  <img
-                    src="/placeholder.svg?height=40&width=40"
-                    alt={cls.name}
-                    className="w-10 h-10 rounded-full"
-                  />
+                  <img src="/placeholder.svg?height=40&width=40" alt={cls.name} className="w-10 h-10 rounded-full" />
                   <div>
                     <p className="font-medium">{cls.name}</p>
                     <p className="text-sm text-gray-500 flex items-center">
@@ -115,8 +179,7 @@ export default function StudentDashboard() {
                     </p>
                   </div>
                 </div>
-                <span className={`text-sm ${cls.status === "Hoàn Thành" ? "text-green-500" : "text-yellow-500"
-                  }`}>
+                <span className={`text-sm ${cls.status === 'Hoàn Thành' ? 'text-green-500' : 'text-yellow-500'}`}>
                   {cls.status}
                 </span>
               </li>
@@ -135,9 +198,7 @@ export default function StudentDashboard() {
               <option>Tuần này</option>
             </select>
           </div>
-          <p className="text-sm text-gray-500 mb-4">
-            No of total working days 28 Days
-          </p>
+          <p className="text-sm text-gray-500 mb-4">No of total working days 28 Days</p>
           <div className="flex justify-between mb-4">
             <div className="text-center">
               <p className="text-2xl font-bold">25</p>
@@ -161,8 +222,26 @@ export default function StudentDashboard() {
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="10" />
               <circle cx="50" cy="50" r="45" fill="none" stroke="#22c55e" strokeWidth="10" strokeDasharray="220 283" />
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" strokeWidth="10" strokeDasharray="20 283" strokeDashoffset="-220" />
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" strokeWidth="10" strokeDasharray="10 283" strokeDashoffset="-240" />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth="10"
+                strokeDasharray="20 283"
+                strokeDashoffset="-220"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="10"
+                strokeDasharray="10 283"
+                strokeDashoffset="-240"
+              />
               <circle cx="50" cy="50" r="38" fill="white" />
             </svg>
           </div>
@@ -192,8 +271,12 @@ export default function StudentDashboard() {
           <p className="text-sm text-gray-500 mb-4">14 May 2024 - 21 May 2024</p>
           <div className="flex justify-between">
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
-              <div key={index} className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${index === 4 ? 'bg-red-500' : index < 4 ? 'bg-green-500' : 'bg-gray-300'
-                }`}>
+              <div
+                key={index}
+                className={`w-10 h-10 flex items-center justify-center rounded-full text-white font-medium ${
+                  index === 4 ? 'bg-red-500' : index < 4 ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
                 {day}
               </div>
             ))}
@@ -219,7 +302,7 @@ export default function StudentDashboard() {
               </button>
             </div>
             <div className="grid grid-cols-7 gap-2 text-center">
-              {DAYS.map(day => (
+              {DAYS.map((day) => (
                 <div key={day} className="text-sm font-medium text-gray-500">
                   {day}
                 </div>
@@ -230,13 +313,10 @@ export default function StudentDashboard() {
               {Array.from({ length: daysInMonth }).map((_, index) => {
                 const day = index + 1
                 const isToday = day === 10 // Assuming 10th is the current day as shown in the image
-                return (
+                return  (
                   <div
                     key={day}
-                    className={`text-sm p-2 rounded-full ${isToday
-                        ? 'bg-blue-500 text-white'
-                        : 'hover:bg-gray-200'
-                      }`}
+                    className={`text-sm p-2 rounded-full ${isToday ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
                   >
                     {day}
                   </div>
@@ -251,20 +331,23 @@ export default function StudentDashboard() {
           <h3 className="text-lg font-semibold mb-4">Bài tập</h3>
           <ul className="space-y-4">
             {[
-              { name: "1st Quarterly", subject: "Mathematics", date: "06 May 2024", time: "01:30 - 02:15 PM", room: "15", daysLeft: 19 },
-              { name: "2nd Quarterly", daysLeft: 20 },
+              {
+                name: '1st Quarterly',
+                subject: 'Mathematics',
+                date: '06 May 2024',
+                time: '01:30 - 02:15 PM',
+                room: '15',
+                daysLeft: 19,
+              },
+              { name: '2nd Quarterly', daysLeft: 20 },
             ].map((assignment, index) => (
               <li key={index} className="border-b pb-4 last:border-b-0">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-medium">{assignment.name}</p>
-                    {assignment.subject && (
-                      <p className="text-sm text-gray-500">{assignment.subject}</p>
-                    )}
+                    {assignment.subject && <p className="text-sm text-gray-500">{assignment.subject}</p>}
                   </div>
-                  <span className="text-xs text-red-500 font-medium">
-                    {assignment.daysLeft} Days More
-                  </span>
+                  <span className="text-xs text-red-500 font-medium">{assignment.daysLeft} Days More</span>
                 </div>
                 {assignment.date && (
                   <div className="mt-2 text-sm text-gray-500 flex items-center">
@@ -274,7 +357,7 @@ export default function StudentDashboard() {
                     <Clock className="w-4 h-4 mr-1" />
                     {assignment.time}
                     <span className="mx-2">•</span>
-                    Room  No : {assignment.room}
+                    Room No : {assignment.room}
                   </div>
                 )}
               </li>

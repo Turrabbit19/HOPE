@@ -1,54 +1,183 @@
-import React, { useState } from 'react'
-import { Bell, X } from "lucide-react"
+'use client'
 
-// Mảng thông báo mẫu
-const sampleNotifications = [
-  { id: 1, message: "Bạn có một tin nhắn mới", isRead: false, timestamp: "5 phút trước", content: "John Doe đã gửi cho bạn một tin nhắn mới. Nhấp vào đây để xem." },
-  { id: 2, message: "Đơn hàng của bạn đã được giao", isRead: true, timestamp: "2 giờ trước", content: "Đơn hàng #12345 của bạn đã được giao thành công. Cảm ơn bạn đã mua hàng!" },
-  { id: 3, message: "Cập nhật bảo mật mới", isRead: false, timestamp: "1 ngày trước", content: "Chúng tôi đã cập nhật chính sách bảo mật. Vui lòng xem lại để biết thêm chi tiết." },
-  { id: 4, message: "Ưu đãi đặc biệt cho bạn", isRead: true, timestamp: "3 ngày trước", content: "Nhân dịp sinh nhật của bạn, chúng tôi tặng bạn mã giảm giá 20% cho đơn hàng tiếp theo!" },
-]
+import React, { useState, useEffect } from 'react';
+import { Bell, X, AlertCircle, RefreshCw, Check } from "lucide-react";
 
-function Popup({ notification, onClose }) {
+function Popup({ notification, onClose, onMarkAsRead }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">{notification.message}</h3>
+          <h3 className="text-lg font-semibold">{notification.notification}</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-gray-600 mb-2">{notification.content}</p>
-        <p className="text-sm text-gray-500">{notification.timestamp}</p>
+        <p className="text-gray-600 mb-2">{notification.description || 'Không có mô tả'}</p>
+        <p className="text-sm text-gray-500 mb-4">Trạng thái: {notification.status}</p>
+        {notification.status !== 'Đã xem' && (
+          <button
+            onClick={() => onMarkAsRead(notification.id)}
+            // className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center"
+          >
+            {/* <Check className="w-5 h-5 mr-2" />
+            Đánh dấu đã xem */}
+          </button>
+        )}
       </div>
     </div>
-  )
+  );
 }
 
 export default function NotificationPage() {
-  const [filter, setFilter] = useState('all')
-  const [selectedNotification, setSelectedNotification] = useState(null)
-  
-  // Lọc thông báo dựa trên bộ lọc hiện tại
-  const filteredNotifications = sampleNotifications.filter(notification => {
-    if (filter === 'all') return true
-    if (filter === 'read') return notification.isRead
-    if (filter === 'unread') return !notification.isRead
-    return true
-  })
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Đếm số lượng thông báo cho mỗi loại
-  const countAll = sampleNotifications.length
-  const countRead = sampleNotifications.filter(n => n.isRead).length
-  const countUnread = sampleNotifications.filter(n => !n.isRead).length
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực');
+      }
 
-  const handleNotificationClick = (notification) => {
-    setSelectedNotification(notification)
-  }
+      const response = await fetch('http://127.0.0.1:8000/api/student/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Token không hợp lệ hoặc đã hết hạn');
+        }
+        throw new Error('Không thể tải thông báo');
+      }
+
+      const data = await response.json();
+      setNotifications(data.data);
+    } catch (err) {
+      setError(err.message || 'Đã xảy ra lỗi khi tải thông báo');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const markAsRead = async (notificationId) => {
+    console.log('Marking as read:', notificationId);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực');
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/api/student/notification/${notificationId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật trạng thái thông báo');
+      }
+
+      const updatedNotification = await response.json();
+
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, status: updatedNotification.status }
+            : notification
+        )
+      );
+
+      if (selectedNotification && selectedNotification.id === notificationId) {
+        setSelectedNotification(prev => ({ ...prev, status: updatedNotification.status }));
+      }
+
+      console.log('Notification marked as read:', updatedNotification);
+    } catch (err) {
+      console.error('Lỗi khi đánh dấu đã xem:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const filteredNotifications = notifications.filter(notification => {
+    if (filter === 'all') return true;
+    if (filter === 'read') return notification.status === 'Đã xem';
+    if (filter === 'unread') return notification.status !== 'Đã xem';
+    return true;
+  });
+
+  const countAll = notifications.length;
+  const countRead = notifications.filter(n => n.status === 'Đã xem').length;
+  const countUnread = notifications.filter(n => n.status !== 'Đã xem').length;
+
+  const handleNotificationClick = async (notification) => {
+    setSelectedNotification(notification);
+    if (notification.status !== 'Đã xem') {
+      await markAsRead(notification.id);
+      updateNotificationStatus(notification.id, 'Đã xem');
+    }
+  };
 
   const closePopup = () => {
-    setSelectedNotification(null)
+    console.log('Closing popup');
+    setSelectedNotification(null);
+  };
+
+  const handleMarkAsRead = async (notificationId) => {
+    console.log('Handling mark as read:', notificationId);
+    await markAsRead(notificationId);
+    await fetchNotifications(); // Refresh the notifications list
+    closePopup();
+  };
+
+  const updateNotificationStatus = (id, newStatus) => {
+    setNotifications(prevNotifications =>
+      prevNotifications.map(notification =>
+        notification.id === id
+          ? { ...notification, status: newStatus }
+          : notification
+      )
+    );
+  };
+
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-6">
+        <div className="flex items-center justify-center mb-4">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+        </div>
+        <p className="text-xl font-semibold text-red-500 mb-4">{error}</p>
+        <button
+          onClick={fetchNotifications}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center mx-auto"
+        >
+          <RefreshCw className="w-5 h-5 mr-2" />
+          Thử lại
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -85,14 +214,14 @@ export default function NotificationPage() {
                 className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                 onClick={() => handleNotificationClick(notification)}
               >
-                <Bell className={`w-6 h-6 ${notification.isRead ? 'text-gray-400' : 'text-blue-500'}`} />
+                <Bell className={`w-6 h-6 ${notification.status === 'Đã xem' ? 'text-gray-400' : 'text-blue-500'}`} />
                 <div className="flex-1">
-                  <p className={`${notification.isRead ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
-                    {notification.message}
+                  <p className={`${notification.status === 'Đã xem' ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
+                    {notification.notification}
                   </p>
-                  <p className="text-sm text-gray-500">{notification.timestamp}</p>
+                  <p className="text-sm text-gray-500">Trạng thái: {notification.status}</p>
                 </div>
-                {!notification.isRead && (
+                {notification.status !== 'Đã xem' && (
                   <span className="px-2 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full">Mới</span>
                 )}
               </li>
@@ -101,8 +230,12 @@ export default function NotificationPage() {
         )}
       </div>
       {selectedNotification && (
-        <Popup notification={selectedNotification} onClose={closePopup} />
+        <Popup 
+          notification={selectedNotification} 
+          onClose={closePopup} 
+          // onMarkAsRead={handleMarkAsRead}
+        />
       )}
     </div>
-  )
+  );
 }

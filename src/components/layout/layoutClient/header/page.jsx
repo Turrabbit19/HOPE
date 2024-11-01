@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Search, Bell, MessageCircle, BarChart2, Maximize, Minimize } from "lucide-react"
+import { Search, Bell, MessageCircle, BarChart2, Maximize, Minimize, X } from "lucide-react"
 
 export default function HeaderClient() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [selectedNotification, setSelectedNotification] = useState(null)
   const notificationRef = useRef(null)
   const buttonRef = useRef(null)
   const navigate = useNavigate()
-  const unreadNotificationsCount = 3 // Số lượng thông báo chưa đọc
+
+  const unreadNotificationsCount = notifications.filter(n => n.status !== 'Đã xem').length
+
+  useEffect(() => {
+    fetchNotifications()
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -19,6 +28,7 @@ export default function HeaderClient() {
         !buttonRef.current.contains(event.target)
       ) {
         setShowNotifications(false)
+        setSelectedNotification(null)
       }
     }
 
@@ -37,8 +47,38 @@ export default function HeaderClient() {
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
   }, [])
 
+  const fetchNotifications = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực')
+      }
+
+      const response = await fetch('http://127.0.0.1:8000/api/student/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Không thể tải thông báo')
+      }
+
+      const data = await response.json()
+      setNotifications(data.data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications)
+    setSelectedNotification(null)
   }
 
   const toggleFullscreen = () => {
@@ -54,13 +94,49 @@ export default function HeaderClient() {
   }
 
   const handleLogout = () => {
-    // Xóa token khỏi localStorage
     localStorage.removeItem("token")
     localStorage.removeItem("role")
     console.log("Đã đăng xuất và xóa token")
-
-    // Điều hướng về trang đăng nhập
     navigate("/login")
+  }
+
+  const markAsRead = async (id) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực')
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/api/student/notification/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật trạng thái thông báo')
+      }
+
+      const updatedNotification = await response.json()
+
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification =>
+          notification.id === id ? { ...notification, status: 'Đã xem' } : notification
+        )
+      )
+      setSelectedNotification(null)
+    } catch (err) {
+      console.error('Lỗi khi đánh dấu đã xem:', err)
+    }
+  }
+
+  const handleNotificationClick = async (notification) => {
+    setSelectedNotification(notification)
+    if (notification.status !== 'Đã xem') {
+      await markAsRead(notification.id)
+    }
   }
 
   return (
@@ -109,28 +185,42 @@ export default function HeaderClient() {
                 <h3 className="text-lg font-semibold">Thông báo</h3>
                 <p className="text-sm text-gray-500">Bạn có {unreadNotificationsCount} thông báo chưa đọc</p>
               </div>
-              <div className="p-4 space-y-4">
-                <div className="flex items-start space-x-4">
-                  <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full" />
+              <div className="p-4 space-y-4 max-h-80 overflow-y-auto">
+                {isLoading ? (
+                  <p className="text-center text-gray-500">Đang tải thông báo...</p>
+                ) : error ? (
+                  <p className="text-center text-red-500">{error}</p>
+                ) : notifications.length === 0 ? (
+                  <p className="text-center text-gray-500">Không có thông báo mới</p>
+                ) : selectedNotification ? (
                   <div>
-                    <p className="text-sm font-medium">Bài tập mới đã được đăng</p>
-                    <p className="text-xs text-gray-500">2 phút trước</p>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-semibold">{selectedNotification.notification}</h4>
+                      <button onClick={() => setSelectedNotification(null)} className="text-gray-500 hover:text-gray-700">
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <p className="text-sm mb-2">{selectedNotification.description}</p>
+                    {selectedNotification.status !== 'Đã xem' && (
+                      <button
+                        onClick={() => markAsRead(selectedNotification.id)}
+                        className="text-sm text-blue-500 hover:text-blue-700"
+                      >
+                        Đánh dấu đã đọc
+                      </button>
+                    )}
                   </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full" />
-                  <div>
-                    <p className="text-sm font-medium">Nhắc nhở kỳ thi sắp tới</p>
-                    <p className="text-xs text-gray-500">1 giờ trước</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full" />
-                  <div>
-                    <p className="text-sm font-medium">Điểm Toán 101 đã được công bố</p>
-                    <p className="text-xs text-gray-500">Hôm qua</p>
-                  </div>
-                </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div key={notification.id} className="flex items-start space-x-4 cursor-pointer" onClick={() => handleNotificationClick(notification)}>
+                      <div className={`w-2 h-2 mt-2 rounded-full ${notification.status === 'Đã xem' ? 'bg-gray-300' : 'bg-blue-500'}`} />
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${notification.status === 'Đã xem' ? 'text-gray-600' : 'text-gray-900'}`}>{notification.notification}</p>
+                        <p className="text-xs text-gray-500">{notification.description.substring(0, 50)}...</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

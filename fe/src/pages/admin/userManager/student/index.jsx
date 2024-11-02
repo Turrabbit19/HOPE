@@ -1,4 +1,4 @@
-import { Avatar, Button, Descriptions, Divider, Input, Modal, Popconfirm, Table } from "antd";
+import { Avatar, Button, Descriptions, Divider, Input, message, Modal, Popconfirm, Table } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
@@ -12,13 +12,18 @@ import {
   EditOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import { deleteStudent, deleteUser, getStudent } from "../../../../services/user-service";
-
+import { createStudent, deleteStudent, deleteUser, getStudent } from "../../../../services/user-service";
+import { useRef } from "react";
+import * as XLSX from 'xlsx';
+import {saveAs} from 'file-saver'
+ 
 const { Search } = Input;
 
 const StudentManager = () => {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
+
+  const fileInputRef = useRef(null); // Tạo ref cho input file
 
   const [textSearch, setTextSearch] = useState('')
 
@@ -33,6 +38,8 @@ const StudentManager = () => {
   const [reload, setReload] = useState(false);
   const [userDetail, setUserDetail] = useState({});
   const [recordType, setRecordType] = useState(""); // "teacher" hoặc "student" hoặc "classManager"
+
+  const [dataImport, setDataImport] = useState([])
   useEffect(() => {
 
     (async () => {
@@ -55,6 +62,36 @@ const StudentManager = () => {
       }
     })();
   }, [reload]);
+
+  useEffect(() => {
+    if(dataImport.length > 0){
+      handleAddUser()
+    }
+  }, [dataImport])
+
+  async function handleAddUser(){
+    let textError = 'Dữ liệu các hàng trên đã được thêm. Xảy ra lỗi ở dòng'
+    setLoading(true);
+    for (let i = 0; i < dataImport.length; i++){
+      let body = {...dataImport[i],  student_current_semester: 1, student_status: 1, avatar: null, role_id: 3}
+      try {
+        // Chờ cho createStudent hoàn tất trước khi tiếp tục
+        await createStudent(body);
+        console.log(`Student ${i + 1} created successfully.`);
+      } catch (error) {
+        // setLoading(false)
+        textError = textError + ' '  + (i+ 1)
+        message.error(textError)
+        setReload(!reload)        
+        // message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+        return
+      }
+    }
+    message.success('Dữ liệu đã được import vào.')
+    setReload(!reload)
+   
+  }
+
   if (loading) {
     return <Loading />;
   }
@@ -235,6 +272,28 @@ const StudentManager = () => {
     });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    console.log(file);
+    
+    if (file) {
+      const reader = new FileReader();
+   
+      reader.onload = (evt) => {
+       
+        const binaryStr = evt.target.result;
+        const workbook = XLSX.read(binaryStr, { type: 'binary' });
+        // Lấy dữ liệu từ sheet đầu tiên
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        // setData(jsonData);
+        setDataImport(jsonData)
+        
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
 
   const handleDelete = async (record) => {
     await deleteStudent(record.id);
@@ -261,14 +320,42 @@ const StudentManager = () => {
 
   })
 
+  function handlePickExcel(){
+    fileInputRef.current.click();
+  }
   
+  const handleExport = () => {
+   
+    let dataExport =  data.map(({ key, id, ...rest }) => rest);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Convert the data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(dataExport);
+
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'FlowData');
+
+    // Generate a binary string and create a Blob
+    const workbookBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([workbookBlob], { type: 'application/octet-stream' });
+
+    // Use FileSaver to save the file
+    saveAs(blob, 'student.xlsx');
+};
 
   return (
     <>
       <div>
         <div className="flex justify-between mb-2">
           <h1>Sinh viên</h1>
-          <Button onClick={handleAdd}>Thêm sinh viên</Button>
+         <div className="flex flex-row items-center">
+         <Button onClick={handleAdd}>Thêm sinh viên</Button>
+         <input type="file" accept=".xlsx, .xls"  ref={fileInputRef} onChange={handleFileChange} style={{display: 'none'}}/>
+         <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
+         <Button onClick={handleExport} className="ml-5" type="default">Export</Button>
+         </div>
+
         </div>
         <div className="relative">
           <Input

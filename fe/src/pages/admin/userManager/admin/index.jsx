@@ -1,5 +1,5 @@
-import { Avatar, Button, Descriptions, Divider, Input, Modal, Popconfirm, Table } from "antd";
-import React, { useEffect, useState } from "react";
+import { Avatar, Button, Descriptions, Divider, Input, message, Modal, Popconfirm, Table } from "antd";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading";
@@ -12,19 +12,21 @@ import {
   PlusOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { deleteUser, getUser } from "../../../../services/user-service";
-
+import { createUser, deleteUser, getUser } from "../../../../services/user-service";
+import * as XLSX from 'xlsx';
+import {saveAs} from 'file-saver'
 const AdminManager = () => {
   const navigate = useNavigate();
   const [admins, setAdmins] = useState([]);
-
-  console.log(admins);
+  const fileInputRef = useRef(null); 
   
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userDetail, setUserDetail] = useState({});
   const [recordType, setRecordType] = useState("");
   const [reload, setReload] = useState(false);
+
+  const [dataImport, setDataImport] = useState([])
 
   const [textSearch, setTextSearch] = useState('');
 
@@ -51,6 +53,43 @@ const AdminManager = () => {
       }
     })();
   }, [reload]);
+
+  useEffect(() => {
+    if(dataImport.length > 0){
+      handleAddAdmin()
+    }
+  }, [dataImport])
+
+  console.log(dataImport);
+
+  async function handleAddAdmin(){
+    let textError = 'Dữ liệu các hàng trên đã được thêm, Xảy ra lỗi ở dòng'
+    setLoading(true);
+    
+    
+    for (let i = 0; i < dataImport.length; i++){
+      console.log(dataImport[i]?.role);
+      
+      let body = {...dataImport[i], avatar: null, role_id: dataImport[i]?.role === 'Cán bộ' ? 2 : 1, password: 'admin@2024'}
+      
+      try {
+        // Chờ cho createStudent hoàn tất trước khi tiếp tục
+        await createUser(body);
+        console.log(`Admin ${i + 1} created successfully.`);
+      } catch (error) {
+        // setLoading(false)
+        textError = textError + ' '  +(i + 1)
+        message.error(textError)
+        setReload(!reload)     
+        // message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+        return
+      }
+    }
+    message.success('Dữ liệu đã được import vào.')
+    setReload(!reload)
+   
+  }
+
 
 
   if (loading) {
@@ -191,12 +230,63 @@ const AdminManager = () => {
   
 
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    console.log(file);
+    
+    if (file) {
+      const reader = new FileReader();
+   
+      reader.onload = (evt) => {
+       
+        const binaryStr = evt.target.result;
+        const workbook = XLSX.read(binaryStr, { type: 'binary' });
+        // Lấy dữ liệu từ sheet đầu tiên
+        const firstSheet = workbook.Sheets[workbook.SheetNames[2]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        // setData(jsonData);
+        setDataImport(jsonData)
+        
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+  
+  function handlePickExcel(){
+    fileInputRef.current.click();
+  }
+
+  const handleExport = () => {
+   
+    let dataExport =  data.map(({ key, id, ...rest }) => rest);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Convert the data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(dataExport);
+
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'FlowData');
+
+    // Generate a binary string and create a Blob
+    const workbookBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([workbookBlob], { type: 'application/octet-stream' });
+
+    // Use FileSaver to save the file
+    saveAs(blob, 'admin.xlsx');
+};
+
   return (
     <>
       <div>
         <div className="flex justify-between mb-2">
           <h1>Quản trị viên</h1>
+          <div className="flex flex-row">
           <Button onClick={handleAdd}>Thêm quản trị viên</Button>
+          <input type="file" accept=".xlsx, .xls"  ref={fileInputRef} onChange={handleFileChange} style={{display: 'none'}}/>
+          <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
+          <Button onClick={handleExport} className="ml-5" type="default">Export</Button>
+          </div>
         </div>
         <div className="relative">
           <Input

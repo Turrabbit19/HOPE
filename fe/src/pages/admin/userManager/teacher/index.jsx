@@ -1,5 +1,5 @@
-import { Avatar, Button, Descriptions, Divider, Input, Modal, Popconfirm, Table } from "antd";
-import React, { useEffect, useState } from "react";
+import { Avatar, Button, Descriptions, Divider, Input, message, Modal, Popconfirm, Table } from "antd";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading";
@@ -11,8 +11,9 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import { deleteTeacher, getTeacher } from "../../../../services/user-service";
-
+import { createTeacher, deleteTeacher, getTeacher } from "../../../../services/user-service";
+import * as XLSX from 'xlsx';
+import {saveAs} from 'file-saver'
 const TeacherManager = () => {
 
   const navigate = useNavigate()
@@ -23,10 +24,14 @@ const TeacherManager = () => {
 
   const [reload, setReload] = useState(false);
 
+  const fileInputRef = useRef(null); 
+
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userDetail, setUserDetail] = useState({});
   const [recordType, setRecordType] = useState("");
+
+  const [dataImport, setDataImport] = useState([])
 
   const [textSearch, setTextSearch] = useState('')
 
@@ -59,6 +64,37 @@ const TeacherManager = () => {
       }
     })();
   }, [reload]);
+
+  useEffect(() => {
+    if(dataImport.length > 0){
+      handleAddTeacher()
+    }
+  }, [dataImport])
+
+  async function handleAddTeacher(){
+    let textError = 'Dữ liệu các hàng trên đã được thêm. Xảy ra lỗi ở dòng'
+    setLoading(true);
+    for (let i = 0; i < dataImport.length; i++){
+      let body = {...dataImport[i],  teacher_status: 1, avatar: null, role_id: 4}
+      try {
+        // Chờ cho createStudent hoàn tất trước khi tiếp tục
+        await createTeacher(body);
+        console.log(`Teacher ${i + 1} created successfully.`);
+      } catch (error) {
+        // setLoading(false)
+        textError = textError + ' '  +(i + 1)
+        message.error(textError)
+        setReload(!reload)     
+        // message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+        return
+      }
+    }
+    message.success('Dữ liệu đã được import vào.')
+    setReload(!reload)
+   
+  }
+
+
   if (loading) {
     return <Loading />;
   }
@@ -117,13 +153,14 @@ const TeacherManager = () => {
       key: "2",
     },
     {
-      title: "Ngành dậy",
+      title: "Ngành dạy",
       dataIndex: "major_name",
       key: "8",
       width: 600
     },
     {
       title: "Trạng thái",
+
       dataIndex: "status",
       key: "8",
       width: 500
@@ -224,12 +261,65 @@ const TeacherManager = () => {
   })
 
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    console.log(file);
+    
+    if (file) {
+      const reader = new FileReader();
+   
+      reader.onload = (evt) => {
+       
+        const binaryStr = evt.target.result;
+        const workbook = XLSX.read(binaryStr, { type: 'binary' });
+        // Lấy dữ liệu từ sheet đầu tiên
+        const firstSheet = workbook.Sheets[workbook.SheetNames[1]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        // setData(jsonData);
+        setDataImport(jsonData)
+        
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+  
+  function handlePickExcel(){
+    fileInputRef.current.click();
+  }
+
+  const handleExport = () => {
+   
+    let dataExport =  teachers.map(({ key, id, ...rest }) => rest);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Convert the data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(dataExport);
+
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'FlowData');
+
+    // Generate a binary string and create a Blob
+    const workbookBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([workbookBlob], { type: 'application/octet-stream' });
+
+    // Use FileSaver to save the file
+    saveAs(blob, 'teacher.xlsx');
+};
+
+ 
   return (
     <>
      <div>
         <div className="flex justify-between mb-2">
           <h1>Giảng viên</h1>
-          <Button onClick={handleAdd}>Thêm giảng viên</Button>
+         
+        <div className="flex flex-row">
+        <Button onClick={handleAdd}>Thêm giảng viên</Button>
+        <input type="file" accept=".xlsx, .xls"  ref={fileInputRef} onChange={handleFileChange} style={{display: 'none'}}/>
+        <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
+        <Button onClick={handleExport} className="ml-5" type="default">Export</Button>
+        </div>
         </div>
         <div className="relative">
           <Input

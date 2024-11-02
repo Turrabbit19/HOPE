@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Student;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\Room;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ApiStudentController extends Controller
 {
@@ -147,6 +149,79 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Không tìm thấy học sinh nào thông qua ngành và kỳ'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới học sinh', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getStudentStatistics()
+    {
+        try {
+            // Thống kê số lượng tất cả học sinh
+            $totalStudents = Student::count();
+            $response = [
+                'Tổng số học sinh' => $totalStudents
+            ];
+
+            // Thống kê số lượng giảng viên
+            $totalTeacher = Teacher::count();
+            $res = [
+                'Tổng số giảng viên' => $totalTeacher
+            ];
+
+            // Thống kê số lượng phòng học
+            $totalRoom = Room::count();
+            $res2 = [
+                'Tổng số phòng học' => $totalRoom
+            ];
+            
+            // Thống kê số lượng học sinh theo ngành
+            $byMajor = Student::with('major')
+                ->select('major_id')
+                ->selectRaw('count(*) as total')
+                ->groupBy('major_id')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'Ngành học' => $item->major->name ?? 'Unknown',
+                        'Tổng' => $item->total
+                    ];
+                });
+
+            // Thống kê số lượng học sinh theo khóa
+            $byCourse = Student::with('course')
+                ->select('course_id')
+                ->selectRaw('count(*) as total')
+                ->groupBy('course_id')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'Khóa' => $item->course->name ?? 'Unknown',
+                        'Tổng' => $item->total
+                    ];
+                });
+
+            // Thống kê số lượng học sinh theo trạng thái
+            $byStatus = Student::select('status')
+                ->selectRaw('count(*) as total')
+                ->groupBy('status')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'Trạng thái' => $item->status == 1 ? 'Online' : 'Offline',
+                        'Tổng' => $item->total
+                    ];
+                });
+
+            // Trả về kết quả thống kê
+            return response()->json([
+                'byAllStudent' => $response,
+                'byTeacher' => $res,
+                'byRoom' => $res2,
+                'byMajor' => $byMajor,
+                'bySemester' => $byCourse,
+                'byStatus' => $byStatus,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể thống kê học sinh', 'message' => $e->getMessage()], 500);
         }
     }
 }

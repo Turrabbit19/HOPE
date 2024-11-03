@@ -85,4 +85,34 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notification_Courses', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getSchedule()
+    {
+        $user = Auth::user();
+
+        try {
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+            
+            $schedules = $student->schedules->map(function ($schedule) {
+                return [
+                   'id' => $schedule->id,
+                    'course_name' => $schedule->course->name,
+                    'subject_name' => $schedule->subject->name,
+                    'teacher_name' => $schedule->teacher->user->name,
+                    'shift_name' => $schedule->shift->name,
+                    'room_name' => $schedule->room->name,
+                    'link' => $schedule->link ? $schedule->link : "NULL",
+                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                    'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
+                ];
+            });
+
+            return response()->json(['data' => $schedules], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

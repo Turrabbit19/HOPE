@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin;
+namespace App\Http\Controllers\Api\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCourseController extends Controller
 {
-   
+    
     public function index()
     {
         try {

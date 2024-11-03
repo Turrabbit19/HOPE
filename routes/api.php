@@ -14,12 +14,11 @@ use App\Http\Controllers\Api\Admin\ApiSectionController;
 use App\Http\Controllers\Api\Admin\ApiSemesterController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
-use App\Http\Controllers\Api\Client\Student\ApiStudentController as ApiClientStudent;
+use App\Http\Controllers\Api\Student\ApiStudentController as ApiClientStudent;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
 
 use App\Http\Controllers\Api\Auth\ApiAuthController;
-
 use App\Http\Controllers\Api\Student\ApiClientController;
 
 use Illuminate\Http\Request;
@@ -88,24 +87,49 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
     });
 
+
+    Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
+    ->group(function () {
+    Route::apiResource('students', ApiStudentController::class);
+    Route::apiResource('teachers', ApiTeacherController::class);
+
+    Route::apiResource('courses', ApiCourseController::class);
+    Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
+    Route::get('course/{courseId}/students', [ApiStudentController::class, 'getStudentsByCourse']);
+
+    Route::apiResource('semesters', ApiSemesterController::class);
+
+    Route::apiResource('majors', ApiMajorController::class);
+    Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
+
+    Route::apiResource('plans', ApiPlanController::class);
+    Route::get('major/{id}/subjects/selected', [ApiPlanController::class, 'getSubjectsByMajor']);
+
+    Route::apiResource('subjects', ApiSubjectController::class);
+    Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
+    Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
+
+    Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
+    Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
+
+    Route::apiResource('rooms', ApiClassroomController::class);
+
+    Route::apiResource('sections', ApiSectionController::class);
+    Route::get('section/{id}/notifications', [ApiSectionController::class, 'getNotifications']);
+    Route::post('section/{id}/addNotice', [ApiSectionController::class, 'addNotification']);
+
+    Route::apiResource('notifications', ApiNotificationController::class);
+    Route::apiResource('classrooms', ApiClassroomController::class);
+
+    Route::apiResource('schedules', ApiScheduleController::class);
+    Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
+    Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
+    Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
+    Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
+    });
+
     Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')->group(function () {
         Route::get('/', [ApiClientController::class, 'getStudentDetail']);
         Route::get('notifications', [ApiClientController::class, 'getStudentNotifications']);
     });
 
-
-    // test api export file excel students + teachers
-    Route::get('export-students', [ApiUserController::class, 'exportStudent']);
-    Route::get('export-teachers', [ApiUserController::class, 'exportTeacher']);
-
-    // test api import file excel students + teachers
-    Route::post('import-students', [ApiUserController::class, 'importStudent']);
-    Route::post('import-teachers', [ApiUserController::class, 'importTeacher']);
-
-    // test api detail-student
-    Route::get('detail-student/{id}', [ApiClientStudent::class, 'detailStudent']);
-
-    Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
-
-
-// });

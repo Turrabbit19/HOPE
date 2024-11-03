@@ -103,7 +103,8 @@ class ApiClientController extends Controller
         }
     }
 
-    public function registerSchedule($id) {
+    public function registerSchedule($id) 
+    {
         $user = Auth::user();
 
         try {
@@ -152,6 +153,42 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getTimetable() 
+    {
+        $user = Auth::user();
+
+        try {
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+
+            $timetable = StudentSchedule::where('student_id', $student->id)
+            ->get();
+
+            $data = $timetable->map(function($tt) {
+                return [
+                    'id' => $tt->schedule->id,
+                    'teacher_name' => $tt->schedule->teacher->user->name ?? "Không có giáo viên",
+                    'shift_name' => $tt->schedule->shift->name ?? "Không có ca học",
+                    'room_name' => $tt->schedule->room->name ?? "Không có phòng học",
+                    'link' => $tt->schedule->link ?? "NULL",
+                    'start_date' => Carbon::parse($tt->schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
+                    'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) {
+                        return [
+                            'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
+                            'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
     }
 }

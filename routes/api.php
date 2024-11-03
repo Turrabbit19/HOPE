@@ -62,6 +62,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::apiResource('plans', ApiPlanController::class);
         Route::get('major/{id}/subjects/selected', [ApiPlanController::class, 'getSubjectsByMajor']);
+        Route::get('plan/{planId}/major/{majorId}/subjects', [ApiMajorController::class, 'filterMajorsByOrder']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
@@ -96,6 +97,8 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('/', [ApiClientController::class, 'getStudentDetail']);
         Route::get('schedules', [ApiClientController::class, 'getSchedules']);
         Route::post('schedule/{id}/register', [ApiClientController::class, 'registerSchedule']);
+
+        Route::get('timetable', [ApiClientController::class, 'getTimetable']);
 
         Route::get('notifications', [ApiClientNoticeController::class, 'getStudentNotifications']);
         Route::get('notification/{id}', [ApiClientNoticeController::class, 'detailNotification']);

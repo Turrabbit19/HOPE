@@ -283,7 +283,7 @@ const ScheduleAdd = () => {
                 className="bg-white p-6 rounded-lg shadow-md"
             >
                 {/* Hàng 1: Khóa Học, Kỳ Học, Ngành Học */}
-                <Row gutter={16}>
+                {/* <Row gutter={16}>
                     <Col span={8}>
                         <Form.Item
                             label="Khóa Học"
@@ -365,7 +365,7 @@ const ScheduleAdd = () => {
                             </Select>
                         </Form.Item>
                     </Col>
-                </Row>
+                </Row> */}
 
                 {/* Hàng 2: Môn Học */}
                 <Form.Item

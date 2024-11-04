@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin;
+namespace App\Http\Controllers\Api\Officer;
 
-use App\Excel\Export\StudentExport;
-use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Student;
 use App\Models\User;
 use Carbon\Carbon;
@@ -13,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ApiStudentController extends Controller
 {
@@ -58,24 +56,6 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-    public function exportStudent(){
-        try {
-            return Excel::download(new StudentExport, 'students.xlsx');
-        
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
-        }
-    }
-    public function importStudent(Request $request){
-        try {
-            Excel::import(new StudentImport, $request->file('file'));
-        
-            return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
-        }
-    }
-
     public function getStudentsByCourse($courseId){
         try {
             $students = Student::where('course_id', $courseId)->get();

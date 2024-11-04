@@ -15,9 +15,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ApiSectionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
@@ -58,9 +55,6 @@ class ApiSectionController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
@@ -102,9 +96,6 @@ class ApiSectionController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {

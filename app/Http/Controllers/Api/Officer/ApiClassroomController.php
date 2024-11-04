@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Excel\Export\TeacherExport;
+use App\Excel\Import\TeacherImport;
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\User;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ApiTeacherController extends Controller
 {
@@ -51,6 +54,23 @@ class ApiTeacherController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function exportTeacher(){
+        try {
+            return Excel::download(new TeacherExport, 'teachers.xlsx');
+        
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function importTeacher(Request $request){
+        try {
+            Excel::import(new TeacherImport, $request->file('file'));
+        
+            return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 

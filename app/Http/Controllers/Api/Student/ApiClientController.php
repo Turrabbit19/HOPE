@@ -169,10 +169,11 @@ class ApiClientController extends Controller
             $data = $timetable->map(function($tt) {
                 return [
                     'id' => $tt->schedule->id,
-                    'teacher_name' => $tt->schedule->teacher->user->name ?? "Không có giáo viên",
-                    'shift_name' => $tt->schedule->shift->name ?? "Không có ca học",
-                    'room_name' => $tt->schedule->room->name ?? "Không có phòng học",
-                    'link' => $tt->schedule->link ?? "NULL",
+                    'subject_name' => $tt->schedule->subject->name,
+                    'teacher_name' => $tt->schedule->teacher->user->name,
+                    'shift_name' => $tt->schedule->shift->name,
+                    'room_name' => $tt->schedule->room->name ?? "Null",
+                    'link' => $tt->schedule->link ?? "Null",
                     'start_date' => Carbon::parse($tt->schedule->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
                     'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) {

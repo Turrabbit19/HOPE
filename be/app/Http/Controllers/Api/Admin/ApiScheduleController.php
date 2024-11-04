@@ -29,6 +29,7 @@ class ApiScheduleController extends Controller
             $data = $majors->map(function($major) {
                 return [
                     'id' => $major->id,
+
                     'name' => $major->name,
                 ];
             });
@@ -65,20 +66,12 @@ class ApiScheduleController extends Controller
                 ->where('semester_id', $semesterId)
                 ->first();
 
-            if (!$courseSemester) {
-                return response()->json(['error' => 'Không tìm thấy kỳ học này trong khóa học'], 404);
-            }
-
             $subjects = PlanSubject::whereHas('majorSubject', function ($query) use ($majorId) {
                     $query->where('major_id', $majorId);
                 })
                 ->where('semester_order', $courseSemester->order)
                 ->with('majorSubject.subject')
                 ->get();
-
-            if ($subjects->isEmpty()) {
-                return response()->json(['error' => 'Không tìm thấy môn học nào cho kỳ học này'], 404);
-            }
 
             $data = $subjects->map(function($subject) {
                 return [
@@ -92,6 +85,7 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng PlanSubject', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function index(Request $request)
     {
@@ -219,37 +213,6 @@ class ApiScheduleController extends Controller
         }
         return $scheduleDates;
     }
-
-    public function restore($id)
-{
-    $schedule = Schedule::withTrashed()->find($id);
-
-    if ($schedule) {
-        $schedule->restore();
-
-        $data = [
-            'id' => $schedule->id,
-            'course_name' => $schedule->course->name,
-            'semester_name' => $schedule->semester->name,
-            'major_name' => $schedule->major->name,
-            'subject_name' => $schedule->subject->name,
-            'teacher_name' => $schedule->teacher->user->name,
-            'shift_name' => $schedule->shift->name,
-            'room_name' => $schedule->room->name,
-            'link' => $schedule->link ? $schedule->link : "NULL",
-            'start_date' => Carbon::parse($schedule->start_date),
-            'end_date' => Carbon::parse($schedule->end_date),
-            'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
-        ];
-
-        return response()->json([
-            'data' => $data,
-            'message' => 'Khôi phục thành công.'
-        ], 200);
-    }
-
-    return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
-}
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -261,7 +224,7 @@ class ApiScheduleController extends Controller
             'teacher_id' => 'required|exists:teachers,id',
             'shift_id' => 'required|exists:shifts,id',
             'room_id' => 'nullable|exists:rooms,id',
-            'link' => 'nullable|sometimes',
+            'link' => 'nullable|sometimes|url',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'days_of_week' => 'required|array',
@@ -306,8 +269,6 @@ class ApiScheduleController extends Controller
         }
     }
 
-
-
     public function show(string $id)
     {
         try {
@@ -318,16 +279,15 @@ class ApiScheduleController extends Controller
                     'semester_name' => $schedule->semester->name,
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teacher->user->name,
+                    'teacher_name' => $schedule->teacher->name,
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
-                    'class_name' => $schedule->classroom->code,
                     'link' => $schedule->link ? $schedule->link : "NULL",
-                    'start_date' => Carbon::parse($schedule->start_date),
-                    'end_date' => Carbon::parse($schedule->end_date),
+                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
                     'days_of_week' => $schedule->days->map(function($day) {
                         return [
-                            "day" => $day->id,
+                            "Thứ" => $day->id,
                         ];
                     }),
                     'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
@@ -346,11 +306,57 @@ class ApiScheduleController extends Controller
         try {
             $schedule = Schedule::findOrFail($id);
             $schedule->delete();
+
             return response()->json(['message' => 'Xóa thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function getScheduledDates(string $scheduleId)
+    {
+        $schedule = Schedule::findOrFail($scheduleId);
+
+        if (!$schedule) {
+            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $scheduleId], 404);
+        }
+
+        $startDate = new \DateTime($schedule->start_date);
+        $endDate = new \DateTime($schedule->end_date);
+
+        $days = $schedule->days()->pluck('id')->toArray();
+
+        if (empty($days)) {
+            return response()->json(['error' => 'Không có ngày học được lưu cho lịch này'], 404);
+        }
+
+        $lessonsCount = $schedule->subject->lessons()->count();
+
+        $scheduledDates = [];
+        $currentDate = clone $startDate;
+
+        while ($currentDate <= $endDate) {
+            $dayOfWeek = $currentDate->format('N');
+            $dayOfWeekAdjusted = ($dayOfWeek == 7) ? 1 : $dayOfWeek + 1;
+
+            if (in_array($dayOfWeekAdjusted, $days)) {
+                if (count($scheduledDates) < $lessonsCount) {
+                    $lessonName = $schedule->subject->lessons()->pluck('name')->get(count($scheduledDates) % $lessonsCount);
+                    $scheduledDates[] = $lessonName . ': ' . $currentDate->format('Y-m-d');
+                } else {
+                    break;
+                }
+            }
+
+            $currentDate->modify('+1 day');
+        }
+
+        return response()->json([
+            'subject_name' => $schedule->subject->name,
+            'scheduled_dates' => $scheduledDates,
+            'total_lessons' => count($scheduledDates)
+        ], 200);
     }
 }

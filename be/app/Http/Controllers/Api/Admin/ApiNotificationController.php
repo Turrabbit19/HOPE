@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\NewNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -66,8 +67,9 @@ class ApiNotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'section_id' => 'required|exists:sections,id',   
             'name' => 'required|string|max:255|unique:notifications',   
-            'description' => 'required|string',  
-            'time' => 'required|date_format:Y-m-d H:i:s',
+            'description' => 'required|string', 
+            'courses' => 'required|array',
+            'courses.*.id' => 'required|exists:courses,id',   
         ]);
 
         if ($validator->fails()) {
@@ -76,7 +78,17 @@ class ApiNotificationController extends Controller
 
         try {
             $data = $validator->validated();
+            $data['time'] = Carbon::now();
+
             $notification = Notification::create($data);
+
+            $courses = collect($data['courses'])->mapWithKeys(function ($course) {
+                return [$course['id'] => []];
+            });
+            
+            $notification->courses()->sync($courses);
+
+            broadcast(new NewNotification($notification));
             
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -90,10 +102,24 @@ class ApiNotificationController extends Controller
     public function show(string $id)
     {
         try {
-            $notification = Notification::with('section')->findOrFail($id);
-            return response()->json(['data' => $notification], 200);
+            $notification = Notification::with('section', 'courses')->findOrFail($id);
+            $data = [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                    'courses' => $notification->courses->map(function ($course) {
+                        return [
+                            "id" => $course->id,
+                            "name" => $course->name
+                        ];
+                    }),
+                ];
+
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
         }
@@ -123,7 +149,7 @@ class ApiNotificationController extends Controller
 
             return response()->json(['data' => $notification, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -139,7 +165,7 @@ class ApiNotificationController extends Controller
             $notification->delete();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy id'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Plan;
 use App\Models\PlanSubject;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -17,6 +17,8 @@ class ApiPlanController extends Controller
     {
         try {
             $plans = Plan::get();
+
+            $majors = Major::get();
 
             $data = $plans->map(function($plan) {
                 return [
@@ -36,7 +38,7 @@ class ApiPlanController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:plans,name',
             'status' => 'boolean',
-
+            
             'majors' => 'required|array',
             'majors.*.id' => 'required|exists:majors,id',
             'majors.*.semesters' => 'required|array',
@@ -76,31 +78,18 @@ class ApiPlanController extends Controller
                     }
                 }
             }
-
+            
             return response()->json(['data' => $plan, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function restore($id)
-    {
-        $plan = Plan::withTrashed()->find($id);
-
-        if ($plan) {
-            $plan->restore();
-
-            return response()->json(['data' => $plan, 'message' => 'Khôi phục thành công.'], 200);
-        }
-
-        return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
-    }
-
     public function show(string $id)
     {
         try {
             $plan = Plan::with(['planSubjects.majorSubject.major', 'planSubjects.majorSubject.subject'])->findOrFail($id);
-
+            
             $data = [
                 'id' => $plan->id,
                 'name' => $plan->name,
@@ -123,14 +112,14 @@ class ApiPlanController extends Controller
                     ];
                 })->values()->toArray(),
             ];
-
+    
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy kế hoạch với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Plans', 'message' => $e->getMessage()], 500);
         }
-    }
+    }     
 
     public function update(Request $request, string $id)
     {
@@ -152,7 +141,7 @@ class ApiPlanController extends Controller
 
         try {
             $plan = Plan::findOrFail($id);
-
+            
             $data = $validator->validated();
             $plan->update($data);
 
@@ -203,6 +192,26 @@ class ApiPlanController extends Controller
             return response()->json(['error' => 'Không tìm thấy kế hoạch với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getSubjectsByMajor($id)
+    {
+        try {
+            $subjects = MajorSubject::where('major_id', $id)->with('subject')->get();
+
+            $data = $subjects->map(function($majorSubject) {
+                return [
+                    'id' => $majorSubject->subject->id,
+                    'name' => $majorSubject->subject->name,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }
     }
 }

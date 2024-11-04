@@ -12,34 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCourseController extends Controller
 {
-    public function getSemestersByCourse($courseId)
-    {
-        try {
-            $semestersByCourse = CourseSemester::where('course_id', $courseId)
-            ->with('semester')
-            ->get();
 
-            if ($semestersByCourse->isEmpty()) {
-                return response()->json(['error' => 'Không tìm thấy kỳ học nào cho khóa học với ID: ' . $courseId], 404);
-            }
-
-            $data = $semestersByCourse->map(function($value){
-                return [
-                    "id" => $value->semester->id,
-                    "name" => $value->semester->name,
-                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
-                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
-                    "order" => "Kì học thứ"." ".$value->order
-                ];
-            });
-
-        return response()->json(["semesters" => $data], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng CourseSemester', 'message' => $e->getMessage()], 500);
-        }
-    }
     public function restore($id)
     {
         $course = Course::withTrashed()->find($id);
@@ -71,16 +44,7 @@ class ApiCourseController extends Controller
     }
 
 
-    public function getCount()
-    {
-        $totalCourses = Course::withTrashed()->count();
-        $activeCourses = Course::where('status', 'active')->count();
 
-        return response()->json([
-            'total_courses' => $totalCourses,
-            'active_courses' => $activeCourses
-        ], 200);
-    }
     public function index()
     {
         try {
@@ -90,10 +54,9 @@ class ApiCourseController extends Controller
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
-                    'plan_name' => $course->plan->name,
-                    'plan_id' => $course->plan->id,
-                    'start_date' => Carbon::parse($course->start_date),
-                    'end_date' => Carbon::parse($course->end_date),
+                    'plan' => $course->plan->name,
+                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
                     'status' => match($course->status) {
                         "0" => "Chờ diễn ra",
                         "1" => "Đang diễn ra",
@@ -108,47 +71,66 @@ class ApiCourseController extends Controller
         }
     }
 
+    public function getSemestersByCourse($courseId)
+    {
+        try {
+            $semestersByCourse = CourseSemester::where('course_id', $courseId)
+            ->with('semester')
+            ->get();
+
+            if ($semestersByCourse->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy kỳ học nào cho khóa học với ID: ' . $courseId], 404);
+            }
+
+            $data = $semestersByCourse->map(function($value){
+                return [
+                    "id" => $value->semester->id,
+                    "name" => $value->semester->name,
+                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
+                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
+                    "order" => "Kì học thứ"." ".$value->order
+                ];
+            });
+
+        return response()->json(["semesters" => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng CourseSemester', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:50|unique:courses',
-        'plan_id' => 'required|exists:plans,id',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'status' => 'integer|in:0,1,2',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:50|unique:courses',
+            'plan_id' => 'required|exists:plans,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 400);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        try {
+            $data = $validator->validated();
+            if($data['start_date'] >= Carbon::now()) {
+
+            }
+            elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                $data['status'] = "1";
+            } else {
+                $data['status'] = "2";
+            }
+
+            $course = Course::create($data);
+
+            return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+        }
     }
-
-    try {
-        $data = $validator->validated();
-        $course = Course::create($data);
-
-        $course->load('plan');
-
-        $formattedCourse = [
-            'id' => $course->id,
-            'name' => $course->name,
-            'plan_name' => $course->plan->name,
-            'plan_id' => $course->plan->id,
-            'start_date' => Carbon::parse($course->start_date),
-            'end_date' => Carbon::parse($course->end_date),
-            'status' => match($course->status) {
-                "0" => "Chờ diễn ra",
-                "1" => "Đang diễn ra",
-                "2" => "Kết thúc",
-                default => "Không xác định",
-            },
-        ];
-
-        return response()->json(['data' => $formattedCourse, 'message' => 'Tạo mới thành công'], 201);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
-    }
-}
-
 
     public function show(string $id)
     {
@@ -194,6 +176,17 @@ class ApiCourseController extends Controller
             $course = Course::findOrFail($id);
 
             $data = $validator->validated();
+            if(isset($data['start_date'])) {
+                if($data['start_date'] >= Carbon::now()) {
+
+                }
+                elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                    $data['status'] = "1";
+                } else {
+                    $data['status'] = "2";
+                }
+            }
+
             $course->update($data);
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);

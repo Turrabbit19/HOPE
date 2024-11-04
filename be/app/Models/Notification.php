@@ -17,7 +17,10 @@ class Notification extends Model
         'time',
     ];
 
-    public function sections() {
+    public function section() {
         return $this->belongsTo(Section::class);
+    }
+    public function courses() {
+        return $this->belongsToMany(Course::class, 'notification_courses');
     }
 }

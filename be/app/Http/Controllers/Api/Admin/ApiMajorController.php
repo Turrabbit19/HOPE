@@ -49,7 +49,7 @@ class ApiMajorController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:majors,name',
             'description' => 'required|string',
-            'status' => 'required',
+            'status' => 'string'
         ]);
 
         if ($validator->fails()) {
@@ -58,11 +58,7 @@ class ApiMajorController extends Controller
 
         try {
             $data = $validator->validated();
-
-
             $data['code'] = $this->generateCodeFromName($data['name']);
-
-
             $major = Major::create($data);
 
             return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);
@@ -71,7 +67,11 @@ class ApiMajorController extends Controller
         }
     }
 
+    private function convertVietnameseToEnglish($string) {
+        return iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $string);
+    }
     private function generateCodeFromName($name){
+        $name = $this->convertVietnameseToEnglish($name);
         $parts = explode(' ', trim($name));
         $code = '';
         foreach ($parts as $part) {
@@ -148,21 +148,24 @@ class ApiMajorController extends Controller
         }
     }
 
-    public function getSubjectsByMajor($id)
-    {
+    public function getAllSubjects(string $majorId) {
         try {
-            $subjects = MajorSubject::where('major_id', $id)->with('subject')->get();
+            $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject')->get();
 
-            $data = $subjects->map(function($majorSubject) {
+            $data = $majorSubjects->map(function ($majorSubject) {
                 return [
                     'id' => $majorSubject->subject->id,
+                    'code' => $majorSubject->subject->code,
                     'name' => $majorSubject->subject->name,
+                    'description' => $majorSubject->subject->description,
+                    'credit' => $majorSubject->subject->credit,
+                    'status' => $majorSubject->subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
+            return response()->json(['error' => 'Không tìm thấy chuyên ngành với ID: ' . $majorId], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }

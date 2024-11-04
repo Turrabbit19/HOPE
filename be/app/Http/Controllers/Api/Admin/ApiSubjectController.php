@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Classroom;
+use App\Models\Lesson;
 use App\Models\MajorSubject;
 use App\Models\Subject;
 use Carbon\Carbon;
@@ -134,8 +136,12 @@ class ApiSubjectController extends Controller
         return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
     }
 
+    private function convertVietnameseToEnglish($string) {
+        return iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $string);
+    }
     private function generateCodeFromName($name)
     {
+        $name = $this->convertVietnameseToEnglish($name);
         $parts = explode(' ', trim($name));
         $code = '';
         foreach ($parts as $part) {
@@ -197,6 +203,48 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAllLessons(string $id) {
+        try {
+            $lessons = Lesson::where('subject_id', $id)->get();
+
+            $data = $lessons->map(function ($lesson){
+                return [
+                    'id' => $lesson->id,
+                    'name' => $lesson->name,
+                    'description' =>$lesson->description,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getAllClassrooms(string $id) {
+        try {
+            $classrooms = Classroom::where('subject_id', $id)->get();
+
+            $data = $classrooms->map(function($classroom) {
+                return [
+                    'id' => $classroom->id,
+                    'code' => $classroom->code,
+                    'max_students' => $classroom->max_students,
+                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+
+            return response()->json(['data' =>$data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
 

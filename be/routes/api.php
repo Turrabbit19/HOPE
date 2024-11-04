@@ -55,13 +55,20 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('sections', ApiSectionController::class);
     Route::apiResource('notifications', ApiNotificationController::class);
     Route::apiResource('shifts', ApiShiftController::class);
+
+
     Route::apiResource('schedules', ApiScheduleController::class);
+    Route::get('course/{courseId}/semesters', [ApiScheduleController::class, 'getSemestersByCourse']);
+    Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
+    Route::post('schedules/{id}/restore', [ApiScheduleController::class, 'restore']);
 
     Route::apiResource('subjects', ApiSubjectController::class);
     Route::post('/subjects/{id}/restore', [ApiSubjectController::class, 'restore']);
     Route::get('/subjects/{id}/getMajorIdBySubjectId', [ApiSubjectController::class, 'getMajorIdBySubjectId']);
     Route::get('/subjects/{id}/getSubjectByMajorId', [ApiSubjectController::class, 'getSubjectByMajorId']);
+    Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
 
+    Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
 
     Route::apiResource('classrooms', ApiClassroomController::class);
     Route::post('/classrooms/{id}/restore', [ApiClassroomController::class, 'restore']);
@@ -70,12 +77,13 @@ Route::prefix('admin')->group(function() {
     Route::apiResource('majors', ApiMajorController::class);
     Route::post('/majors/{id}/restore', [ApiMajorController::class, 'restore']);
     Route::get('majors/check-unique/{name}', [ApiMajorController::class, 'checkNameUnique']);
-    Route::get('majors/{id}/subjects', [ApiMajorController::class, 'getSubjectsByMajor']);
+    Route::get('majors/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 
 
 
     Route::apiResource('courses', ApiCourseController::class);
     Route::get('count/courses', [ApiCourseController::class, 'getCount']);
     Route::post('/courses/{id}/restore', [ApiCourseController::class, 'restore']);
-
+    Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
+    Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
 });

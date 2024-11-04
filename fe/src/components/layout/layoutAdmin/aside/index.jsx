@@ -42,7 +42,7 @@ const AsideAdmin = () => {
     const study_manager = [
         {
             name: "Quản lý ngành học",
-            link: "/admin/teaching",
+            link: "/admin/majors",
             icon: <BookOutlined />,
         },
         {

@@ -224,6 +224,7 @@ const ListSubject = () => {
         )
       );
       message.success("Cập nhật môn học thành công");
+      setIsPopupVisible(!isPopupVisible);
       closeEditModal()
     } catch (error) {
       if (error.response && error.response.data) {

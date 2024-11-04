@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseSemester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -11,6 +12,34 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCourseController extends Controller
 {
+    public function getSemestersByCourse($courseId)
+    {
+        try {
+            $semestersByCourse = CourseSemester::where('course_id', $courseId)
+            ->with('semester')
+            ->get();
+
+            if ($semestersByCourse->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy kỳ học nào cho khóa học với ID: ' . $courseId], 404);
+            }
+
+            $data = $semestersByCourse->map(function($value){
+                return [
+                    "id" => $value->semester->id,
+                    "name" => $value->semester->name,
+                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
+                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
+                    "order" => "Kì học thứ"." ".$value->order
+                ];
+            });
+
+        return response()->json(["semesters" => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng CourseSemester', 'message' => $e->getMessage()], 500);
+        }
+    }
     public function restore($id)
     {
         $course = Course::withTrashed()->find($id);

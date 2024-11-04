@@ -111,6 +111,7 @@ const ListRooms = () => {
       await instance.post(`admin/rooms`, values);
       message.success("Thêm phòng học thành công");
       setRooms([...rooms, values]);
+      handleModalCancel()
       form.resetFields();
     } catch (error) {
       if (error.response && error.response.data) {

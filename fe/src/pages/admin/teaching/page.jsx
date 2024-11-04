@@ -44,13 +44,10 @@ const Teach = () => {
     fetchMajors();
   }, []);
 
-
-
   const onHandleSubmit = async (values) => {
     setLoading(true);
-    debugger
+    console.log(values);
     try {
-      
       const response = await instance.post("admin/majors", values);
       const newMajor = response.data.data;
       setMajors((prevMajors) => [...prevMajors, newMajor]);
@@ -111,6 +108,7 @@ const Teach = () => {
           major.id === initialValues.id ? { ...major, ...values } : major
         )
       );
+      form.resetFields();
       handleCancel();
     } catch (error) {
       console.error(error.message);
@@ -237,14 +235,17 @@ const Teach = () => {
                     </div>
                     <div className="teaching__card-bottom">
                       <Link
-                        to="list"
+                        to={{
+                          pathname: `${item.id}/subjects`,
+                        }}
+                        state= {{ majorName: item.name }}
                         className="flex items-center gap-3 text-[#1167B4] font-bold"
                       >
                         <img
                           src="/assets/svg/setting.svg"
                           alt="Quản lý chương trình dạy"
                         />
-                        Quản Lý Chương Trình Dạy
+                        Quản Lý Môn học
                       </Link>
                       <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                         <img src="/assets/svg/eye.svg" alt="" />

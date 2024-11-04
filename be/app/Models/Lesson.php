@@ -20,4 +20,11 @@ class Lesson extends Model
     {
         return $this->belongsTo(Subject::class);
     }
+
+    public function schedules()
+    {
+        return $this->belongsToMany(Schedule::class, 'schedule_lessons')
+                    ->withPivot('study_date');
+    }
+
 }

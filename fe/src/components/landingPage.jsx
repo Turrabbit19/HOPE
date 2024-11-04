@@ -6,7 +6,7 @@ import HeaderAdmin from "./layout/layoutAdmin/header";
 const LandingPage = () => {
     return (
         <>
-            <HeaderAdmin />
+            <HeaderLandingPage />
             <CarouselLandingPage />
         </>
     );

@@ -18,7 +18,7 @@ const LayoutStudent = lazy(() => import("../components/layout/layoutStudent"));
 const StudentInformation = lazy(() => import("../pages/student/information"));
 // Lazy loading for components
 const LayoutAdmin = lazy(() => import("../components/layout/layoutAdmin"));
-const Schedule = lazy(() => import("../pages/student/schedul"));
+// const Schedule = lazy(() => import("../pages/student/schedul"));
 const List = lazy(() => import("../pages/admin/list"));
 
 const Teach = lazy(() => import("../pages/admin/teaching/page"));
@@ -44,6 +44,12 @@ import ListCourse from "../pages/admin/courses/list/page";
 import AllStudent from "../pages/admin/userManager/all-student";
 import AllUser from "../pages/admin/userManager/all-user";
 import AllTeacher from "../pages/admin/userManager/all-teacher";
+import ScheduleAdd from "../pages/admin/schedule/add/page";
+import Schedule from "../pages/admin/schedule/page";
+import EditSchedule from "../pages/admin/schedule/edit/page";
+import MajorSubject from "../pages/admin/teaching/subject/page";
+import CourseDetail from "../pages/admin/courses/detail/page";
+import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
 
 const Router = createBrowserRouter([
     {
@@ -101,10 +107,26 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "teaching",
+                path: "majors",
                 element: (
                     <>
                         <Teach />
+                    </>
+                ),
+            },
+            {
+                path: "majors/:id/subjects",
+                element: (
+                    <>
+                        <MajorSubject />
+                    </>
+                ),
+            },
+            {
+                path: "majors/:majorId/subjects/detail/:subjectId",
+                element: (
+                    <>
+                        <MajorDetailSubject />
                     </>
                 ),
             },
@@ -124,6 +146,30 @@ const Router = createBrowserRouter([
                         <ListCourse />
                     </>
                 ),
+            },
+            {
+                path: "Schedule",
+                element: (<>
+                    <Schedule/>
+                </>)
+            },
+            {
+                path: "schedule/add",
+                element: (
+                    <>
+                        <ScheduleAdd />
+                    </>
+                ),
+
+            },
+            {
+                path: "schedule/edit/:id",
+                element: (
+                    <>
+                        <EditSchedule />
+                    </>
+                ),
+
             },
             {
                 path: "class-student",
@@ -258,6 +304,14 @@ const Router = createBrowserRouter([
                 ),
             },
             {
+                path: "list-course/:courseId/detail",
+                element: (
+                    <>
+                        <CourseDetail />
+                    </>
+                ),
+            },
+            {
                 path: "sections",
                 element: (
                     <>
@@ -331,14 +385,14 @@ const Router = createBrowserRouter([
                     </Suspense>
                 ),
             },
-            {
-                path: "schedule",
-                element: (
-                    <Suspense fallback={<Loading />}>
-                        <Schedule />
-                    </Suspense>
-                ),
-            },
+            // {
+            //     path: "schedule",
+            //     element: (
+            //         <Suspense fallback={<Loading />}>
+            //             <Schedule />
+            //         </Suspense>
+            //     ),
+            // },
         ],
     },
     {

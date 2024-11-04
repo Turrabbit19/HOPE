@@ -28,7 +28,7 @@ const ListCourse = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-    const [id, setId] = useState();
+  const [id, setId] = useState();
   useEffect(() => {
     (async () => {
       try {
@@ -65,7 +65,7 @@ const ListCourse = () => {
       name: course.name,
       start_date: moment(course.startDate),
       end_date: moment(course.endDate),
-      plan_id: course.plan_id
+      plan_id: course.plan_id,
     });
     setId(course.id);
     setIsEditModalVisible(true);
@@ -85,54 +85,55 @@ const ListCourse = () => {
       plan_id: values.plan_id,
     };
     try {
-        setLoading(true);
-        const response = await instance.post("admin/courses", formattedValues);
-        notification.success({
-            message: `Tạo khóa học ${values.name} thành công`
-        })
-        const newCourse = response.data.data;
-        setCourses((prevCourses) => [...prevCourses, newCourse]);
-        form.resetFields();
-        handleModalCancel();
-
+      setLoading(true);
+      const response = await instance.post("admin/courses", formattedValues);
+      notification.success({
+        message: `Tạo khóa học ${values.name} thành công`,
+      });
+      const newCourse = response.data.data;
+      setCourses((prevCourses) => [...prevCourses, newCourse]);
+      form.resetFields();
+      handleModalCancel();
     } catch (error) {
-        notification.error({
-            message:"Tạo khóa học thất bại"
-        })
-    }finally {
-        setLoading(false);
+      notification.error({
+        message: "Tạo khóa học thất bại",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const onHandleUpdate = async (values) => {
     const formattedValues = {
-        name: values.name,
-        start_date: values.start_date.format("YYYY-MM-DD"),
-        end_date: values.end_date.format("YYYY-MM-DD"),
-        plan_id: values.plan_id,
-      };
+      name: values.name,
+      start_date: values.start_date.format("YYYY-MM-DD"),
+      end_date: values.end_date.format("YYYY-MM-DD"),
+      plan_id: values.plan_id,
+    };
     try {
-        setLoading(true);
-        const response = instance.put(`admin/courses/${id}`, formattedValues);
-        notification.success({
-            message: "Cập nhật khóa học thành công"
-        })
-        setCourses((prevCourses) =>
-            prevCourses.map((course) =>
-                course.id === editingCourse.id ? { ...course, ...formattedValues } : course
-            )
-        );
-        form.resetFields();
-        handleModalCancel();
+      setLoading(true);
+      const response = instance.put(`admin/courses/${id}`, formattedValues);
+      notification.success({
+        message: "Cập nhật khóa học thành công",
+      });
+      setCourses((prevCourses) =>
+        prevCourses.map((course) =>
+          course.id === editingCourse.id
+            ? { ...course, ...formattedValues }
+            : course
+        )
+      );
+      form.resetFields();
+      handleModalCancel();
     } catch (error) {
-        console.log(error.message);
-        notification.error({
-            message: "Cập nhật khóa học thất bại"
-        })
-    }finally {
-        setLoading(false);
+      console.log(error.message);
+      notification.error({
+        message: "Cập nhật khóa học thất bại",
+      });
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const handleModalCancel = () => {
     setIsEditModalVisible(false);
@@ -141,39 +142,43 @@ const ListCourse = () => {
 
   const confirmDelete = async (id) => {
     try {
-        setLoading(true);
-        await instance.delete("admin/courses/" + id);
-        setCourses(courses.filter((course) => course.id !== id));
-        notification.success({
-            message: (
-                <span>Xóa thành công khó học, <a className="underline" onClick={() => undoCourse(id)}>Khôi phục lại khóa học</a></span>
-            )
-        })
+      setLoading(true);
+      await instance.delete("admin/courses/" + id);
+      setCourses(courses.filter((course) => course.id !== id));
+      notification.success({
+        message: (
+          <span>
+            Xóa thành công khó học,{" "}
+            <a className="underline" onClick={() => undoCourse(id)}>
+              Khôi phục lại khóa học
+            </a>
+          </span>
+        ),
+      });
     } catch (error) {
-        console.error("Error deleting semester:", error);
-    }finally{
-        setLoading(false);
+      console.error("Error deleting semester:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-
   const undoCourse = async (id) => {
     try {
-        setLoading(true);
-        const values = await instance.post(`admin/courses/${id}/restore`);
-        const restoredCourse = values.data.data;
-        console.log(values.data.data);
-        notification.success({
-          message: "Khôi phục khóa học thành công",
-        });
-        setCourses((prev) => [...prev, restoredCourse]);
-      } catch (error) {
-        console.log(error.message);
-        message.error("Khôi phục thất bại thất bại");
-      } finally {
-        setLoading(false);
-      }
-  }
+      setLoading(true);
+      const values = await instance.post(`admin/courses/${id}/restore`);
+      const restoredCourse = values.data.data;
+      console.log(values.data.data);
+      notification.success({
+        message: "Khôi phục khóa học thành công",
+      });
+      setCourses((prev) => [...prev, restoredCourse]);
+    } catch (error) {
+      console.log(error.message);
+      message.error("Khôi phục thất bại thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return <Loading />;
@@ -265,7 +270,7 @@ const ListCourse = () => {
 
                   <div className="teaching__card-bottom">
                     <Link
-                      to="list"
+                      to={`${course.id}/detail`}
                       className="flex items-center gap-3 text-[#1167B4] font-bold"
                     >
                       <img src="/assets/svg/setting.svg" alt="setting" />

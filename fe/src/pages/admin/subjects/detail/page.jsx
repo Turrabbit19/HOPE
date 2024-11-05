@@ -9,12 +9,21 @@ import {
     InputNumber,
     message,
     Tabs,
+    Space,
 } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+    EditOutlined,
+    DeleteOutlined,
+    PlusOutlined,
+    ArrowLeftOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const { TabPane } = Tabs;
 
 const DetailSubject = () => {
+    const navigate = useNavigate();
+
     // Các biến trạng thái hiện tại
     const [activeTab, setActiveTab] = useState("lecture"); // Theo dõi tab hiện tại
     const [isLectureModalVisible, setIsLectureModalVisible] = useState(false); // Hiện modal bài giảng
@@ -285,9 +294,33 @@ const DetailSubject = () => {
             </Card>
         ));
 
+    const handleBack = () => {
+        navigate("/admin/list-subject");
+    };
+
     return (
         <div className="p-6">
-            <div className="col-12 justify-between flex mb-4">
+            <Space
+                align="center"
+                style={{ cursor: "pointer" }}
+                onClick={handleBack}
+            >
+                <div
+                    style={{
+                        border: "1.5px solid #1890ff",
+                        borderRadius: "50%",
+                        padding: "6px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <ArrowLeftOutlined
+                        style={{ fontSize: "16px", color: "#1890ff" }}
+                    />
+                </div>
+            </Space>
+            <div className="flex justify-center mb-4">
                 <h1 className="text-[#7017E2] text-[24px] pb-8 font-semibold">
                     Chi tiết môn học: Reactjs
                 </h1>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Card, Typography, Spin, Tag, Row, Col } from "antd";
-import { BookOutlined } from "@ant-design/icons";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { Card, Typography, Spin, Tag, Row, Col, Space } from "antd";
+import { ArrowLeftOutlined, BookOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -10,6 +10,7 @@ const MajorSubject = () => {
     const [courses, setCourses] = useState([]);
     const [majorName, setMajorName] = useState("");
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Dữ liệu chuyên ngành
@@ -109,13 +110,46 @@ const MajorSubject = () => {
         return <Tag color={color}>{status}</Tag>;
     };
 
+    const handleBack = () => {
+        navigate("/admin/major");
+    };
+
     return (
         <div style={{ padding: "24px" }}>
+            <Space
+                align="center"
+                style={{ cursor: "pointer" }}
+                onClick={handleBack}
+            >
+                <div
+                    style={{
+                        border: "1.5px solid #1890ff",
+                        borderRadius: "50%",
+                        padding: "6px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <ArrowLeftOutlined
+                        style={{ fontSize: "16px", color: "#1890ff" }}
+                    />
+                </div>
+            </Space>
             {/* Tiêu đề */}
-            <Title>
-                <BookOutlined style={{ marginRight: "8px" }} />
-                {majorName}
-            </Title>
+            <div className="flex justify-center pb-3 text-[#7017E2]">
+                <h1
+                    className="mb-8"
+                    style={{
+                        fontSize: "28px",
+                        fontWeight: "bold",
+                        marginTop: "20px",
+                    }}
+                >
+                    <BookOutlined style={{ marginRight: "8px" }} />
+                    {majorName}
+                </h1>
+            </div>
 
             {/* Danh sách môn học */}
             {courses.length > 0 ? (

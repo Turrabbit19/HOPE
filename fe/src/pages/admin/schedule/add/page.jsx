@@ -368,7 +368,7 @@ const ScheduleAdd = () => {
                 </Row> */}
 
                 {/* Hàng 2: Môn Học */}
-                <Form.Item
+                {/* <Form.Item
                     label="Môn Học"
                     name="subject"
                     rules={[
@@ -389,7 +389,7 @@ const ScheduleAdd = () => {
                             </Option>
                         ))}
                     </Select>
-                </Form.Item>
+                </Form.Item> */}
 
                 {/* Hàng 3: Lớp Học (Multiple Selection) */}
                 <Form.Item

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+<<<<<<< HEAD
 Route::prefix('/')->group( function () {
     Route::get('/', function () {
         return view('client.index');
@@ -38,3 +39,12 @@ Route::prefix('/')->group( function () {
     });
 
 });
+=======
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('users', function () {
+    return view('user');
+});
+>>>>>>> beb685d65dd80b4493afdaa6f4a8c6188e2f2280

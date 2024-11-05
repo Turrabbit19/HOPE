@@ -197,9 +197,8 @@ class ApiSubjectController extends Controller
     }
     public function addLessons(Request $request, string $id) {
         $validator = Validator::make($request->all(), [
-            'lessons' => 'required|array',
-            'lessons.*.name' => 'required|string|max:50',
-            'lessons.*.description' => 'required',
+            '*.name' => 'required|string|max:50',
+            '*.description' => 'required|string',
         ]);
     
         if ($validator->fails()) {
@@ -210,7 +209,7 @@ class ApiSubjectController extends Controller
             $validatedData = $validator->validated();
             $lessons = [];
     
-            foreach ($validatedData['lessons'] as $lessonData) {
+            foreach ($validatedData as $lessonData) {
                 $lessonData['subject_id'] = $id; 
                 $lesson = Lesson::create($lessonData);
                 $lessons[] = $lesson;
@@ -244,10 +243,9 @@ class ApiSubjectController extends Controller
     }
     public function addClassrooms(Request $request, string $id) {
         $validator = Validator::make($request->all(), [
-            'classrooms' => 'required|array',
-            'classrooms.*.code' => 'required|string|max:10|unique:classrooms',
-            'classrooms.*.max_students' => 'required||integer|min:1',
-            'classrooms.*.status' => 'boolean',
+            '*.code' => 'required|string|max:10|unique:classrooms,code', 
+            '*.max_students' => 'required|integer|min:1',
+            '*.status' => 'boolean',
         ]);
     
         if ($validator->fails()) {
@@ -258,7 +256,7 @@ class ApiSubjectController extends Controller
             $validatedData = $validator->validated();
             $classrooms = [];
     
-            foreach ($validatedData['classrooms'] as $classroomData) {
+            foreach ($validatedData as $classroomData) {
                 $classroomData['subject_id'] = $id; 
                 $classroom = Classroom::create($classroomData);
                 $classrooms[] = $classroom;
@@ -268,5 +266,5 @@ class ApiSubjectController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 }

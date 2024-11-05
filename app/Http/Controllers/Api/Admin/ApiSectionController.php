@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\NewNotification;
+use App\Models\StudentNotification;
 use Carbon\Carbon;
 use App\Models\Section;
-use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
+use App\Models\Student;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -19,11 +22,12 @@ class ApiSectionController extends Controller
     {
         try {
             $sections = Section::get();
-            $data = $sections->map(function ($section) {
-               return[
+
+            $data = $sections->map(function($section) {
+                return [
                     'id' => $section->id,
                     'name' => $section->name,
-               ]; 
+                ];
             });
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
@@ -114,31 +118,93 @@ class ApiSectionController extends Controller
         }
     }
 
-    public function getNotificationsBySection(string $sectionId)
-{
-    try {
-        // Truy vấn notifications dựa trên section_id và load quan hệ 'sections'
-        $notifications = Notification::where('section_id', $sectionId)->with('sections')->get();
-        
-        // Lọc và định dạng dữ liệu
-        $data = $notifications->map(function ($notification) {
-            return [
-                'id' => $notification->id,
-                'name' => $notification->name,
-                'description' => $notification->description,
-                'time' => $notification->time ? $notification->time->format('Y-m-d H:i:s') : null,
-                'section' => $notification->sections ? $notification->sections->name : null, // Lấy tên của section liên quan
-            ];
-        });
+    public function getNotifications(Request $request, string $id){
+        try {
+            $perPage = $request->input('perPage', 9);
 
-        // Trả về kết quả JSON
-        return response()->json(['data' => $data], 200);
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['error' => 'Không tìm thấy danh mục với ID: ' . $sectionId], 404);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
-    }
-}
-
+            $notifications = Notification::with('section', 'courses')->where('section_id',$id)->paginate($perPage);
     
+            $data = collect($notifications->items())->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => Carbon::parse($notification->time)->format('H:i, d/m/Y'),
+                    'courses' => $notification->courses->map(function ($course) {
+                        return [
+                            "id" => $course->id,
+                            "name" => $course->name
+                        ];
+                    }),
+                ];
+            });
+    
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $notifications->total(),               
+                    'per_page' => $notifications->perPage(),     
+                    'first_page' => 1,             
+                    'current_page' => $notifications->currentPage(),  
+                    'last_page' => $notifications->lastPage(),        
+                    'first_page_url' => $notifications->url(1),       
+                    'last_page_url' => $notifications->url($notifications->lastPage()),  
+                    'next_page_url' => $notifications->nextPageUrl(), 
+                    'prev_page_url' => $notifications->previousPageUrl(),  
+                    'from' => $notifications->firstItem(),            
+                    'to' => $notifications->lastItem(),              
+                ]
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Notifications', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function addNotification(Request $request, string $id){
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:notifications',   
+            'description' => 'required|string',
+            'courses' => 'required|array',
+            'courses.*.id' => 'required|exists:courses,id',  
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        try {
+            $data = $validator->validated();
+
+            $data['section_id'] = $id;
+            $data['time'] = Carbon::now();
+
+            $notification = Notification::create($data);
+
+            $courses = collect($data['courses'])->mapWithKeys(function ($course) {
+                return [$course['id'] => []];
+            });
+            
+            $notification->courses()->sync($courses);
+
+            foreach ($data['courses'] as $course) {
+                $students = Student::where('course_id', $course['id'])->get();
+    
+                foreach ($students as $student) {
+                    StudentNotification::create([
+                        'student_id' => $student->id,
+                        'notification_id' => $notification->id,
+                        'status' => 0
+                    ]);
+                }
+            }
+
+            broadcast(new NewNotification($notification));
+            
+            return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

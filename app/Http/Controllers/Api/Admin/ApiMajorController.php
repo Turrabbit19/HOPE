@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\Admin;
 use Carbon\Carbon;
 use App\Models\Major;
 use App\Models\MajorSubject;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\PlanSubject;
+use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -115,16 +117,19 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    public function getSubjectsByMajor(string $majorId) {
-        try {
-            
-            $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject') ->get();
+
+    public function getAllSubjects(string $majorId) {
+        try {    
+            $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject')->get();
     
             $data = $majorSubjects->map(function ($majorSubject) {
                 return [
                     'id' => $majorSubject->subject->id,
+                    'code' => $majorSubject->subject->code,
                     'name' => $majorSubject->subject->name,
                     'description' => $majorSubject->subject->description,
+                    'credit' => $majorSubject->subject->credit,
+                    'status' => $majorSubject->subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
     
@@ -135,5 +140,36 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function filterMajorsByOrder(string $planId, string $majorId) {
+        try {
+            $planSubjects = PlanSubject::where('plan_id', $planId)
+                ->join('major_subjects', 'plan_subjects.major_subject_id', '=', 'major_subjects.id')
+                ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
+                ->where('major_subjects.major_id', $majorId)
+                ->select('plan_subjects.semester_order', 'subjects.code', 'subjects.name', 'subjects.credit')
+                ->get();
     
+            $groupSubjects = $planSubjects->groupBy('semester_order');
+    
+            $data = $groupSubjects->map(function ($subjects, $semesterOrder) {
+                return [
+                    'id' => $semesterOrder,
+                    'subjects' => $subjects->map(function ($subject) {
+                        return [
+                            'code' => $subject->code,
+                            'name' => $subject->name,
+                            'credit' => $subject->credit,
+                        ];
+                    }),
+                ];
+            })->values(); 
+    
+            return response()->json(['semester_order' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy kế hoạch học tập với ID: ' . $planId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng PlanSubject', 'message' => $e->getMessage()], 500);
+        }
+    } 
 }

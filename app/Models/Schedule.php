@@ -11,8 +11,10 @@ class Schedule extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'course_semester_id',
-        'major_subject_id',
+        'course_id',
+        'semester_id',
+        'major_id',
+        'subject_id',
         'classroom_id',
         'teacher_id',
         'shift_id',
@@ -27,14 +29,33 @@ class Schedule extends Model
         'status' => 'boolean',
     ];
 
-    public function courseSemester()
+    public function course()
     {
-        return $this->belongsTo(CourseSemester::class);
+        return $this->belongsTo(Course::class);
+    }
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class);
+    }
+    public function major()
+    {
+        return $this->belongsTo(Major::class);
+    }
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
     }
 
-    public function plan()
+    public function days()
     {
-        return $this->belongsTo(Plan::class);
+        return $this->belongsToMany(Day::class, 'study_days')
+                    ->select('days.id'); 
+    }
+
+    public function lessons()
+    {
+        return $this->belongsToMany(Lesson::class, 'schedule_lessons')
+                    ->withPivot('study_date');
     }
 
     public function classroom()

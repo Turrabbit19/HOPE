@@ -21,4 +21,9 @@ class Subject extends Model
     {
         return $this->belongsToMany(Major::class, 'major_subjects');
     }
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class);
+    }
 }

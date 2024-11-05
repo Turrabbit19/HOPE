@@ -6,8 +6,10 @@ use Carbon\Carbon;
 use App\Models\Student;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Events\NewNotification;
 use App\Events\NotificationEvent;
 use App\Models\StudentNotification;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -67,12 +69,11 @@ class ApiNotificationController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'section_id' => 'required|exists:sections,id',
-            'name' => 'required|string|max:255|unique:notifications',
-            'description' => 'required|string',
-            'time' => 'required|date_format:Y-m-d H:i:s',
+            'section_id' => 'required|exists:sections,id',   
+            'name' => 'required|string|max:255|unique:notifications',   
+            'description' => 'required|string', 
             'courses' => 'required|array',
-            'courses.*.id' => 'required|exists:notification_courses,id',
+            'courses.*.id' => 'required|exists:courses,id',   
         ]);
 
         if ($validator->fails()) {
@@ -81,37 +82,48 @@ class ApiNotificationController extends Controller
 
         try {
             $data = $validator->validated();
+            $data['time'] = Carbon::now();
+
             $notification = Notification::create($data);
 
+            foreach ($data['courses'] as $course) {
+                $students = Student::where('course_id', $course['id'])->get();
+    
+                foreach ($students as $student) {
+                    StudentNotification::create([
+                        'student_id' => $student->id,
+                        'notification_id' => $notification->id,
+                        'status' => 0
+                    ]);
+                }
+            }
 
-            $notification_courses = collect($data['courses'])->mapWithKeys(function ($notification_course) {
-                return [$notification_course['id'] => []];
-            });
-
-            $notification->courses()->sync($notification_courses);
-
-            broadcast(new NotificationEvent($notification));
-
+            broadcast(new NewNotification($notification));
+            
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
+            Log::error('Error creating StudentNotification: ' . $e->getMessage());
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
-            $notification = Notification::with('section')->findOrFail($id);
+            $notification = Notification::with('section', 'courses')->findOrFail($id);
             $data = [
-                'id' => $notification->id,
-                'section_name' => $notification->section->name,
-                'name' => $notification->name,
-                'description' => $notification->description,
-                'time' => $notification->time,
-            ];
+                    'id' => $notification->id,
+                    'section_name' => $notification->section->name,
+                    'name' => $notification->name,
+                    'description' => $notification->description,
+                    'time' => $notification->time,
+                    'courses' => $notification->courses->map(function ($course) {
+                        return [
+                            "id" => $course->id,
+                            "name" => $course->name
+                        ];
+                    }),
+                ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

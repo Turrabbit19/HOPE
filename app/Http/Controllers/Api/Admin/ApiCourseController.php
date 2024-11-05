@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Major;
+use App\Models\CourseSemester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -51,10 +52,10 @@ class ApiCourseController extends Controller
                     'plan' => $course->plan->name,
                     'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
-                    'status' => match ($course->status) {
-                        0 => "Chờ diễn ra",
-                        1 => "Đang diễn ra",
-                        2 => "Kết thúc",
+                    'status' => match($course->status) {
+                        "0" => "Chờ diễn ra",
+                        "1" => "Đang diễn ra",
+                        "2" => "Kết thúc",
                         default => "Không xác định",
                     },
                 ];
@@ -65,6 +66,35 @@ class ApiCourseController extends Controller
         }
     }
 
+    public function getSemestersByCourse($courseId)
+    {
+        try {
+            $semestersByCourse = CourseSemester::where('course_id', $courseId)
+            ->with('semester') 
+            ->get();
+        
+            if ($semestersByCourse->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy kỳ học nào cho khóa học với ID: ' . $courseId], 404);
+            }
+
+            $data = $semestersByCourse->map(function($value){
+                return [
+                    "id" => $value->semester->id,
+                    "name" => $value->semester->name,
+                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
+                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
+                    "order" => "Kì học thứ"." ".$value->order
+                ];
+            });
+
+        return response()->json(["semesters" => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng CourseSemester', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -72,7 +102,6 @@ class ApiCourseController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -81,6 +110,15 @@ class ApiCourseController extends Controller
 
         try {
             $data = $validator->validated();
+            if($data['start_date'] >= Carbon::now()) {
+
+            }
+            elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                $data['status'] = "1";
+            } else {
+                $data['status'] = "2";
+            }
+
             $course = Course::create($data);
 
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
@@ -94,18 +132,18 @@ class ApiCourseController extends Controller
         try {
             $course = Course::with('plan')->findOrFail($id);
             $data = [
-                'id' => $course->id,
-                'name' => $course->name,
-                'plan' => $course->plan->name,
-                'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
-                'status' => match ($course->status) {
-                    0 => "Chờ diễn ra",
-                    1 => "Đang diễn ra",
-                    2 => "Kết thúc",
-                    default => "Không xác định",
-                },
-            ];
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'plan' => $course->plan->name,
+                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'status' => match($course->status) {
+                        "0" => "Chờ diễn ra",
+                        "1" => "Đang diễn ra",
+                        "2" => "Kết thúc",
+                        default => "Không xác định",
+                    },
+                ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -133,6 +171,17 @@ class ApiCourseController extends Controller
             $course = Course::findOrFail($id);
 
             $data = $validator->validated();
+            if(isset($data['start_date'])) {
+                if($data['start_date'] >= Carbon::now()) {
+
+                }
+                elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                    $data['status'] = "1";
+                } else {
+                    $data['status'] = "2";
+                }
+            }
+
             $course->update($data);
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);

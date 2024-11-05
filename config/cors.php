@@ -15,7 +15,11 @@ return [
     |
     */
 
+<<<<<<< HEAD
    'paths' => ['api/*', 'sanctum/csrf-cookie', 'broadcasting/*'],
+=======
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'broadcasting/*'],
+>>>>>>> beb685d65dd80b4493afdaa6f4a8c6188e2f2280
 
     'allowed_methods' => ['*'],
 

@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiNotificationController;
 use App\Http\Controllers\Api\Admin\ApiNotificationCoursesController;
 use App\Http\Controllers\Api\Student\ApiStudentNotificationController;
+use App\Http\Controllers\Api\Teacher\ApiTeacherScheduleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,5 +92,10 @@ Route::get('/section/notifications/{id}', [ApiSectionController::class, 'getNoti
     Route::get('/schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
     Route::get('course/{courseId}/major/{majorId}/students', [ApiStudentController::class, 'getStudentByMajorAndSemester']);
     Route::get('/students/statistics', [ApiStudentController::class, 'getStudentStatistics']);
-    Route::get('/teachers/infomation', [ApiTeacherController::class, 'GetInfoTeacher']);
-    Route::get('/teachers/{id}/schedule', [ApiTeacherController::class, 'TeachingSchedule']);
+
+  
+    Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
+    ->group(function () {
+        Route::get('/teachers/infomation', [ApiTeacherScheduleController::class, 'GetInfoTeacher']);
+        Route::get('/teachers/{id}/schedule', [ApiTeacherScheduleController::class, 'TeachingSchedule']);
+    });

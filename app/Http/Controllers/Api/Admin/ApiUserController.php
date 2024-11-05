@@ -340,11 +340,11 @@ class ApiUserController extends Controller
         }
     }
 
-    public function exportStudent(){
-        return Excel::download(new StudentExport, 'students.xlsx');
-    }
+    // public function exportStudent(){
+    //     return Excel::download(new StudentExport, 'students.xlsx');
+    // }
 
-    public function exportTeacher(){
-        return Excel::download(new TeacherExport, 'students.xlsx');
-    }
+    // public function exportTeacher(){
+    //     return Excel::download(new TeacherExport, 'students.xlsx');
+    // }
 }

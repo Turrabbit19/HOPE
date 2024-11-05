@@ -91,3 +91,5 @@ Route::get('/section/notifications/{id}', [ApiSectionController::class, 'getNoti
     Route::get('/schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
     Route::get('course/{courseId}/major/{majorId}/students', [ApiStudentController::class, 'getStudentByMajorAndSemester']);
     Route::get('/students/statistics', [ApiStudentController::class, 'getStudentStatistics']);
+    Route::get('/teachers/infomation', [ApiTeacherController::class, 'GetInfoTeacher']);
+    Route::get('/teachers/{id}/schedule', [ApiTeacherController::class, 'TeachingSchedule']);

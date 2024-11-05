@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Exports\StudentExport;
-use App\Exports\TeacherExport;
+use App\Excel\Export\StudentExport;
+use App\Excel\Export\TeacherExport;
 use App\Http\Controllers\Controller;
-use App\Imports\StudentImport;
-use App\Imports\TeacherImport;
+use App\Excel\Import\StudentImport;
+use App\Excel\Import\TeacherImport;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;

@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseSemester;
 use App\Models\NotificationCourse;
 use App\Models\Schedule;
+use App\Models\ScheduleLesson;
 use App\Models\Student;
 use App\Models\StudentClassroom;
+use App\Models\StudentLesson;
 use App\Models\StudentNotification;
 use App\Models\StudentSchedule;
 use Carbon\Carbon;
@@ -128,6 +130,16 @@ class ApiClientController extends Controller
                 'student_id' => $student->id,
                 'classroom_id' => $rschedule->schedule->classroom_id
             ]);
+
+            $scheduleLessons = ScheduleLesson::where('schedule_id', $id)->get();
+
+            foreach ($scheduleLessons as $scheduleLesson) {
+                StudentLesson::create([
+                    'student_id' => $student->id,
+                    'lesson_id' => $scheduleLesson->lesson_id,
+                    'status' => '0',
+                ]);
+            }
 
             $data = [
                     'id' => $rschedule->id,

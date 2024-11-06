@@ -44,7 +44,7 @@ class TeacherImport implements ToModel, WithHeadingRow, WithValidation
     
             return new Teacher([
                 'user_id'      => $user->id,
-                'major_id'     => $row['nganh'],              
+                'major_id'     => $majorId,              
                 'teacher_code' => $row['mgv'],             
                 'status'       => match($row['trang_thai']) {
                     'Đang dạy' => "0",

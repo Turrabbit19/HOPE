@@ -8,7 +8,7 @@ use App\Models\StudentNotification;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
-class ApiClientNoticeController extends Controller
+class StudentNoticeController extends Controller
 {
     private function getStudent()
     {

@@ -4,19 +4,15 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourseSemester;
-use App\Models\NotificationCourse;
 use App\Models\Schedule;
-use App\Models\ScheduleLesson;
 use App\Models\Student;
 use App\Models\StudentClassroom;
-use App\Models\StudentLesson;
-use App\Models\StudentNotification;
 use App\Models\StudentSchedule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
-class ApiClientController extends Controller
+class StudentController extends Controller
 {
     public function getStudentDetail()
     {
@@ -26,9 +22,13 @@ class ApiClientController extends Controller
             $student = Student::with(['user', 'course', 'major'])->where('user_id', $user->id)->firstOrFail();
             
             $data = [
-                'id' => $student->id,
                 'avatar' => $student->user->avatar,
                 'name' => $student->user->name,
+                'student_code' => $student->student_code,
+                'course_name' => $student->course->name,
+                'major_name' => $student->major->name,
+                'current_semester' => $student->current_semester,
+
                 'email' => $student->user->email,
                 'phone' => $student->user->phone,
                 'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
@@ -36,10 +36,6 @@ class ApiClientController extends Controller
                 'ethnicity' => $student->user->ethnicity,
                 'address' => $student->user->address,
                 
-                'student_code' => $student->student_code,
-                'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
-                'current_semester' => $student->current_semester,
                 'status' => match($student->status) {
                     "0" => "Đang học",
                     "1" => "Bảo lưu",
@@ -55,7 +51,6 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function getSchedules()
     {
         $user = Auth::user();
@@ -104,7 +99,6 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function registerSchedule($id) 
     {
         $user = Auth::user();
@@ -124,22 +118,11 @@ class ApiClientController extends Controller
                     'student_id' => $student->id,
                     'schedule_id' => $id
                 ]);
-            
-                
+                            
             StudentClassroom::create([
                 'student_id' => $student->id,
                 'classroom_id' => $rschedule->schedule->classroom_id
             ]);
-
-            $scheduleLessons = ScheduleLesson::where('schedule_id', $id)->get();
-
-            foreach ($scheduleLessons as $scheduleLesson) {
-                StudentLesson::create([
-                    'student_id' => $student->id,
-                    'lesson_id' => $scheduleLesson->lesson_id,
-                    'status' => '0',
-                ]);
-            }
 
             $data = [
                     'id' => $rschedule->id,
@@ -181,14 +164,16 @@ class ApiClientController extends Controller
             $data = $timetable->map(function($tt) {
                 return [
                     'id' => $tt->schedule->id,
-                    'teacher_name' => $tt->schedule->teacher->user->name ?? "Không có giáo viên",
-                    'shift_name' => $tt->schedule->shift->name ?? "Không có ca học",
-                    'room_name' => $tt->schedule->room->name ?? "Không có phòng học",
-                    'link' => $tt->schedule->link ?? "NULL",
+                    'subject_name' => $tt->schedule->subject->name,
+                    'teacher_name' => $tt->schedule->teacher->user->name,
+                    'shift_name' => $tt->schedule->shift->name,
+                    'room_name' => $tt->schedule->room->name ?? "Null",
+                    'link' => $tt->schedule->link ?? "Null",
                     'start_date' => Carbon::parse($tt->schedule->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
                     'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) {
                         return [
+                            'name' => $lesson->name,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
                             'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
                         ];
@@ -197,36 +182,6 @@ class ApiClientController extends Controller
             });
 
             return response()->json(['data' => $data], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function getSchedule()
-    {
-        $user = Auth::user();
-
-        try {
-            $student = Student::where('user_id', $user->id)->firstOrFail();
-            
-            $schedules = $student->schedules->map(function ($schedule) {
-                return [
-                   'id' => $schedule->id,
-                    'course_name' => $schedule->course->name,
-                    'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teacher->user->name,
-                    'shift_name' => $schedule->shift->name,
-                    'room_name' => $schedule->room->name,
-                    'link' => $schedule->link ? $schedule->link : "NULL",
-                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
-                    'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
-                ];
-            });
-
-            return response()->json(['data' => $schedules], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {

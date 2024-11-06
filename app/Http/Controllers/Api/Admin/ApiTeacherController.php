@@ -108,7 +108,7 @@ class ApiTeacherController extends Controller
                 'ethnicity' => $data['ethnicity'],
                 'address' => $data['address'],
                 'password' => Hash::make("123456789"),
-                'role_id' => 3,
+                'role_id' => 4,
             ]);
 
             $teacher = Teacher::create([

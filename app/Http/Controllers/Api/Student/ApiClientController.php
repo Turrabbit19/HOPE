@@ -122,8 +122,7 @@ class ApiClientController extends Controller
                     'student_id' => $student->id,
                     'schedule_id' => $id
                 ]);
-            
-                
+                            
             StudentClassroom::create([
                 'student_id' => $student->id,
                 'classroom_id' => $rschedule->schedule->classroom_id
@@ -178,6 +177,7 @@ class ApiClientController extends Controller
                     'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
                     'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) {
                         return [
+                            'name' => $lesson->name,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
                             'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
                         ];

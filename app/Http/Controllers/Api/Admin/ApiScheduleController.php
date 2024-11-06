@@ -401,10 +401,9 @@ class ApiScheduleController extends Controller
                 : "Chưa học";
     
             $data = [
-                'id' => $schedule->id,
-                'teacher_name' => $schedule->teacher->user->name ?? "Không có giáo viên",
-                'shift_name' => $schedule->shift->name ?? "Không có ca học",
-                'room_name' => $schedule->room->name ?? "Không có phòng học",
+                'teacher_name' => $schedule->teacher->user->name,
+                'shift_name' => $schedule->shift->name,
+                'room_name' => $schedule->room->name ?? "NULL",
                 'link' => $schedule->link ?? "NULL",
                 'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
                 'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
@@ -423,50 +422,5 @@ class ApiScheduleController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới lịch học', 'message' => $e->getMessage()], 500);
         }
-    }
-
-    public function getScheduledDates(string $scheduleId)
-    {
-        $schedule = Schedule::findOrFail($scheduleId);
-
-        if (!$schedule) {
-            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $scheduleId], 404);
-        }
-
-        $startDate = new \DateTime($schedule->start_date);
-        $endDate = new \DateTime($schedule->end_date);
-        
-        $days = $schedule->days()->pluck('id')->toArray();
-
-        if (empty($days)) {
-            return response()->json(['error' => 'Không có ngày học được lưu cho lịch này'], 404);
-        }
-
-        $lessonsCount = $schedule->subject->lessons()->count();
-
-        $scheduledDates = [];
-        $currentDate = clone $startDate;
-
-        while ($currentDate <= $endDate) {
-            $dayOfWeek = $currentDate->format('N'); 
-            $dayOfWeekAdjusted = ($dayOfWeek == 7) ? 1 : $dayOfWeek + 1;
-
-            if (in_array($dayOfWeekAdjusted, $days)) {
-                if (count($scheduledDates) < $lessonsCount) {
-                    $lessonName = $schedule->subject->lessons()->pluck('name')->get(count($scheduledDates) % $lessonsCount);
-                    $scheduledDates[] = $lessonName . ': ' . $currentDate->format('Y-m-d');
-                } else {
-                    break; 
-                }
-            }
-
-            $currentDate->modify('+1 day');
-        }
-
-        return response()->json([
-            'subject_name' => $schedule->subject->name,
-            'scheduled_dates' => $scheduledDates,
-            'total_lessons' => count($scheduledDates) 
-        ], 200);
     }
 }

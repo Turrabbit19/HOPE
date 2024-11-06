@@ -19,9 +19,9 @@ use App\Http\Controllers\Api\Admin\ApiTeacherController;
 
 use App\Http\Controllers\Api\Auth\ApiAuthController;
 
-use App\Http\Controllers\Api\Student\ApiClientController;
-use App\Http\Controllers\Api\Student\ApiClientNoticeController;
-
+use App\Http\Controllers\Api\Student\StudentController;
+use App\Http\Controllers\Api\Student\StudentNoticeController;
+use App\Http\Controllers\Api\Teacher\TeacherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -141,18 +141,26 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
     Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
-        Route::get('/', [ApiClientController::class, 'getStudentDetail']);
-        Route::get('schedules', [ApiClientController::class, 'getSchedules']);
-        Route::post('schedule/{id}/register', [ApiClientController::class, 'registerSchedule']);
+        Route::get('/', [StudentController::class, 'getStudentDetail']);
+        Route::get('schedules', [StudentController::class, 'getSchedules']);
+        Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
-        Route::get('timetable', [ApiClientController::class, 'getTimetable']);
+        Route::get('timetable', [StudentController::class, 'getTimetable']);
 
-        Route::get('notifications', [ApiClientNoticeController::class, 'getStudentNotifications']);
-        Route::get('notification/{id}', [ApiClientNoticeController::class, 'detailNotification']);
+        Route::get('notifications', [StudentNoticeController::class, 'getStudentNotifications']);
+        Route::get('notification/{id}', [StudentNoticeController::class, 'detailNotification']);
 
-        Route::get('notifications/unread', [ApiClientNoticeController::class, 'getUnreadNotifications']);
-        Route::get('notification/unread/{id}', [ApiClientNoticeController::class, 'detailNotification']);
+        Route::get('notifications/unread', [StudentNoticeController::class, 'getUnreadNotifications']);
+        Route::get('notification/unread/{id}', [StudentNoticeController::class, 'detailNotification']);
 
-        Route::get('notifications/read', [ApiClientNoticeController::class, 'getReadNotifications']);
-        Route::get('notification/read/{id}', [ApiClientNoticeController::class, 'detailNotification']);
+        Route::get('notifications/read', [StudentNoticeController::class, 'getReadNotifications']);
+        Route::get('notification/read/{id}', [StudentNoticeController::class, 'detailNotification']);
+    });
+
+    Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
+    ->group(function () {
+        Route::get('/', [TeacherController::class, 'getTeacherDetail']);
+        Route::get('schedules', [TeacherController::class, 'getSchedules']);
+        Route::get('schedule/{scheduleId}/detail', [TeacherController::class, 'getDetailSchedule']);
+        Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailClassroom']);
     });

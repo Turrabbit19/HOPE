@@ -4,17 +4,15 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourseSemester;
-use App\Models\NotificationCourse;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\StudentClassroom;
-use App\Models\StudentNotification;
 use App\Models\StudentSchedule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
-class ApiClientController extends Controller
+class StudentController extends Controller
 {
     public function getStudentDetail()
     {
@@ -24,9 +22,13 @@ class ApiClientController extends Controller
             $student = Student::with(['user', 'course', 'major'])->where('user_id', $user->id)->firstOrFail();
             
             $data = [
-                'id' => $student->id,
                 'avatar' => $student->user->avatar,
                 'name' => $student->user->name,
+                'student_code' => $student->student_code,
+                'course_name' => $student->course->name,
+                'major_name' => $student->major->name,
+                'current_semester' => $student->current_semester,
+
                 'email' => $student->user->email,
                 'phone' => $student->user->phone,
                 'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
@@ -34,10 +36,6 @@ class ApiClientController extends Controller
                 'ethnicity' => $student->user->ethnicity,
                 'address' => $student->user->address,
                 
-                'student_code' => $student->student_code,
-                'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
-                'current_semester' => $student->current_semester,
                 'status' => match($student->status) {
                     "0" => "Đang học",
                     "1" => "Bảo lưu",
@@ -53,7 +51,6 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function getSchedules()
     {
         $user = Auth::user();
@@ -102,7 +99,6 @@ class ApiClientController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function registerSchedule($id) 
     {
         $user = Auth::user();

@@ -43,7 +43,7 @@ class ApiTeacherScheduleController extends Controller
             return response()->json(['message' => 'Không tìm thấy giảng viên với user này'], 404);
         }
         try {
-            $schedules = Schedule::with(['courseSemester', 'classroom', 'teacher', 'shift', 'room', 'lessons'])
+            $schedules = Schedule::with(['courseSemester', 'classroom', 'teacher', 'shift', 'room', 'lessons','user'])
                 ->where('teacher_id', $teacher->id)->get();
             if ($schedules->isEmpty()) {
                 return response()->json(['message' => 'Không tìm thấy lịch dạy cho giảng viên này'], 404);
@@ -51,7 +51,9 @@ class ApiTeacherScheduleController extends Controller
             $data = $schedules->map(function ($schedule) {
                 return [
                     'id' => $schedule->id,
+                    'name'=> $schedule->teacher->user->name,
                     'Subject' => $schedule->subject->name,
+                    'major_code'=> $schedule->major->code,
                     'shift' => $schedule->shift->name,
                     'room' => $schedule->room->name,
                     'link' => $schedule->link ?? "NULL",

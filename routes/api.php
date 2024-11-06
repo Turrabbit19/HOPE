@@ -1,29 +1,30 @@
 <?php
 
-use App\Http\Controllers\Api\Admin\ApiClassroomController;
-use App\Http\Controllers\Api\Admin\ApiCourseController;
-use App\Http\Controllers\Api\Admin\ApiLessonController;
-use App\Http\Controllers\Api\Admin\ApiMajorController;
-use App\Http\Controllers\Api\Admin\ApiNotificationController;
-use App\Http\Controllers\Api\Admin\ApiOfficerController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Auth\ApiAuthController;
 use App\Http\Controllers\Api\Admin\ApiPlanController;
 use App\Http\Controllers\Api\Admin\ApiRoleController;
 use App\Http\Controllers\Api\Admin\ApiRoomController;
-use App\Http\Controllers\Api\Admin\ApiScheduleController;
-use App\Http\Controllers\Api\Admin\ApiSectionController;
-use App\Http\Controllers\Api\Admin\ApiSemesterController;
+use App\Http\Controllers\Api\Admin\ApiMajorController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
+use App\Http\Controllers\Api\Admin\ApiCourseController;
+use App\Http\Controllers\Api\Admin\ApiLessonController;
+use App\Http\Controllers\Api\Admin\ApiOfficerController;
+use App\Http\Controllers\Api\Admin\ApiSectionController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
+use App\Http\Controllers\Api\Admin\ApiScheduleController;
 
-use App\Http\Controllers\Api\Auth\ApiAuthController;
+use App\Http\Controllers\Api\Admin\ApiSemesterController;
 
 use App\Http\Controllers\Api\Student\ApiClientController;
-use App\Http\Controllers\Api\Student\ApiClientNoticeController;
+use App\Http\Controllers\Api\Admin\ApiClassroomController;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Admin\ApiNotificationController;
+use App\Http\Controllers\Api\Student\ApiClientNoticeController;
+use App\Http\Controllers\Api\Teacher\ApiTeacherScheduleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,8 +44,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('login', [ApiAuthController::class, 'login']);
 Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
-
-    Route::middleware(['auth:sanctum', 'role:Quản trị viên'])->prefix('admin')
+// middleware(['auth:sanctum', 'role:Quản trị viên'])->
+    Route::prefix('admin')
         ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
         
@@ -155,4 +156,10 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::get('notifications/read', [ApiClientNoticeController::class, 'getReadNotifications']);
         Route::get('notification/read/{id}', [ApiClientNoticeController::class, 'detailNotification']);
+    });
+
+    Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
+    ->group(function () {
+        Route::get('/teachers/infomation', [ApiTeacherScheduleController::class, 'GetInfoTeacher']);
+        Route::get('/teachers/schedule', [ApiTeacherScheduleController::class, 'TeachingSchedule']);
     });

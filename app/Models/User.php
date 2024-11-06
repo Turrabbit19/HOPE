@@ -63,4 +63,9 @@ class User extends Authenticatable
 
         return $this->role && $this->role->name === $roleName;
     }
+
+    public function teacher()
+{
+    return $this->hasOne(Teacher::class, 'user_id');
+}
 }

@@ -197,10 +197,6 @@ class ApiScheduleController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'major_id' => 'required|exists:majors,id',
-            'subject_id' => 'required|exists:subjects,id',
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
             'classrooms.*.teacher_id' => 'required|exists:teachers,id',
@@ -226,10 +222,6 @@ class ApiScheduleController extends Controller
                 $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $data['subject_id']);
     
                 $scheduleData = [
-                    'course_id' => $data['course_id'],
-                    'semester_id' => $data['semester_id'],
-                    'major_id' => $data['major_id'],
-                    'subject_id' => $data['subject_id'],
                     'classroom_id' => $classroom['id'],
                     'teacher_id' => $classroom['teacher_id'],
                     'shift_id' => $classroom['shift_id'],

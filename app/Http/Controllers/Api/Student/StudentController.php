@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\CourseSemester;
+use App\Models\PlanSubject;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\StudentClassroom;
@@ -51,7 +53,8 @@ class StudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
-    public function getSchedules()
+
+    public function getSubjects() 
     {
         $user = Auth::user();
 
@@ -59,36 +62,55 @@ class StudentController extends Controller
             $student = Student::where('user_id', $user->id)->firstOrFail();
 
             $courseId = $student->course_id;
-            $majorId = $student->major_id;
+            $majorId = $student->major_id; 
 
-            $courseSemester = CourseSemester::where('course_id', $courseId)
-            ->where('order', $student->current_semester)
-            ->firstOrFail();
+            $planId = Course::where('id', $courseId)->value('plan_id');
 
-            $semesterId = $courseSemester->semester_id;
+            $subjects = PlanSubject::where('plan_id', $planId)->where('semester_order', $student->current_semester)
+                        ->join('major_subjects', 'plan_subjects.major_subject_id', '=', 'major_subjects.id')
+                        ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
+                        ->where('major_subjects.major_id', $majorId)
+                        ->select('subjects.code', 'subjects.name', 'subjects.credit')
+                        ->get();
 
-            $schedules = Schedule::where('course_id', $courseId)
-            ->where('semester_id', $semesterId)->where('major_id', $majorId)
+            $listSubjects = $subjects->map(function ($ls) {
+                return [
+                    'code' => $ls->code,
+                    'name' => $ls->name,
+                    'credit' => $ls->credit,
+                ];
+            });
+
+            return response()->json(['data' => $listSubjects], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getClassrooms(string $subjectid, string $shiftId)
+    {
+        try {
+            $schedules = Schedule::where('subject_id', $subjectid)
+            ->where('shift_id', $shiftId)
+            ->where('end_date', '>=', Carbon::now())
             ->get();
 
             $data = $schedules->map(function ($schedule) {
                 return [
                     'id' => $schedule->id,
-                    'course_name' => $schedule->course->name,
-                    'semester_name' => $schedule->semester->name,
-                    'major_name' => $schedule->major->name,
-                    'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teacher->name,
-                    'shift_name' => $schedule->shift->name,
-                    'room_name' => $schedule->room->name,
+                    'classroom' => $schedule->classroom->code,
+                    'room' => $schedule->room->name ? $schedule->room->name : "NULL",
                     'link' => $schedule->link ? $schedule->link : "NULL",
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
                     'days_of_week' => $schedule->days->map(function($day) {
                         return [
                             "Thứ" => $day->id,
                         ];
                     }),
+                    'students' => $schedule->classroom->students->count(),
+                    'max_students' => $schedule->classroom->max_students, 
                 ];
             });
 

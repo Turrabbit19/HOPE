@@ -142,7 +142,8 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
     Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
         Route::get('/', [StudentController::class, 'getStudentDetail']);
-        Route::get('schedules', [StudentController::class, 'getSchedules']);
+        Route::get('subjects', [StudentController::class, 'getSubjects']);
+        Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
         Route::get('timetable', [StudentController::class, 'getTimetable']);

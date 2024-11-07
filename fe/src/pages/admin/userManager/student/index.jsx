@@ -16,6 +16,7 @@ import { createStudent, deleteStudent, deleteUser, getStudent } from "../../../.
 import { useRef } from "react";
 import * as XLSX from 'xlsx';
 import {saveAs} from 'file-saver'
+import axios from "axios";
  
 const { Search } = Input;
 
@@ -70,25 +71,25 @@ const StudentManager = () => {
   }, [dataImport])
 
   async function handleAddUser(){
-    let textError = 'Dữ liệu các hàng trên đã được thêm. Xảy ra lỗi ở dòng'
-    setLoading(true);
-    for (let i = 0; i < dataImport.length; i++){
-      let body = {...dataImport[i],  student_current_semester: 1, student_status: 1, avatar: null, role_id: 3}
-      try {
-        // Chờ cho createStudent hoàn tất trước khi tiếp tục
-        await createStudent(body);
-        console.log(`Student ${i + 1} created successfully.`);
-      } catch (error) {
-        // setLoading(false)
-        textError = textError + ' '  + (i+ 1)
-        message.error(textError)
-        setReload(!reload)        
-        // message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
-        return
-      }
-    }
-    message.success('Dữ liệu đã được import vào.')
-    setReload(!reload)
+    // let textError = 'Dữ liệu các hàng trên đã được thêm. Xảy ra lỗi ở dòng'
+    // setLoading(true);
+    // for (let i = 0; i < dataImport.length; i++){
+    //   let body = {...dataImport[i],  student_current_semester: 1, student_status: 1, avatar: null, role_id: 3}
+    //   try {
+    //     // Chờ cho createStudent hoàn tất trước khi tiếp tục
+    //     await createStudent(body);
+    //     console.log(`Student ${i + 1} created successfully.`);
+    //   } catch (error) {
+    //     // setLoading(false)
+    //     textError = textError + ' '  + (i+ 1)
+    //     message.error(textError)
+    //     setReload(!reload)        
+    //     // message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+    //     return
+    //   }
+    // }
+    // message.success('Dữ liệu đã được import vào.')
+    // setReload(!reload)
    
   }
 
@@ -186,7 +187,7 @@ const StudentManager = () => {
       title: "Ngành học",
       dataIndex: "major_name",
       key: "8",
-      width: 600
+      width: 1000
     },
     // {
     //   title: "Môn học",
@@ -197,7 +198,7 @@ const StudentManager = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "8",
-      width: 500
+      width: 400
     },
     {
       title: "Action",  
@@ -272,25 +273,27 @@ const StudentManager = () => {
     });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    console.log(file);
-    
-    if (file) {
-      const reader = new FileReader();
-   
-      reader.onload = (evt) => {
-       
-        const binaryStr = evt.target.result;
-        const workbook = XLSX.read(binaryStr, { type: 'binary' });
-        // Lấy dữ liệu từ sheet đầu tiên
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-        // setData(jsonData);
-        setDataImport(jsonData)
-        
-      };
-      reader.readAsBinaryString(file);
+    // console.log(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Make POST request to the server
+      const response = await axios.post('http://localhost:8000/api/admin/import-student', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if(response.status === 200) {
+        setReload(true)
+        message.success('Import thành công')
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file');
     }
   };
 
@@ -344,6 +347,29 @@ const StudentManager = () => {
     saveAs(blob, 'student.xlsx');
 };
 
+const downloadExcel = async () => {
+  try {
+    const response = await fetch("http://localhost:8000/api/admin/export-student", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    // Get the file as a blob
+    const blob = await response.blob();
+
+    // Save the file
+    saveAs(blob, "downloaded_student.xlsx");
+  } catch (error) {
+    console.error("Failed to download file:", error);
+  }
+};
+
   return (
     <>
       <div>
@@ -353,7 +379,7 @@ const StudentManager = () => {
          <Button onClick={handleAdd}>Thêm sinh viên</Button>
          <input type="file" accept=".xlsx, .xls"  ref={fileInputRef} onChange={handleFileChange} style={{display: 'none'}}/>
          <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
-         <Button onClick={handleExport} className="ml-5" type="default">Export</Button>
+         <Button onClick={downloadExcel} className="ml-5" type="default">Export</Button>
          </div>
 
         </div>

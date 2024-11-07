@@ -284,8 +284,8 @@ const AdminManager = () => {
           <div className="flex flex-row">
           <Button onClick={handleAdd}>Thêm quản trị viên</Button>
           <input type="file" accept=".xlsx, .xls"  ref={fileInputRef} onChange={handleFileChange} style={{display: 'none'}}/>
-          <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
-          <Button onClick={handleExport} className="ml-5" type="default">Export</Button>
+          {/* <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
+          <Button onClick={handleExport} className="ml-5" type="default">Export</Button> */}
           </div>
         </div>
         <div className="relative">

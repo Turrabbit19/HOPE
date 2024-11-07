@@ -261,25 +261,27 @@ const TeacherManager = () => {
   })
 
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    console.log(file);
-    
-    if (file) {
-      const reader = new FileReader();
-   
-      reader.onload = (evt) => {
-       
-        const binaryStr = evt.target.result;
-        const workbook = XLSX.read(binaryStr, { type: 'binary' });
-        // Lấy dữ liệu từ sheet đầu tiên
-        const firstSheet = workbook.Sheets[workbook.SheetNames[1]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-        // setData(jsonData);
-        setDataImport(jsonData)
-        
-      };
-      reader.readAsBinaryString(file);
+    // console.log(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Make POST request to the server
+      const response = await axios.post('http://localhost:8000/api/admin/import-teacher', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if(response.status === 200) {
+        setReload(true)
+        message.success('Import thành công')
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file');
     }
   };
   
@@ -307,6 +309,29 @@ const TeacherManager = () => {
     saveAs(blob, 'teacher.xlsx');
 };
 
+const downloadExcel = async () => {
+  try {
+    const response = await fetch("http://localhost:8000/api/admin/export-teacher", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    // Get the file as a blob
+    const blob = await response.blob();
+
+    // Save the file
+    saveAs(blob, "downloaded_teacher.xlsx");
+  } catch (error) {
+    console.error("Failed to download file:", error);
+  }
+};
+
  
   return (
     <>
@@ -318,7 +343,7 @@ const TeacherManager = () => {
         <Button onClick={handleAdd}>Thêm giảng viên</Button>
         <input type="file" accept=".xlsx, .xls"  ref={fileInputRef} onChange={handleFileChange} style={{display: 'none'}}/>
         <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
-        <Button onClick={handleExport} className="ml-5" type="default">Export</Button>
+        <Button onClick={downloadExcel} className="ml-5" type="default">Export</Button>
         </div>
         </div>
         <div className="relative">

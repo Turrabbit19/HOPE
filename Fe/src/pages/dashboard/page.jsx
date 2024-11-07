@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Col, Row, Statistic } from "antd";
 import { UserOutlined, BookOutlined, TeamOutlined } from "@ant-design/icons";
 
-const DashboardPage = () => {
+const OfficerPage = () => {
     return (
         <div style={{ padding: 24, background: "#f0f2f5", minHeight: "100vh" }}>
             <h2>Dashboard</h2>
@@ -39,4 +39,4 @@ const DashboardPage = () => {
     );
 };
 
-export default DashboardPage;
+export default OfficerPage;

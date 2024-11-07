@@ -1,8 +1,9 @@
+// src/components/layout/page.jsx
 import React, { useState } from "react";
 import { Layout } from "antd";
 import Aside from "./aside/page";
 import HeaderComponent from "./header/page";
-import Content from "./content/page";
+import CustomContent from "./content/page";
 
 const MainLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
@@ -28,7 +29,7 @@ const MainLayout = () => {
                     {/* Header có thể đặt thêm nội dung nếu cần */}
                 </HeaderComponent>
                 <Layout>
-                    <Content />
+                    <CustomContent />
                 </Layout>
             </Layout>
         </Layout>

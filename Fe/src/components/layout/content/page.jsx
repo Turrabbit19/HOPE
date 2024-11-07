@@ -1,3 +1,4 @@
+// src/components/layout/content/page.jsx
 import React from "react";
 import { Layout, theme } from "antd";
 import { Outlet } from "react-router-dom";

@@ -16,7 +16,7 @@ const MajorSubject = () => {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await instance.get(`admin/majors/${id}/subjects`);
+        const { data } = await instance.get(`admin/major/${id}/subjects`);
         setsubjects(data.data);
       } catch (error) {
         console.log(error.message);

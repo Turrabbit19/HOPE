@@ -35,15 +35,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
-Route::post('login', [ApiAuthController::class, 'login']);
-Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
+// Route::post('login', [ApiAuthController::class, 'login']);
+// Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
+// Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
-    Route::middleware(['auth:sanctum', 'role:Quản trị viên'])->prefix('admin')
+    Route::
+    // middleware(['auth:sanctum', 'role:Quản trị viên'])->
+    prefix('admin')
         ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
         Route::apiResource('officers', ApiOfficerController::class);
@@ -81,11 +83,12 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
+        Route::get('semester/{semesterId}/courses', [ApiScheduleController::class, 'getCoursesBySemester']);
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
     });
 
-    Route::prefix('student')->group(function () {
-        Route::get('detail/{id}', [ApiClientController::class, 'detail']);
-    });
+    // Route::prefix('student')->group(function () {
+    //     Route::get('detail/{id}', [ApiClientController::class, 'detail']);
+    // });

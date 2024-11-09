@@ -24,8 +24,8 @@ class ApiSemesterController extends Controller
                 return [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($semester->start_date),
+                    'end_date' => Carbon::parse($semester->end_date),
                     'courses' => $semester->orders->map(function ($order) {
                         return [
                             'id' => $order->course->id,
@@ -64,8 +64,8 @@ class ApiSemesterController extends Controller
                 return [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($semester->start_date),
+                    'end_date' => Carbon::parse($semester->end_date),
                     'status' => match($semester->status) {
                         0 => "Chờ diễn ra",
                         1 => "Đang diễn ra",
@@ -84,9 +84,9 @@ class ApiSemesterController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:semesters', 
+            'name' => 'required|string|max:255|unique:semesters',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date', 
+            'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'integer|in:0,1,2'
         ]);
 
@@ -106,7 +106,7 @@ class ApiSemesterController extends Controller
             }
 
             $semester = Semester::create($data);
-            
+
             $activeCourses = Course::where(function ($query) use ($data) {
                 $query->where(function ($query) use ($data) {
                     $query->where('start_date', '<=', $data['end_date'])
@@ -121,11 +121,11 @@ class ApiSemesterController extends Controller
                 $currentMaxOrder = CourseSemester::where('course_id', $course->id)
                     ->max('order');
                 $newOrder = min($currentMaxOrder + 1, $maxOrder);
-            
+
                 return [$course->id => ['order' => $newOrder]];
             });
-            
-            
+
+
             $semester->courses()->syncWithoutDetaching($coursesWithOrder);
 
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
@@ -170,7 +170,7 @@ class ApiSemesterController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255|unique:semesters,name,' . $id,
             'start_date' => 'sometimes|date',
-            'end_date' => 'sometimes|date|after_or_equal:start_date', 
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
             'status' => 'sometimes|integer|in:0,1,2',
             'courses' => 'sometimes|array',
             'courses.*.id' => 'sometimes|exists:courses,id',
@@ -183,7 +183,7 @@ class ApiSemesterController extends Controller
 
         try {
             $semester = Semester::findOrFail($id);
-            
+
             $data = $validator->validated();
             if(isset($data['start_date'])) {
                 if($data['start_date'] >= Carbon::now()) {
@@ -202,7 +202,7 @@ class ApiSemesterController extends Controller
                 $coursesWithOrder = collect($data['courses'])->mapWithKeys(function ($course) {
                     return [$course['id'] => ['order' => $course['order']]];
                 });
-                
+
                 $semester->courses()->sync($coursesWithOrder);
             }
 

@@ -55,8 +55,8 @@ class ApiCourseController extends Controller
                     'id' => $course->id,
                     'name' => $course->name,
                     'plan' => $course->plan->name,
-                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'start_date' => $course->start_date,
+                    'end_date' => $course->end_date,
                     'status' => match($course->status) {
                         "0" => "Chờ diễn ra",
                         "1" => "Đang diễn ra",

@@ -50,6 +50,7 @@ import EditSchedule from "../pages/admin/schedule/edit/page";
 import MajorSubject from "../pages/admin/teaching/subject/page";
 import CourseDetail from "../pages/admin/courses/detail/page";
 import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
+import ScheduleList from "../pages/admin/schedule/list/pages";
 
 const Router = createBrowserRouter([
     {
@@ -152,6 +153,10 @@ const Router = createBrowserRouter([
                 element: (<>
                     <Schedule/>
                 </>)
+            },
+            {
+                path: "list-schedule",
+                element: <ScheduleList />,
             },
             {
                 path: "schedule/add",

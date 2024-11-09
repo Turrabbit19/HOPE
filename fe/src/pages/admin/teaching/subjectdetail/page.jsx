@@ -10,6 +10,7 @@ import {
   message,
   Tabs,
   Spin,
+  notification,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useLocation, useParams } from "react-router-dom";
@@ -33,9 +34,9 @@ const MajorDetailSubject = () => {
   const [currentClassroom, setCurrentClassroom] = useState(null);
   const [lectureCount, setLectureCount] = useState(1);
   const [classroomCount, setClassroomCount] = useState(1);
-    const {subjectName} = useLocation().state;
-
-  
+  const { subjectName } = useLocation().state;
+  const [lectureId, setlectureId] = useState();
+  const [classId, setClassId] = useState();
 
   const [lectureData, setLectureData] = useState([]);
   const [classData, setClassData] = useState([]);
@@ -48,26 +49,58 @@ const MajorDetailSubject = () => {
 
   const fetchLessons = async () => {
     const response = await instance.get(`admin/subject/${subjectId}/lessons`);
-    setLectureData(response.data.data); 
-  }
-
-  const fetchClassroom = async () => {
-    const response = await instance.get(`admin/subject/${subjectId}/classrooms`);
-    setClassData(response.data.data);
-  }
-
-  const confirmDeleteClassroom = (id) => {
-    setClassData((prev) => prev.filter((classroom) => classroom.id !== id));
-    message.success("Đã xóa lớp học thành công!");
+    setLectureData(response.data.data);
   };
 
-  const confirmDeleteLecture = (id) => {
-    setLectureData((prev) => prev.filter((lecture) => lecture.id !== id));
-    message.success("Đã xóa bài giảng thành công!");
+  const fetchClassroom = async () => {
+    const response = await instance.get(
+      `admin/subject/${subjectId}/classrooms`
+    );
+    setClassData(response.data.data);
+  };
+
+  const confirmDeleteClassroom = async (id) => {
+    try {
+      await instance.delete(`admin/classrooms/${id}`);
+
+      notification.success({
+        message: "Xóa lớp học thành công",
+      });
+      setClassData((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Error deleting classrooms:", error);
+
+      notification.error({
+        message: "Xóa lớp học thất bại",
+        description:
+          error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.",
+      });
+    }
+  };
+
+  const confirmDeleteLecture = async (id) => {
+    try {
+      await instance.delete(`admin/lessons/${id}`);
+
+      notification.success({
+        message: "Xóa bài giảng thành công",
+      });
+      setLectureData((prev) => prev.filter((lecture) => lecture.id !== id));
+    } catch (error) {
+      console.error("Error deleting lecture:", error);
+
+      notification.error({
+        message: "Xóa bài giảng thất bại",
+        description:
+          error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.",
+      });
+    }
   };
 
   // Hiển thị modal thêm/sửa bài giảng
   const showLectureModal = (lecture = null) => {
+    debugger;
+    setlectureId(lecture.id);
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -83,6 +116,7 @@ const MajorDetailSubject = () => {
     setIsClassroomModalVisible(true);
     if (classroom) {
       setClassroomCount(1);
+      setClassId(classroom.id);
     }
   };
 
@@ -100,62 +134,94 @@ const MajorDetailSubject = () => {
     setClassroomCount(1);
   };
 
-  // Hàm thêm nhiều bài giảng
-  const handleAddLectures = (values) => {
+  const handleAddLectures = async (values) => {
     const newLectures = values.lectures.map((lecture, index) => ({
-      id: Date.now() + index,
       name: lecture.name,
       description: lecture.description,
     }));
-    console.log(values);
+    console.log(newLectures);
+    try {
+      const response = await instance.post(
+        `admin/subject/${subjectId}/lessons/add`,
+        newLectures
+      );
+
+      setLectureData((prev) => [...prev, ...newLectures]);
+      message.success("Thêm bài giảng thành công!");
+      handleLectureModalCancel();
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi thêm bài giảng!");
+    }
   };
 
-  // Hàm sửa một bài giảng
-  const handleEditLecture = (values) => {
-    setLectureData((prev) =>
-      prev.map((lecture) =>
-        lecture.id === currentLecture.id
-          ? {
-              ...lecture,
-              name: values.name,
-              description: values.description,
-            }
-          : lecture
-      )
-    );
-    message.success("Cập nhật bài giảng thành công!");
-    handleLectureModalCancel();
+  const handleEditLecture = async (values) => {
+    try {
+      await instance.put(`admin/lessons/${lectureId}`, values);
+      notification.success({
+        message: "Cập nhật bài giảng thành công",
+      });
+      setLectureData((prev) =>
+        prev.map((lecture) =>
+          lecture.id === lectureId ? { ...lecture, ...values } : lecture
+        )
+      );
+      handleLectureModalCancel();
+    } catch (error) {
+      console.error("Error deleting lecture:", error);
+
+      notification.error({
+        message: "Cập nhật giảng thất bại",
+        description:
+          error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.",
+      });
+    }
   };
 
   // Hàm thêm nhiều lớp học
-  const handleAddClassrooms = (values) => {
-    const newClassrooms = values.classrooms.map((classroom, index) => ({
-      id: Date.now() + index,
-      name: classroom.name,
-      students: classroom.students,
-      status: "Đang học",
-      createdDate: new Date().toISOString().split("T")[0],
+  const handleAddClassrooms = async (values) => {
+  const newClassrooms = values.classrooms.map((item, index) => ({
+      code: item.name,
+      max_students: item.students,
     }));
-    setClassData((prev) => [...prev, ...newClassrooms]);
-    message.success("Thêm lớp học thành công!");
+    console.log(values);
+    try {
+      const response = await instance.post(
+        `admin/subject/${subjectId}/classrooms/add`,
+        newClassrooms
+      );
+
+      setClassData((prev) => [...prev, newClassrooms]);
+      message.success("Thêm lớp học thành công!");
+      handleLectureModalCancel();
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi thêm lớp học!");
+    }
     handleClassroomModalCancel();
   };
 
   // Hàm sửa một lớp học
-  const handleEditClassroom = (values) => {
-    setClassData((prev) =>
-      prev.map((classroom) =>
-        classroom.id === currentClassroom.id
-          ? {
-              ...classroom,
-              name: values.name,
-              students: values.students,
-            }
-          : classroom
-      )
-    );
-    message.success("Cập nhật lớp học thành công!");
-    handleClassroomModalCancel();
+  const handleEditClassroom = async (values) => {
+    console.log(values);
+    try {
+      // await instance.put(`admin/classrooms/${classId}`, values);
+      notification.success({
+        message: "Cập nhật lớp học thành công",
+      });
+      setClassData((prev) =>
+        prev.map((item) =>
+          item.id === classId ? { ...item, ...values } : item
+        )
+      );
+      handleClassroomModalCancel();
+    } catch (error) {
+      console.error("Error deleting classrooms:", error);
+
+      notification.error({
+        message: "Cập nhật lớp học thất bại",
+        description:
+          error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.",
+      });
+    }
   };
 
   // Nút hành động cho bài giảng
@@ -269,7 +335,6 @@ const MajorDetailSubject = () => {
       </div>
     );
   }
-
 
   return (
     <div className="p-6">

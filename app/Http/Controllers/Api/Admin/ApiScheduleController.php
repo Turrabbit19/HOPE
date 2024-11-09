@@ -29,7 +29,7 @@ class ApiScheduleController extends Controller
                 ];
             });
 
-            return response()->json(['SemesterOrder' => $data], 200);
+            return response()->json(['courses' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy kỳ học với ID: ' . $semesterId], 404);
         } catch (\Exception $e) {

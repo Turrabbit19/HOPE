@@ -216,9 +216,28 @@ class ApiScheduleController extends Controller
         }
         return $scheduleDates;
     }
+    private function hasConflict($classroom)
+    {
+        return Schedule::where('classroom_id', $classroom['id'])
+            ->where('shift_id', $classroom['shift_id'])
+            ->where(function ($query) use ($classroom) {
+                $query->whereBetween('start_date', [$classroom['start_date'], $classroom['end_date']])
+                    ->orWhereBetween('end_date', [$classroom['start_date'], $classroom['end_date']]);
+            })
+            ->whereHas('days', function ($query) use ($classroom) {
+                $query->whereIn('days.id', $classroom['days_of_week']);
+            })
+            ->exists();
+    }
+    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'course_id' => 'required|exists:courses,id',
+            'semester_id' => 'required|exists:semesters,id',
+            'major_id' => 'required|exists:majors,id',
+            'subject_id' => 'required|exists:subjects,id',
+
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
             'classrooms.*.teacher_id' => 'required|exists:teachers,id',
@@ -243,7 +262,18 @@ class ApiScheduleController extends Controller
             foreach ($data['classrooms'] as $classroom) {
                 $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $data['subject_id']);
     
+                if ($this->hasConflict($classroom)) {
+                    return response()->json([
+                        'error' => "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch."
+                    ], 409);
+                }
+    
                 $scheduleData = [
+                    'course_id' => $data['course_id'],
+                    'semester_id' => $data['semester_id'],
+                    'major_id' => $data['major_id'],
+                    'subject_id' => $data['subject_id'],
+
                     'classroom_id' => $classroom['id'],
                     'teacher_id' => $classroom['teacher_id'],
                     'shift_id' => $classroom['shift_id'],
@@ -286,7 +316,7 @@ class ApiScheduleController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function show(string $id)
     {

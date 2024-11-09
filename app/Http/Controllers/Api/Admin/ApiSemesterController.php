@@ -89,45 +89,42 @@ class ApiSemesterController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date', 
             'status' => 'integer|in:0,1,2'
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-
+    
         try {
             $data = $validator->validated();
-            if($data['start_date'] >= Carbon::now()) {
-
-            }
-            elseif($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
-                $data['status'] = "1";
+    
+            if ($data['start_date'] > Carbon::now()) {
+                
+            } elseif ($data['start_date'] <= Carbon::now() && Carbon::now() <= $data['end_date']) {
+                $data['status'] = 1; 
             } else {
-                $data['status'] = "2";
+                $data['status'] = 2; 
             }
-
+    
             $semester = Semester::create($data);
-            
+    
             $activeCourses = Course::where(function ($query) use ($data) {
-                $query->where(function ($query) use ($data) {
-                    $query->where('start_date', '<=', $data['end_date'])
-                          ->where('end_date', '>=', $data['start_date']);
-                });
+                $query->where('start_date', '<=', $data['end_date'])
+                      ->where('end_date', '>=', $data['start_date']);
             })->get();
-
-
-            $maxOrder = $activeCourses->first()->plan->semester_total;
-
-            $coursesWithOrder = $activeCourses->mapWithKeys(function ($course) use ($maxOrder) {
-                $currentMaxOrder = CourseSemester::where('course_id', $course->id)
-                    ->max('order');
-                $newOrder = min($currentMaxOrder + 1, $maxOrder);
-            
-                return [$course->id => ['order' => $newOrder]];
-            });
-            
-            
-            $semester->courses()->syncWithoutDetaching($coursesWithOrder);
-
+    
+            if ($activeCourses->isNotEmpty()) {
+                $maxOrder = $activeCourses->first()->plan->semester_total;
+    
+                $coursesWithOrder = $activeCourses->mapWithKeys(function ($course) use ($maxOrder) {
+                    $currentMaxOrder = CourseSemester::where('course_id', $course->id)
+                                    ->max('order');
+                    $newOrder = min($currentMaxOrder + 1, $maxOrder);
+                    return [$course->id => ['order' => $newOrder]];
+                });
+    
+                $semester->courses()->syncWithoutDetaching($coursesWithOrder);
+            }
+    
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);

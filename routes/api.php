@@ -90,6 +90,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
+        Route::get('semester/{semesterId}/courses', [ApiScheduleController::class, 'getCoursesBySemester']);
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);

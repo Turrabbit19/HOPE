@@ -121,6 +121,7 @@ class StudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
+    
     public function registerSchedule($id) 
     {
         $user = Auth::user();

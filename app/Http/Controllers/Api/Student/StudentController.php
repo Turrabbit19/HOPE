@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\CourseSemester;
 use App\Models\PlanSubject;
 use App\Models\Schedule;
+use App\Models\Shift;
 use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentSchedule;
@@ -70,22 +71,43 @@ class StudentController extends Controller
                         ->join('major_subjects', 'plan_subjects.major_subject_id', '=', 'major_subjects.id')
                         ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
                         ->where('major_subjects.major_id', $majorId)
-                        ->select('subjects.code', 'subjects.name', 'subjects.credit')
+                        ->select('subjects.id', 'subjects.code', 'subjects.name', 'subjects.credit')
                         ->get();
 
             $listSubjects = $subjects->map(function ($ls) {
                 return [
+                    'id' => $ls->id,
                     'code' => $ls->code,
                     'name' => $ls->name,
                     'credit' => $ls->credit,
                 ];
             });
 
-            return response()->json(['data' => $listSubjects], 200);
+            return response()->json(['subjects' => $listSubjects], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getShifts() 
+    {
+        try {
+            $shifts = Shift::all();
+
+            $listShifts = $shifts->map(function ($shift) {
+                return [
+                    'id' => $shift->id,
+                    'name' => $shift->name,
+                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'), 
+                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),     
+                ];
+            });
+
+            return response()->json(['shifts' => $listShifts], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Shifts', 'message' => $e->getMessage()], 500);
         }
     }
 

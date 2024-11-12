@@ -230,14 +230,9 @@ class ApiScheduleController extends Controller
             ->exists();
     }
     
-    public function store(Request $request)
+    public function addSchedules(Request $request, string $subjectId, $courseId, $semesterId, $majorId)
     {
         $validator = Validator::make($request->all(), [
-            'course_id' => 'required|exists:courses,id',
-            'semester_id' => 'required|exists:semesters,id',
-            'major_id' => 'required|exists:majors,id',
-            'subject_id' => 'required|exists:subjects,id',
-
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
             'classrooms.*.teacher_id' => 'required|exists:teachers,id',
@@ -260,7 +255,13 @@ class ApiScheduleController extends Controller
             $scheduleResponses = [];
     
             foreach ($data['classrooms'] as $classroom) {
-                $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $data['subject_id']);
+                if (Carbon::parse($classroom['end_date'])->lt(Carbon::parse($classroom['start_date']))) {
+                    return response()->json([
+                        'error' => "Ngày kết thúc của lớp học {$classroom['id']} không được trước ngày bắt đầu."
+                    ], 400);
+                }
+    
+                $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $subjectId);
     
                 if ($this->hasConflict($classroom)) {
                     return response()->json([
@@ -269,10 +270,10 @@ class ApiScheduleController extends Controller
                 }
     
                 $scheduleData = [
-                    'course_id' => $data['course_id'],
-                    'semester_id' => $data['semester_id'],
-                    'major_id' => $data['major_id'],
-                    'subject_id' => $data['subject_id'],
+                    'course_id' => $courseId,
+                    'semester_id' => $semesterId,
+                    'major_id' => $majorId,
+                    'subject_id' => $subjectId,  
 
                     'classroom_id' => $classroom['id'],
                     'teacher_id' => $classroom['teacher_id'],
@@ -281,7 +282,6 @@ class ApiScheduleController extends Controller
                     'link' => $classroom['link'],
                     'start_date' => $classroom['start_date'],
                     'end_date' => $classroom['end_date'],
-                    'status' => $request->input('status', true)
                 ];
     
                 $schedule = Schedule::create($scheduleData);
@@ -293,9 +293,6 @@ class ApiScheduleController extends Controller
     
                 $scheduleResponses[] = [
                     'data' => [
-                        'course_name' => $schedule->course->name,
-                        'semester_name' => $schedule->semester->name,
-                        'major_name' => $schedule->major->name,
                         'subject_name' => $schedule->subject->name,
                         'classroom_id' => $schedule->classroom_id,
                         'teacher_name' => $schedule->teacher->user->name,
@@ -316,8 +313,8 @@ class ApiScheduleController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-    }    
-
+    }
+      
     public function show(string $id)
     {
         try {

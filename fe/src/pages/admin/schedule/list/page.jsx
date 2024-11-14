@@ -32,7 +32,75 @@ const semestersData = [
                                         teacher: "Nguyễn Văn A",
                                         schedule: [
                                             {
-                                                day: "Thứ 2",
+                                                day: "2",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            // {
+                                            //     day: "Thứ 3",
+                                            //     time: "7:30 - 9:30",
+                                            //     status: "Hết chỗ",
+                                            // },
+                                            {
+                                                day: "4",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            // {
+                                            //     day: "Thứ 5",
+                                            //     time: "7:30 - 9:30",
+                                            //     status: "Còn chỗ",
+                                            // },
+                                            {
+                                                day: "6",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            // {
+                                            //     day: "Thứ 7",
+                                            //     time: "7:30 - 9:30",
+                                            //     status: "Còn chỗ",
+                                            // },
+                                        ],
+                                    },
+                                    {
+                                        id: "2",
+                                        teacher: "Nguyễn Văn B",
+                                        schedule: [
+                                            {
+                                                day: "3",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            {
+                                                day: "5",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            {
+                                                day: "7",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                        ],
+                                    },
+
+                                    {
+                                        id: "3",
+                                        teacher: "Nguyễn Văn B",
+                                        schedule: [
+                                            {
+                                                day: "3",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            {
+                                                day: "4",
+                                                time: "7:30 - 9:30",
+                                                status: "Còn chỗ",
+                                            },
+                                            {
+                                                day: "5",
                                                 time: "7:30 - 9:30",
                                                 status: "Còn chỗ",
                                             },
@@ -51,7 +119,7 @@ const semestersData = [
                                         teacher: "Trần Thị B",
                                         schedule: [
                                             {
-                                                day: "Thứ 3",
+                                                day: "3",
                                                 time: "9:45 - 11:45",
                                                 status: "Hết chỗ",
                                             },
@@ -77,7 +145,7 @@ const semestersData = [
                                         teacher: "Lê Văn C",
                                         schedule: [
                                             {
-                                                day: "Thứ 4",
+                                                day: " 4",
                                                 time: "13:00 - 15:00",
                                                 status: "Còn chỗ",
                                             },
@@ -96,7 +164,7 @@ const semestersData = [
                                         teacher: "Phạm Thị D",
                                         schedule: [
                                             {
-                                                day: "Thứ 5",
+                                                day: " 5",
                                                 time: "15:15 - 17:15",
                                                 status: "Còn chỗ",
                                             },
@@ -128,7 +196,7 @@ const semestersData = [
                                         teacher: "Lê Văn C",
                                         schedule: [
                                             {
-                                                day: "Thứ 4",
+                                                day: " 4",
                                                 time: "13:00 - 15:00",
                                                 status: "Còn chỗ",
                                             },
@@ -147,7 +215,7 @@ const semestersData = [
                                         teacher: "Phạm Thị D",
                                         schedule: [
                                             {
-                                                day: "Thứ 5",
+                                                day: " 5",
                                                 time: "15:15 - 17:15",
                                                 status: "Còn chỗ",
                                             },
@@ -190,7 +258,7 @@ const semestersData = [
                                         teacher: "Nguyễn Văn E",
                                         schedule: [
                                             {
-                                                day: "Thứ 2",
+                                                day: " 2",
                                                 time: "7:30 - 9:30",
                                                 status: "Còn chỗ",
                                             },
@@ -209,7 +277,7 @@ const semestersData = [
                                         teacher: "Trần Thị F",
                                         schedule: [
                                             {
-                                                day: "Thứ 3",
+                                                day: " 3",
                                                 time: "9:45 - 11:45",
                                                 status: "Hết chỗ",
                                             },
@@ -252,7 +320,7 @@ const semestersData = [
                                         teacher: "Lê Văn G",
                                         schedule: [
                                             {
-                                                day: "Thứ 4",
+                                                day: " 4",
                                                 time: "13:00 - 15:00",
                                                 status: "Còn chỗ",
                                             },
@@ -271,7 +339,7 @@ const semestersData = [
                                         teacher: "Phạm Thị H",
                                         schedule: [
                                             {
-                                                day: "Thứ 5",
+                                                day: " 5",
                                                 time: "15:15 - 17:15",
                                                 status: "Còn chỗ",
                                             },
@@ -314,7 +382,7 @@ const semestersData = [
                                         teacher: "Nguyễn Văn I",
                                         schedule: [
                                             {
-                                                day: "Thứ 6",
+                                                day: " 6",
                                                 time: "7:30 - 9:30",
                                                 status: "Hết chỗ",
                                             },
@@ -333,7 +401,7 @@ const semestersData = [
                                         teacher: "Trần Thị K",
                                         schedule: [
                                             {
-                                                day: "Thứ 2",
+                                                day: " 2",
                                                 time: "9:45 - 11:45",
                                                 status: "Còn chỗ",
                                             },
@@ -376,7 +444,7 @@ const semestersData = [
                                         teacher: "Lê Văn M",
                                         schedule: [
                                             {
-                                                day: "Thứ 3",
+                                                day: " 3",
                                                 time: "13:00 - 15:00",
                                                 status: "Còn chỗ",
                                             },
@@ -395,7 +463,7 @@ const semestersData = [
                                         teacher: "Phạm Thị N",
                                         schedule: [
                                             {
-                                                day: "Thứ 4",
+                                                day: " 4",
                                                 time: "15:15 - 17:15",
                                                 status: "Hết chỗ",
                                             },
@@ -438,7 +506,7 @@ const semestersData = [
                                         teacher: "Nguyễn Văn O",
                                         schedule: [
                                             {
-                                                day: "Thứ 5",
+                                                day: " 5",
                                                 time: "7:30 - 9:30",
                                                 status: "Còn chỗ",
                                             },
@@ -457,7 +525,7 @@ const semestersData = [
                                         teacher: "Trần Thị P",
                                         schedule: [
                                             {
-                                                day: "Thứ 6",
+                                                day: " 6",
                                                 time: "9:45 - 11:45",
                                                 status: "Hết chỗ",
                                             },
@@ -500,7 +568,7 @@ const semestersData = [
                                         teacher: "Lê Văn Q",
                                         schedule: [
                                             {
-                                                day: "Thứ 2",
+                                                day: " 2",
                                                 time: "13:00 - 15:00",
                                                 status: "Còn chỗ",
                                             },
@@ -678,7 +746,7 @@ const ScheduleList = () => {
                                                                 {/* Subjects within the Major */}
                                                                 {expandedMajor ===
                                                                     major.id && (
-                                                                    <div className="mt-4 space-y-4">
+                                                                    <div className="mt-4  space-y-4">
                                                                         {major.subjects.map(
                                                                             (
                                                                                 subject
@@ -726,7 +794,7 @@ const ScheduleList = () => {
                                                                                     {/* Classes within the Subject */}
                                                                                     {selectedSubject ===
                                                                                         subject.id && (
-                                                                                        <div className="mt-4 space-y-4">
+                                                                                        <div className="mt-6 grid grid-cols-2 gap-4">
                                                                                             {subject
                                                                                                 .classes
                                                                                                 .length ===
@@ -755,19 +823,32 @@ const ScheduleList = () => {
                                                                                                                 }
                                                                                                                 className="p-6 border rounded-lg bg-white shadow-md"
                                                                                                             >
-                                                                                                                <p className="font-semibold text-xl text-gray-700">
-                                                                                                                    Lớp:{" "}
-                                                                                                                    {
-                                                                                                                        classItem.id
-                                                                                                                    }{" "}
-                                                                                                                    -
-                                                                                                                    Giảng
-                                                                                                                    viên:{" "}
-                                                                                                                    {
-                                                                                                                        classItem.teacher
-                                                                                                                    }
-                                                                                                                </p>
-                                                                                                                <div className="flex flex-wrap mt-4">
+                                                                                                                <div className="flex px-6 font-semibold text-xl text-gray-700">
+                                                                                                                    <p>
+                                                                                                                        Lớp:{" "}
+                                                                                                                        {
+                                                                                                                            classItem.id
+                                                                                                                        }{" "}
+                                                                                                                        -{" "}
+                                                                                                                    </p>
+
+                                                                                                                    <div>
+                                                                                                                        <p>
+                                                                                                                            {" Thứ " +
+                                                                                                                                classItem.schedule
+                                                                                                                                    .map(
+                                                                                                                                        (
+                                                                                                                                            sch
+                                                                                                                                        ) =>
+                                                                                                                                            sch.day
+                                                                                                                                    )
+                                                                                                                                    .join(
+                                                                                                                                        " , "
+                                                                                                                                    )}
+                                                                                                                        </p>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div className="flex flex-wrap mt-2">
                                                                                                                     {classItem.schedule.map(
                                                                                                                         (
                                                                                                                             sch,
@@ -790,10 +871,9 @@ const ScheduleList = () => {
                                                                                                                                 }`}
                                                                                                                             >
                                                                                                                                 <p className="text-base text-gray-700">
-                                                                                                                                    {
-                                                                                                                                        sch.day
-                                                                                                                                    }{" "}
-                                                                                                                                    -{" "}
+                                                                                                                                    Thời
+                                                                                                                                    gian
+                                                                                                                                    :{" "}
                                                                                                                                     {
                                                                                                                                         sch.time
                                                                                                                                     }
@@ -817,7 +897,7 @@ const ScheduleList = () => {
                                                                                                             </div>
                                                                                                         )
                                                                                                     )}
-                                                                                                    <div className="flex justify-end mt-4">
+                                                                                                    <div className="flex justify-end items-end mt-4">
                                                                                                         <Button type="primary">
                                                                                                             <Link
                                                                                                                 to={`add`}

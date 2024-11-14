@@ -10,6 +10,7 @@ import {
     Space,
     Pagination,
     message,
+    Checkbox,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -22,7 +23,8 @@ const Teach = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [form] = Form.useForm();
-    const itemsPerPage = 6; // Giới hạn 6 mục mỗi trang
+    const [isMajorSelected, setIsMajorSelected] = useState(false); // State for checkbox
+    const itemsPerPage = 6; // Limit to 6 items per page
 
     useEffect(() => {
         const fetchMajors = async () => {
@@ -86,11 +88,12 @@ const Teach = () => {
 
     const handleSearch = (value) => {
         setSearchTerm(value.toLowerCase());
+        setCurrentPage(1);
     };
 
     const filteredMajors = majors
         .filter((major) => major.name.toLowerCase().includes(searchTerm))
-        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage); // Phân trang
+        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage); // Pagination
 
     const showEditModal = (major) => {
         setEditingMajor(major);
@@ -99,46 +102,57 @@ const Teach = () => {
             code: major.code,
             status: major.status,
             description: major.description,
+            isMajor: major.isMajor || false,
+            selectedMajor: major.selectedMajor || null,
         });
+        setIsMajorSelected(major.isMajor || false);
         setIsEditModalVisible(true);
     };
 
     const showAddModal = () => {
         setEditingMajor(null);
         form.resetFields();
+        setIsMajorSelected(false);
         setIsAddModalVisible(true);
     };
 
     const handleModalOk = async () => {
-        const values = await form.validateFields();
-        if (editingMajor) {
-            setMajors(
-                majors.map((major) =>
-                    major.id === editingMajor.id
-                        ? { ...major, ...values }
-                        : major
-                )
-            );
-        } else {
-            setMajors([...majors, { id: majors.length + 1, ...values }]);
+        try {
+            const values = await form.validateFields();
+            if (editingMajor) {
+                setMajors(
+                    majors.map((major) =>
+                        major.id === editingMajor.id
+                            ? { ...major, ...values }
+                            : major
+                    )
+                );
+                message.success("Cập nhật chuyên ngành thành công!");
+            } else {
+                setMajors([...majors, { id: majors.length + 1, ...values }]);
+                message.success("Thêm mới chuyên ngành thành công!");
+            }
+            handleModalCancel();
+        } catch (errorInfo) {
+            console.log("Validate Failed:", errorInfo);
         }
-        handleModalCancel();
     };
 
     const handleModalCancel = () => {
         setIsEditModalVisible(false);
         setIsAddModalVisible(false);
+        form.resetFields();
+        setIsMajorSelected(false);
     };
 
     const confirmDelete = (id) => {
         setMajors(majors.filter((major) => major.id !== id));
-        message.success("Xóa thành công!");
+        message.success("Xóa chuyên ngành thành công!");
     };
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
     };
-
     return (
         <div className="row row-cols-2 g-3">
             <div className="col-12">
@@ -307,105 +321,145 @@ const Teach = () => {
                 onCancel={handleModalCancel}
                 footer={null}
                 centered
-                width={600}
+                width={800}
             >
                 <Form
                     form={form}
                     layout="vertical"
                     onFinish={handleModalOk}
-                    style={{ padding: "20px" }}
                     autoComplete="off"
                     name="basic"
-                    labelCol={{ span: 8 }}
-                    wrapperCol={{ span: 26 }}
                     initialValues={{ remember: true }}
                 >
-                    <div className="pb-6  teaching__add   ">
-                        <div className="col">
-                            <div className="teaching_add-form-left ">
-                                <h1 className="text-[#1167B4] text-[20px] mt-4 font-semibold">
-                                    Tổng quan
-                                </h1>
+                    {/* Form Content */}
+                    <div style={{ display: "flex", gap: "20px" }}>
+                        {/* Column 1 */}
+                        <div style={{ flex: 1 }}>
+                            <Form.Item
+                                name="code"
+                                label="Mã chuyên ngành"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng điền vào trường này",
+                                    },
+                                    {
+                                        min: 4,
+                                        message:
+                                            "Mã chuyên ngành phải có ít nhất 4 ký tự",
+                                    },
+                                ]}
+                            >
+                                <Input placeholder="Code" />
+                            </Form.Item>
 
-                                <div className="teaching__add-form-group mt-14">
-                                    <Form.Item
-                                        name="code"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message:
-                                                    "Vui lòng điền vào trường này",
-                                            },
-                                            {
-                                                min: 4,
-                                                message:
-                                                    "Mã chương trình phải có ít nhất 4 ký tự",
-                                            },
-                                        ]}
-                                    >
-                                        <Input
-                                            placeholder="Code"
-                                            className="input_form"
-                                        />
-                                    </Form.Item>
-                                </div>
-
-                                <div className="teaching__add-form-group mt-14">
-                                    <Form.Item
-                                        name="name"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message:
-                                                    "Vui lòng điền vào trường này",
-                                            },
-                                            {
-                                                min: 6,
-                                                message:
-                                                    "Mã chương trình phải có ít nhất 4 ký tự",
-                                            },
-                                        ]}
-                                    >
-                                        <Input
-                                            placeholder="Tên chuyên ngành"
-                                            className="input_form"
-                                        />
-                                    </Form.Item>
-                                </div>
-                            </div>
+                            <Form.Item
+                                name="name"
+                                label="Tên chuyên ngành"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng điền vào trường này",
+                                    },
+                                    {
+                                        min: 6,
+                                        message:
+                                            "Tên chuyên ngành phải có ít nhất 6 ký tự",
+                                    },
+                                ]}
+                            >
+                                <Input placeholder="Tên chuyên ngành" />
+                            </Form.Item>
                         </div>
 
-                        <div className="col">
-                            <div className="teaching_add-form-left">
-                                <div className="teaching__add-form-group ">
-                                    <Form.Item
-                                        name="description"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message:
-                                                    "Vui lòng điền vào trường này",
-                                            },
-                                        ]}
-                                    >
-                                        <Input.TextArea
-                                            placeholder="Mô tả"
-                                            rows={8}
-                                        />
-                                    </Form.Item>
-                                </div>
-                            </div>
+                        {/* Column 2 */}
+                        <div style={{ flex: 1 }}>
+                            <Form.Item
+                                name="description"
+                                label="Mô tả"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng điền vào trường này",
+                                    },
+                                ]}
+                            >
+                                <Input.TextArea placeholder="Mô tả" rows={5} />
+                            </Form.Item>
                         </div>
                     </div>
 
+                    {/* Checkbox at the bottom right */}
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            marginTop: "20px",
+                        }}
+                    >
+                        <Form.Item
+                            name="isMajor"
+                            valuePropName="checked"
+                            style={{ marginBottom: 0 }}
+                        >
+                            <Checkbox
+                                onChange={(e) =>
+                                    setIsMajorSelected(e.target.checked)
+                                }
+                            >
+                                Đây có phải chuyên ngành không?
+                            </Checkbox>
+                        </Form.Item>
+                    </div>
+
+                    {/* Conditional Select */}
+                    {isMajorSelected && (
+                        <Form.Item
+                            name="selectedMajor"
+                            label="Chọn chuyên ngành"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Vui lòng chọn chuyên ngành",
+                                },
+                            ]}
+                        >
+                            <Select placeholder="Chọn chuyên ngành">
+                                {majors.map((major) => (
+                                    <Select.Option
+                                        key={major.id}
+                                        value={major.id}
+                                    >
+                                        {major.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    )}
+
                     {/* Actions */}
-                    <div className="flex justify-center items-center gap-4 mt-16">
-                        <button type="reset" className="btn btn--cancel">
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: "10px",
+                            marginTop: "30px",
+                        }}
+                    >
+                        <Button
+                            onClick={() => form.resetFields()}
+                            className="btn btn--cancel"
+                        >
                             Reset
-                        </button>
-                        <button className="btn btn--primary">
+                        </Button>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            className="btn btn--primary"
+                        >
                             {editingMajor ? "Lưu" : "Thêm mới"}
-                        </button>
+                        </Button>
                     </div>
                 </Form>
             </Modal>

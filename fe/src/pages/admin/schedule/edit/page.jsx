@@ -150,6 +150,70 @@ const ScheduleEdit = () => {
                             ))}
                         </Select>
                     </Form.Item>
+
+                    <Form.Item
+                        shouldUpdate={(prevValues, currentValues) =>
+                            prevValues.learningMethod !==
+                            currentValues.learningMethod
+                        }
+                    >
+                        {({ getFieldValue }) => {
+                            const learningMethod =
+                                getFieldValue("learningMethod");
+                            if (learningMethod === "online") {
+                                return (
+                                    <Form.Item
+                                        label="Link Học Trực Tuyến"
+                                        name="classLink"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message:
+                                                    "Vui lòng nhập link học!",
+                                            },
+                                        ]}
+                                    >
+                                        <Input
+                                            placeholder="Link phòng học"
+                                            prefix={<LinkOutlined />}
+                                            style={{ width: "100%" }}
+                                        />
+                                    </Form.Item>
+                                );
+                            } else if (learningMethod === "offline") {
+                                return (
+                                    <Form.Item
+                                        label="Phòng Học Trực Tiếp"
+                                        name="classRoom"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message:
+                                                    "Vui lòng chọn phòng học!",
+                                            },
+                                        ]}
+                                    >
+                                        <Select
+                                            showSearch
+                                            placeholder="Chọn phòng học"
+                                            optionFilterProp="children"
+                                        >
+                                            {rooms.map((room) => (
+                                                <Option
+                                                    key={room.value}
+                                                    value={room.value}
+                                                >
+                                                    {room.label}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                );
+                            } else {
+                                return null;
+                            }
+                        }}
+                    </Form.Item>
                 </Card>
             </TabPane>
         ));
@@ -484,7 +548,8 @@ const ScheduleEdit = () => {
                             </Select>
                         </Form.Item>
 
-                        <Form.Item
+                        {/* Các Trường "Ca Học" Tùy Theo Lớp Được Chọn */}
+                        {/* <Form.Item
                             shouldUpdate={(prevValues, currentValues) =>
                                 prevValues.learningMethod !==
                                 currentValues.learningMethod
@@ -546,9 +611,8 @@ const ScheduleEdit = () => {
                                     return null;
                                 }
                             }}
-                        </Form.Item>
+                        </Form.Item> */}
 
-                        {/* Render Fields for Each Selected Class */}
                         {selectedClasses.length > 0 && (
                             <Tabs style={{ marginBottom: 24 }}>
                                 {renderClassSessionFields()}

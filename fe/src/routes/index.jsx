@@ -41,9 +41,6 @@ import SyllabusAdd from "../pages/admin/syllabus/add/page";
 import SyllabusList from "../pages/admin/syllabus/page";
 import SyllabusEdit from "../pages/admin/syllabus/edit/page";
 import ListCourse from "../pages/admin/courses/list/page";
-import AllStudent from "../pages/admin/userManager/all-student";
-import AllUser from "../pages/admin/userManager/all-user";
-import AllTeacher from "../pages/admin/userManager/all-teacher";
 import ScheduleAdd from "../pages/admin/schedule/add/page";
 import Schedule from "../pages/admin/schedule/page";
 import EditSchedule from "../pages/admin/schedule/edit/page";
@@ -52,6 +49,7 @@ import CourseDetail from "../pages/admin/courses/detail/page";
 import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
 import ScheduleList from "../pages/admin/schedule/list/pages";
 import ScheduleDetail from "../pages/admin/schedule/detail/page";
+import ListSections from "../pages/admin/section/list/page";
 
 
 const Router = createBrowserRouter([
@@ -93,10 +91,10 @@ const Router = createBrowserRouter([
                 path: "list-syllabus/edit/:id",
                 element: <SyllabusEdit />,
             },
-            {
-                path: "list-syllabus/detail/:id",
-                element: <SyllabusDetail />,
-            },
+            // {
+            //     path: "list-syllabus/detail/:id",
+            //     element: <SyllabusDetai />,
+            // },
             {
                 path: "list",
                 element: (
@@ -232,10 +230,10 @@ const Router = createBrowserRouter([
                 path: "list-schedule/add",
                 element: <ScheduleAdd />,
             },
-            {
-                path: "list-schedule/details/:id/edit",
-                element: <ScheduleEdit />,
-            },
+            // {
+            //     path: "list-schedule/details/:id/edit",
+            //     element: <ScheduleEdit />,
+            // },
             {
                 path: "list-schedule/details/:id",
                 element: <ScheduleDetail />,
@@ -279,14 +277,14 @@ const Router = createBrowserRouter([
                 ),
             },
 
-            {
-                path: "list-subject/detail/:id",
-                element: (
-                    <>
-                        <DetailSubject />
-                    </>
-                ),
-            },
+            // {
+            //     path: "list-subject/detail/:id",
+            //     element: (
+            //         <>
+            //             <DetailSubject />
+            //         </>
+            //     ),
+            // },
 
             {
                 path: "list-sections",
@@ -392,18 +390,18 @@ const Router = createBrowserRouter([
                 ),
             },
 
-            {
-                path: "list-users",
-                element: <ListUser />,
-            },
-            {
-                path: "list-users/add",
-                element: <UserAdd />,
-            },
-            {
-                path: "list-users/update/:id",
-                element: <UserUpdate />,
-            },
+            // {
+            //     path: "list-users",
+            //     element: <ListUser />,
+            // },
+            // {
+            //     path: "list-users/add",
+            //     element: <UserAdd />,
+            // },
+            // {
+            //     path: "list-users/update/:id",
+            //     element: <UserUpdate />,
+            // },
         ],
     },
     {

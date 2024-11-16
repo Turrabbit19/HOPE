@@ -83,9 +83,16 @@ const HeaderLandingPage = () => {
             
           >
             <div className="flex gap-1 ">
-              <GoogleOAuthProvider>
-                <GoogleLogin theme="outline" size="large" />
+              <GoogleOAuthProvider clientId="727074021020-s9kg9jspljfbvlltd1gdtbh5oeo5lcl9.apps.googleusercontent.com">
+                <GoogleLogin
+                onSuccess={credentialResponse => {
+                  console.log(credentialResponse);
+                }}
+                onError={() => {
+                  console.log('Login Failed');
+                }}></GoogleLogin>
               </GoogleOAuthProvider>
+              
               <Button
                 className="bg-black text-white font-bold"
                 htmlType="submit"

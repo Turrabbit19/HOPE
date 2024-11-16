@@ -80,6 +80,7 @@ use Illuminate\Support\Facades\Route;
         Route::apiResource('notifications', ApiNotificationController::class);
         Route::apiResource('shifts', ApiShiftController::class);
         Route::apiResource('classrooms', ApiClassroomController::class);
+        Route::post('schedules/{courseId}/{semesterId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
 
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
@@ -87,6 +88,7 @@ use Illuminate\Support\Facades\Route;
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('course/{courseId}/semester/{semesterId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::get('schedule/{id}/dates', [ApiScheduleController::class, 'getScheduledDates']);
+        Route::get('schedule/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
     });
 
     // Route::prefix('student')->group(function () {

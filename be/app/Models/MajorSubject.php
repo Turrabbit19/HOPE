@@ -9,6 +9,7 @@ class MajorSubject extends Model
 {
     use HasFactory;
 
+
     protected $fillable = [
         'major_id',
         'subject_id',

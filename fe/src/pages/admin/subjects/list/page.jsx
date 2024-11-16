@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   Pagination,
   Row,
@@ -295,6 +296,7 @@ const ListSubject = () => {
                     style={{ width: 300 }}
                     allowClear
                   />
+
                 </div>
                 <div className="flex justify-between items-center">
                   <button

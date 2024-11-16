@@ -5,12 +5,14 @@ import { Button, Modal, Typography, Card, Divider } from "antd";
 import { Link, useParams } from "react-router-dom";
 import { BookOutlined, UserOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import instance from "../../../../config/axios";
+
 dayjs.locale("vi");
 
 const { Title, Paragraph, Text } = Typography;
 
 const ScheduleDetail = () => {
     const [selectedClassId, setSelectedClassId] = useState(1);
+
     const [currentMonth, setCurrentMonth] = useState(dayjs());
     const [completedSessions, setCompletedSessions] = useState(0);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -66,12 +68,13 @@ const ScheduleDetail = () => {
     const end = dayjs(schedule.endDate);
 
     // Tính tất cả các ngày trong tháng hiện tại
+
     const daysInMonth = Array.from(
         { length: currentMonth.daysInMonth() },
         (_, i) => currentMonth.startOf("month").add(i, "day")
     );
 
-    // Kiểm tra xem ngày có phải là ngày học hay không
+
     const isClassDay = (date) => {
         return (
             date.isAfter(start.subtract(1, "day")) &&
@@ -80,7 +83,6 @@ const ScheduleDetail = () => {
         );
     };
 
-    // Tạo danh sách các ngày học từ ngày bắt đầu đến ngày kết thúc
     const classDaysInRange = () => {
         let classDays = [];
         let currentDay = start;
@@ -102,6 +104,7 @@ const ScheduleDetail = () => {
             instructor: classData.teacher_name || "Chưa có giảng viên",
             classPeriod: `Ca học: ${classData.shift_name}`,
             room: classData.room_name,
+
         };
     };
 
@@ -124,6 +127,7 @@ const ScheduleDetail = () => {
     return (
         <div>
             <div className="p-8 bg-white shadow-lg mx-auto w-full">
+
                 <Button>
                     <Link to="/admin/list-schedule">Quay lại</Link>
                 </Button>
@@ -132,6 +136,7 @@ const ScheduleDetail = () => {
                         <button
                             onClick={handlePreviousMonth}
                             className="px-6 py-3  text-gray-700 rounded-lg text-lg hover:bg-gray-300 bg-blue-300"
+
                         >
                             Tháng Trước
                         </button>
@@ -146,6 +151,7 @@ const ScheduleDetail = () => {
                         <button
                             onClick={handleNextMonth}
                             className="px-6 py-3  bg-blue-300 text-gray-700 rounded-lg text-lg hover:bg-gray-300"
+
                         >
                             Tháng Kế Tiếp
                         </button>
@@ -197,6 +203,7 @@ const ScheduleDetail = () => {
                         );
                     })}
                 </div>
+
             </div>
 
             <div className="flex justify-end mt-6">
@@ -205,12 +212,14 @@ const ScheduleDetail = () => {
                 </Button>
             </div>
 
+
             <Modal
                 title={<Title level={4}>{selectedSession?.sessionName}</Title>}
                 visible={isModalVisible}
                 onOk={() => setIsModalVisible(false)}
                 onCancel={() => setIsModalVisible(false)}
                 footer={[<Button key="back" onClick={() => setIsModalVisible(false)}>Đóng</Button>]}
+
             >
                 <Card bordered={false}>
                     <Paragraph>
@@ -221,6 +230,7 @@ const ScheduleDetail = () => {
                     <Paragraph>
                         <UserOutlined style={{ marginRight: 8 }} />
                         <Text strong>Giảng viên:</Text> {selectedSession?.instructor}
+
                     </Paragraph>
                     <Divider />
                     <Paragraph>
@@ -229,6 +239,7 @@ const ScheduleDetail = () => {
                     </Paragraph>
                     <Paragraph>
                         <Text strong>Phòng học:</Text> {selectedSession?.room}
+
                     </Paragraph>
                 </Card>
             </Modal>

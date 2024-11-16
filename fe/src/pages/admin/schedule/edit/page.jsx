@@ -13,6 +13,7 @@ import {
     message,
     Tabs,
     Card,
+
 } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import { useParams } from "react-router-dom";
@@ -44,6 +45,7 @@ const ScheduleEdit = () => {
         { value: "subject1", label: "Môn 1" },
         { value: "subject2", label: "Môn 2" },
     ];
+
     const classes = [
         { value: "class1", label: "Lớp 1" },
         { value: "class2", label: "Lớp 2" },
@@ -52,6 +54,7 @@ const ScheduleEdit = () => {
     const teachers = [
         { value: "teacher1", label: "Giảng viên 1" },
         { value: "teacher2", label: "Giảng viên 2" },
+
     ];
     const rooms = [
         { value: "room1", label: "Phòng 101" },
@@ -60,8 +63,7 @@ const ScheduleEdit = () => {
 
     useEffect(() => {
         const fetchScheduleDetails = async () => {
-            // Fetch schedule data based on scheduleId
-            // For this example, we'll use hardcoded data
+
             const schedule = {
                 course: "course1",
                 semester: "semester1",
@@ -91,6 +93,7 @@ const ScheduleEdit = () => {
             };
             form.setFieldsValue(schedule);
             setSelectedClasses(schedule.classes || []);
+
         };
 
         fetchScheduleDetails();
@@ -99,6 +102,8 @@ const ScheduleEdit = () => {
     const handleFinish = (values) => {
         console.log("Form values: ", values);
         message.success("Lịch học đã được cập nhật thành công!");
+
+        setScheduleUpdated(true); // Đánh dấu lịch học đã được cập nhật
     };
 
     const handleClassChange = (values) => {
@@ -266,6 +271,7 @@ const ScheduleEdit = () => {
                             </Row>
                         </Checkbox.Group>
                     </Form.Item>
+
                     <Form.Item
                         label="Ca Học"
                         name={["classDetails", classId, "session"]}
@@ -321,6 +327,7 @@ const ScheduleEdit = () => {
                                 classId,
                                 "learningMethod",
                             ]);
+
                             if (learningMethod === "online") {
                                 return (
                                     <Form.Item
@@ -330,6 +337,7 @@ const ScheduleEdit = () => {
                                             classId,
                                             "classLink",
                                         ]}
+
                                         rules={[
                                             {
                                                 required: true,
@@ -354,6 +362,7 @@ const ScheduleEdit = () => {
                                             classId,
                                             "classRoom",
                                         ]}
+
                                         rules={[
                                             {
                                                 required: true,
@@ -397,116 +406,6 @@ const ScheduleEdit = () => {
                 onFinish={handleFinish}
                 className="bg-white p-6 rounded-lg shadow-md"
             >
-                {/* Hàng 1: Khóa Học, Kỳ Học, Ngành Học */}
-                {/* <Row gutter={16}>
-                    <Col span={8}>
-                        <Form.Item
-                            label="Khóa Học"
-                            name="course"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn khóa học!",
-                                },
-                            ]}
-                        >
-                            <Select
-                                showSearch
-                                placeholder="Chọn khóa học"
-                                optionFilterProp="children"
-                            >
-                                {courses.map((course) => (
-                                    <Option
-                                        key={course.value}
-                                        value={course.value}
-                                    >
-                                        {course.label}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                        <Form.Item
-                            label="Kỳ Học"
-                            name="semester"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn kỳ học!",
-                                },
-                            ]}
-                        >
-                            <Select
-                                showSearch
-                                placeholder="Chọn kỳ học"
-                                optionFilterProp="children"
-                            >
-                                {semesters.map((semester) => (
-                                    <Option
-                                        key={semester.value}
-                                        value={semester.value}
-                                    >
-                                        {semester.label}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                        <Form.Item
-                            label="Ngành Học"
-                            name="major"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Vui lòng chọn ngành học!",
-                                },
-                            ]}
-                        >
-                            <Select
-                                showSearch
-                                placeholder="Chọn ngành học"
-                                optionFilterProp="children"
-                            >
-                                {majors.map((major) => (
-                                    <Option
-                                        key={major.value}
-                                        value={major.value}
-                                    >
-                                        {major.label}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                </Row> */}
-
-                {/* Hàng 2: Môn Học */}
-                {/* <Form.Item
-                    label="Môn Học"
-                    name="subject"
-                    rules={[
-                        {
-                            required: true,
-                            message: "Vui lòng chọn môn học!",
-                        },
-                    ]}
-                >
-                    <Select
-                        showSearch
-                        placeholder="Chọn môn học"
-                        optionFilterProp="children"
-                    >
-                        {subjects.map((subject) => (
-                            <Option key={subject.value} value={subject.value}>
-                                {subject.label}
-                            </Option>
-                        ))}
-                    </Select>
-                </Form.Item> */}
-
-                {/* Hàng 3: Lớp Học (Multiple Selection) */}
                 <Form.Item
                     label="Lớp Học"
                     name="classes"
@@ -571,12 +470,15 @@ const ScheduleEdit = () => {
                         <Button type="default">Hủy Bỏ</Button>
                         <Button type="primary" htmlType="submit">
                             Cập Nhật
+
                         </Button>
                     </Space>
                 </Form.Item>
             </Form>
+
         </div>
     );
 };
 
 export default ScheduleEdit;
+

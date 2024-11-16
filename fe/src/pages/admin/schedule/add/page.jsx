@@ -302,6 +302,7 @@ const ScheduleAdd = () => {
       </Form>
     </div>
   );
+
 };
 
 export default ScheduleAdd;

@@ -10,6 +10,7 @@ class PlanSubject extends Model
 {
     use HasFactory;
 
+
     protected $fillable = [
         'plan_id',
         'major_subject_id',

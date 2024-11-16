@@ -57,6 +57,7 @@ class ApiCourseController extends Controller
                     'plan' => $course->plan->name,
                     'start_date' => $course->start_date,
                     'end_date' => $course->end_date,
+
                     'status' => match($course->status) {
                         "0" => "Chờ diễn ra",
                         "1" => "Đang diễn ra",
@@ -107,6 +108,7 @@ class ApiCourseController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'status' => 'integer|in:0,1,2',
         ]);
 
         if ($validator->fails()) {
@@ -186,6 +188,7 @@ class ApiCourseController extends Controller
                     $data['status'] = "2";
                 }
             }
+
 
             $course->update($data);
 

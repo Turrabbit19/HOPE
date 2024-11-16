@@ -27,6 +27,7 @@ return new class extends Migration
             $table->foreignIdFor(Semester::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
+
             $table->foreignIdFor(Classroom::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Shift::class)->constrained()->cascadeOnDelete();

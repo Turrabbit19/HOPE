@@ -63,6 +63,7 @@ use Illuminate\Support\Facades\Route;
         Route::apiResource('plans', ApiPlanController::class);
         Route::get('major/{id}/subjects/selected', [ApiPlanController::class, 'getSubjectsByMajor']);
 
+
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
         Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
@@ -94,3 +95,4 @@ use Illuminate\Support\Facades\Route;
     // Route::prefix('student')->group(function () {
     //     Route::get('detail/{id}', [ApiClientController::class, 'detail']);
     // });
+

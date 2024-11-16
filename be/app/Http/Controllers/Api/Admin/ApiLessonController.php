@@ -25,6 +25,7 @@ class ApiLessonController extends Controller
                 ];
             });
 
+
             return response()->json([
                 'data' => $data,
                 'pagination' => [
@@ -124,6 +125,7 @@ class ApiLessonController extends Controller
             return response()->json(['data' => $lesson, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
+
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);

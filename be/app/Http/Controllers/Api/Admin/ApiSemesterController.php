@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseSemester;
+
 use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -36,6 +37,7 @@ class ApiSemesterController extends Controller
                         "0" => "Chờ diễn ra",
                         "1" => "Đang diễn ra",
                         "2" => "Kết thúc",
+
                         default => "Không xác định",
                     },
                 ];
@@ -66,6 +68,7 @@ class ApiSemesterController extends Controller
                     'name' => $semester->name,
                     'start_date' => Carbon::parse($semester->start_date),
                     'end_date' => Carbon::parse($semester->end_date),
+
                     'status' => match($semester->status) {
                         0 => "Chờ diễn ra",
                         1 => "Đang diễn ra",
@@ -88,6 +91,7 @@ class ApiSemesterController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'integer|in:0,1,2'
+
         ]);
 
         if ($validator->fails()) {
@@ -128,6 +132,7 @@ class ApiSemesterController extends Controller
 
             $semester->courses()->syncWithoutDetaching($coursesWithOrder);
 
+
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -153,6 +158,7 @@ class ApiSemesterController extends Controller
                         "0" => "Chờ diễn ra",
                         "1" => "Đang diễn ra",
                         "2" => "Kết thúc",
+
                         default => "Không xác định",
                     },
                 ];

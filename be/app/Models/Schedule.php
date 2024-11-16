@@ -15,6 +15,7 @@ class Schedule extends Model
         'semester_id',
         'major_id',
         'subject_id',
+
         'classroom_id',
         'teacher_id',
         'shift_id',
@@ -56,6 +57,7 @@ class Schedule extends Model
     {
         return $this->belongsToMany(Lesson::class, 'schedule_lessons')
                     ->withPivot('study_date');
+
     }
 
     public function classroom()

@@ -4,6 +4,7 @@ import { Card, Typography, Spin, Tag } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import instance from "../../../../config/axios";
 
+
 const { Title, Text } = Typography;
 
 const MajorSubject = () => {
@@ -97,6 +98,7 @@ const MajorSubject = () => {
       )}
     </div>
   );
+
 };
 
 export default MajorSubject;

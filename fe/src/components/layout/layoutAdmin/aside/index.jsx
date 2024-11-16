@@ -11,30 +11,31 @@ import {
     CalendarOutlined,
     BookFilled,
     ReadOutlined,
+    BellOutlined,
 } from "@ant-design/icons";
 
 const AsideAdmin = () => {
     const [collapsed, setCollapsed] = useState(false);
 
     const navigates = [
-        {
-            name: "Quản lý sinh viên",
-            link: "/admin/student_manager",
-            icon: <UserOutlined />,
-        },
-        {
-            name: "Tất cả sinh viên",
-            link: "/admin/all-student",
-            icon: <TeamOutlined />,
-        },
-        {
-            name: "Quản lý giảng viên",
-            link: "/admin/teacher-manager",
-            icon: <UserOutlined />,
-        },
+        // {
+        //     name: "Quản lý sinh viên",
+        //     link: "/admin/student_manager",
+        //     icon: <UserOutlined />,
+        // },
+        // {
+        //     name: "Tất cả sinh viên",
+        //     link: "/admin/all-student",
+        //     icon: <TeamOutlined />,
+        // },
+        // {
+        //     name: "Quản lý giảng viên",
+        //     link: "/admin/teacher-manager",
+        //     icon: <UserOutlined />,
+        // },
         {
             name: "Quản lý người dùng",
-            link: "/admin/all-user",
+            link: "/admin/list-users",
             icon: <TeamOutlined />,
         },
     ];
@@ -43,6 +44,7 @@ const AsideAdmin = () => {
         {
             name: "Quản lý ngành học",
             link: "/admin/majors",
+
             icon: <BookOutlined />,
         },
         {
@@ -75,6 +77,11 @@ const AsideAdmin = () => {
             link: "/admin/classrooms",
             icon: <ReadOutlined />,
         },
+        {
+            name: "Quản lý lịch học",
+            link: "/admin/list-schedule",
+            icon: <ReadOutlined />,
+        },
     ];
 
     const { Sider } = Layout;
@@ -100,25 +107,11 @@ const AsideAdmin = () => {
                 label: <Link to={item.link}>{item.name}</Link>,
             })),
         },
+
         {
             key: "sub3",
-            icon: <BookOutlined />,
-            label: <Link to="/admin/majors">Quản lý ngành học</Link>,
-        },
-        {
-            key: "sub4",
-            icon: <BookOutlined />,
-            label: <Link to="/admin/courses">Quản lý khóa học</Link>,
-        },
-        {
-            key: "sub5",
-            icon: <CalendarOutlined />,
-            label: <Link to="/admin/semesters">Quản lý kỳ học</Link>,
-        },
-        {
-            key: "sub6",
-            icon: <ReadOutlined />,
-            label: <Link to="/admin/subjects">Quản lý môn học</Link>,
+            icon: <BellOutlined />,
+            label: <Link to="/admin/list-sections">Quản lý thông báo</Link>,
         },
     ];
 

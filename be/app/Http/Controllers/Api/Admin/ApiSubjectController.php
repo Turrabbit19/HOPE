@@ -19,6 +19,7 @@ class ApiSubjectController extends Controller
         try {
             $perPage = $request->input('per_page', 9);
 
+
             $subjects = Subject::paginate($perPage);
 
             $data = collect($subjects->items())->map(function ($subject){
@@ -61,6 +62,7 @@ class ApiSubjectController extends Controller
                     'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
+
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
@@ -73,6 +75,7 @@ class ApiSubjectController extends Controller
             'code' => 'required|string|max:50|unique:subjects',
             'name' => 'required|string|max:100|unique:subjects',
             'description' => 'nullable|string|max:255',
+
             'credit' => 'required|integer|min:1|max:19',
             'status' => 'boolean',
             'majors' => 'required|array',
@@ -92,6 +95,7 @@ class ApiSubjectController extends Controller
             });
 
             $subject->majors()->sync($majors);
+
 
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -132,6 +136,7 @@ class ApiSubjectController extends Controller
             'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id,
             'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id,
             'description' => 'nullable|string|max:255',
+
             'credit' => 'sometimes|integer|min:1|max:19',
             'status' => 'sometimes|boolean',
             'majors' => 'sometimes|array',
@@ -184,6 +189,51 @@ class ApiSubjectController extends Controller
     }
 
 
+
+
+    public function destroy(string $id)
+    {
+        try {
+            $subject = Subject::findOrFail($id);
+            $subject->delete();
+            return response()->json(['message' => 'Xóa mềm thành công'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+
+
+    public function addLessons(Request $request, string $id) {
+        $validator = Validator::make($request->all(), [
+            'lessons' => 'required|array',
+            'lessons.*.name' => 'required|string|max:50',
+            'lessons.*.description' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        try {
+            $validatedData = $validator->validated();
+            $lessons = [];
+
+            foreach ($validatedData['lessons'] as $lessonData) {
+                $lessonData['subject_id'] = $id;
+                $lesson = Lesson::create($lessonData);
+                $lessons[] = $lesson;
+            }
+
+            return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function getAllClassrooms(string $id) {
         try {
             $classrooms = Classroom::where('subject_id', $id)->get();
@@ -204,52 +254,12 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function destroy(string $id)
-    {
-        try {
-            $subject = Subject::findOrFail($id);
-            $subject->delete();
-            return response()->json(['message' => 'Xóa mềm thành công'], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function addLessons(Request $request, string $id) {
-        $validator = Validator::make($request->all(), [
-            '*.name' => 'required|string|max:50',
-            '*.description' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        try {
-            $validatedData = $validator->validated();
-            $lessons = [];
-
-            foreach ($validatedData as $lessonData) {
-                $lessonData['subject_id'] = $id;
-                $lesson = Lesson::create($lessonData);
-                $lessons[] = $lesson;
-            }
-
-            return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-
     public function addClassrooms(Request $request, string $id) {
         $validator = Validator::make($request->all(), [
-            '*.code' => 'required|string|max:10|unique:classrooms,code',
-            '*.max_students' => 'required|integer|min:1',
-            '*.status' => 'boolean',
+            'classrooms' => 'required|array',
+            'classrooms.*.code' => 'required|string|max:10|unique:classrooms',
+            'classrooms.*.max_students' => 'required||integer|min:1',
+            'classrooms.*.status' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -260,7 +270,7 @@ class ApiSubjectController extends Controller
             $validatedData = $validator->validated();
             $classrooms = [];
 
-            foreach ($validatedData as $classroomData) {
+            foreach ($validatedData['classrooms'] as $classroomData) {
                 $classroomData['subject_id'] = $id;
                 $classroom = Classroom::create($classroomData);
                 $classrooms[] = $classroom;

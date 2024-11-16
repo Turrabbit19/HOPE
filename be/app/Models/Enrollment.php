@@ -10,6 +10,7 @@ class Enrollment extends Model
 {
     use HasFactory;
 
+
     protected $fillable = [
         'student_id',
         'schedule_id',

@@ -53,6 +53,7 @@ import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
 import ScheduleList from "../pages/admin/schedule/list/pages";
 import ScheduleDetail from "../pages/admin/schedule/detail/page";
 
+
 const Router = createBrowserRouter([
     {
         path: "",
@@ -93,6 +94,10 @@ const Router = createBrowserRouter([
                 element: <SyllabusEdit />,
             },
             {
+                path: "list-syllabus/detail/:id",
+                element: <SyllabusDetail />,
+            },
+            {
                 path: "list",
                 element: (
                     <Suspense fallback={<Loading />}>
@@ -110,6 +115,7 @@ const Router = createBrowserRouter([
             },
             {
                 path: "majors",
+
                 element: (
                     <>
                         <Teach />
@@ -134,6 +140,7 @@ const Router = createBrowserRouter([
             },
             {
                 path: "teaching/add",
+
                 element: (
                     <>
                         <BreadCrumb />
@@ -142,7 +149,7 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "teaching/list",
+                path: "major/list",
                 element: (
                     <>
                         <ListCourse />
@@ -181,6 +188,7 @@ const Router = createBrowserRouter([
                 ),
 
             },
+
             {
                 path: "class-student",
                 element: <ClassStudent />,
@@ -214,6 +222,23 @@ const Router = createBrowserRouter([
                         element: <Resource />,
                     },
                 ],
+            },
+            {
+                path: "list-schedule",
+                element: <ScheduleList />,
+            },
+
+            {
+                path: "list-schedule/add",
+                element: <ScheduleAdd />,
+            },
+            {
+                path: "list-schedule/details/:id/edit",
+                element: <ScheduleEdit />,
+            },
+            {
+                path: "list-schedule/details/:id",
+                element: <ScheduleDetail />,
             },
 
             {
@@ -250,6 +275,24 @@ const Router = createBrowserRouter([
                 element: (
                     <>
                         <ListSubjects />
+                    </>
+                ),
+            },
+
+            {
+                path: "list-subject/detail/:id",
+                element: (
+                    <>
+                        <DetailSubject />
+                    </>
+                ),
+            },
+
+            {
+                path: "list-sections",
+                element: (
+                    <>
+                        <ListSections />
                     </>
                 ),
             },
@@ -341,40 +384,25 @@ const Router = createBrowserRouter([
             },
 
             {
-                path: "all-student",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <AllStudent />
-                    </>
-                ),
-            },
-            {
-                path: "all-user",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <AllUser />
-                    </>
-                ),
-            },
-            {
-                path: "teacher-manager",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <AllTeacher />
-                    </>
-                ),
-            },
-
-            {
                 path: "classrooms",
                 element: (
                     <>
                         <ClassRoom />
                     </>
                 ),
+            },
+
+            {
+                path: "list-users",
+                element: <ListUser />,
+            },
+            {
+                path: "list-users/add",
+                element: <UserAdd />,
+            },
+            {
+                path: "list-users/update/:id",
+                element: <UserUpdate />,
             },
         ],
     },

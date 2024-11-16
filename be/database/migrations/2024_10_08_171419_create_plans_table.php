@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->tinyInteger('semester_total');
+
             $table->boolean('status')->default(TRUE); // 'Đang hoạt động', 'Tạm dừng'
             $table->softDeletes();
             $table->timestamps();

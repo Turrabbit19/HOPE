@@ -47,10 +47,10 @@ const SyllabusList = () => {
       }
     })();
   }, []);
-
   const handleSearch = (value) => {
     const filtered = syllabuses.filter((syllabus) =>
       syllabus.name.toLowerCase().includes(value.toLowerCase())
+
     );
     setFilteredSyllabuses(filtered);
   };

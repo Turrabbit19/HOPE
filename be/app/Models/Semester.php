@@ -25,5 +25,6 @@ class Semester extends Model
     public function orders()
     {
         return $this->hasMany(CourseSemester::class);
+
     }
 }

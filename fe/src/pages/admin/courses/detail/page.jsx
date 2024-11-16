@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, Table, Space, Button, Avatar, Input } from "antd";
 import { ArrowLeftOutlined, SearchOutlined } from "@ant-design/icons";
-import instance from "../../../../config/axios";
+
 
 const { TabPane } = Tabs;
 
@@ -16,13 +16,13 @@ const CourseDetail = () => {
     const [students, setStudents] = useState([]);
     const [filteredStudents, setFilteredStudents] = useState([]);
 
+
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(50);
     const [totalStudents, setTotalStudents] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        
         if (courseId) {
             const courseData = {
                 id: courseId,
@@ -44,6 +44,7 @@ const CourseDetail = () => {
     const fetchDepartments = async () => {
         const majors = await instance.get(`admin/course/${courseId}/majors`);
         setDepartments(majors.data.majors);
+
     };
 
     const fetchStudentsByDepartment = (departmentId, page = 1) => {
@@ -76,7 +77,7 @@ const CourseDetail = () => {
     };
 
     const handleDepartmentClick = (department) => {
-        console.log(department);
+
         setSelectedDepartment(department);
         fetchStudentsByDepartment(department.id, 1);
     };
@@ -102,6 +103,7 @@ const CourseDetail = () => {
         { title: "Tên Kỳ Học", dataIndex: "name", key: "name" },
         { title: "Ngày Bắt Đầu", dataIndex: "start_date", key: "startDate" },
         { title: "Ngày Kết Thúc", dataIndex: "end_date", key: "endDate" },
+
     ];
 
     const departmentColumns = [
@@ -247,3 +249,4 @@ const CourseDetail = () => {
 };
 
 export default CourseDetail;
+

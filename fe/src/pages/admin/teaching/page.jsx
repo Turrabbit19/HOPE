@@ -9,6 +9,7 @@ import {
   notification,
   Pagination,
   Select,
+
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -40,6 +41,7 @@ const Teach = () => {
       } finally {
         setLoading(false);
       }
+
     };
     fetchMajors();
   }, []);
@@ -124,6 +126,7 @@ const Teach = () => {
       (major) =>
         major.name.toLowerCase().includes(value) ||
         major.code.toLowerCase().includes(value)
+
     );
     setFilterMajors(filtered);
     setCurrentPage(1); // Reset về trang 1 khi tìm kiếm

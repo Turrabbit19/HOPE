@@ -8,6 +8,7 @@ use App\Models\CourseSemester;
 use App\Models\PlanSubject;
 use App\Models\Schedule;
 use App\Models\Subject;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -97,6 +98,7 @@ class ApiScheduleController extends Controller
 
             $schedules = Schedule::paginate($perPage);
 
+
             $data = collect($schedules->items())->map(function($schedule) {
                 return [
                     'id' => $schedule->id,
@@ -105,6 +107,7 @@ class ApiScheduleController extends Controller
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
                     'teacher_name' => $schedule->teacher->user->name,
+
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
                     'link' => $schedule->link ? $schedule->link : "NULL",
@@ -127,7 +130,6 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
-
     private function calculateEndDateLogic($startDate, $subjectId, $daysOfWeek)
     {
         $subject = Subject::findOrFail($subjectId);
@@ -325,6 +327,7 @@ class ApiScheduleController extends Controller
                     'semester_name' => $schedule->semester->name,
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
+
                     'teacher_name' => $schedule->teacher->name,
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
@@ -336,6 +339,7 @@ class ApiScheduleController extends Controller
                             "Thứ" => $day->id,
                         ];
                     }),
+
                     'status' => $schedule->status ? "Đang diễn ra" : "Kết thúc",
                 ];
 
@@ -360,6 +364,7 @@ class ApiScheduleController extends Controller
             'classrooms.*.end_date' => 'sometimes|date|after_or_equal:classrooms.*.start_date',
             'classrooms.*.days_of_week' => 'sometimes|array',
             'classrooms.*.days_of_week.*' => 'integer'
+
         ]);
 
         if ($validator->fails()) {
@@ -411,6 +416,7 @@ class ApiScheduleController extends Controller
                 'message' => 'Cập nhật thành công và lịch học đã được cập nhật cho các lớp.',
                 'schedules' => $scheduleResponses
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -426,6 +432,7 @@ class ApiScheduleController extends Controller
             return response()->json(['message' => 'Xóa lịch học thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lịch học cho lớp học này'], 404);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -497,4 +504,5 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới lịch học', 'message' => $e->getMessage()], 500);
         }
     }
+
 }

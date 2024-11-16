@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from "react";
 import {
-  Button,
-  Card,
-  Modal,
-  Popconfirm,
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Tabs,
-  Spin,
-  notification,
+
+    Button,
+    Card,
+    Modal,
+    Popconfirm,
+    Form,
+    Input,
+    InputNumber,
+    message,
+    Tabs,
+    Spin,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { useLocation, useParams } from "react-router-dom";
-import instance from "../../../../config/axios";
+import { useNavigate, useParams } from "react-router-dom";
 
 const { TabPane } = Tabs;
 
@@ -692,6 +691,7 @@ const MajorDetailSubject = () => {
       )}
     </div>
   );
+
 };
 
 export default MajorDetailSubject;

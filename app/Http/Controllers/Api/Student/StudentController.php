@@ -128,6 +128,11 @@ class StudentController extends Controller
             ->get();
 
             $data = $schedules->map(function ($schedule) {
+                $studentsCount = $schedule->classroom->students->count();
+                $maxStudents = $schedule->classroom->max_students;
+                
+                $status = ($studentsCount >= $maxStudents) ? 'Đã đầy' : 'Còn chỗ';
+
                 return [
                     'id' => $schedule->id,
                     'classroom' => $schedule->classroom->code,
@@ -139,8 +144,9 @@ class StudentController extends Controller
                             "Thứ" => $day->id,
                         ];
                     }),
-                    'students' => $schedule->classroom->students->count(),
-                    'max_students' => $schedule->classroom->max_students, 
+                    'students' => $studentsCount,
+                    'max_students' => $maxStudents,
+                    'status' => $status,
                 ];
             });
 
@@ -230,7 +236,6 @@ class StudentController extends Controller
             ], 500);
         }
     }
-    
     
     public function getTimetable() 
     {

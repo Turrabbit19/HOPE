@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\Admin\ApiLessonController;
 use App\Http\Controllers\Api\Admin\ApiMajorController;
 use App\Http\Controllers\Api\Admin\ApiNotificationController;
 use App\Http\Controllers\Api\Admin\ApiOfficerController;
-use App\Http\Controllers\Api\Admin\ApiPlanController;
 use App\Http\Controllers\Api\Admin\ApiRoleController;
 use App\Http\Controllers\Api\Admin\ApiRoomController;
 use App\Http\Controllers\Api\Admin\ApiScheduleController;
@@ -25,17 +24,6 @@ use App\Http\Controllers\Api\Teacher\TeacherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
-
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -44,7 +32,7 @@ Route::post('login', [ApiAuthController::class, 'login']);
 Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
-    Route::prefix('admin')
+    Route::middleware(['auth:sanctum', 'role:Quản trị viên'])->prefix('admin')
         ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
         
@@ -106,7 +94,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
     });
 
     Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
-    ->group(function () {
+        ->group(function () {
         Route::apiResource('students', ApiStudentController::class);
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
@@ -124,11 +112,14 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
 
         Route::apiResource('majors', ApiMajorController::class);
+        Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
+        Route::get('filter/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
+        Route::post('subjects/{majorId}/add', [ApiSubjectController::class, 'addSubjects']);
 
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
         Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
@@ -136,13 +127,15 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
         Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
 
-        Route::apiResource('rooms', ApiClassroomController::class);
+        Route::apiResource('rooms', ApiRoomController::class);
+        Route::apiResource('lessons', ApiLessonController::class);
 
         Route::apiResource('sections', ApiSectionController::class);
         Route::get('section/{id}/notifications', [ApiSectionController::class, 'getNotifications']);
         Route::post('section/{id}/addNotice', [ApiSectionController::class, 'addNotification']);
 
         Route::apiResource('notifications', ApiNotificationController::class);
+        Route::apiResource('shifts', ApiShiftController::class);
         Route::apiResource('classrooms', ApiClassroomController::class);
 
         Route::apiResource('schedules', ApiScheduleController::class);

@@ -57,8 +57,10 @@ class StudentExport implements FromCollection, WithHeadings, WithEvents
     public function collection()
     {
         $outputArr = [];
-        $students = Student::with(['user', 'course', 'major'])->get();
+        $students = Student::with(['user', 'course', 'majors'])->get();
+
         $data = $students->map(function($student){
+            $mainMajor = $student->majors->firstWhere('status', 1)?->major?->name ?? 'Không xác định';
             return [
                 'name' => $student->user->name,
                 'email' => $student->user->email,
@@ -68,7 +70,7 @@ class StudentExport implements FromCollection, WithHeadings, WithEvents
                 'ethnicity' => $student->user->ethnicity,
                 'address' => $student->user->address,
                 'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
+                'major_name' => $mainMajor,
                 'student_code' => $student->student_code,
                 'current_semester' => $student->current_semester,
                 'status' => match($student->status) {
@@ -98,7 +100,6 @@ class StudentExport implements FromCollection, WithHeadings, WithEvents
         }
         return collect($outputArr);
     }
-
     public function headings() :array {
         return [
             'STT',

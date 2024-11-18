@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\Course;
 use App\Models\Major;
+use App\Models\StudentMajor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -46,10 +47,9 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
                 'role_id'  => 3,
             ]);
 
-            return new Student([
+            $student = Student::create([
                 'user_id'          => $user->id,
                 'course_id'        => $courseId,
-                'major_id'         => $majorId,
                 'current_semester' => $row['ki_hien_tai'],
                 'student_code'     => $row['msv'],
                 'status'           => match($row['trang_thai']) {
@@ -59,6 +59,20 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
                     default        => "Không xác định",  
                 },
             ]);
+
+            StudentMajor::create([
+                'student_id' => $student->id,
+                'major_id'   => 1,
+                'status'     => 0, 
+            ]);
+
+            StudentMajor::create([
+                'student_id' => $student->id,
+                'major_id'   => $majorId, 
+                'status'     => 1, 
+            ]);
+
+            return $student;
         } catch (\Exception $e) {
             Log::error('Failed to import student data: ' . $e->getMessage());
             return null;

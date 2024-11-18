@@ -137,21 +137,20 @@ class ApiStudentController extends Controller
             'gender' => 'required|boolean',
             'ethnicity' => 'required|string|max:50',
             'address' => 'required|string|max:255',
-
+    
             'student_course_id' => 'required|exists:courses,id',
-            'student_branch_id' => 'required|exists:branches,id',
-            'student_major_id' => 'nullable|exists:majors,id',
-
+            'student_major_id' => 'required|exists:majors,id',
+    
             'student_code' => 'required|unique:students,student_code',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-
+    
         try {
             $data = $validator->validated();
-
+    
             $user = User::create([
                 'avatar' => $data['avatar'],
                 'name' => $data['name'],
@@ -164,15 +163,31 @@ class ApiStudentController extends Controller
                 'password' => Hash::make("123456789"),
                 'role_id' => 3,
             ]);
-
+    
             $student = Student::create([
                 'user_id' => $user->id,
                 'course_id' => $data['student_course_id'],
-                'major_id' => $data['student_major_id'],
                 'current_semester' => 1,
                 'student_code' => $data['student_code'],
-            ]);    
-
+            ]);
+    
+            StudentMajor::create([
+                'student_id' => $student->id,
+                'major_id' => 1, 
+                'status' => 0,  
+            ]);
+    
+            StudentMajor::create([
+                'student_id' => $student->id,
+                'major_id' => $data['student_major_id'],
+                'status' => 1, 
+            ]);
+    
+            $mainMajor = StudentMajor::where('student_id', $student->id)
+                                      ->where('status', 1)
+                                      ->with('major')
+                                      ->first();
+    
             $studentData = [
                 'avatar' => $user->avatar,
                 'name' => $user->name,
@@ -182,24 +197,27 @@ class ApiStudentController extends Controller
                 'gender' => $user->gender ? "Nam" : "Nữ",
                 'ethnicity' => $user->ethnicity,
                 'address' => $user->address,
-
+    
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'branch_name' => $student->branch->name,
-                'major_name' => $student->major->name ?? "",
-                'current_semester' => $student->current_semester,
+                'major_name' => $mainMajor->major->name
             ];
-
+    
             return response()->json(['data' => $studentData, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function show(string $id)
     {
         try {
             $student = Student::findOrFail($id);
+            
+            $major = StudentMajor::with('major')
+            ->where('student_id', $id)
+            ->where('status', 1)
+            ->firstOr();
             
             $data = [
                 'id' => $student->id,
@@ -214,8 +232,7 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'branch_name' => $student->branch->name,
-                'major_name' => $student->major->name ?? "",
+                'major_name' => $major->major->name,
                 'current_semester' => $student->current_semester,
                 'status' => match($student->status) {
                     "0" => "Đang học",

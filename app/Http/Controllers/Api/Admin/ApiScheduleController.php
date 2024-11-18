@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
 use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\MajorSubject;
-use App\Models\PlanSubject;
 use App\Models\Schedule;
 use App\Models\Subject;
+use App\Models\TeacherSchedule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ApiScheduleController extends Controller
 {
@@ -104,7 +104,7 @@ class ApiScheduleController extends Controller
                     'semester_name' => $schedule->semester->name,
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teacher->user->name,
+                    'teacher_name' => $schedule->teachers->user->name,
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
                     'link' => $schedule->link ? $schedule->link : "NULL",
@@ -312,6 +312,89 @@ class ApiScheduleController extends Controller
         }
     }
       
+    private function hasTeacherConflict($teacherId, $scheduleId)
+    {
+        $newSchedule = Schedule::with('days', 'shift')->findOrFail($scheduleId);
+        
+        $newScheduleDays = $newSchedule->days->pluck('id')->toArray();
+        $newScheduleShift = $newSchedule->shift_id;
+    
+        $teacherSchedules = TeacherSchedule::where('teacher_id', $teacherId)->get();
+    
+        foreach ($teacherSchedules as $teacherSchedule) {
+            $existingSchedule = $teacherSchedule->schedule;
+    
+            $existingDays = $existingSchedule->days->pluck('id')->toArray();
+            $existingShift = $existingSchedule->shift_id;
+    
+            if (
+                !empty(array_intersect($newScheduleDays, $existingDays)) && 
+                $newScheduleShift === $existingShift                  
+            ) {
+                return true; 
+            }
+        }
+    
+        return false; 
+    }
+    public function assignTeacherSchedules(Request $request)
+    {
+        Log::debug('Request data:', $request->all());
+    
+        $validator = Validator::make($request->all(), [
+            'schedules' => 'required|array',
+            'schedules.*.teacher_id' => 'required|exists:teachers,id',
+            'schedules.*.schedule_id' => 'required|exists:schedules,id',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+    
+        try {
+            $data = $validator->validated();
+    
+            if (!isset($data['schedules']) || !is_array($data['schedules']) || empty($data['schedules'])) {
+                return response()->json(['error' => 'Dữ liệu lịch học không hợp lệ.'], 400);
+            }
+    
+            $assignedSchedules = [];
+    
+            foreach ($data['schedules'] as $scheduleData) {
+                $teacherId = $scheduleData['teacher_id'];
+                $scheduleId = $scheduleData['schedule_id'];
+    
+                $conflict = $this->hasTeacherConflict($teacherId, $scheduleId);
+    
+                if ($conflict) {
+                    return response()->json([
+                        'error' => "Lịch bị trùng cho giảng viên có ID = {$teacherId} với lịch học có ID = {$scheduleId}."
+                    ], 409);
+                }
+    
+                $teacherScheduleData = [
+                    'teacher_id' => $teacherId,
+                    'schedule_id' => $scheduleId,
+                ];
+    
+                $teacherSchedule = TeacherSchedule::create($teacherScheduleData);
+    
+                $assignedSchedules[] = [
+                    'teacher_id' => $teacherSchedule->teacher_id,
+                    'schedule_id' => $teacherSchedule->schedule_id,
+                ];
+            }
+    
+            return response()->json([
+                'message' => 'Phân lịch thành công cho các giảng viên.',
+                'assigned_schedules' => $assignedSchedules,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Assign Teacher Schedules failed:', ['message' => $e->getMessage(), 'data' => $data]);
+            return response()->json(['error' => 'Phân lịch thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+            
     public function show(string $id)
     {
         try {

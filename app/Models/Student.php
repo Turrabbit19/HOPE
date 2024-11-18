@@ -13,10 +13,9 @@ class Student extends Model
     protected $fillable = [
         'user_id',
         'course_id',
-        'branch_id',
-        'major_id',
         'current_semester',
-        'student_code'
+        'student_code',
+        'status'
     ];
     
     public function user()
@@ -29,6 +28,11 @@ class Student extends Model
         return $this->belongsTo(Course::class);
     }
 
+    public function majors()
+    {
+        return $this->hasMany(StudentMajor::class, 'student_id');
+    }
+
     public function classrooms()
     {
         return $this->belongsToMany(Classroom::class);
@@ -37,10 +41,5 @@ class Student extends Model
     public function schedules()
     {
         return $this->belongsToMany(Schedule::class, 'student_schedules');
-    }
-
-    public function studentSchedules()
-    {
-        return $this->hasMany(StudentSchedule::class);
     }
 }

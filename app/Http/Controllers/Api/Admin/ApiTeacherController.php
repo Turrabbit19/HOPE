@@ -74,6 +74,25 @@ class ApiTeacherController extends Controller
         }
     }
 
+    public function filterTeachersByMajor(string $majorId) {
+        try {
+            $listTeachers = Teacher::with('user')->where('major_id', $majorId)->get();
+
+            $data = $listTeachers->map(function ($teacher) {
+                return [
+                    'id' => $teacher->id,
+                    'name' => $teacher->user->name
+                ];
+            });
+
+            return response()->json(['listTeachers' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

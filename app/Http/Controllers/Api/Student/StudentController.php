@@ -23,14 +23,16 @@ class StudentController extends Controller
         $user = Auth::user();
 
         try {
-            $student = Student::with(['user', 'course', 'major'])->where('user_id', $user->id)->firstOrFail();
+            $student = Student::with(['user', 'course'])->where('user_id', $user->id)->firstOrFail();
+            
+            $major = StudentMajor::where('status', 1)->firstOrFail();
             
             $data = [
                 'avatar' => $student->user->avatar,
                 'name' => $student->user->name,
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
+                'major_name' => $major->major->name,
                 'current_semester' => $student->current_semester,
 
                 'email' => $student->user->email,
@@ -209,7 +211,7 @@ class StudentController extends Controller
             StudentClassroom::create([
                 'student_id' => $student->id,
                 'classroom_id' => $newSchedule->classroom_id,
-                'study_date' => $newSchedule->end_date
+                'study_date' => $newSchedule->start_date
             ]);
     
             $data = [

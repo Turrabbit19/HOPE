@@ -5,6 +5,8 @@ import MainLayout from "../components/layout/page";
 import LoginPage from "../pages/auth/login/page";
 import OfficerPage from "../pages/dashboard/page";
 import { AuthContext } from "../context/authContext";
+import Testing from "../pages/test/page";
+import ListSubject from "../pages/officer/subject/list/page";
 
 const Router = () => {
     const { isAuthenticated } = useContext(AuthContext);
@@ -58,6 +60,9 @@ const Router = () => {
 
                         {/* Bạn có thể thêm các route con khác của /officer/student tại đây */}
                     </Route>
+
+                    <Route path="list-subjects" element={<ListSubject />} />
+                    <Route path="test" element={<Testing />} />
                 </Route>
 
                 {/* Thêm các route khác nếu cần */}

@@ -14,14 +14,16 @@ const LoginPage = () => {
     const { login } = useContext(AuthContext); // Sử dụng AuthContext
 
     const onFinish = async (values) => {
+        console.log("Form submitted:", values); // Log khi form được submit
         setLoading(true);
         try {
             const response = await instance.post("login", values);
+            console.log("Login response:", response); // Log phản hồi từ backend
             const { token } = response.data;
 
             // Sử dụng hàm login từ AuthContext
             login(token);
-            console.log("Token đã lưu:", localStorage.getItem("authToken"));
+            console.log("Token đã lưu:", localStorage.getItem("authToken")); // Log token đã lưu
 
             // Hiển thị thông báo đăng nhập thành công
             notification.success({
@@ -30,11 +32,12 @@ const LoginPage = () => {
                 placement: "topRight",
                 duration: 3,
                 onClose: () => {
+                    console.log("Navigating to /officer"); // Log trước khi navigate
                     navigate("/officer", { replace: true });
                 },
             });
         } catch (error) {
-            console.error("Lỗi đăng nhập:", error);
+            console.error("Lỗi đăng nhập:", error); // Log lỗi
             let description =
                 "Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại.";
 
@@ -56,7 +59,6 @@ const LoginPage = () => {
                         description = "Thông tin đăng nhập không chính xác.";
                     }
                 } else if (status === 429) {
-                    // Too Many Requests
                     if (data.errors && data.errors.email) {
                         const errorMessage = data.errors.email[0];
                         description = errorMessage; // Sử dụng thông báo từ backend
@@ -65,7 +67,6 @@ const LoginPage = () => {
                             "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau.";
                     }
                 } else if (status >= 500) {
-                    // Lỗi máy chủ
                     description = "Lỗi máy chủ. Vui lòng thử lại sau.";
                 } else {
                     description = data.message || description;
@@ -78,8 +79,19 @@ const LoginPage = () => {
                 placement: "topRight",
             });
         } finally {
+            console.log("Setting loading to false"); // Log khi kết thúc quá trình
             setLoading(false);
         }
+    };
+
+    // Thêm onFinishFailed để xử lý lỗi form
+    const onFinishFailed = (errorInfo) => {
+        console.log("Failed:", errorInfo); // Log lỗi form
+        notification.error({
+            message: "Đăng nhập thất bại",
+            description: "Vui lòng kiểm tra lại thông tin đã nhập.",
+            placement: "topRight",
+        });
     };
 
     return (
@@ -141,6 +153,7 @@ const LoginPage = () => {
 
                 <Form
                     onFinish={onFinish}
+                    onFinishFailed={onFinishFailed} // Thêm handler này
                     style={{ width: "100%", maxWidth: "350px" }}
                     layout="vertical"
                 >
@@ -173,6 +186,10 @@ const LoginPage = () => {
                             {
                                 required: true,
                                 message: "Vui lòng nhập mật khẩu của bạn!",
+                            },
+                            {
+                                min: 8,
+                                message: "Mật khẩu phải có ít nhất 8 ký tự.",
                             },
                         ]}
                     >

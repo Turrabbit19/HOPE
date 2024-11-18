@@ -1,4 +1,8 @@
-// src/context/AuthContext.jsx
-import { createContext } from "react";
+// src/context/authContext.js
+import React from "react";
 
-export const AuthContext = createContext();
+export const AuthContext = React.createContext({
+    isAuthenticated: false,
+    login: () => {},
+    logout: () => {},
+});

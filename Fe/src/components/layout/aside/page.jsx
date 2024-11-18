@@ -18,22 +18,22 @@ const Aside = ({ collapsed, setCollapsed }) => {
     const navigates = [
         {
             name: "Quản lý sinh viên",
-            link: "/admin/student_manager",
+            link: "/officer/student_manager",
             icon: <UserOutlined />,
         },
         {
             name: "Tất cả sinh viên",
-            link: "/admin/all-student",
+            link: "/officer/all-student",
             icon: <TeamOutlined />,
         },
         {
             name: "Quản lý giảng viên",
-            link: "/admin/teacher-manager",
+            link: "/officer/teacher-manager",
             icon: <UserOutlined />,
         },
         {
             name: "Quản lý người dùng",
-            link: "/admin/all-user",
+            link: "/officer/all-user",
             icon: <TeamOutlined />,
         },
     ];
@@ -41,37 +41,37 @@ const Aside = ({ collapsed, setCollapsed }) => {
     const study_manager = [
         {
             name: "Quản lý ngành học",
-            link: "/admin/majors",
+            link: "/officer/majors",
             icon: <BookOutlined />,
         },
         {
             name: "Quản lý môn học",
-            link: "/admin/list-subject",
+            link: "/officer/list-subjects",
             icon: <ReadOutlined />,
         },
         {
             name: "Kế hoạch học tập",
-            link: "/admin/list-syllabus",
+            link: "/officer/list-syllabus",
             icon: <BookFilled />,
         },
         {
             name: "Quản lý khóa học",
-            link: "/admin/list-course",
+            link: "/officer/list-course",
             icon: <BookOutlined />,
         },
         {
             name: "Quản lý kỳ học",
-            link: "/admin/list-semesters",
+            link: "/officer/list-semesters",
             icon: <CalendarOutlined />,
         },
         {
             name: "Quản lý phòng học",
-            link: "/admin/list-rooms",
+            link: "/officer/list-rooms",
             icon: <HomeOutlined />,
         },
         {
             name: "Quản lý lớp học",
-            link: "/admin/classrooms",
+            link: "/officer/classrooms",
             icon: <ReadOutlined />,
         },
     ];

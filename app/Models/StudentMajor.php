@@ -4,14 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Enrollment extends Model
+class StudentMajor extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'student_id',
-        'schedule_id',
+        'major_id',
+        'status'
     ];
+
+    public function major() {
+        return $this->belongsTo(Major::class);
+    }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Notification::class)->constrained()->cascadeOnDelete();
-            $table->boolean('status');
+            $table->boolean('status')->default(False);
             $table->timestamps();
         });
     }

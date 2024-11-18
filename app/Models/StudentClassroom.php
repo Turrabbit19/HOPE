@@ -13,6 +13,7 @@ class StudentClassroom extends Model
     protected $fillable = [
         'student_id',
         'classroom_id',
+        'study_date'
     ];
 
 

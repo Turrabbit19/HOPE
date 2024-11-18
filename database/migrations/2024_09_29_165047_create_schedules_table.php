@@ -1,15 +1,12 @@
 <?php
 
+use App\Models\Major;
 use App\Models\Classroom;
 use App\Models\Course;
-use App\Models\CourseSemester;
-use App\Models\Major;
-use App\Models\PlanSubject;
 use App\Models\Room;
 use App\Models\Semester;
 use App\Models\Shift;
 use App\Models\Subject;
-use App\Models\Teacher;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -25,9 +22,9 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Semester::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Classroom::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Shift::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Room::class)->nullable()->constrained()->cascadeOnDelete();
             $table->text('link')->nullable();

@@ -28,6 +28,7 @@ class ApiSubjectController extends Controller
                     'name' => $subject->name,
                     'description' => $subject->description,
                     'credit' => $subject->credit,
+                    'order' => $subject->order,
                     'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             }); 
@@ -45,28 +46,40 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function getAll()
+    
+    public function filterSubjectsByMajor() 
     {
         try {
-            $subjects = Subject::get();
-
-            $data = $subjects->map(function ($subject) {
-                return [
-                    'id' => $subject->id,
-                    'code' => $subject->code,
-                    'name' => $subject->name,
-                    'description' => $subject->description,
-                    'credit' => $subject->credit,
-                    'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
+            $majors = Major::with('subjects')->get();
+    
+            $subjectsByMajor = $majors->mapWithKeys(function ($major) {
+                $subjects = $major->subjects->map(function ($subject) {
+                    return [
+                        'id' => $subject->id,
+                        'name' => $subject->name,
+                        'description' => $subject->description,
+                        'credit' => $subject->credit,
+                        'order' => $subject->order,
+                    ];
+                });
+    
+                return [$major->name => [
+                        'id' => $major->id,
+                        'subjects' => $subjects
+                    ]
                 ];
             });
-            return response()->json(['data' => $data], 200);
+    
+            return response()->json($subjectsByMajor, 200);
+    
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy cập dữ liệu ngành hoặc môn học',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
-
+     
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -74,6 +87,7 @@ class ApiSubjectController extends Controller
             'name' => 'required|string|max:100|unique:subjects', 
             'description' => 'nullable|string|max:255', 
             'credit' => 'required|integer|min:1|max:19',
+            'order' => 'required|integer|min:1|max:9',
             'status' => 'boolean',
             'majors' => 'required|array',
             'majors.*.id' => 'required|exists:majors,id',
@@ -109,6 +123,7 @@ class ApiSubjectController extends Controller
                 'name' => $subject->name,
                 'description' => $subject->description,
                 'credit' => $subject->credit,
+                'order' => $subject->order,
                 'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
                 'majors' => $subject->majors->map(function ($major) {
                     return [
@@ -133,6 +148,7 @@ class ApiSubjectController extends Controller
             'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id, 
             'description' => 'nullable|string|max:255', 
             'credit' => 'sometimes|integer|min:1|max:19',
+            'order' => 'sometimes|integer|min:1|max:9',
             'status' => 'sometimes|boolean',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',
@@ -173,6 +189,19 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function restore(string $id)
+    {
+        try {
+            $subject = Subject::withTrashed()->findOrFail($id);
+            $subject->restore();
+            return response()->json(['message' => 'Khôi phục thành công'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 

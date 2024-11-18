@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
+use App\Models\Major;
 use App\Models\Student;
+use App\Models\StudentMajor;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -20,44 +22,55 @@ class ApiStudentController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 40);
-
-            $students = Student::paginate($perPage);
-
-            $data = collect($students->items())->map(function ($student) {
+            $perPage = $request->input('per_page', 40);    
+            $students = Student::with(['user', 'course'])->paginate($perPage);
+        
+            $majors = StudentMajor::with('major')
+                ->where('status', 1)
+                ->get()
+                ->groupBy('student_id'); 
+    
+            $data = collect($students->items())->map(function ($student) use ($majors) {
+                $studentMajor = $majors[$student->id]->first() ?? null; 
                 return [
                     "id" => $student->id,
-                    "avatar" => $student->user->avatar,
-                    "code" => $student->student_code,
+                    "avatar" => $student->user->avatar ?? null,
+                    "student_code" => $student->student_code,
                     "name" => $student->user->name,
                     "email" => $student->user->email,
                     "phone" => $student->user->phone,
 
                     'course_name' => $student->course->name,
-                    'major_name' => $student->major->name,
+                    'major_name' => $studentMajor->major->name,
                     'current_semester' => $student->current_semester,
-                    'status' => match($student->status) {
-                        "0" => "Đang học",
-                        "1" => "Bảo lưu",
-                        "2" => "Hoàn thành",
+                    'status' => match ($student->status) {
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
                         default => "Không xác định"
                     },
                 ];
             });
-
+    
             return response()->json([
                 'data' => $data,
                 'pagination' => [
-                        'total' => $students->total(),
-                        'per_page' => $students->perPage(),
-                        'current_page' => $students->currentPage(),
-                        'last_page' => $students->lastPage(),
-                    ],
+                    'total' => $students->total(),
+                    'per_page' => $students->perPage(),
+                    'current_page' => $students->currentPage(),
+                    'last_page' => $students->lastPage(),
+                ],
             ], 200);
+    
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Students',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
+    
+    
     public function exportStudent(){
         try {
             return Excel::download(new StudentExport, 'students.xlsx');
@@ -78,23 +91,23 @@ class ApiStudentController extends Controller
 
     public function getStudentsByCourse($courseId){
         try {
-            $students = Student::where('course_id', $courseId)->get();
+            $students = Student::with('user', 'course')->where('course_id', $courseId)->get();
             
-            $data = $students->map(function ($student) {
+            $majors = StudentMajor::with('major')->where('status', 1)
+                    ->get()->groupBy('student_id');
+
+            $data = $students->map(function ($student) use ($majors) {
+                $studentMajor = $majors[$student->id]->first() ?? null; 
                 return [
                     'id' => $student->id,
                     'avatar' => $student->user->avatar,
+                    'student_code' => $student->student_code,
                     'name' => $student->user->name,
                     'email' => $student->user->email,
                     'phone' => $student->user->phone,
-                    'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
-                    'gender' => $student->user->gender ? "Nam" : "Nữ",
-                    'ethnicity' => $student->user->ethnicity,
-                    'address' => $student->user->address,
 
-                    'student_code' => $student->student_code,
                     'course_name' => $student->course->name,
-                    'major_name' => $student->major->name,
+                    'major_name' => $studentMajor->major->name,
                     'current_semester' => $student->current_semester,
                     'status' => match($student->status) {
                         "0" => "Đang học",
@@ -126,7 +139,8 @@ class ApiStudentController extends Controller
             'address' => 'required|string|max:255',
 
             'student_course_id' => 'required|exists:courses,id',
-            'student_major_id' => 'required|exists:majors,id',
+            'student_branch_id' => 'required|exists:branches,id',
+            'student_major_id' => 'nullable|exists:majors,id',
 
             'student_code' => 'required|unique:students,student_code',
         ]);
@@ -171,7 +185,8 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
+                'branch_name' => $student->branch->name,
+                'major_name' => $student->major->name ?? "",
                 'current_semester' => $student->current_semester,
             ];
 
@@ -199,7 +214,8 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
+                'branch_name' => $student->branch->name,
+                'major_name' => $student->major->name ?? "",
                 'current_semester' => $student->current_semester,
                 'status' => match($student->status) {
                     "0" => "Đang học",

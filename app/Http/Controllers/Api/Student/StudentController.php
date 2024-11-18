@@ -4,16 +4,17 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\CourseSemester;
-use App\Models\PlanSubject;
 use App\Models\Schedule;
 use App\Models\Shift;
 use App\Models\Student;
 use App\Models\StudentClassroom;
+use App\Models\StudentMajor;
 use App\Models\StudentSchedule;
+use App\Models\StudyDay;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -55,42 +56,49 @@ class StudentController extends Controller
         }
     }
 
-    public function getSubjects() 
+    public function getSubjects()
     {
         $user = Auth::user();
-
+    
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
-
-            $courseId = $student->course_id;
-            $majorId = $student->major_id; 
-
-            $planId = Course::where('id', $courseId)->value('plan_id');
-
-            $subjects = PlanSubject::where('plan_id', $planId)->where('semester_order', $student->current_semester)
-                        ->join('major_subjects', 'plan_subjects.major_subject_id', '=', 'major_subjects.id')
-                        ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
-                        ->where('major_subjects.major_id', $majorId)
-                        ->select('subjects.id', 'subjects.code', 'subjects.name', 'subjects.credit')
-                        ->get();
-
-            $listSubjects = $subjects->map(function ($ls) {
+    
+            $registeredSubjects = StudentSchedule::where('student_id', $student->id)
+                ->join('schedules', 'schedules.id', '=', 'student_schedules.schedule_id')
+                ->pluck('schedules.subject_id')
+                ->toArray();
+    
+            $subjects = StudentMajor::where('student_majors.student_id', $student->id)
+                ->join('majors', 'majors.id', '=', 'student_majors.major_id')
+                ->join('major_subjects', 'major_subjects.major_id', '=', 'majors.id')
+                ->join('subjects', 'subjects.id', '=', 'major_subjects.subject_id')
+                ->where('subjects.order', $student->current_semester)
+                ->whereNotIn('subjects.id', $registeredSubjects) 
+                ->select('subjects.id', 'subjects.code', 'subjects.name', 'subjects.credit')
+                ->get();
+    
+            $listSubjects = $subjects->map(function ($subject) {
                 return [
-                    'id' => $ls->id,
-                    'code' => $ls->code,
-                    'name' => $ls->name,
-                    'credit' => $ls->credit,
+                    'id' => $subject->id,
+                    'code' => $subject->code,
+                    'name' => $subject->name,
+                    'credit' => $subject->credit,
                 ];
             });
-
+    
             return response()->json(['subjects' => $listSubjects], 200);
+    
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Students',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
-
+    
+    
     public function getShifts() 
     {
         try {
@@ -144,58 +152,86 @@ class StudentController extends Controller
         }
     }
     
-    public function registerSchedule($id) 
+    public function registerSchedule($id)
     {
         $user = Auth::user();
-
+    
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
-
-            $checkrSchedule = StudentSchedule::where('student_id', $student->id)
-            ->where('schedule_id', $id)
-            ->first();
-
-            if($checkrSchedule) {
+    
+            if (StudentSchedule::where('student_id', $student->id)->where('schedule_id', $id)->exists()) {
                 return response()->json(['message' => 'Bạn đã đăng ký rồi, vui lòng không đăng ký lại'], 409);
             }
-
+    
+            $newSchedule = Schedule::with('days')->findOrFail($id);
+    
+            $newScheduleDays = StudyDay::where('schedule_id', $id)->pluck('day_id')->toArray();
+            $newScheduleShift = $newSchedule->shift_id;
+    
+            $registeredSchedules = StudentSchedule::where('student_id', $student->id)
+                ->with(['schedule.days', 'schedule.shift'])
+                ->get();
+    
+            foreach ($registeredSchedules as $rSchedule) {
+                $existingSchedule = $rSchedule->schedule;
+                $existingDays = $existingSchedule->days->pluck('id')->toArray();
+                $existingShift = $existingSchedule->shift_id;
+    
+                if (
+                    !empty(array_intersect($newScheduleDays, $existingDays)) && 
+                    $newScheduleShift === $existingShift
+                ) {
+                    return response()->json([
+                        'message' => 'Lịch học này bị trùng ca và ngày học với lịch học của môn ' . $existingSchedule->subject->name,
+                        'conflict_schedule' => [
+                            'course_name' => $existingSchedule->course->name,
+                            'subject_name' => $existingSchedule->subject->name,
+                            'start_date' => $existingSchedule->start_date,
+                            'end_date' => $existingSchedule->end_date,
+                            'shift_name' => $existingSchedule->shift->name,
+                            'conflict_days' => array_intersect($newScheduleDays, $existingDays),
+                        ]
+                    ], 409);
+                }
+            }
+    
             $rschedule = StudentSchedule::create([
-                    'student_id' => $student->id,
-                    'schedule_id' => $id
-                ]);
-                            
+                'student_id' => $student->id,
+                'schedule_id' => $id
+            ]);
+    
             StudentClassroom::create([
                 'student_id' => $student->id,
-                'classroom_id' => $rschedule->schedule->classroom_id
+                'classroom_id' => $newSchedule->classroom_id,
+                'study_date' => $newSchedule->end_date
             ]);
-
+    
             $data = [
-                    'id' => $rschedule->id,
-                    'course_name' => $rschedule->schedule->course->name,
-                    'semester_name' => $rschedule->schedule->semester->name,
-                    'major_name' => $rschedule->schedule->major->name,
-                    'subject_name' => $rschedule->schedule->subject->name,
-                    'teacher_name' => $rschedule->schedule->teacher->name,
-                    'shift_name' => $rschedule->schedule->shift->name,
-                    'room_name' => $rschedule->schedule->room->name,
-                    'link' => $rschedule->schedule->link ? $rschedule->link : "NULL",
-                    'start_date' => Carbon::parse($rschedule->schedule->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($rschedule->schedule->end_date)->format('d/m/Y'),
-                    'days_of_week' => $rschedule->schedule->days->map(function($day) {
-                        return [
-                            "Thứ" => $day->id,
-                        ];
-                    }),
-                ];
-
+                'id' => $rschedule->id,
+                'course_name' => $newSchedule->course->name,
+                'semester_name' => $newSchedule->semester->name,
+                'major_name' => $newSchedule->major->name,
+                'subject_name' => $newSchedule->subject->name,
+                'shift_name' => $newSchedule->shift->name,
+                'room_name' => $newSchedule->room->name,
+                'link' => $newSchedule->link ?? 'NULL',
+                'start_date' => Carbon::parse($newSchedule->start_date)->format('d/m/Y'),
+                'end_date' => Carbon::parse($newSchedule->end_date)->format('d/m/Y'),
+                'days_of_week' => $newSchedule->days->map(fn($day) => ["Thứ" => $day->id]),
+            ];
+    
             return response()->json(['message' => 'Đăng ký thành công', 'data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể xử lý yêu cầu',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
-
+    
+    
     public function getTimetable() 
     {
         $user = Auth::user();

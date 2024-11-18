@@ -77,4 +77,9 @@ class Schedule extends Model
     {
         return $this->belongsTo(Room::class);
     }
+
+    public function studentSchedules()
+    {
+        return $this->hasMany(StudentSchedule::class);
+    }
 }

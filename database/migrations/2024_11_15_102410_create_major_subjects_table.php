@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Major;
+use App\Models\Subject;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,12 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plans', function (Blueprint $table) {
+        Schema::create('major_subjects', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->tinyInteger('semester_total');
-            $table->boolean('status')->default(TRUE); // 'Đang hoạt động', 'Tạm dừng'
-            $table->softDeletes();
+            $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plans');
+        Schema::dropIfExists('major_subjects');
     }
 };

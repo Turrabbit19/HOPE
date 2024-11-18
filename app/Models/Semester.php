@@ -14,7 +14,6 @@ class Semester extends Model
         'name',
         'start_date',
         'end_date',
-        'status',
     ];
 
     public function courses()

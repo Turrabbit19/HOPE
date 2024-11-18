@@ -177,4 +177,17 @@ class ApiNotificationController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function restore(string $id)
+    {
+        try {
+            $notification = Notification::withTrashed()->findOrFail($id);
+            $notification->restore();
+            return response()->json(['message' => 'Khôi phục thành công'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông báo với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

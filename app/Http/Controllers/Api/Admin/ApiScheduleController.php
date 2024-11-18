@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseSemester;
+use App\Models\Major;
+use App\Models\MajorSubject;
 use App\Models\PlanSubject;
 use App\Models\Schedule;
 use App\Models\Subject;
@@ -40,56 +42,54 @@ class ApiScheduleController extends Controller
     public function getMajorsByCourse($courseId)
     {
         try {
-            $planId = Course::where('id', $courseId)->value('plan_id');
-
-            $majors = PlanSubject::where('plan_id', $planId)
-                                ->get()
-                                ->pluck('majorSubject.major') 
-                                ->unique('id') 
-                                ->values(); 
-
-            $data = $majors->map(function($major) {
+            $majors = Major::whereHas('students.course', fn($query) => $query->where('id', $courseId))
+            ->withCount('students')
+            ->get();        
+    
+            $data = $majors->map(function ($major) {
                 return [
                     'id' => $major->id,
-                    'name' => $major->name, 
+                    'name' => $major->name,
+                    'credit' => $major->credit,
+                    'student_count' => $major->students_count,
                 ];
             });
-
+    
             return response()->json(['majors' => $data], 200);
+    
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng PlanSubject', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function getSubjects($courseId, $semesterId, $majorId)
+    public function getSubjects($semesterId, $courseId, $majorId)
     {
         try {
-            $courseSemester = CourseSemester::where('course_id', $courseId)
+            $order = CourseSemester::where('course_id', $courseId)
                 ->where('semester_id', $semesterId)
-                ->first();
+                ->value('order');
 
-            $subjects = PlanSubject::whereHas('majorSubject', function ($query) use ($majorId) {
-                    $query->where('major_id', $majorId);
-                })
-                ->where('semester_order', $courseSemester->order) 
-                ->with('majorSubject.subject')
+            $subjects = MajorSubject::where('major_id', $majorId)
+                ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
+                ->where('subjects.order', $order)
                 ->get();
-
+            
             $data = $subjects->map(function($subject) {
                 return [
-                    "id" => $subject->majorSubject->subject->id,
-                    "name" => $subject->majorSubject->subject->name
+                    "id" => $subject->id,
+                    "name" => $subject->name,
+                    "credit" => $subject->credit
                 ];
             });
 
             return response()->json(['subjects' => $data], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng PlanSubject', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }
     }
-    
+
     public function index(Request $request)
     {
         try {
@@ -124,7 +124,7 @@ class ApiScheduleController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedules', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -230,12 +230,11 @@ class ApiScheduleController extends Controller
             ->exists();
     }
     
-    public function addSchedules(Request $request, string $subjectId, $courseId, $semesterId, $majorId)
+    public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
     {
         $validator = Validator::make($request->all(), [
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
-            'classrooms.*.teacher_id' => 'required|exists:teachers,id',
             'classrooms.*.shift_id' => 'required|exists:shifts,id',
             'classrooms.*.room_id' => 'nullable|exists:rooms,id',
             'classrooms.*.link' => 'nullable|sometimes|url',
@@ -276,7 +275,6 @@ class ApiScheduleController extends Controller
                     'subject_id' => $subjectId,  
 
                     'classroom_id' => $classroom['id'],
-                    'teacher_id' => $classroom['teacher_id'],
                     'shift_id' => $classroom['shift_id'],
                     'room_id' => $classroom['room_id'],
                     'link' => $classroom['link'],
@@ -295,7 +293,6 @@ class ApiScheduleController extends Controller
                     'data' => [
                         'subject_name' => $schedule->subject->name,
                         'classroom_id' => $schedule->classroom_id,
-                        'teacher_name' => $schedule->teacher->user->name,
                         'shift_name' => $schedule->shift->name,
                         'room_name' => $schedule->room ? $schedule->room->name : 'NULL',
                         'link' => $schedule->link ? $schedule->link : "NULL",

@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\MajorSubject;
-use App\Models\Plan;
+use App\Models\Major;
+use App\Models\Student;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,11 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plan_subjects', function (Blueprint $table) {
+        Schema::create('student_majors', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Plan::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(MajorSubject::class)->constrained()->cascadeOnDelete();
-            $table->tinyInteger('semester_order');
+            $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Major::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plan_subjects');
+        Schema::dropIfExists('student_majors');
     }
 };

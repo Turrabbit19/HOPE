@@ -12,10 +12,14 @@ class StudentNotification extends Model
     protected $fillable = [
         'student_id',
         'notification_id',
-        'status',
+        'status'
     ];
-    
-    protected $casts = [
-        'status' => 'boolean',
-    ];
+
+    public function student() {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function notification() {
+        return $this->belongsTo(Notification::class);
+    }
 }

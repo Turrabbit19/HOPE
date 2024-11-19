@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Excel\Export\TeacherExport;
+use App\Excel\Import\TeacherImport;
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\User;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ApiTeacherController extends Controller
 {
@@ -53,6 +56,42 @@ class ApiTeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
     }
+    public function exportTeacher(){
+        try {
+            return Excel::download(new TeacherExport, 'teachers.xlsx');
+        
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function importTeacher(Request $request){
+        try {
+            Excel::import(new TeacherImport, $request->file('file'));
+        
+            return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function filterTeachersByMajor(string $majorId) {
+        try {
+            $listTeachers = Teacher::with('user')->where('major_id', $majorId)->get();
+
+            $data = $listTeachers->map(function ($teacher) {
+                return [
+                    'id' => $teacher->id,
+                    'name' => $teacher->user->name
+                ];
+            });
+
+            return response()->json(['listTeachers' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
+        }
+    }
 
     public function store(Request $request)
     {
@@ -88,7 +127,7 @@ class ApiTeacherController extends Controller
                 'ethnicity' => $data['ethnicity'],
                 'address' => $data['address'],
                 'password' => Hash::make("123456789"),
-                'role_id' => 3,
+                'role_id' => 4,
             ]);
 
             $teacher = Teacher::create([

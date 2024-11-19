@@ -15,7 +15,6 @@ class Schedule extends Model
         'semester_id',
         'major_id',
         'subject_id',
-
         'classroom_id',
         'teacher_id',
         'shift_id',
@@ -50,14 +49,13 @@ class Schedule extends Model
     public function days()
     {
         return $this->belongsToMany(Day::class, 'study_days')
-                    ->select('days.id');
+                    ->select('days.id'); 
     }
 
     public function lessons()
     {
         return $this->belongsToMany(Lesson::class, 'schedule_lessons')
                     ->withPivot('study_date');
-
     }
 
     public function classroom()
@@ -78,5 +76,10 @@ class Schedule extends Model
     public function room()
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function studentSchedules()
+    {
+        return $this->hasMany(StudentSchedule::class);
     }
 }

@@ -20,8 +20,22 @@ class Major extends Model
         'status' => 'boolean',
     ];
 
+    public function parent()
+    {
+        return $this->belongsTo(Major::class, 'major_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Major::class, 'major_id');
+    }
+
     public function subjects()
     {
         return $this->belongsToMany(Subject::class, 'major_subjects');
+    }
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'student_majors');
     }
 }

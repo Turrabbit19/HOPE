@@ -15,10 +15,8 @@ return new class extends Migration
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->foreignIdFor(Plan::class)->constrained()->cascadeOnDelete();
             $table->date('start_date');
             $table->date('end_date');
-            $table->enum('status', [0, 1, 2])->default(0); // 0: Chờ diễn ra, 1: Đang diễn ra, 2: Kết thúc
             $table->softDeletes();
             $table->timestamps();
         });

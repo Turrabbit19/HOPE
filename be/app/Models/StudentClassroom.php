@@ -10,25 +10,17 @@ class StudentClassroom extends Model
 {
     use HasFactory;
 
-
     protected $fillable = [
         'student_id',
         'classroom_id',
-        'schedule_id',
-        'status',
+        'study_date'
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-    ];
 
     public function student() {
         return $this->belongsTo(Student::class);
     }
     public function classroom() {
         return $this->belongsTo(Classroom::class);
-    }
-    public function schedule() {
-        return $this->belongsTo(Schedule::class);
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->boolean('status')->default(TRUE); // 'Đang trống', 'Đang hoạt động'
+            $table->boolean('status')->default(TRUE); // 'Đang hoạt động', 'Tạm dừng'
             $table->softDeletes();
             $table->timestamps();
         });

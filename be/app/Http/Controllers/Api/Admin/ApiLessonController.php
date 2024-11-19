@@ -23,8 +23,7 @@ class ApiLessonController extends Controller
                     'name' => $lesson->name,
                     'description' =>$lesson->description,
                 ];
-            });
-
+            }); 
 
             return response()->json([
                 'data' => $data,
@@ -76,7 +75,7 @@ class ApiLessonController extends Controller
         try {
             $data = $validator->validated();
             $lesson = Lesson::create($data);
-
+            
             return response()->json(['data' => $lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -117,16 +116,13 @@ class ApiLessonController extends Controller
 
         try {
             $lesson = Lesson::findOrFail($id);
-
+            
             $data = $validator->validated();
             $lesson->update($data);
-
-
+            
             return response()->json(['data' => $lesson, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
-
-
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }

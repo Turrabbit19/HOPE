@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Major;
 use App\Models\MajorSubject;
+use App\Models\PlanSubject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -32,14 +33,30 @@ class ApiMajorController extends Controller
         }
     }
 
+    public function getMainMajors() {
+        try {
+            $mainMajors = Major::where('main', 1)->get();
+            
+            $data = $mainMajors->map(function ($mm) {
+                return [
+                    'id' => $mm->id,
+                    'name' => $mm->name
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|max:19|unique:majors,code',
             'name' => 'required|string|max:50|unique:majors,name',
             'description' => 'required|string',
-            'status' => 'string'
-            // 'status' => 'boolean',
+            'status' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -48,9 +65,6 @@ class ApiMajorController extends Controller
 
         try {
             $data = $validator->validated();
-
-            $data['code'] = $this->generateCodeFromName($data['name']);
-
             $major = Major::create($data);
 
             return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);
@@ -58,37 +72,6 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
-
-    private function convertVietnameseToEnglish($string) {
-        return iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $string);
-    }
-    private function generateCodeFromName($name){
-        $name = $this->convertVietnameseToEnglish($name);
-        $parts = explode(' ', trim($name));
-        $code = '';
-        foreach ($parts as $part) {
-            if (!empty($part)) {
-                $code .= strtoupper($part[0]);
-            }
-        }
-        $day = date('d');
-        $random = rand(10, 99);
-        return strtoupper($code . $day . $random);
-    }
-
-    public function restore($id)
-{
-    $major = Major::withTrashed()->find($id);
-
-    if ($major) {
-        $major->restore();
-
-        return response()->json(['data' => $major, 'message' => 'Khôi phục thành công.'], 200);
-    }
-
-    return response()->json(['error' => 'Không tìm thấy bản ghi.'], 404);
-}
 
     public function show(string $id)
     {
@@ -125,7 +108,7 @@ class ApiMajorController extends Controller
 
         try {
             $major = Major::findOrFail($id);
-
+            
             $data = $validator->validated();
             $major->update($data);
 
@@ -150,27 +133,33 @@ class ApiMajorController extends Controller
         }
     }
 
-    public function getAllSubjects(string $majorId) {
-
+    public function restore(string $id)
+    {
         try {
-            $majorSubjects = MajorSubject::where('major_id', $majorId)->with('subject')->get();
+            $major = Major::withTrashed()->findOrFail($id);
 
-            $data = $majorSubjects->map(function ($majorSubject) {
-                return [
-                    'id' => $majorSubject->subject->id,
-                    'code' => $majorSubject->subject->code,
-                    'name' => $majorSubject->subject->name,
-                    'description' => $majorSubject->subject->description,
-                    'credit' => $majorSubject->subject->credit,
-                    'status' => $majorSubject->subject->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
+            if (!$major->trashed()) {
+                return response()->json(['error' => 'Ngành học này chưa bị xóa.'], 400);
+            }
 
-            return response()->json(['data' => $data], 200);
+            $major->restore();
+
+            return response()->json(['data' => $major, 'message' => 'Khôi phục thành công.'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy chuyên ngành với ID: ' . $majorId], 404);
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    public function getAllSubjects(string $majorId) 
+    {   
+        try {
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
     }
 }

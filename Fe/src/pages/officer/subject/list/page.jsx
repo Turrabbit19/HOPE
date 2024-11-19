@@ -1,4 +1,5 @@
 // src/pages/officer/ListSubject.jsx
+
 import {
     Pagination,
     Row,
@@ -14,7 +15,13 @@ import {
     notification,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import React, { useEffect, useState, useContext, useCallback } from "react";
+import React, {
+    useEffect,
+    useState,
+    useContext,
+    useCallback,
+    useMemo,
+} from "react";
 import { AuthContext } from "../../../../context/authContext";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading/page";
@@ -46,27 +53,125 @@ const ListSubject = () => {
         total: 0,
     });
 
+    // Hàm chuyển đổi status thành boolean
+    const convertStatusToBoolean = (status) => {
+        console.log("Converting status:", status);
+        if (typeof status === "string") {
+            const normalizedStatus = status.trim().toLowerCase();
+            const result =
+                normalizedStatus === "đang hoạt động" ||
+                normalizedStatus === "active" ||
+                normalizedStatus === "1" ||
+                normalizedStatus === "true"; // Thêm các giá trị khác nếu cần
+            console.log("Converted to boolean:", result);
+            return result;
+        } else if (typeof status === "boolean") {
+            console.log("Status is already boolean:", status);
+            return status;
+        } else if (typeof status === "number") {
+            const result = status === 1;
+            console.log("Converted number status to boolean:", result);
+            return result;
+        }
+        console.log("Default status:", false);
+        return false; // Mặc định là false nếu không rõ
+    };
+
+    // Logic hiển thị các môn học: nếu có filteredCourses, sử dụng filteredCourses
+    const displayCourses = useMemo(() => {
+        let courses = subjects;
+
+        if (filteredCourses.length > 0) {
+            courses = filteredCourses;
+        }
+
+        if (searchValue) {
+            courses = courses.filter((subject) =>
+                subject.name.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+
+        console.log("Display Courses:", courses);
+        return courses;
+    }, [subjects, filteredCourses, searchValue]);
+
     // Hàm fetchData để lấy dữ liệu môn học và ngành học
     const fetchData = useCallback(
         async (page = 1, perPage = 9) => {
             try {
                 setLoading(true);
+                // Fetch subjects và majors
                 const [subjectsResponse, majorsResponse] = await Promise.all([
                     instance.get("officer/subjects", {
                         params: { per_page: perPage, page: page },
                     }),
                     instance.get("officer/majors"),
                 ]);
-                setMajors(majorsResponse.data.data);
 
-                // Chuyển đổi subject.majors thành mảng các ID
+                // Log dữ liệu nhận được từ API
+                console.log("Subjects Response:", subjectsResponse.data.data);
+                console.log("Majors Response:", majorsResponse.data.data);
+
+                // Chuyển đổi majors
+                const fetchedMajors = majorsResponse.data.data.map((major) => ({
+                    ...major,
+                    id: String(major.id), // Đảm bảo ID là string
+                }));
+                setMajors(fetchedMajors);
+
+                // Lấy tất cả các major IDs
+                const allMajorIds = fetchedMajors.map((major) => major.id);
+
+                // Fetch subjects with majors using 'filterSubjectsByMajor'
+                const filterResponse = await instance.get(
+                    "officer/filter/subjects",
+                    {
+                        params: { majors: allMajorIds }, // Gửi majors dưới dạng mảng
+                    }
+                );
+
+                const subjectsByMajor = filterResponse.data; // Dữ liệu trả về từ API
+
+                // Log dữ liệu đã lọc từ API
+                console.log(
+                    "Filter Subjects By Major Response:",
+                    subjectsByMajor
+                );
+
+                // Tạo bản đồ từ subjectId đến danh sách majors
+                const subjectToMajorsMap = {};
+
+                for (const [majorName, majorData] of Object.entries(
+                    subjectsByMajor
+                )) {
+                    const majorId = String(majorData.id);
+                    const subjectsList = majorData.subjects;
+
+                    subjectsList.forEach((subject) => {
+                        const subjectId = String(subject.id);
+                        if (!subjectToMajorsMap[subjectId]) {
+                            subjectToMajorsMap[subjectId] = [];
+                        }
+                        subjectToMajorsMap[subjectId].push({
+                            id: majorId,
+                            name: majorName,
+                        });
+                    });
+                }
+
+                // Xử lý subjects để bao gồm majors và status
                 const subjectsWithMajors = subjectsResponse.data.data.map(
                     (subject) => ({
                         ...subject,
-                        majors: subject.majors
-                            ? subject.majors.map((major) => major.id)
-                            : [],
+                        status: convertStatusToBoolean(subject.status), // Chuyển đổi status
+                        majors: subjectToMajorsMap[String(subject.id)] || [],
                     })
+                );
+
+                // Log dữ liệu đã xử lý
+                console.log(
+                    "Processed Subjects with Majors:",
+                    subjectsWithMajors
                 );
 
                 setSubjects(subjectsWithMajors);
@@ -159,7 +264,7 @@ const ListSubject = () => {
             await instance.post(`officer/subject/${id}/restore`);
 
             // Gọi lại fetchData để cập nhật danh sách môn học
-            fetchData(pagination.current, pagination.pageSize);
+            await fetchData(pagination.current, pagination.pageSize);
 
             // Loại bỏ môn học khỏi deletedSubjects
             setDeletedSubjects(
@@ -194,15 +299,24 @@ const ListSubject = () => {
                 credit: values.credit,
                 status: values.status,
                 order: values.semester,
-                majors: values.majors.map((id) => ({ id })),
+                majors: values.majors.map((id) => ({ id: String(id) })), // Chuyển ID thành string
             };
             console.log("Payload gửi lên:", payload);
             const response = await instance.post("officer/subjects", payload);
             const newSubject = response.data.data;
+
+            // Log dữ liệu nhận được sau khi thêm mới
+            console.log("New Subject:", newSubject);
+
             message.success("Thêm môn học mới thành công!");
             setIsPopupVisible(false);
             formAddEdit.resetFields();
-            setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
+
+            // Gọi lại fetchData để cập nhật danh sách môn học
+            await fetchData(pagination.current, pagination.pageSize);
+
+            // Xóa bộ lọc để displayCourses lấy từ subjects
+            setFilteredCourses([]);
         } catch (error) {
             console.error("Lỗi khi thêm môn học:", error.response);
             if (error.response && error.response.status === 403) {
@@ -230,14 +344,15 @@ const ListSubject = () => {
         setUpdate(true);
         try {
             const subjectData = await getSubjectById(subject.id);
+            console.log("Subject Data for Editing:", subjectData);
             formAddEdit.setFieldsValue({
                 code: subjectData.code,
                 name: subjectData.name,
                 description: subjectData.description,
                 credit: subjectData.credit,
-                status: subjectData.status === "Đang hoạt động",
+                status: convertStatusToBoolean(subjectData.status), // Chuyển đổi status
                 semester: subjectData.order,
-                majors: subjectData.majors.map((m) => m.id),
+                majors: subjectData.majors.map((m) => String(m.id)),
             });
             setInitialValues(subject.id);
         } catch (error) {
@@ -260,7 +375,7 @@ const ListSubject = () => {
                 credit: values.credit,
                 status: values.status,
                 order: values.semester,
-                majors: values.majors.map((id) => ({ id })),
+                majors: values.majors.map((id) => ({ id: String(id) })), // Chuyển ID thành string
             };
             console.log("Payload cập nhật:", payload);
             const response = await instance.put(
@@ -268,15 +383,19 @@ const ListSubject = () => {
                 payload
             );
             const updatedSubject = response.data.data;
-            setSubjects((prevSubjects) =>
-                prevSubjects.map((subject) =>
-                    subject.id === updatedSubject.id ? updatedSubject : subject
-                )
-            );
+
+            // Log dữ liệu nhận được sau khi cập nhật
+            console.log("Updated Subject:", updatedSubject);
+
             message.success("Cập nhật môn học thành công");
             setIsPopupVisible(false);
             formAddEdit.resetFields();
-            setUpdate(!update);
+
+            // Gọi lại fetchData để cập nhật danh sách môn học
+            await fetchData(pagination.current, pagination.pageSize);
+
+            // Xóa bộ lọc để displayCourses lấy từ subjects
+            setFilteredCourses([]);
         } catch (error) {
             console.error("Lỗi khi cập nhật môn học:", error.response);
             if (error.response && error.response.status === 403) {
@@ -298,45 +417,57 @@ const ListSubject = () => {
         setIsModalVisible(true);
     };
 
-    const handleOk = async () => {
+    const handleOkFilter = async () => {
         try {
             // Lấy giá trị từ form lọc
             const values = await formFilter.validateFields();
-            const selectedMajorIds = values.majors;
+            const selectedMajorIds = values.majors.map((id) => String(id)); // Đảm bảo là string
 
             const response = await instance.get("officer/filter/subjects", {
-                params: { majors: selectedMajorIds },
+                params: { majors: selectedMajorIds }, // Gửi majors dưới dạng mảng
             });
 
             const data = response.data;
 
-            // Tạo bản đồ từ subjectId đến thông tin môn học và các ngành học liên quan
+            // Log dữ liệu nhận được từ API
+            console.log("Filter Subjects By Major Response:", data);
+
+            // Tạo bản đồ từ subjectId đến danh sách majors
             const subjectMap = {};
 
-            for (const majorName in data) {
-                if (Object.prototype.hasOwnProperty.call(data, majorName)) {
-                    const majorData = data[majorName];
-                    const majorId = majorData.id;
-                    const subjectsList = majorData.subjects;
+            for (const [majorName, majorData] of Object.entries(data)) {
+                const majorId = String(majorData.id);
+                const subjectsList = majorData.subjects;
 
-                    subjectsList.forEach((subject) => {
-                        if (subjectMap[subject.id]) {
-                            // thêm id ngành học vào mảng majors
-                            subjectMap[subject.id].majors.push(majorId);
-                        } else {
-                            // tạo mới entry với mảng majors chứa id ngành học hiện tại
-                            subjectMap[subject.id] = {
-                                ...subject,
-                                majors: [majorId],
-                            };
-                        }
-                    });
-                }
+                subjectsList.forEach((subject) => {
+                    const subjectId = String(subject.id);
+                    if (subjectMap[subjectId]) {
+                        // thêm id ngành học vào mảng majors
+                        subjectMap[subjectId].majors.push({
+                            id: majorId,
+                            name: majorName,
+                        });
+                    } else {
+                        // tạo mới entry với mảng majors chứa id ngành học hiện tại và xử lý status
+                        subjectMap[subjectId] = {
+                            ...subject,
+                            majors: [{ id: majorId, name: majorName }],
+                            status: convertStatusToBoolean(subject.status), // Xử lý status là boolean
+                        };
+                    }
+                });
             }
 
             // Chuyển đổi bản đồ thành mảng
             let filteredSubjects = Object.values(subjectMap);
             console.log("Filtered Subjects:", filteredSubjects); // Log dữ liệu đã lọc
+
+            // Kiểm tra các giá trị status sau khi chuyển đổi
+            filteredSubjects.forEach((subject) => {
+                console.log(
+                    `Subject ID: ${subject.id}, Status: ${subject.status}`
+                );
+            });
 
             // Cập nhật state với danh sách môn học đã lọc có thông tin ngành học
             setFilteredCourses(filteredSubjects);
@@ -355,25 +486,6 @@ const ListSubject = () => {
     if (loading) {
         return <Loading />;
     }
-
-    // Logic hiển thị các môn học: nếu có filteredCourses, sử dụng filteredCourses
-
-    const displayCourses = (() => {
-        let courses = subjects;
-
-        if (filteredCourses.length > 0) {
-            courses = filteredCourses;
-        }
-
-        if (searchValue) {
-            courses = courses.filter((subject) =>
-                subject.name.toLowerCase().includes(searchValue.toLowerCase())
-            );
-        }
-
-        console.log("Display Courses:", courses);
-        return courses;
-    })();
 
     return (
         <>
@@ -542,17 +654,10 @@ const ListSubject = () => {
                                                 {subject.majors &&
                                                 subject.majors.length > 0
                                                     ? subject.majors
-                                                          .map((majorId) => {
-                                                              const major =
-                                                                  majors.find(
-                                                                      (m) =>
-                                                                          m.id ===
-                                                                          majorId
-                                                                  );
-                                                              return major
-                                                                  ? major.name
-                                                                  : "Không xác định";
-                                                          })
+                                                          .map(
+                                                              (major) =>
+                                                                  major.name
+                                                          )
                                                           .join(", ")
                                                     : "Không xác định"}
                                             </span>
@@ -834,7 +939,7 @@ const ListSubject = () => {
                     <Modal
                         title="Lọc Môn Học"
                         visible={isModalVisible}
-                        onOk={handleOk}
+                        onOk={handleOkFilter}
                         onCancel={handleCancel}
                         centered
                         width={600}

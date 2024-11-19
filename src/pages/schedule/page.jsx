@@ -181,7 +181,7 @@ export default function DashboardActions() {
                   </div>
                   {schedule && lesson ? (
                     <div>
-                      <p className="font-semibold">{schedule.teacher_name}</p>
+                      {/* <p className="font-semibold">{schedule.teacher_name}</p> */}
                       <p>{schedule.room_name}</p>
                       <p>{schedule.subject_name}</p>
                       <button
@@ -235,7 +235,7 @@ export default function DashboardActions() {
                         <td key={day} className="p-3 text-center border border-gray-200">
                           {schedule && lesson ? (
                             <div>
-                              <p>{schedule.teacher_name}</p>
+                              {/* <p>{schedule.teacher_name}</p> */}
                               <p>{schedule.room_name}</p>
                               <p className="font-semibold">{schedule.subject_name}</p>
                               <button

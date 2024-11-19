@@ -14,26 +14,37 @@ import {
   ChevronUp,
   AlertCircle,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 export default function Component() {
   const [student, setStudent] = useState(null)
+  const [timetable, setTimetable] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showPersonalInfo, setShowPersonalInfo] = useState(false)
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)) // October 2024
+  const [currentDate, setCurrentDate] = useState(new Date())
 
   useEffect(() => {
-    const fetchStudentData = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem('token')
 
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/student', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        setStudent(response.data.data)
+        const [studentResponse, timetableResponse] = await Promise.all([
+          axios.get('http://127.0.0.1:8000/api/student', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          axios.get('http://127.0.0.1:8000/api/student/timetable', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        ])
+        setStudent(studentResponse.data.data)
+        setTimetable(timetableResponse.data.data)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -41,13 +52,13 @@ export default function Component() {
       }
     }
 
-    fetchStudentData()
+    fetchData()
   }, [])
 
   const handleRetry = () => {
     setLoading(true)
     setError(null)
-    fetchStudentData()
+    fetchData()
   }
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
@@ -76,6 +87,21 @@ export default function Component() {
     'November',
     'December',
   ]
+
+  const getTodayClasses = () => {
+    const today = new Date().toLocaleDateString('en-GB') // Format: DD/MM/YYYY
+    return timetable.flatMap(subject => 
+      subject.schedule_lessons.filter(lesson => lesson.date === today)
+        .map(lesson => ({
+          name: subject.subject_name,
+          time: subject.shift_name,
+          status: lesson.status,
+          room: subject.room_name
+        }))
+    )
+  }
+
+  const todayClasses = getTodayClasses()
 
   if (loading) {
     return (
@@ -158,32 +184,31 @@ export default function Component() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Lớp Học Hôm Nay</h3>
             <div className="flex items-center text-gray-500">
-              <span className="mr-2">16 May 2024</span>
+              <span className="mr-2">{new Date().toLocaleDateString('en-GB')}</span>
               <Calendar className="w-4 h-4" />
             </div>
           </div>
           <ul className="space-y-4">
-            {[
-              { name: 'PHP3', time: '09:00 - 09:45 AM', status: 'Hoàn Thành' },
-              { name: 'PTCN2', time: '10:45 - 11:30 AM', status: 'Hoàn Thành' },
-              { name: 'JS Nâng Cao', time: '11:30 - 12:15 AM', status: 'Sắp Tới' },
-            ].map((cls, index) => (
-              <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                <div className="flex items-center space-x-3">
-                  <img src="/placeholder.svg?height=40&width=40" alt={cls.name} className="w-10 h-10 rounded-full" />
-                  <div>
-                    <p className="font-medium">{cls.name}</p>
-                    <p className="text-sm text-gray-500 flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {cls.time}
-                    </p>
+            {todayClasses.length > 0 ? (
+              todayClasses.map((cls, index) => (
+                <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                  <div className="flex items-center space-x-3">
+                    <img src="/placeholder.svg?height=40&width=40" alt={cls.name} className="w-10 h-10 rounded-full" />
+                    <div>
+                      <p className="font-medium">{cls.name}</p>
+                      <p className="text-sm text-gray-500 flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {cls.time}
+                      </p>
+                      <p className="text-sm text-gray-500">Room: {cls.room}</p>
+                    </div>
                   </div>
-                </div>
-                <span className={`text-sm ${cls.status === 'Hoàn Thành' ? 'text-green-500' : 'text-yellow-500'}`}>
-                  {cls.status}
-                </span>
-              </li>
-            ))}
+                  
+                </li>
+              ))
+            ) : (
+              <li className="text-center text-gray-500">No classes today</li>
+            )}
           </ul>
         </div>
       </div>
@@ -292,13 +317,13 @@ export default function Component() {
           <div className="bg-gray-100 p-4 rounded">
             <div className="flex justify-between items-center mb-4">
               <button onClick={prevMonth} className="p-1 hover:bg-gray-200 rounded-full">
-                <Calendar className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <h4 className="text-lg font-medium">
                 {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h4>
               <button onClick={nextMonth} className="p-1 hover:bg-gray-200 rounded-full">
-                <Calendar className="w-5 h-5" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
             <div className="grid grid-cols-7 gap-2 text-center">
@@ -312,11 +337,16 @@ export default function Component() {
               ))}
               {Array.from({ length: daysInMonth }).map((_, index) => {
                 const day = index + 1
-                const isToday = day === 10 // Assuming 10th is the current day as shown in the image
-                return  (
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                const isToday = date.toDateString() === new Date().toDateString()
+                return (
                   <div
                     key={day}
-                    className={`text-sm p-2 rounded-full ${isToday ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+                    className={`text-sm p-2 rounded-full ${
+                      isToday
+                        ? 'bg-blue-500 text-white'
+                        : 'hover:bg-gray-200'
+                    }`}
                   >
                     {day}
                   </div>

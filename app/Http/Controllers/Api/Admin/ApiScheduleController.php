@@ -334,7 +334,6 @@ class ApiScheduleController extends Controller
     
         return false; 
     }
-    
     public function assignTeacherSchedules(Request $request)
     {
         Log::debug('Request data:', $request->all());

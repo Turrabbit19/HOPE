@@ -11,9 +11,11 @@ class Major extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'main',
         'code',
         'name',
         'description',
+        'major_id',
         'status',
     ];
     protected $casts = [

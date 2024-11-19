@@ -57,6 +57,8 @@ class ApiMajorController extends Controller
             'name' => 'required|string|max:50|unique:majors,name',
             'description' => 'required|string',
             'status' => 'boolean',
+            'checkMajor' => 'nullable|integer',
+            'major_id' => 'nullable|integer|exists:majors,id'
         ]);
 
         if ($validator->fails()) {
@@ -65,6 +67,15 @@ class ApiMajorController extends Controller
 
         try {
             $data = $validator->validated();
+
+            if($request['checkMajor'] == 1) {
+                $data['main'] = 1; 
+            } elseif($request['checkMajor'] == 2) {
+                $data['major_id'] = $request['major_id'];
+            } else {
+
+            }
+
             $major = Major::create($data);
 
             return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);

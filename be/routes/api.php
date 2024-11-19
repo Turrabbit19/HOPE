@@ -21,8 +21,10 @@ use App\Http\Controllers\Api\Auth\ApiAuthController;
 
 use App\Http\Controllers\Api\Client\ApiClientController;
 
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,7 +44,11 @@ use Illuminate\Support\Facades\Route;
 // Route::post('login', [ApiAuthController::class, 'login']);
 // Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
 // Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
+Route::post('google-login', [GoogleController::class, 'googleLogin']);
 
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle']);
+
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
     Route::
     // middleware(['auth:sanctum', 'role:Quản trị viên'])->
     prefix('admin')

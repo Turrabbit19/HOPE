@@ -2,32 +2,37 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { Button, Checkbox, Form, Input, Modal } from "antd";
 import React from "react";
 import { Link } from "react-router-dom";
+import instance from "../../config/axios";
 // import ThemeToggleButton from "../../theme/themeToggleButton";
 
 const HeaderLandingPage = () => {
-  
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const showLoading = () => {
     setOpen(true);
     setLoading(true);
 
-    
     setTimeout(() => {
       setLoading(false);
     }, 1500);
   };
-  const onFinish = (values) => {
-    console.log("Success:", values);
+  const onFinish = async (credentialResponse) => {
+    try {
+      console.log("Google Credential:", credentialResponse.credential);
+      const { data } = await instance.post("google-login", {
+        credential: credentialResponse.credential,
+      });
+      console.log("Server Response:", data);
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+    }
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
   return (
     <>
-    
       <Modal
-      
         title={<p>Đăng nhập</p>}
         footer={null}
         loading={loading}
@@ -38,11 +43,10 @@ const HeaderLandingPage = () => {
         <Form
           className="flex flex-col justify-center items-center mt-10"
           name="basic"
-          
           // style={{
           //   maxWidth: 500,
           // }}
-          
+
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off"
@@ -57,7 +61,7 @@ const HeaderLandingPage = () => {
               },
             ]}
             style={{
-              width: 450
+              width: 450,
             }}
           >
             <Input />
@@ -73,26 +77,23 @@ const HeaderLandingPage = () => {
               },
             ]}
             style={{
-              width: 450
+              width: 450,
             }}
           >
             <Input.Password />
           </Form.Item>
 
-          <Form.Item
-            
-          >
+          <Form.Item>
             <div className="flex gap-1 ">
-              <GoogleOAuthProvider clientId="727074021020-s9kg9jspljfbvlltd1gdtbh5oeo5lcl9.apps.googleusercontent.com">
+              <GoogleOAuthProvider clientId="727074021020-s38ks3vfp5kb1iugpsj275fldko3h8fp.apps.googleusercontent.com">
                 <GoogleLogin
-                onSuccess={credentialResponse => {
-                  console.log(credentialResponse);
-                }}
-                onError={() => {
-                  console.log('Login Failed');
-                }}></GoogleLogin>
+                  onSuccess={onFinish}
+                  onError={() => {
+                    console.log("Login Failed");
+                  }}
+                ></GoogleLogin>
               </GoogleOAuthProvider>
-              
+
               <Button
                 className="bg-black text-white font-bold"
                 htmlType="submit"

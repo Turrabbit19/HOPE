@@ -1,19 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { BookOpen, Users, Clock, AlertCircle, Link as LinkIcon, CheckCircle } from 'lucide-react'
-
-const SHIFTS = [
-  { id: 1, name: 'Ca 1', time: '7:00 - 9:00' },
-  { id: 2, name: 'Ca 2', time: '9:15 - 11:15' },
-  { id: 3, name: 'Ca 3', time: '11:45 - 13:45' },
-  { id: 4, name: 'Ca 4', time: '14:00 - 16:00' },
-  { id: 5, name: 'Ca 5', time: '16:15 - 18:15' },
-  { id: 6, name: 'Ca 6', time: '18:30 - 20:30' },
-]
+import { BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react'
 
 export default function CourseRegistration() {
   const [subjects, setSubjects] = useState([])
+  const [shifts, setShifts] = useState([])
   const [classrooms, setClassrooms] = useState([])
   const [selectedSubject, setSelectedSubject] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
@@ -24,6 +16,7 @@ export default function CourseRegistration() {
 
   useEffect(() => {
     fetchSubjects()
+    fetchShifts()
   }, [])
 
   useEffect(() => {
@@ -31,14 +24,10 @@ export default function CourseRegistration() {
       console.log('Selected subject and shift:', { 
         subjectId: selectedSubject.id, 
         shiftId: selectedShift.id 
-      });
+      })
       fetchClassrooms(selectedSubject.id, selectedShift.id)
     }
   }, [selectedSubject, selectedShift])
-
-  useEffect(() => {
-    console.log('Classrooms state updated:', classrooms);
-  }, [classrooms]);
 
   const fetchSubjects = async () => {
     setIsLoading(true)
@@ -61,17 +50,22 @@ export default function CourseRegistration() {
       }
 
       const data = await response.json()
-      console.log('Subjects data received:', data);
-      setSubjects(data.data || [])
+      console.log('Subjects data received:', data)
+      if (data && data.subjects && Array.isArray(data.subjects)) {
+        setSubjects(data.subjects)
+      } else {
+        console.error('Unexpected subjects data structure:', data)
+        setSubjects([])
+      }
     } catch (err) {
+      console.error('Error in fetchSubjects:', err)
       setError(err.message || 'Đã xảy ra lỗi khi tải danh sách môn học')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const fetchClassrooms = async (subjectId, shiftId) => {
-    console.log('Fetching classrooms with:', { subjectId, shiftId });
+  const fetchShifts = async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -80,8 +74,45 @@ export default function CourseRegistration() {
         throw new Error('Không tìm thấy token xác thực')
       }
 
-      const url = `http://127.0.0.1:8000/api/student/subject/${subjectId}/shift/${shiftId}/classrooms`;
-      console.log('Fetching from URL:', url);
+      const response = await fetch('http://127.0.0.1:8000/api/student/shifts', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Không thể tải danh sách ca học')
+      }
+
+      const data = await response.json()
+      console.log('Shifts data received:', data)
+      if (data && data.shifts && Array.isArray(data.shifts)) {
+        setShifts(data.shifts)
+      } else {
+        console.error('Unexpected shifts data structure:', data)
+        setShifts([])
+      }
+    } catch (err) {
+      console.error('Error in fetchShifts:', err)
+      setError(err.message || 'Đã xảy ra lỗi khi tải danh sách ca học')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchClassrooms = async (subjectId, shiftId) => {
+    console.log('Fetching classrooms with:', { subjectId, shiftId })
+    setIsLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực')
+      }
+
+      const url = `http://127.0.0.1:8000/api/student/subject/${subjectId}/shift/${shiftId}/classrooms`
+      console.log('Fetching from URL:', url)
 
       const response = await fetch(url, {
         headers: {
@@ -90,24 +121,24 @@ export default function CourseRegistration() {
         }
       })
 
-      console.log('Response status:', response.status);
+      console.log('Response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Không thể tải danh sách lớp học')
       }
 
       const data = await response.json()
-      console.log('Raw classrooms data received:', data);
+      console.log('Raw classrooms data received:', data)
     
       if (data && data.data && Array.isArray(data.data)) {
         setClassrooms(data.data)
-        console.log('Classrooms set:', data.data);
+        console.log('Classrooms set:', data.data)
       } else {
-        console.error('Unexpected data structure:', data);
+        console.error('Unexpected data structure:', data)
         setClassrooms([])
       }
     } catch (err) {
-      console.error('Error in fetchClassrooms:', err);
+      console.error('Error in fetchClassrooms:', err)
       setError(err.message || 'Đã xảy ra lỗi khi tải danh sách lớp học')
     } finally {
       setIsLoading(false)
@@ -140,13 +171,16 @@ export default function CourseRegistration() {
       })
 
       if (!response.ok) {
-        throw new Error('Không thể đăng ký khóa học')
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Không thể đăng ký khóa học')
       }
 
       alert('Đăng ký thành công!')
       setShowConfirmation(false)
       setSelectedClassroom(null)
-      fetchSubjects() 
+      setSelectedShift(null)
+      fetchSubjects()
+      window.location.reload()
     } catch (err) {
       alert(err.message || 'Đã xảy ra lỗi trong quá trình đăng ký')
     }
@@ -178,19 +212,12 @@ export default function CourseRegistration() {
 
           {!isLoading && !error && (
             <>
-              {/* <div className="mb-4 p-4 bg-gray-100 rounded">
-                <h3 className="font-bold">Debug Info:</h3>
-                <p>Selected Subject: {selectedSubject ? JSON.stringify(selectedSubject) : 'None'}</p>
-                <p>Selected Shift: {selectedShift ? JSON.stringify(selectedShift) : 'None'}</p>
-                <p>Classrooms Count: {classrooms.length}</p>
-                <p>Classrooms Data: {JSON.stringify(classrooms)}</p>
-              </div> */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {subjects.map(subject => (
                   <button
                     key={subject.id}
                     onClick={() => {
-                      console.log('Setting selected subject:', subject);
+                      console.log('Setting selected subject:', subject)
                       setSelectedSubject(subject)
                       setSelectedShift(null)
                       setClassrooms([])
@@ -220,13 +247,13 @@ export default function CourseRegistration() {
                 <div className="mt-8">
                   <h2 className="text-2xl font-bold mb-4">Chọn ca học</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {SHIFTS.map(shift => (
+                    {shifts.map(shift => (
                       <button
                         key={shift.id}
                         onClick={() => {
-                          console.log('Setting selected shift:', shift);
-                          setSelectedShift(shift);
-                          setClassrooms([]);
+                          console.log('Setting selected shift:', shift)
+                          setSelectedShift(shift)
+                          setClassrooms([])
                         }}
                         className={`p-4 rounded-lg transition-all duration-200 ${
                           selectedShift?.id === shift.id
@@ -298,6 +325,19 @@ export default function CourseRegistration() {
           )}
         </div>
       </div>
+
+      {/* Debug Information */}
+      {/* <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+        <h2 className="text-xl font-bold mb-2">Debug Information:</h2>
+        <p>Subjects: {subjects.length}</p>
+        <p>Shifts: {shifts.length}</p>
+        <p>Classrooms: {classrooms.length}</p>
+        <p>Selected Subject: {selectedSubject ? selectedSubject.name : 'None'}</p>
+        <p>Selected Shift: {selectedShift ? selectedShift.name : 'None'}</p>
+        <p>Selected Classroom: {selectedClassroom ? selectedClassroom.classroom : 'None'}</p>
+        <p>Is Loading: {isLoading.toString()}</p>
+        <p>Error: {error || 'None'}</p>
+      </div> */}
 
       {showConfirmation && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

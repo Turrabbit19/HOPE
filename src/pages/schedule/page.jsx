@@ -48,7 +48,11 @@ export default function DashboardActions() {
       console.log('Dữ liệu trả về từ API:', data)
       setSchedules(data.data || [])
     } catch (err) {
-      setError(err.message || 'Đã xảy ra lỗi khi tải lịch học')
+      if (err.message.includes("Attempt to read property \"user\" on null")) {
+        setError('Lỗi xác thực người dùng. Vui lòng đăng nhập lại.')
+      } else {
+        setError(err.message || 'Đã xảy ra lỗi khi tải lịch học')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -231,9 +235,9 @@ export default function DashboardActions() {
                         <td key={day} className="p-3 text-center border border-gray-200">
                           {schedule && lesson ? (
                             <div>
-                              <p className="font-semibold">{schedule.teacher_name}</p>
+                              <p>{schedule.teacher_name}</p>
                               <p>{schedule.room_name}</p>
-                              <p>{schedule.subject_name}</p>
+                              <p className="font-semibold">{schedule.subject_name}</p>
                               <button
                                 onClick={() => openPopup(schedule, lesson)}
                                 className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"

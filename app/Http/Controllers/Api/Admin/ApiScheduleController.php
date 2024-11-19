@@ -8,7 +8,6 @@ use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Schedule;
 use App\Models\Subject;
-use App\Models\TeacherSchedule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -104,7 +103,7 @@ class ApiScheduleController extends Controller
                     'semester_name' => $schedule->semester->name,
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teachers->user->name,
+                    'teacher_name' => $schedule->teacher->user->name,
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
                     'link' => $schedule->link ? $schedule->link : "NULL",
@@ -315,21 +314,19 @@ class ApiScheduleController extends Controller
     private function hasTeacherConflict($teacherId, $scheduleId)
     {
         $newSchedule = Schedule::with('days', 'shift')->findOrFail($scheduleId);
-        
+    
         $newScheduleDays = $newSchedule->days->pluck('id')->toArray();
         $newScheduleShift = $newSchedule->shift_id;
     
-        $teacherSchedules = TeacherSchedule::where('teacher_id', $teacherId)->get();
+        $teacherSchedules = Schedule::where('teacher_id', $teacherId)->get();
     
-        foreach ($teacherSchedules as $teacherSchedule) {
-            $existingSchedule = $teacherSchedule->schedule;
-    
+        foreach ($teacherSchedules as $existingSchedule) {
             $existingDays = $existingSchedule->days->pluck('id')->toArray();
             $existingShift = $existingSchedule->shift_id;
     
             if (
-                !empty(array_intersect($newScheduleDays, $existingDays)) && 
-                $newScheduleShift === $existingShift                  
+                !empty(array_intersect($newScheduleDays, $existingDays)) &&
+                $newScheduleShift === $existingShift
             ) {
                 return true; 
             }
@@ -337,6 +334,7 @@ class ApiScheduleController extends Controller
     
         return false; 
     }
+    
     public function assignTeacherSchedules(Request $request)
     {
         Log::debug('Request data:', $request->all());
@@ -372,16 +370,13 @@ class ApiScheduleController extends Controller
                     ], 409);
                 }
     
-                $teacherScheduleData = [
-                    'teacher_id' => $teacherId,
-                    'schedule_id' => $scheduleId,
-                ];
-    
-                $teacherSchedule = TeacherSchedule::create($teacherScheduleData);
+                $schedule = Schedule::findOrFail($scheduleId);
+                $schedule->teacher_id = $teacherId;
+                $schedule->save();
     
                 $assignedSchedules[] = [
-                    'teacher_id' => $teacherSchedule->teacher_id,
-                    'schedule_id' => $teacherSchedule->schedule_id,
+                    'teacher_id' => $teacherId,
+                    'schedule_id' => $scheduleId,
                 ];
             }
     
@@ -394,7 +389,7 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Phân lịch thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-            
+              
     public function show(string $id)
     {
         try {

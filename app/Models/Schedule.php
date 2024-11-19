@@ -63,9 +63,9 @@ class Schedule extends Model
         return $this->belongsTo(Classroom::class);
     }
 
-    public function teachers()
+    public function teacher()
     {
-        return $this->belongsToMany(Teacher::class, 'teacher_schedules');
+        return $this->belongsTo(Teacher::class);
     }
 
     public function shift()

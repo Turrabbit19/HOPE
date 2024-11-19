@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Events\NewNotification;
+use App\Models\StudentNotification;
 use Carbon\Carbon;
 use App\Models\Section;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\Student;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -39,7 +41,7 @@ class ApiSectionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:sections',
+            'name' => 'required|string|max:100|unique:sections',   
         ]);
 
         if ($validator->fails()) {
@@ -49,7 +51,7 @@ class ApiSectionController extends Controller
         try {
             $data = $validator->validated();
             $section = Section::create($data);
-
+            
             return response()->json(['data' => $section, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -79,7 +81,7 @@ class ApiSectionController extends Controller
     public function update(Request $request, string $id)
     {
          $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:100|unique:sections,name,' . $id,
+            'name' => 'sometimes|string|max:100|unique:sections,name,' . $id,   
         ]);
 
         if ($validator->fails()) {
@@ -88,7 +90,7 @@ class ApiSectionController extends Controller
 
         try {
             $section = Section::findOrFail($id);
-
+            
             $data = $validator->validated();
             $section->update($data);
 
@@ -121,7 +123,7 @@ class ApiSectionController extends Controller
             $perPage = $request->input('perPage', 9);
 
             $notifications = Notification::with('section', 'courses')->where('section_id',$id)->paginate($perPage);
-
+    
             $data = collect($notifications->items())->map(function ($notification) {
                 return [
                     'id' => $notification->id,
@@ -137,22 +139,21 @@ class ApiSectionController extends Controller
                     }),
                 ];
             });
-
+    
             return response()->json([
                 'data' => $data,
                 'pagination' => [
-                    'total' => $notifications->total(),
-                    'per_page' => $notifications->perPage(),
-                    'first_page' => 1,
-                    'current_page' => $notifications->currentPage(),
-                    'last_page' => $notifications->lastPage(),
-                    'first_page_url' => $notifications->url(1),
-                    'last_page_url' => $notifications->url($notifications->lastPage()),
-                    'next_page_url' => $notifications->nextPageUrl(),
-                    'prev_page_url' => $notifications->previousPageUrl(),
-                    'from' => $notifications->firstItem(),
-                    'to' => $notifications->lastItem(),
-
+                    'total' => $notifications->total(),               
+                    'per_page' => $notifications->perPage(),     
+                    'first_page' => 1,             
+                    'current_page' => $notifications->currentPage(),  
+                    'last_page' => $notifications->lastPage(),        
+                    'first_page_url' => $notifications->url(1),       
+                    'last_page_url' => $notifications->url($notifications->lastPage()),  
+                    'next_page_url' => $notifications->nextPageUrl(), 
+                    'prev_page_url' => $notifications->previousPageUrl(),  
+                    'from' => $notifications->firstItem(),            
+                    'to' => $notifications->lastItem(),              
                 ]
             ], 200);
         } catch (ModelNotFoundException $e) {
@@ -163,10 +164,10 @@ class ApiSectionController extends Controller
     }
     public function addNotification(Request $request, string $id){
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:notifications',
+            'name' => 'required|string|max:255|unique:notifications',   
             'description' => 'required|string',
             'courses' => 'required|array',
-            'courses.*.id' => 'required|exists:courses,id',
+            'courses.*.id' => 'required|exists:courses,id',  
         ]);
 
         if ($validator->fails()) {
@@ -184,12 +185,23 @@ class ApiSectionController extends Controller
             $courses = collect($data['courses'])->mapWithKeys(function ($course) {
                 return [$course['id'] => []];
             });
-
+            
             $notification->courses()->sync($courses);
 
+            foreach ($data['courses'] as $course) {
+                $students = Student::where('course_id', $course['id'])->get();
+    
+                foreach ($students as $student) {
+                    StudentNotification::create([
+                        'student_id' => $student->id,
+                        'notification_id' => $notification->id,
+                        'status' => 0
+                    ]);
+                }
+            }
+
             broadcast(new NewNotification($notification));
-
-
+            
             return response()->json(['data' => $notification, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);

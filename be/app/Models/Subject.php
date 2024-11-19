@@ -15,8 +15,9 @@ class Subject extends Model
         'name',
         'description',
         'credit',
+        'order'
     ];
-
+    
     public function majors()
     {
         return $this->belongsToMany(Major::class, 'major_subjects');
@@ -26,5 +27,9 @@ class Subject extends Model
     {
         return $this->hasMany(Lesson::class);
     }
-}
 
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+}

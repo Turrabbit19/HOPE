@@ -92,11 +92,10 @@ class ApiAuthController extends Controller
         ];
 
         if ($user->role_id == 3) {
-            $student = Student::with('course', 'major')->where('user_id', $user->id)->first();
+            $student = Student::with('course')->where('user_id', $user->id)->first();
             if ($student) {
                 $data['student'] = [
                     'course_id' => $student->course->name,
-                    'major_id' => $student->major->name,
                     'current_semester' => $student->current_semester,
                     'student_code' => $student->student_code,
                     'status' => $this->getStudentStatus($student->status),

@@ -5,11 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class NotificationCourse extends Model
+class StudentLesson extends Model
 {
     use HasFactory;
-
-    public function notification() {
-        return $this->belongsTo(Notification::class);
-    }
 }

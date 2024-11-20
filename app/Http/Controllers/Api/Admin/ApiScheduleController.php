@@ -232,15 +232,16 @@ class ApiScheduleController extends Controller
     public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
     {
         $validator = Validator::make($request->all(), [
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'days_of_week' => 'required|array',
+            'days_of_week.*' => 'integer',
+
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
             'classrooms.*.shift_id' => 'required|exists:shifts,id',
             'classrooms.*.room_id' => 'nullable|exists:rooms,id',
             'classrooms.*.link' => 'nullable|sometimes|url',
-            'classrooms.*.start_date' => 'required|date|after_or_equal:today',
-            'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
-            'classrooms.*.days_of_week' => 'required|array',
-            'classrooms.*.days_of_week.*' => 'integer'
         ]);
     
         if ($validator->fails()) {
@@ -451,7 +452,6 @@ class ApiScheduleController extends Controller
                 $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $schedule->subject_id);
 
                 $scheduleData = [
-                    'teacher_id' => $classroom['teacher_id'],
                     'shift_id' => $classroom['shift_id'],
                     'room_id' => $classroom['room_id'],
                     'link' => $classroom['link'],
@@ -470,7 +470,6 @@ class ApiScheduleController extends Controller
                 $scheduleResponses[] = [
                     'data' => [
                         'classroom_id' => $scheduleClassroom->classroom_id,
-                        'teacher_name' => $scheduleClassroom->teacher->user->name,
                         'shift_name' => $scheduleClassroom->shift->name,
                         'room_name' => $scheduleClassroom->room ? $scheduleClassroom->room->name : 'NULL',
                         'link' => $scheduleClassroom->link ? $scheduleClassroom->link : "NULL",

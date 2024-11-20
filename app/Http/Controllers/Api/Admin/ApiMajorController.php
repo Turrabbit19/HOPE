@@ -166,7 +166,18 @@ class ApiMajorController extends Controller
     public function getAllSubjects(string $majorId) 
     {   
         try {
-
+            $major = MajorSubject::where('major_id', $majorId)->get();
+    
+            $subjectsByMajor = $major->map(function ($major) {
+                return [
+                    'id' => $major->subject->id,
+                    'name' => $major->subject->name,
+                    'description' => $major->subject->description,
+                    'credit' => $major->subject->credit,
+                    'order' => $major->subject->order,
+                ];
+            });
+            return response()->json(['data' => $subjectsByMajor], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
         } catch (\Exception $e) {

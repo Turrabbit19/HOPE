@@ -61,7 +61,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
-        Route::get('filter/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
+        Route::get('filter/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
         Route::post('subjects/{majorId}/add', [ApiSubjectController::class, 'addSubjects']);
 

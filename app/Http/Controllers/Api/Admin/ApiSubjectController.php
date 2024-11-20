@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Lesson;
 use App\Models\Major;
+use App\Models\MajorSubject;
 use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -47,31 +48,24 @@ class ApiSubjectController extends Controller
         }
     }
     
-    public function filterSubjectsByMajor() 
+    public function filterSubjectsByMajor(string $majorId) 
     {
         try {
-            $majors = Major::with('subjects')->get();
+            $major = MajorSubject::where('major_id', $majorId)->get();
     
-            $subjectsByMajor = $majors->mapWithKeys(function ($major) {
-                $subjects = $major->subjects->map(function ($subject) {
-                    return [
-                        'id' => $subject->id,
-                        'name' => $subject->name,
-                        'description' => $subject->description,
-                        'credit' => $subject->credit,
-                        'order' => $subject->order,
-                    ];
-                });
-    
-                return [$major->name => [
-                        'id' => $major->id,
-                        'subjects' => $subjects
-                    ]
+            $subjectsByMajor = $major->map(function ($major) {
+                return [
+                    'id' => $major->subject->id,
+                    'name' => $major->subject->name,
+                    'description' => $major->subject->description,
+                    'credit' => $major->subject->credit,
+                    'order' => $major->subject->order,
                 ];
             });
     
-            return response()->json($subjectsByMajor, 200);
-    
+            return response()->json(['data' => $subjectsByMajor], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể truy cập dữ liệu ngành hoặc môn học',

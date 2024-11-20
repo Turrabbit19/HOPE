@@ -4,8 +4,13 @@ import "dayjs/locale/vi";
 import isBetween from "dayjs/plugin/isBetween"; // Import the isBetween plugin
 import { Button, Calendar, Modal, Typography, Card, Divider } from "antd";
 import { Link, useParams } from "react-router-dom";
-import { BookOutlined, UserOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import {
+  BookOutlined,
+  UserOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 import instance from "../../../../config/axios";
+import moment from "moment";
 
 dayjs.extend(isBetween);
 dayjs.locale("vi");
@@ -13,67 +18,61 @@ dayjs.locale("vi");
 const { Title, Paragraph, Text } = Typography;
 
 const ScheduleDetail = () => {
-    const [selectedClassId, setSelectedClassId] = useState(1);
-    const [currentMonth, setCurrentMonth] = useState(dayjs());
-    const [completedSessions, setCompletedSessions] = useState(0);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectedSession, setSelectedSession] = useState(null);
-    const [classData, setClassData] = useState(null);
-    const { id } = useParams();
-    console.log(id);
+  const [classData, setClassData] = useState(null);
+  const { id } = useParams();
+  const [days_of_week, setDays_of_week] = useState([]);
+  useEffect(() => {
+    const fetchClassData = async () => {
+      try {
+        const { data } = await instance.get(`admin/schedules/${id}`);
+        setClassData(data.data);
+        setDays_of_week(data.data.days_of_week.map((item) => item["Thứ"]));
+      } catch (error) {
+        console.error("Error fetching class data", error);
+      }
+    };
+    fetchClassData();
+  }, [id]);
 
-    useEffect(() => {
-        const fetchClassData = async () => {
-            try {
-                const { data } = await instance.get(`admin/schedules/${id}`);
-                setClassData(data.data);
-            } catch (error) {
-                console.error("Error fetching class data", error);
-            }
-        };
-        fetchClassData();
-    }, [id]);
+  if (!classData) {
+    return <div>Loading...</div>;
+  }
 
-    if (!classData) {
-        return <div>Loading...</div>; 
+  const onPanelChange = (value, mode) => {
+    console.log(value.format("YYYY-MM-DD"), mode);
+  };
+
+  const onDateCellRender = (value) => {
+    console.log(days_of_week);
+    console.log(value.day());
+    if (days_of_week.includes(value.day())) {
+      return (
+        <div
+          style={{
+            backgroundColor: "black",
+            width: "100%",
+            height: "100%",
+            opacity: 0.2,
+          }}
+        ></div>
+      );
     }
+    
+    // return null
+  };
 
-    const startDate = dayjs(classData.start_date, "DD/MM/YYYY");
-    const endDate = dayjs(classData.end_date, "DD/MM/YYYY");
-    const daysOfWeek = classData.days_of_week.map(day => Object.keys(day)[0]);
+  return (
+    <div>
+      <div>Môn học: {classData.subject_name}</div>
+      <Calendar onChange={onPanelChange} dateCellRender={onDateCellRender} />
 
-    const isHighlighted = (date) => {
-        const dayOfWeek = date.day();
-        const isInDateRange = date.isBetween(startDate, endDate, 'day', '[]');
-        const isValidDayOfWeek = daysOfWeek.includes(dayjs().day(dayOfWeek).format('dddd'));
-
-        return isInDateRange && isValidDayOfWeek;
-    };
-
-    const dateCellRender = (value) => {
-        if (isHighlighted(value)) {
-            return <div style={{ backgroundColor: '#1890ff', color: 'white', padding: '5px', borderRadius: '50%' }}>
-                {value.date()}
-            </div>;
-        }
-        return <div>{value.date()}</div>;
-    };
-
-    return (
-        <div>
-            <div>Môn học: {classData.subject_name}</div>
-            <Calendar
-                dateCellRender={dateCellRender}
-                value={currentMonth}
-            />
-
-            <div className="flex justify-end mt-6">
-                <Button type="primary">
-                    <Link to={`edit`}>Sửa lịch học</Link>
-                </Button>
-            </div>
-        </div>
-    );
+      <div className="flex justify-end mt-6">
+        <Button type="primary">
+          <Link to={`edit`}>Sửa lịch học</Link>
+        </Button>
+      </div>
+    </div>
+  );
 };
 
 export default ScheduleDetail;

@@ -99,7 +99,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::apiResource('classrooms', ApiClassroomController::class);
 
         Route::apiResource('schedules', ApiScheduleController::class);
-        Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
+        Route::post('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
         Route::get('semester/{semesterId}/courses', [ApiScheduleController::class, 'getCoursesBySemester']);
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);

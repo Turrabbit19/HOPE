@@ -278,7 +278,7 @@ const ScheduleList = () => {
                                                   </h6>
                                                   {expandedSubject ===
                                                     subject.id && (
-                                                    <div>
+                                                    <div key={subject.id}>
                                                       <h6 className="font-semibold text-lg mt-4">
                                                         Thông tin lớp:
                                                       </h6>

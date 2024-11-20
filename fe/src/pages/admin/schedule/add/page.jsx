@@ -24,14 +24,16 @@ const { TabPane } = Tabs;
 
 const ScheduleAdd = () => {
   const [form] = Form.useForm();
-  const [selectedClasses, setSelectedClasses] = useState([]);
-  const [rooms, setRooms] = useState([]); // Store both online and offline rooms
+  const [selectedClasses, setSelectedClasses] = useState([]);  // Store classIds
+  const [rooms, setRooms] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { courseId, semesterId, majorId, subjectId } = location.state || {};
+  const [subject, setSubject] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -49,7 +51,6 @@ const ScheduleAdd = () => {
 
   useEffect(() => {
     setLoading(true);
-    // Fetch teachers
     instance
       .get("admin/teachers")
       .then((response) => {
@@ -63,12 +64,11 @@ const ScheduleAdd = () => {
   }, []);
 
   useEffect(() => {
-
     setLoading(true);
     instance
       .get("admin/rooms")
       .then((response) => {
-        setRooms(response.data.data); // Set rooms for both online and offline
+        setRooms(response.data.data);
         setLoading(false);
       })
       .catch(() => {
@@ -77,67 +77,139 @@ const ScheduleAdd = () => {
       });
   }, [form.getFieldValue("learningMethod")]);
 
+  useEffect(() => {
+    if (subjectId) {
+      instance
+        .get(`admin/subjects/${subjectId}`)
+        .then((response) => {
+          setSubject(response.data);
+        })
+        .catch(() => {
+          message.error("Lỗi khi tải thông tin môn học!");
+        });
+    }
+  }, [subjectId]);
+
   const handleClassChange = (values) => {
-    setSelectedClasses(values);
+    console.log(values);
+    setSelectedClasses(values);  // Store selected classIds
+  };
+
+  const calculateEndDate = async (startDate, subjectId, daysOfWeek) => {
+    console.log(daysOfWeek);
+    const payload = {
+      start_date: startDate,
+      subject_id: subjectId,
+      days_of_week: daysOfWeek.map((day) => {
+        switch (day) {
+          case "Thứ 2":
+            return "2";
+          case "Thứ 3":
+            return "3";
+          case "Thứ 4":
+            return "4";
+          case "Thứ 5":
+            return "5";
+          case "Thứ 6":
+            return "6";
+          case "Thứ 7":
+            return "7";
+          default:
+            return "";
+        }
+      }),
+    };
+    console.log(payload);
+    try {
+      const response = await instance.post(`admin/calculate-end-date`, payload);
+      console.log(response);
+      setEndDate(response.data.end_date);
+      form.setFieldsValue({ endDate: response.data.end_date });
+    } catch (error) {
+      message.error("Không thể tính toán ngày kết thúc.");
+    }
   };
 
   const handleFinish = async (values) => {
+    debugger;
+    console.log(values);
     try {
-      
       const transformedValues = selectedClasses.map((classId) => {
         const classDetails = values.classDetails[classId];
+        console.log(classDetails);
         return {
-          teacher_id: classDetails.teacher,
           id: classId,
-          shift_id: classDetails.session, 
-          start_date: moment(classDetails.startDate).format('YYYY-MM-DD'),
-          end_date: moment(classDetails.endDate).format('YYYY-MM-DD'),
-          days_of_week: classDetails.repeatDays.map(day => {
+          teacher_id: classDetails.teacher,
+          shift_id: classDetails.session,
+          start_date: moment(classDetails.startDate).format("YYYY-MM-DD"),
+          end_date: moment(endDate).format("YYYY-MM-DD"),
+          days_of_week: classDetails.repeatDays.map((day) => {
             switch (day) {
-              case "Thứ 2": return "2";
-              case "Thứ 3": return "3";
-              case "Thứ 4": return "4";
-              case "Thứ 5": return "5";
-              case "Thứ 6": return "6";
-              case "Thứ 7": return "7";
-              default: return "";
+              case "Thứ 2":
+                return "2";
+              case "Thứ 3":
+                return "3";
+              case "Thứ 4":
+                return "4";
+              case "Thứ 5":
+                return "5";
+              case "Thứ 6":
+                return "6";
+              case "Thứ 7":
+                return "7";
+              default:
+                return "";
             }
           }),
-          room_id: classDetails.learningMethod === "offline" ? classDetails.classRoom : null,
-          link: classDetails.learningMethod === "online" ? classDetails.classLink : null,
+          room_id:
+            classDetails.learningMethod === "offline"
+              ? classDetails.classRoom
+              : null,
+          link:
+            classDetails.learningMethod === "online"
+              ? classDetails.classLink
+              : null,
         };
       });
       console.log(transformedValues);
-      // Route::post('schedules/{courseId}/{semesterId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
-      const response = await instance.post(`admin/schedules/${courseId}/${semesterId}/${majorId}/${subjectId}/add`, {
-        classrooms: transformedValues
-      });
+      const response = await instance.post(
+        `admin/schedules/${courseId}/${semesterId}/${majorId}/${subjectId}/add`,
+        {
+          classrooms: transformedValues,
+        }
+      );
       notification.success({
-        message: "Thêm lịch học thành công"
-      })
+        message: "Thêm lịch học thành công",
+      });
       form.resetFields();
       setTimeout(() => {
         navigate("/admin/list-schedule");
-      }, 3000)
+      }, 3000);
     } catch (error) {
       console.log(error.message);
     }
+  };
+
+  const handleClassIdChange = (values) => {
+    const selectedClassDetails = classrooms.filter((classroom) =>
+      values.includes(classroom.id)  // Match the selected classIds
+    );
+    setSelectedClasses(selectedClassDetails.map((classroom) => classroom.id));  // Store only classIds
   };
 
   const renderClassFields = () => {
     return selectedClasses.map((classId) => (
       <TabPane tab={`Lớp ${classId}`} key={classId}>
         <Card title={`Thông Tin Cho Lớp ${classId}`}>
+          {/* Giảng Viên */}
           <Form.Item
             label="Giảng Viên"
             name={["classDetails", classId, "teacher"]}
-            rules={[{ required: true, message: "Vui lòng chọn giảng viên!" }]}
-          >
+            rules={[{ required: true, message: "Vui lòng chọn giảng viên!" }]}>
             <Select
               showSearch
               placeholder="Chọn giảng viên"
-              optionFilterProp="children"
-            >
+              optionFilterProp="children">
               {teachers.map((teacher) => (
                 <Option key={teacher.id} value={teacher.id}>
                   {teacher.name}
@@ -146,27 +218,28 @@ const ScheduleAdd = () => {
             </Select>
           </Form.Item>
 
+          {/* Ngày Bắt Đầu */}
           <Form.Item
             label="Ngày Bắt Đầu"
             name={["classDetails", classId, "startDate"]}
-            rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
-          >
-            <DatePicker format="DD-MM-YYYY" style={{ width: "100%" }} />
-          </Form.Item>
-
-          <Form.Item
-            label="Ngày Kết Thúc"
-            name={["classDetails", classId, "endDate"]}
-            rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
-          >
-            <DatePicker format="DD-MM-YYYY" style={{ width: "100%" }} />
+            rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}>
+            <DatePicker
+              format="DD-MM-YYYY"
+              style={{ width: "100%" }}
+              onChange={(date, dateString) =>
+                calculateEndDate(
+                  dateString,
+                  subjectId,
+                  form.getFieldValue(["classDetails", classId, "repeatDays"])
+                )
+              }
+            />
           </Form.Item>
 
           <Form.Item
             label="Thời Gian Lặp"
             name={["classDetails", classId, "repeatDays"]}
-            rules={[{ required: true, message: "Vui lòng chọn ít nhất một ngày!" }]}
-          >
+            rules={[{ required: true, message: "Vui lòng chọn ít nhất một ngày!" }]}>
             <Checkbox.Group style={{ width: "100%" }}>
               <Row>
                 {["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"].map(
@@ -180,12 +253,20 @@ const ScheduleAdd = () => {
             </Checkbox.Group>
           </Form.Item>
 
-          {/* Class Session */}
+          <Form.Item
+            label="Ngày Kết Thúc"
+            name="endDate"
+            rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}>
+            <Input
+              value={endDate ? moment(endDate).format("DD-MM-YYYY") : ""}
+              disabled
+            />
+          </Form.Item>
+
           <Form.Item
             label="Ca Học"
             name={["classDetails", classId, "session"]}
-            rules={[{ required: true, message: "Vui lòng chọn ca học!" }]}
-          >
+            rules={[{ required: true, message: "Vui lòng chọn ca học!" }]}>
             <Select showSearch placeholder="Chọn ca học">
               {[...Array(6)].map((_, i) => (
                 <Option key={i} value={`${i + 1}`}>{`Ca ${i + 1}: ${
@@ -195,17 +276,19 @@ const ScheduleAdd = () => {
             </Select>
           </Form.Item>
 
-          {/* Learning Method */}
           <Form.Item
             label="Hình Thức Học"
             name={["classDetails", classId, "learningMethod"]}
-            rules={[{ required: true, message: "Vui lòng chọn hình thức học!" }]}
-          >
+            rules={[{ required: true, message: "Vui lòng chọn hình thức học!" }]}>
             <Select
               showSearch
               placeholder="Chọn hình thức học"
-              onChange={() => form.resetFields([`classDetails.${classId}.classRoom`, `classDetails.${classId}.classLink`])}
-            >
+              onChange={() =>
+                form.resetFields([
+                  `classDetails.${classId}.classRoom`,
+                  `classDetails.${classId}.classLink`,
+                ])
+              }>
               <Option value="online">Trực tuyến</Option>
               <Option value="offline">Trực tiếp</Option>
             </Select>
@@ -216,17 +299,19 @@ const ScheduleAdd = () => {
             shouldUpdate={(prevValues, currentValues) =>
               prevValues.classDetails?.[classId]?.learningMethod !==
               currentValues.classDetails?.[classId]?.learningMethod
-            }
-          >
+            }>
             {({ getFieldValue }) => {
-              const learningMethod = getFieldValue(["classDetails", classId, "learningMethod"]);
+              const learningMethod = getFieldValue([
+                "classDetails",
+                classId,
+                "learningMethod",
+              ]);
               if (learningMethod === "online") {
                 return (
                   <Form.Item
                     label="Link Học Trực Tuyến"
                     name={["classDetails", classId, "classLink"]}
-                    rules={[{ required: true, message: "Vui lòng nhập link học!" }]}
-                  >
+                    rules={[{ required: true, message: "Vui lòng nhập link học!" }]}>
                     <Input
                       placeholder="Link phòng học"
                       prefix={<LinkOutlined />}
@@ -237,11 +322,10 @@ const ScheduleAdd = () => {
               } else if (learningMethod === "offline") {
                 return (
                   <Form.Item
-                    label="Phòng Học Trực Tiếp"
+                    label="Phòng Học"
                     name={["classDetails", classId, "classRoom"]}
-                    rules={[{ required: true, message: "Vui lòng chọn phòng học!" }]}
-                  >
-                    <Select showSearch placeholder="Chọn phòng học">
+                    rules={[{ required: true, message: "Vui lòng chọn phòng học!" }]}>
+                    <Select placeholder="Chọn phòng học">
                       {rooms.map((room) => (
                         <Option key={room.id} value={room.id}>
                           {room.name}
@@ -250,8 +334,6 @@ const ScheduleAdd = () => {
                     </Select>
                   </Form.Item>
                 );
-              } else {
-                return null;
               }
             }}
           </Form.Item>
@@ -267,23 +349,20 @@ const ScheduleAdd = () => {
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        className="bg-white p-6 rounded-lg shadow-md"
-      >
+        className="bg-white p-6 rounded-lg shadow-md">
         <Form.Item
           label="Lớp Học"
           name="classes"
-          rules={[{ required: true, message: "Vui lòng chọn lớp học!" }]}
-        >
+          rules={[{ required: true, message: "Vui lòng chọn lớp học!" }]}>
           <Select
             mode="multiple"
             showSearch
             placeholder="Chọn lớp học"
             onChange={handleClassChange}
-            loading={loading}
-          >
+            loading={loading}>
             {classrooms.map((item) => (
               <Option key={item.id} value={item.id}>
-                {item.code}
+                {item.code} {/* Displaying class code */}
               </Option>
             ))}
           </Select>
@@ -302,7 +381,6 @@ const ScheduleAdd = () => {
       </Form>
     </div>
   );
-
 };
 
 export default ScheduleAdd;

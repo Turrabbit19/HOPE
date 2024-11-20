@@ -52,6 +52,7 @@ const MajorDetailSubject = () => {
   const fetchLessons = async () => {
     const response = await instance.get(`admin/subject/${subjectId}/lessons`);
     setLectureData(response.data.data);
+    // console.log(response.data.data);
   };
 
   const fetchClassroom = async () => {
@@ -198,9 +199,7 @@ const MajorDetailSubject = () => {
       notification.success({
         message: "Thêm lớp học thành công",
       });
-      response.data.data.map((item) => console.log(item));
-      setClassData((prev) => [...prev, response.data.data.map((item) => item)]);
-
+      setClassData((prev) => [...prev, response.data.data]);
       handleLectureModalCancel();
     } catch (error) {
       message.error("Có lỗi xảy ra khi thêm lớp học!");
@@ -243,16 +242,6 @@ const MajorDetailSubject = () => {
       >
         Sửa
       </Button>
-      {/* <Popconfirm
-        title="Bạn có chắc chắn muốn xóa bài giảng này?"
-        onConfirm={() => confirmDeleteLecture(lecture.id)}
-        okText="Có"
-        cancelText="Không"
-      >
-        <Button type="danger" icon={<DeleteOutlined />}>
-          Xóa
-        </Button>
-      </Popconfirm> */}
     </div>
   );
 
@@ -316,34 +305,42 @@ const MajorDetailSubject = () => {
 
   // Render các thẻ lớp học
   const renderClassroomCards = () =>
-    classData.map((classroom) => (
-      <Card
-        key={classroom.id}
-        className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
-      >
-        <div className="teaching__card-top flex justify-between items-center mb-4">
-          <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
-            Tên lớp:{" "}
-            <span className="text-red-300 uppercase ml-2">
-              {classroom.code}
-            </span>
-          </h2>
-        </div>
-        <div className="teaching__card-body">
-          <div className="mt-6 flex flex-col gap-4 pb-6">
-            <div className="flex gap-6">
-              <p className="text-[#9E9E9E]">Số học sinh:</p>
-              <p className="text-[#000]">{classroom.max_students}</p>
-            </div>
-            <div className="flex gap-6">
-              <p className="text-[#9E9E9E]">Trạng thái:</p>
-              <p className="text-[#000]">{classroom.status}</p>
-            </div>
+    classData.length > 0 ? (
+      classData.map((item) => (
+        <Card
+          key={item.id}
+          className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <div className="teaching__card-top flex justify-between items-center mb-4">
+            <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
+              Tên lớp:{" "}
+              <span className="text-red-300 uppercase ml-2">
+                {item.code}
+              </span>
+            </h2>
           </div>
-          {renderClassroomActionButtons(classroom)}
-        </div>
-      </Card>
-    ));
+          <div className="teaching__card-body">
+            <div className="mt-6 flex flex-col gap-4 pb-6">
+              <div className="flex gap-6">
+                <p className="text-[#9E9E9E]">Số học sinh:</p>
+                <p className="text-[#000]">{item.max_students}</p>
+              </div>
+              <div className="flex gap-6">
+                <p className="text-[#9E9E9E]">Trạng thái:</p>
+                <p className="text-[#000]">{item.status}</p>
+              </div>
+            </div>
+            {renderClassroomActionButtons(item)}
+          </div>
+        </Card>
+      ))
+    ) : (
+      <div className="col-12 text-center">
+        <p className="text-red-500 font-bold text-lg">
+          Không tìm thấy lớp học
+        </p>
+      </div>
+    );
 
   if (loading) {
     return (
@@ -381,7 +378,7 @@ const MajorDetailSubject = () => {
       {activeTab === "lecture" ? (
         <>
           <div className="flex justify-end mb-4">
-            {lectureData == credit * 6 ? (
+            {lectureData.length !== credit * 6 ? (
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -483,7 +480,7 @@ const MajorDetailSubject = () => {
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
                     {[...Array(lectureCount)].map((_, index) => (
-                      <TabPane tab={`Bài học ${index + 1}`} key={index + 1}>
+                      <TabPane tab={`Bài học ${index + 1}`} key={`lecture-${index}`}>
                         <Card
                           type="inner"
                           title={`Thông tin Bài học ${index + 1}`}

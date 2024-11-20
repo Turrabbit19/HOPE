@@ -8,7 +8,6 @@ use App\Models\Lesson;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Subject;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -71,6 +70,25 @@ class ApiSubjectController extends Controller
                 'error' => 'Không thể truy cập dữ liệu ngành hoặc môn học',
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function getMajorsBySubject(string $subjectId) 
+    {
+        try {
+            $subject = Subject::with('majors')->findOrFail($subjectId);
+            $majors = $subject->majors->map(function ($major) {
+                    return [
+                        'id' => $major->id,
+                        'name' => $major->name,
+                    ];
+                });
+
+            return response()->json(['data' => $majors], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $subjectId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
      

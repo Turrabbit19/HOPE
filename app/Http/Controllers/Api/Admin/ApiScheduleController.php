@@ -215,20 +215,29 @@ class ApiScheduleController extends Controller
         }
         return $scheduleDates;
     }
-    private function hasConflict($classroom)
+    private function hasConflict(array $classroom, $start_date, $end_date, $days_of_week): bool
     {
-        return Schedule::where('classroom_id', $classroom['id'])
-            ->where('shift_id', $classroom['shift_id'])
-            ->where(function ($query) use ($classroom) {
-                $query->whereBetween('start_date', [$classroom['start_date'], $classroom['end_date']])
-                    ->orWhereBetween('end_date', [$classroom['start_date'], $classroom['end_date']]);
-            })
-            ->whereHas('days', function ($query) use ($classroom) {
-                $query->whereIn('days.id', $classroom['days_of_week']);
-            })
-            ->exists();
-    }
+        $start_date = Carbon::parse($start_date);
+        $end_date = Carbon::parse($end_date);
+        $shift_id = $classroom['shift_id'];
     
+        $conflictSchedules = Schedule::where(function ($query) use ($start_date, $end_date) {
+                $query->whereBetween('start_date', [$start_date, $end_date])
+                      ->orWhereBetween('end_date', [$start_date, $end_date])
+                      ->orWhere(function ($subQuery) use ($start_date, $end_date) {
+                          $subQuery->where('start_date', '<=', $start_date)
+                                   ->where('end_date', '>=', $end_date);
+                      });
+            })
+            ->whereHas('days', function ($query) use ($days_of_week) {
+                $query->whereIn('days.id', $days_of_week);
+            })
+            ->where('shift_id', $shift_id)
+            ->exists();
+    
+        return $conflictSchedules;
+    }    
+
     public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
     {
         $validator = Validator::make($request->all(), [
@@ -250,23 +259,34 @@ class ApiScheduleController extends Controller
     
         try {
             $data = $validator->validated();
-    
             $scheduleResponses = [];
+            $conflictErrors = [];
     
-            // Lặp qua từng lớp học trong `classrooms`
             foreach ($data['classrooms'] as $classroom) {
-                // Sử dụng `start_date` và `end_date` chung cho tất cả lớp học
                 $startDate = $data['start_date'];
                 $endDate = $data['end_date'];
     
-                // Kiểm tra ngày kết thúc không nhỏ hơn ngày bắt đầu
                 if (Carbon::parse($endDate)->lt(Carbon::parse($startDate))) {
                     return response()->json([
                         'error' => "Ngày kết thúc không được trước ngày bắt đầu."
                     ], 400);
                 }
     
-                // Xử lý lớp học này
+                if ($this->hasConflict($classroom, $startDate, $endDate, $data['days_of_week'])) {
+                    $conflictErrors[] = "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch.";
+                }
+            }
+    
+            if (count($conflictErrors) > 0) {
+                return response()->json([
+                    'error' => $conflictErrors
+                ], 409);
+            }
+    
+            foreach ($data['classrooms'] as $classroom) {
+                $startDate = $data['start_date'];
+                $endDate = $data['end_date'];
+    
                 $scheduleData = [
                     'course_id' => $courseId,
                     'semester_id' => $semesterId,
@@ -283,11 +303,9 @@ class ApiScheduleController extends Controller
     
                 $schedule = Schedule::create($scheduleData);
     
-                // Đồng bộ các ngày học với lịch
                 $days = collect($data['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
                 $schedule->days()->sync($days);
     
-                // Tạo các ngày học từ lịch
                 $scheduleDates = $this->createLessonDate($schedule);
     
                 $scheduleResponses[] = [
@@ -313,7 +331,7 @@ class ApiScheduleController extends Controller
         }
     }
     
-      
+    
     private function hasTeacherConflict($teacherId, $scheduleId)
     {
         $newSchedule = Schedule::with('days', 'shift')->findOrFail($scheduleId);

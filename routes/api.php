@@ -80,7 +80,9 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::apiResource('notifications', ApiNotificationController::class);
         Route::apiResource('shifts', ApiShiftController::class);
+
         Route::apiResource('classrooms', ApiClassroomController::class);
+        Route::get('{subjectId}/classrooms/without-schedule', [ApiClassroomController::class, 'getClassroomsWithoutSchedule']);
 
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);

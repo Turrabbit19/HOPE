@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -39,27 +40,36 @@ class ApiClassroomController extends Controller
         }
     }
 
-    public function getAll()
+    public function getClassroomsWithoutSchedule($subjectId)
     {
         try {
-            $classrooms = Classroom::with('subject')->get();
+            $today = Carbon::today(); 
 
-            $data = $classrooms->map(function ($classroom){
-                return [
-                    'id' => $classroom->id,
-                    'subject_name' => $classroom->subject->name,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
-                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
-
-            return response()->json(['data' =>$data], 200);
+            $classrooms = Classroom::where('subject_id', $subjectId)
+                ->whereDoesntHave('schedules', function ($query) use ($subjectId) {
+                    $query->where('subject_id', $subjectId);
+                })
+                ->orWhereHas('schedules', function ($query) use ($subjectId, $today) {
+                    $query->where('subject_id', $subjectId)
+                          ->where('end_date', '<', $today); 
+                })
+                ->get();
+    
+            if ($classrooms->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không có lớp học nào thỏa điều kiện.',
+                ], 404);
+            }
+    
+            return response()->json([
+                'classrooms' => $classrooms
+            ], 200);
+    
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
         }
     }
-
+    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

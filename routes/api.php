@@ -91,7 +91,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
-        Route::get('subject/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
+        Route::get('schedules/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
         Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
 
         Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);

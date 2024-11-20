@@ -21,17 +21,17 @@ class ApiCourseController extends Controller
 
             $data = $courses->map(function ($course) use ($now) {
                 if ($now->lt(Carbon::parse($course->start_date))) {
-                    $status = "Chờ diễn ra"; 
+                    $status = "Chờ diễn ra";
                 } elseif ($now->between(Carbon::parse($course->start_date), Carbon::parse($course->end_date))) {
-                    $status = "Đang diễn ra"; 
+                    $status = "Đang diễn ra";
                 } elseif ($now->gt(Carbon::parse($course->end_date))) {
-                    $status = "Kết thúc"; 
+                    $status = "Kết thúc";
                 }
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
-                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($course->start_date),
+                    'end_date' => Carbon::parse($course->end_date),
                     'status' => $status
                 ];
             });
@@ -45,15 +45,15 @@ class ApiCourseController extends Controller
     {
         try {
             $semestersByCourse = CourseSemester::where('course_id', $courseId)
-            ->with('semester') 
+            ->with('semester')
             ->get();
 
             $data = $semestersByCourse->map(function($value){
                 return [
                     "id" => $value->semester->id,
                     "name" => $value->semester->name,
-                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
-                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
+                    "start_date" => Carbon::parse($value->semester->start_date),
+                    "end_date" => Carbon::parse($value->semester->end_date),
                     "order" => "Kì học thứ"." ".$value->order
                 ];
             });
@@ -81,7 +81,7 @@ class ApiCourseController extends Controller
         try {
             $data = $validator->validated();
             $course = Course::create($data);
-            
+
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -95,18 +95,18 @@ class ApiCourseController extends Controller
             $now = Carbon::now();
 
             if ($now->lt(Carbon::parse($course->start_date))) {
-                $status = "Chờ diễn ra"; 
+                $status = "Chờ diễn ra";
             } elseif ($now->between(Carbon::parse($course->start_date), Carbon::parse($course->end_date))) {
-                $status = "Đang diễn ra"; 
+                $status = "Đang diễn ra";
             } elseif ($now->gt(Carbon::parse($course->end_date))) {
-                $status = "Kết thúc"; 
+                $status = "Kết thúc";
             }
 
             $data = [
                     'id' => $course->id,
                     'name' => $course->name,
-                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($course->start_date),
+                    'end_date' => Carbon::parse($course->end_date),
                     'status' => $status
                 ];
 

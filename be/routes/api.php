@@ -29,18 +29,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-Route::post('login', [ApiAuthController::class, 'login']);
-Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
-
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 // Route::post('login', [ApiAuthController::class, 'login']);
 // Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
 // Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
+
 Route::post('google-login', [GoogleController::class, 'googleLogin']);
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle']);

@@ -11,9 +11,11 @@ import {
     message,
     Tabs,
     Spin,
+    notification,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import instance from "../../../../config/axios";
 
 const { TabPane } = Tabs;
 
@@ -96,10 +98,11 @@ const MajorDetailSubject = () => {
     }
   };
 
-  // Hiển thị modal thêm/sửa bài giảng
   const showLectureModal = (lecture = null) => {
-    debugger;
-    setlectureId(lecture.id);
+    if(lecture) {
+      setlectureId(lecture.id);
+
+    }
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -108,7 +111,6 @@ const MajorDetailSubject = () => {
     }
   };
 
-  // Hiển thị modal thêm/sửa lớp học
   const showClassroomModal = (classroom = null) => {
     setIsEditing(classroom !== null);
     setCurrentClassroom(classroom);
@@ -119,14 +121,12 @@ const MajorDetailSubject = () => {
     }
   };
 
-  // Đóng modal bài giảng
   const handleLectureModalCancel = () => {
     setIsLectureModalVisible(false);
     setCurrentLecture(null);
     setLectureCount(1);
   };
 
-  // Đóng modal lớp học
   const handleClassroomModalCancel = () => {
     setIsClassroomModalVisible(false);
     setCurrentClassroom(null);
@@ -145,7 +145,7 @@ const MajorDetailSubject = () => {
         newLectures
       );
 
-      setLectureData((prev) => [...prev, ...newLectures]);
+      setLectureData((prev) => [...prev, ...response.data.data]);
       message.success("Thêm bài giảng thành công!");
       handleLectureModalCancel();
     } catch (error) {
@@ -154,6 +154,7 @@ const MajorDetailSubject = () => {
   };
 
   const handleEditLecture = async (values) => {
+    console.log(values);
     try {
       await instance.put(`admin/lessons/${lectureId}`, values);
       notification.success({
@@ -176,21 +177,23 @@ const MajorDetailSubject = () => {
     }
   };
 
-  // Hàm thêm nhiều lớp học
   const handleAddClassrooms = async (values) => {
   const newClassrooms = values.classrooms.map((item, index) => ({
       code: item.name,
       max_students: item.students,
     }));
-    console.log(values);
     try {
       const response = await instance.post(
         `admin/subject/${subjectId}/classrooms/add`,
         newClassrooms
       );
-
-      setClassData((prev) => [...prev, newClassrooms]);
-      message.success("Thêm lớp học thành công!");
+      console.log(response.data.data);
+      notification.success({
+        message: "Thêm lớp học thành công",
+      });
+      response.data.data.map(item => console.log(item))
+      setClassData((prev) => [...prev, response.data.data.map(item => item)]);
+      
       handleLectureModalCancel();
     } catch (error) {
       message.error("Có lỗi xảy ra khi thêm lớp học!");
@@ -223,7 +226,6 @@ const MajorDetailSubject = () => {
     }
   };
 
-  // Nút hành động cho bài giảng
   const renderLectureActionButtons = (lecture) => (
     <div className="flex justify-end space-x-4">
       <Button
@@ -247,7 +249,6 @@ const MajorDetailSubject = () => {
     </div>
   );
 
-  // Nút hành động cho lớp học
   const renderClassroomActionButtons = (classroom) => (
     <div className="flex justify-end space-x-4">
       <Button

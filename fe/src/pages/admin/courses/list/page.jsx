@@ -35,11 +35,11 @@ const ListCourse = () => {
         setLoading(true);
         const [courses, plans] = await Promise.all([
           instance.get("admin/courses"),
-          instance.get("admin/plans"),
+          // instance.get("admin/plans"),
         ]);
         console.log(courses.data.data);
         setCourses(courses.data.data);
-        setPlans(plans.data.data);
+        // setPlans(plans.data.data);
       } catch (error) {
         console.log(error.message);
         notification.success({
@@ -383,13 +383,13 @@ const ListCourse = () => {
               },
             ]}
           >
-            <Select
+            {/* <Select
               placeholder="Chọn ngành học"
               options={plans.map((plan) => ({
                 label: plan.name,
                 value: plan.id,
               }))}
-            />
+            /> */}
           </Form.Item>
 
           <Form.Item>

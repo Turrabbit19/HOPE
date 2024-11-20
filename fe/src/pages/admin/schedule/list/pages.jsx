@@ -27,6 +27,7 @@ const ScheduleList = () => {
       try {
         const response = await instance.get("admin/courses");
         setCourses(response.data.data);
+        console.log(response.data.data);
       } catch (err) {
         setError("Không thể lấy dữ liệu khóa học.");
       } finally {
@@ -70,13 +71,12 @@ const ScheduleList = () => {
     }
   };
 
-  // Fetching subjects for a specific major, semester, and course
   const fetchSubjectsForMajor = async (courseId, semesterId, majorId) => {
     setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
-        `admin/course/${courseId}/semester/${semesterId}/major/${majorId}/subjects`
+        `admin/semester/${semesterId}/course/${courseId}/major/${majorId}/subjects`
       );
       setSubjectsByMajor((prev) => ({
         ...prev,
@@ -97,6 +97,7 @@ const ScheduleList = () => {
       const response = await instance.get(
         `admin/schedule/${subjectId}/classrooms`
       );
+      
       setClassroomsBySubject((prev) => ({
         ...prev,
         [subjectId]: response.data.data,
@@ -134,7 +135,7 @@ const ScheduleList = () => {
   const toggleSubject = (subjectId) => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
     if (expandedSubject !== subjectId) {
-      fetchClassroomsForSubject(subjectId); // Fetch classrooms when a subject is expanded
+      fetchClassroomsForSubject(subjectId);
     }
   };
 

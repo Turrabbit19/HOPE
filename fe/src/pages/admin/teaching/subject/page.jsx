@@ -9,7 +9,7 @@ const { Title, Text } = Typography;
 
 const MajorSubject = () => {
   const location = useLocation();
-  const { id } = useParams();
+  const { subId } = useParams();
   const [subjects, setsubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const { majorName } = location.state || {};
@@ -17,7 +17,7 @@ const MajorSubject = () => {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await instance.get(`admin/major/${id}/subjects`);
+        const { data } = await instance.get(`admin/major/${subId}/subjects`);
         console.log(data.data);
         setsubjects(data.data);
       } catch (error) {
@@ -26,7 +26,7 @@ const MajorSubject = () => {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [subId]);
 
   if (loading) {
     return (
@@ -62,7 +62,7 @@ const MajorSubject = () => {
         subjects.map((subject) => (
           <Link
             to={`detail/${subject.id}`}
-            state={{ subjectName: subject.name}}
+            state={{ subjectName: subject.name, credit: subject.credits}}
             key={subject.id}
             style={{ textDecoration: "none" }}
           >
@@ -83,7 +83,7 @@ const MajorSubject = () => {
               </div>
               <div style={{ marginBottom: "8px" }}>
                 <Text>
-                  Số tín chỉ: <strong>{subject.credit}</strong>
+                  Số tín chỉ: <strong>{subject.credits}</strong>
                 </Text>
               </div>
               <div style={{ marginBottom: "8px" }}>

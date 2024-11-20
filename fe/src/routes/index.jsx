@@ -50,6 +50,8 @@ import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
 import ScheduleList from "../pages/admin/schedule/list/pages";
 import ScheduleDetail from "../pages/admin/schedule/detail/page";
 import ListSections from "../pages/admin/section/list/page";
+import SubMajors from "../pages/admin/teaching/submajors/page";
+import DetailSubject from "../pages/admin/subjects/detail/page";
 
 
 const Router = createBrowserRouter([
@@ -121,7 +123,15 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "majors/:id/subjects",
+                path: "majors/:id/submajors",
+                element: (
+                    <>
+                        <SubMajors/>
+                    </>
+                ),
+            },
+            {
+                path: "majors/:id/submajors/:subId/subjects",
                 element: (
                     <>
                         <MajorSubject />
@@ -129,7 +139,7 @@ const Router = createBrowserRouter([
                 ),
             },
             {
-                path: "majors/:majorId/subjects/detail/:subjectId",
+                path: "majors/:id/submajors/:subId/subjects/detail/:subjectId",
                 element: (
                     <>
                         <MajorDetailSubject />
@@ -277,14 +287,14 @@ const Router = createBrowserRouter([
                 ),
             },
 
-            // {
-            //     path: "list-subject/detail/:id",
-            //     element: (
-            //         <>
-            //             <DetailSubject />
-            //         </>
-            //     ),
-            // },
+            {
+                path: "list-subject/detail/:id",
+                element: (
+                    <>
+                        <DetailSubject />
+                    </>
+                ),
+            },
 
             {
                 path: "list-sections",

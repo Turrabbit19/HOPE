@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from "react";
 import {
-
-    Button,
-    Card,
-    Modal,
-    Popconfirm,
-    Form,
-    Input,
-    InputNumber,
-    message,
-    Tabs,
-    Spin,
-    notification,
+  Button,
+  Card,
+  Modal,
+  Popconfirm,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Tabs,
+  Spin,
+  notification,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import instance from "../../../../config/axios";
+import { useForm } from "antd/es/form/Form";
 
 const { TabPane } = Tabs;
 
 const MajorDetailSubject = () => {
   // Lấy majorId và subjectId từ URL
-  const { majorId, subjectId } = useParams();
-
+  const { subId, subjectId } = useParams();
+  const { credit } = useLocation().state || {};
+  console.log(credit);
   // Trạng thái dữ liệu môn học
   const [loading, setLoading] = useState(true);
-
+  const [form] = useForm();
   // Các biến trạng thái khác
   const [activeTab, setActiveTab] = useState("lecture");
   const [isLectureModalVisible, setIsLectureModalVisible] = useState(false);
@@ -46,7 +47,7 @@ const MajorDetailSubject = () => {
     fetchLessons();
     fetchClassroom();
     setLoading(false);
-  }, [majorId, subjectId]);
+  }, [subId, subjectId]);
 
   const fetchLessons = async () => {
     const response = await instance.get(`admin/subject/${subjectId}/lessons`);
@@ -99,10 +100,10 @@ const MajorDetailSubject = () => {
   };
 
   const showLectureModal = (lecture = null) => {
-    if(lecture) {
+    if (lecture) {
       setlectureId(lecture.id);
-
     }
+    setLectureCount(credit * 6);
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -125,6 +126,7 @@ const MajorDetailSubject = () => {
     setIsLectureModalVisible(false);
     setCurrentLecture(null);
     setLectureCount(1);
+    form.resetFields();
   };
 
   const handleClassroomModalCancel = () => {
@@ -134,6 +136,12 @@ const MajorDetailSubject = () => {
   };
 
   const handleAddLectures = async (values) => {
+    debugger;
+    console.log(values.lectures.length);
+    if (values.lectures.length != lectureCount) {
+      message.error("Vui lòng nhập đầy đủ các bài học");
+      return;
+    }
     const newLectures = values.lectures.map((lecture, index) => ({
       name: lecture.name,
       description: lecture.description,
@@ -144,7 +152,6 @@ const MajorDetailSubject = () => {
         `admin/subject/${subjectId}/lessons/add`,
         newLectures
       );
-
       setLectureData((prev) => [...prev, ...response.data.data]);
       message.success("Thêm bài giảng thành công!");
       handleLectureModalCancel();
@@ -178,7 +185,7 @@ const MajorDetailSubject = () => {
   };
 
   const handleAddClassrooms = async (values) => {
-  const newClassrooms = values.classrooms.map((item, index) => ({
+    const newClassrooms = values.classrooms.map((item, index) => ({
       code: item.name,
       max_students: item.students,
     }));
@@ -191,9 +198,9 @@ const MajorDetailSubject = () => {
       notification.success({
         message: "Thêm lớp học thành công",
       });
-      response.data.data.map(item => console.log(item))
-      setClassData((prev) => [...prev, response.data.data.map(item => item)]);
-      
+      response.data.data.map((item) => console.log(item));
+      setClassData((prev) => [...prev, response.data.data.map((item) => item)]);
+
       handleLectureModalCancel();
     } catch (error) {
       message.error("Có lỗi xảy ra khi thêm lớp học!");
@@ -236,7 +243,7 @@ const MajorDetailSubject = () => {
       >
         Sửa
       </Button>
-      <Popconfirm
+      {/* <Popconfirm
         title="Bạn có chắc chắn muốn xóa bài giảng này?"
         onConfirm={() => confirmDeleteLecture(lecture.id)}
         okText="Có"
@@ -245,7 +252,7 @@ const MajorDetailSubject = () => {
         <Button type="danger" icon={<DeleteOutlined />}>
           Xóa
         </Button>
-      </Popconfirm>
+      </Popconfirm> */}
     </div>
   );
 
@@ -274,28 +281,38 @@ const MajorDetailSubject = () => {
 
   // Render các thẻ bài giảng
   const renderLectureCards = () =>
-    lectureData.map((lecture) => (
-      <Card
-        key={lecture.id}
-        title={
-          <span className="text-[#1167B4] font-bold text-3xl">
-            {lecture.name}
-          </span>
-        }
-        className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
-        headStyle={{ backgroundColor: "#f0f8ff", padding: "16px" }}
-        bodyStyle={{ padding: "16px", fontSize: "16px" }}
-      >
+    lectureData.length > 0 ? (
+      lectureData.map((lecture) => (
         <Card
-          title={<span className="font-bold text-black">Mô tả bài giảng</span>}
-          bordered={false}
-          className="mb-4"
+          key={lecture.id}
+          title={
+            <span className="text-[#1167B4] font-bold text-3xl">
+              {lecture.name}
+            </span>
+          }
+          className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
+          headStyle={{ backgroundColor: "#f0f8ff", padding: "16px" }}
+          bodyStyle={{ padding: "16px", fontSize: "16px" }}
         >
-          <p className="text-gray-700">{lecture.description}</p>
+          <Card
+            title={
+              <span className="font-bold text-black">Mô tả bài giảng</span>
+            }
+            bordered={false}
+            className="mb-4"
+          >
+            <p className="text-gray-700">{lecture.description}</p>
+          </Card>
+          {renderLectureActionButtons(lecture)}
         </Card>
-        {renderLectureActionButtons(lecture)}
-      </Card>
-    ));
+      ))
+    ) : (
+      <div className="col-12 text-center">
+        <p className="text-red-500 font-bold text-lg">
+          Không tìm thấy bài giảng
+        </p>
+      </div>
+    );
 
   // Render các thẻ lớp học
   const renderClassroomCards = () =>
@@ -364,14 +381,18 @@ const MajorDetailSubject = () => {
       {activeTab === "lecture" ? (
         <>
           <div className="flex justify-end mb-4">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => showLectureModal()}
-              className="text-lg"
-            >
-              Thêm bài giảng
-            </Button>
+            {lectureData == credit * 6 ? (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => showLectureModal()}
+                className="text-lg"
+              >
+                Thêm bài giảng
+              </Button>
+            ) : (
+              ""
+            )}
           </div>
           {renderLectureCards()}
 
@@ -385,6 +406,7 @@ const MajorDetailSubject = () => {
             {isEditing ? (
               // Form Sửa Bài Giảng
               <Form
+                form={form}
                 layout="vertical"
                 initialValues={{
                   name: currentLecture?.name || "",
@@ -430,30 +452,27 @@ const MajorDetailSubject = () => {
               <Form
                 layout="vertical"
                 onFinish={handleAddLectures}
+                // initialValues={{
+                //   lectureCount: lectureCount,
+                //   lectures: [],
+                // }}
                 initialValues={{
                   lectureCount: lectureCount,
-                  lectures: [],
+                  lectures: Array(lectureCount).fill({
+                    name: "",
+                    description: "",
+                  }),
                 }}
               >
                 {/* Trường nhập số lượng bài học */}
                 <Form.Item
                   name="lectureCount"
-                  label="Số lượng bài học"
+                  label="Tổng số bài học của môn tính theo tín ( số tín x 6 )"
                   initialValue={lectureCount}
-                  rules={[
-                    {
-                      required: true,
-                      message: "Vui lòng nhập số lượng bài học!",
-                    },
-                    {
-                      type: "number",
-                      min: 1,
-                      message: "Số lượng phải ít nhất là 1",
-                    },
-                  ]}
                 >
                   <InputNumber
                     min={1}
+                    disabled
                     onChange={(value) => {
                       setLectureCount(value || 1);
                     }}
@@ -692,7 +711,6 @@ const MajorDetailSubject = () => {
       )}
     </div>
   );
-
 };
 
 export default MajorDetailSubject;

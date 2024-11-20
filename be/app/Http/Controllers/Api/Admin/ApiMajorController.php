@@ -41,10 +41,51 @@ class ApiMajorController extends Controller
             $data = $mainMajors->map(function ($mm) {
                 return [
                     'id' => $mm->id,
-                    'name' => $mm->name
+                    'code' => $mm->code,
+                    'name' => $mm->name,
+                    'description' => $mm->description,
+                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+        }
+    }
 
+    public function getSubMajors(string $id)
+    {
+        try {
+            $mainMajors = Major::where('major_id', $id)->get() ;
+
+            $data = $mainMajors->map(function ($mm) {
+                return [
+                    'id' => $mm->id,
+                    'code' => $mm->code,
+                    'name' => $mm->name,
+                    'description' => $mm->description,
+                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function getAllSubMajors()
+    {
+        try {
+            $mainMajors = Major::whereNotNull('major_id')->orWhere('id', 1)->get();
+
+            $data = $mainMajors->map(function ($mm) {
+                return [
+                    'id' => $mm->id,
+                    'code' => $mm->code,
+                    'name' => $mm->name,
+                    'description' => $mm->description,
+                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
@@ -177,7 +218,7 @@ class ApiMajorController extends Controller
                     'id' => $item->id,
                     'code' => $item->code,
                     'name' => $item->name,
-                    'credits' => $item->credits,
+                    'credits' => $item->credit,
                     'description' => $item->description,
                     'status' => $item->status ? "Đang hoạt động" : "Tạm dừng",
                 ];

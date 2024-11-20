@@ -14,10 +14,10 @@ import {
     notification,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import instance from "../../../config/axios";
+import { Link, useLocation, useParams } from "react-router-dom";
+import instance from "../../../../config/axios";
 
-const Teach = () => {
+const SubMajors = () => {
     const [majors, setMajors] = useState([]);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -25,16 +25,16 @@ const Teach = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [form] = Form.useForm();
-    const [isMajorSelected, setIsMajorSelected] = useState(false); // State for checkbox
-    const itemsPerPage = 6; // Limit to 6 items per page
+    const [isMajorSelected, setIsMajorSelected] = useState(false);
+    const itemsPerPage = 6;
     const [idMajor, setId] = useState();
-    const [mainMajors, setMainMajors] = useState([]);
+    const {id} = useParams();
+    const { majorName } = useLocation().state || {};
+    console.log(majorName);
     useEffect(() => {
         const fetchMajors = async () => {
             try {
-                const response = await instance.get('/admin/main/majors');
-                
-
+                const response = await instance.get(`/admin/sub/${id}/majors`);
                 setMajors(response.data.data);
             } catch (error) {
                 message.error("Không thể tải dữ liệu chuyên ngành");
@@ -43,18 +43,6 @@ const Teach = () => {
 
         fetchMajors();
     }, []);
-    // useEffect(() => {
-    //   const fetchMajors = async () => {
-    //       try {
-    //           const response = await instance.get('/admin/main/majors');
-    //           setMainMajors(response.data.data);
-    //       } catch (error) {
-    //           message.error("Không thể tải dữ liệu chuyên ngành");
-    //       }
-    //   };
-
-//       fetchMajors();
-//   }, []);
 
     const handleSearch = (value) => {
         setSearchTerm(value.toLowerCase());
@@ -63,7 +51,7 @@ const Teach = () => {
 
     const filteredMajors = majors
         .filter((major) => major.name.toLowerCase().includes(searchTerm))
-        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage); // Pagination
+        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const showEditModal = (major) => {
         setEditingMajor(major);
@@ -92,7 +80,7 @@ const Teach = () => {
             const values = await form.validateFields();
             console.log(values);
             if (editingMajor) {
-              const response = await instance.put(`/admin/majors/${idMajor}`, values);
+              const response = await instance.put(`/admin/majors/${idMajor}`, {...values, major_id: id});
                 setMajors(
                     majors.map((major) =>
                         major.id === editingMajor.id
@@ -104,7 +92,7 @@ const Teach = () => {
                   message: "Cập nhật chuyên ngành thành công"
                 })
             } else {
-              const response = await instance.post('/admin/majors', values);
+              const response = await instance.post('/admin/majors', {...values, major_id: id});
                 setMajors([...majors, { id: majors.length + 1, ...response.data.data }]);
                 notification.success({
                   message: "Thêm mới chuyên ngành thành công"
@@ -145,13 +133,7 @@ const Teach = () => {
                 <div className="col-12">
                     <div className="justify-between flex">
                         <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-                            Quản Lý Ngành học
-                            <button>
-                                <img
-                                    src="/assets/svg/reload.svg"
-                                    alt="reload..."
-                                />
-                            </button>
+                            Quản Lý Chuyên Ngành:  {majorName}
                         </h1>
 
                         <div>
@@ -240,10 +222,8 @@ const Teach = () => {
                                     </div>
 
                                     <div className="teaching__card-bottom">
-
-
                                         <Link
-                                            to={`${major.id}/submajors`}
+                                            to={`${major.id}/subjects`}
                                             state= {{ majorName: major.name }}
                                             className="flex items-center gap-1 text-[#1167B4] font-bold"
                                         >
@@ -251,7 +231,7 @@ const Teach = () => {
                                                 src="/assets/svg/setting.svg"
                                                 alt="setting"
                                             />
-                                            Quản lý chuyên ngành
+                                            Quản lý môn học
                                         </Link>
 
                                         <Popconfirm
@@ -326,7 +306,7 @@ const Teach = () => {
                         <div style={{ flex: 1 }}>
                             <Form.Item
                                 name="code"
-                                label="Mã ngành học"
+                                label="Mã chuyên ngành"
                                 rules={[
                                     {
                                         required: true,
@@ -344,7 +324,7 @@ const Teach = () => {
 
                             <Form.Item
                                 name="name"
-                                label="Tên ngành học"
+                                label="Tên chuyên ngành"
                                 rules={[
                                     {
                                         required: true,
@@ -360,8 +340,6 @@ const Teach = () => {
                                 <Input placeholder="Tên chuyên ngành" />
                             </Form.Item>
                         </div>
-
-                        {/* Column 2 */}
                         <div style={{ flex: 1 }}>
                             <Form.Item
                                 name="description"
@@ -409,4 +387,4 @@ const Teach = () => {
     );
 };
 
-export default Teach;
+export default SubMajors;

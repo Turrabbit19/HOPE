@@ -15,6 +15,7 @@ import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import Loading from "../../../../components/loading";
 import instance from "../../../../config/axios";
+import { Link } from "react-router-dom";
 
 const ListSubject = () => {
   const [searchValue, setSearchValue] = useState("");
@@ -29,7 +30,7 @@ const ListSubject = () => {
   const [selectedMajor, setSelectedMajor] = useState(majors[0]);
   const [subjects, setSubjects] = useState([]);
   const [initialValues, setInitialValues] = useState();
-  const [update, setUpdate] = useState(false)
+  const [update, setUpdate] = useState(false);
   const [loading, setLoading] = useState(false);
   // State cho các biến thể được thêm vào
   const [additionalVariants, setAdditionalVariants] = useState([
@@ -47,7 +48,7 @@ const ListSubject = () => {
         setLoading(true);
         const [{ data }, majors] = await Promise.all([
           instance.get("admin/subjects"),
-          instance.get("admin/majors"),
+          instance.get("admin/sub/majors"),
         ]);
         setMajors(majors.data.data);
         setSubjects(data.data);
@@ -129,17 +130,21 @@ const ListSubject = () => {
         credit: values.credit,
         status: values.status,
         majors: values.majors.map((id) => ({ id })),
+        order: values.order,
+        code: values.code
       };
       console.log(payload);
       const response = await instance.post("/admin/subjects", payload);
-      const newSubject = response.data.data; 
+      const newSubject = response.data.data;
       message.success("Thêm môn học mới thành công !!!");
       setIsPopupVisible(!isPopupVisible);
       form.resetFields();
-      setSubjects((prevSubjects) => [...prevSubjects, newSubject])
+      setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
     } catch (error) {
       if (error.response && error.response.data) {
-        message.error(error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!");
+        message.error(
+          error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!"
+        );
       } else {
         message.error("Lỗi kết nối, vui lòng kiểm tra lại!");
       }
@@ -192,12 +197,17 @@ const ListSubject = () => {
   };
 
   const getMajorIdBySubjectId = async (subjectId) => {
-    const response = await instance.get(`/admin/subjects/${subjectId}/getMajorIdBySubjectId`);
-    return response.data;
-  }
+    const response = await instance.get(
+      // admin/subject/51/majors
+      `/admin/subject/${subjectId}/majors`
+    );
+    console.log(response);
+    return response.data.data;
+  };
 
   // Hàm mở modal chỉnh sửa khóa học
   const openEditModal = async (values) => {
+    debugger
     setIsPopupVisible(!isPopupVisible);
     setUpdate(true);
     const majors = await getMajorIdBySubjectId(values.id);
@@ -208,38 +218,44 @@ const ListSubject = () => {
       description: values.description,
       credit: values.credit,
       status: values.status,
-      majors: majors
+      order: values.order,
+      majors: majors.map(m => m.id),
     });
-    setInitialValues(values.id)
+    setInitialValues(values.id);
   };
 
   const onHandleUpdate = async (values) => {
     try {
       setLoading(true);
-      const response = await instance.put(`/admin/subjects/${initialValues}`, {...values, majors: values.majors.map((id) => ({ id }))});
+      const response = await instance.put(`/admin/subjects/${initialValues}`, {
+        ...values,
+        majors: values.majors.map((id) => ({ id })),
+      });
       const updatedSubject = response.data.data;
-      setSubjects(prevSubjects => 
-        prevSubjects.map(subject => 
+      setSubjects((prevSubjects) =>
+        prevSubjects.map((subject) =>
           subject.id === updatedSubject.id ? updatedSubject : subject
         )
       );
       message.success("Cập nhật môn học thành công");
       setIsPopupVisible(!isPopupVisible);
-      closeEditModal()
+      closeEditModal();
     } catch (error) {
       if (error.response && error.response.data) {
-        message.error(error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!");
+        message.error(
+          error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!"
+        );
       } else {
         message.error("Lỗi kết nối, vui lòng kiểm tra lại!");
       }
-    }finally {
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   // Hàm đóng modal chỉnh sửa khóa học
   const closeEditModal = () => {
-    setIsEditModalVisible(false); 
+    setIsEditModalVisible(false);
     form.resetFields();
   };
 
@@ -295,7 +311,6 @@ const ListSubject = () => {
                     style={{ width: 300 }}
                     allowClear
                   />
-
                 </div>
                 <div className="flex justify-between items-center">
                   <button
@@ -347,7 +362,7 @@ const ListSubject = () => {
                                     alt=""
                                   />
                                   <span className="text-[#44CC15] text-[12px]">
-                                    Kích Hoạt
+                                    {subject.status}
                                   </span>
                                 </div>
                               </div>
@@ -355,14 +370,22 @@ const ListSubject = () => {
                               <p className="text-[#9E9E9E] mt-3 ml-3">
                                 Code:
                                 <span className="text-black ml-2">
-                                  
                                   {subject.code}
                                 </span>
                               </p>
 
                               <p className="text-[#9E9E9E] mt-3 ml-3">
                                 Tín chỉ :
-                                <span className="text-black ml-2">{subject.credit}</span>
+                                <span className="text-black ml-2">
+                                  {subject.credit}
+                                </span>
+                              </p>
+
+                              <p className="text-[#9E9E9E] mt-3 ml-3">
+                                Kỳ học :
+                                <span className="text-black ml-2">
+                                  {subject.order}
+                                </span>
                               </p>
 
                               <div className="text-[#9E9E9E] gap-2 mt-3 ml-3 flex">
@@ -378,7 +401,9 @@ const ListSubject = () => {
                         <div className="listCourse__item-bottom teaching__card-bottom ">
                           <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                             <img src="/assets/svg/eye.svg" alt="" />
+                            <Link to={`detail/${subject.id}`}>
                             Chi Tiết
+                            </Link>
                           </button>
 
                           <Popconfirm
@@ -445,33 +470,46 @@ const ListSubject = () => {
               >
                 <Row gutter={24}>
                   <Col span={16}>
-                    <Form.Item
-                      label="Tên Môn Học"
-                      name="name"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Vui lòng nhập tên môn học!",
-                        },
-                      ]}
-                    >
-                      <Input placeholder="Tên" />
-                    </Form.Item>
+                    <Row gutter={24}>
+                      <Col span={12}>
+                        <Form.Item
+                          label="Tên Môn Học"
+                          name="name"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng nhập tên môn học!",
+                            },
+                          ]}
+                        >
+                          <Input placeholder="Tên môn học" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="Mã Môn Học"
+                          name="code"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng nhập mã môn học!",
+                            },
+                          ]}
+                        >
+                          <Input placeholder="Mã môn học" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
                     {/* Mô tả môn học */}
-                    <Form.Item
-                      label="Mô tả"
-                      name="description"
-                      rules={[
-                    
-                      ]}
-                    >
+                    <Form.Item label="Mô tả" name="description" rules={[]}>
                       <Input.TextArea rows={3} placeholder="Mô tả" />
                     </Form.Item>
 
                     {/* Tín chỉ */}
                     <Row gutter={24}>
-                      <Col span={12}>
+                      <Col span={6}>
                         <Form.Item
                           label="Tín chỉ"
                           name="credit"
@@ -483,32 +521,47 @@ const ListSubject = () => {
                             {
                               type: "number",
                               min: 1,
-                              max: 7,
-                              message: "Tín chỉ phải từ 1 đến 7.",
+                              max: 5,
+                              message: "Tín chỉ phải từ 1 đến 5.",
                             },
                           ]}
                         >
-                          <InputNumber placeholder="Tín chỉ" min={1} max={7} />
+                          <InputNumber placeholder="Tín chỉ" min={1} max={5} />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="Kỳ học"
+                          name="order"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng nhập kỳ học!",
+                            },
+                            {
+                              type: "number",
+                              min: 1,
+                              max: 9,
+                              message: "Kỳ học phải từ 1 đến 9.",
+                            },
+                          ]}
+                        >
+                          <InputNumber placeholder="kỳ học" min={1} max={9} />
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
-                        <Form.Item
-                          label="Trạng thái"
-                          name="status"
-                          rules={[
-                            
-                          ]}
-                        >
+                        <Form.Item label="Trạng thái" name="status" rules={[]}>
                           <Select
-                          defaultValue="Đang hoạt động"
+                            defaultValue="0"
                             placeholder="Chọn trạng thái"
                             options={[
                               {
-                                value: "Đang hoạt động",
+                                value: "0",
                                 label: "Đang hoạt động",
                               },
-                              { value: "Tạm dừng", label: "Tạm dừng" },
+                              { value: "1", label: "Tạm dừng" },
                             ]}
                           />
                         </Form.Item>
@@ -542,7 +595,7 @@ const ListSubject = () => {
                 {/* Nút tạo môn học */}
                 <div className="flex justify-center items-center mt-4">
                   <Button type="primary" htmlType="submit">
-                    {!update ? "Tạo môn học": "Cập nhật môn học"}
+                    {!update ? "Tạo môn học" : "Cập nhật môn học"}
                   </Button>
                 </div>
               </Form>

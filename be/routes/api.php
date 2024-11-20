@@ -70,6 +70,8 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
+        Route::get('sub/{id?}/majors', [ApiMajorController::class, 'getSubMajors']);
+        Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 
@@ -82,6 +84,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
 
         Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
+        Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
         Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
 
         Route::apiResource('rooms', ApiRoomController::class);
@@ -129,6 +132,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
+        Route::get('sub/{id}/majors', [ApiMajorController::class, 'getSubMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 

@@ -18,25 +18,20 @@ const AsideAdmin = () => {
     const [collapsed, setCollapsed] = useState(false);
 
     const navigates = [
-        // {
-        //     name: "Quản lý sinh viên",
-        //     link: "/admin/student_manager",
-        //     icon: <UserOutlined />,
-        // },
-        // {
-        //     name: "Tất cả sinh viên",
-        //     link: "/admin/all-student",
-        //     icon: <TeamOutlined />,
-        // },
-        // {
-        //     name: "Quản lý giảng viên",
-        //     link: "/admin/teacher-manager",
-        //     icon: <UserOutlined />,
-        // },
         {
-            name: "Quản lý người dùng",
-            link: "/admin/list-users",
+            name: "Quản lý Cán Bộ",
+            link: "/admin/admin-manager",
+            icon: <UserOutlined />,
+        },
+        {
+            name: "Quản Lý sinh viên",
+            link: "/admin/all-student",
             icon: <TeamOutlined />,
+        },
+        {
+            name: "Quản lý giảng viên",
+            link: "/admin/teacher-manager",
+            icon: <UserOutlined />,
         },
     ];
 

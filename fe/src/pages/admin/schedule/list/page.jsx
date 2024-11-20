@@ -1,623 +1,149 @@
+import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const semestersData = [
-    // Kỳ 1
-    {
-        id: "1",
-        name: "Kỳ 1",
-        startDate: "01/09/2023",
-        endDate: "31/12/2023",
-        status: "Kết thúc",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "1",
-                                name: "Nhập môn lập trình",
-                                credits: 3,
-                                code: "NMLT",
-                                classes: [
-                                    {
-                                        id: "1",
-                                        teacher: "Nguyễn Văn A",
-                                        schedule: [
-                                            {
-                                                day: "2",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            // {
-                                            //     day: "Thứ 3",
-                                            //     time: "7:30 - 9:30",
-                                            //     status: "Hết chỗ",
-                                            // },
-                                            {
-                                                day: "4",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            // {
-                                            //     day: "Thứ 5",
-                                            //     time: "7:30 - 9:30",
-                                            //     status: "Còn chỗ",
-                                            // },
-                                            {
-                                                day: "6",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            // {
-                                            //     day: "Thứ 7",
-                                            //     time: "7:30 - 9:30",
-                                            //     status: "Còn chỗ",
-                                            // },
-                                        ],
-                                    },
-                                    {
-                                        id: "2",
-                                        teacher: "Nguyễn Văn B",
-                                        schedule: [
-                                            {
-                                                day: "3",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            {
-                                                day: "5",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            {
-                                                day: "7",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-
-                                    {
-                                        id: "3",
-                                        teacher: "Nguyễn Văn B",
-                                        schedule: [
-                                            {
-                                                day: "3",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            {
-                                                day: "4",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                            {
-                                                day: "5",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "2",
-                                name: "Toán rời rạc",
-                                credits: 3,
-                                code: "TRR",
-                                classes: [
-                                    {
-                                        id: "2",
-                                        teacher: "Trần Thị B",
-                                        schedule: [
-                                            {
-                                                day: "3",
-                                                time: "9:45 - 11:45",
-                                                status: "Hết chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                    // Ngành Quản trị kinh doanh
-                    {
-                        id: "qtkd",
-                        name: "Quản trị kinh doanh",
-                        subjects: [
-                            {
-                                id: "3",
-                                name: "Kinh tế vi mô",
-                                credits: 3,
-                                code: "KTVM",
-                                classes: [
-                                    {
-                                        id: "3",
-                                        teacher: "Lê Văn C",
-                                        schedule: [
-                                            {
-                                                day: " 4",
-                                                time: "13:00 - 15:00",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "4",
-                                name: "Nguyên lý kế toán",
-                                credits: 3,
-                                code: "NLKT",
-                                classes: [
-                                    {
-                                        id: "4",
-                                        teacher: "Phạm Thị D",
-                                        schedule: [
-                                            {
-                                                day: " 5",
-                                                time: "15:15 - 17:15",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                id: "19.3",
-                name: "Khóa 19.3",
-                majors: [
-                    // Ngành Quản trị kinh doanh
-                    {
-                        id: "qtkd",
-                        name: "Quản trị kinh doanh",
-                        subjects: [
-                            {
-                                id: "3",
-                                name: "Kinh tế vi mô",
-                                credits: 3,
-                                code: "KTVM",
-                                classes: [
-                                    {
-                                        id: "3",
-                                        teacher: "Lê Văn C",
-                                        schedule: [
-                                            {
-                                                day: " 4",
-                                                time: "13:00 - 15:00",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "4",
-                                name: "Nguyên lý kế toán",
-                                credits: 3,
-                                code: "NLKT",
-                                classes: [
-                                    {
-                                        id: "4",
-                                        teacher: "Phạm Thị D",
-                                        schedule: [
-                                            {
-                                                day: " 5",
-                                                time: "15:15 - 17:15",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-
-    // Kỳ 2
-    {
-        id: "2",
-        name: "Kỳ 2",
-        startDate: "01/01/2024",
-        endDate: "30/04/2024",
-        status: "Đang diễn ra",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "5",
-                                name: "Cấu trúc dữ liệu và giải thuật",
-                                credits: 4,
-                                code: "CTDL-GT",
-                                classes: [
-                                    {
-                                        id: "5",
-                                        teacher: "Nguyễn Văn E",
-                                        schedule: [
-                                            {
-                                                day: " 2",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "6",
-                                name: "Lập trình hướng đối tượng",
-                                credits: 4,
-                                code: "LTHDT",
-                                classes: [
-                                    {
-                                        id: "6",
-                                        teacher: "Trần Thị F",
-                                        schedule: [
-                                            {
-                                                day: " 3",
-                                                time: "9:45 - 11:45",
-                                                status: "Hết chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-
-    // Kỳ 3
-    {
-        id: "3",
-        name: "Kỳ 3",
-        startDate: "01/05/2024",
-        endDate: "31/08/2024",
-        status: "Đang diễn ra",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "7",
-                                name: "Cơ sở dữ liệu",
-                                credits: 4,
-                                code: "CSDL",
-                                classes: [
-                                    {
-                                        id: "7",
-                                        teacher: "Lê Văn G",
-                                        schedule: [
-                                            {
-                                                day: " 4",
-                                                time: "13:00 - 15:00",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "8",
-                                name: "Mạng máy tính",
-                                credits: 3,
-                                code: "MMT",
-                                classes: [
-                                    {
-                                        id: "8",
-                                        teacher: "Phạm Thị H",
-                                        schedule: [
-                                            {
-                                                day: " 5",
-                                                time: "15:15 - 17:15",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-
-    // Kỳ 4
-    {
-        id: "4",
-        name: "Kỳ 4",
-        startDate: "01/09/2024",
-        endDate: "31/12/2024",
-        status: "Đang diễn ra",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "9",
-                                name: "Hệ điều hành",
-                                credits: 3,
-                                code: "HDH",
-                                classes: [
-                                    {
-                                        id: "9",
-                                        teacher: "Nguyễn Văn I",
-                                        schedule: [
-                                            {
-                                                day: " 6",
-                                                time: "7:30 - 9:30",
-                                                status: "Hết chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "10",
-                                name: "Phân tích thiết kế hệ thống",
-                                credits: 3,
-                                code: "PTTKHT",
-                                classes: [
-                                    {
-                                        id: "10",
-                                        teacher: "Trần Thị K",
-                                        schedule: [
-                                            {
-                                                day: " 2",
-                                                time: "9:45 - 11:45",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-
-    // Kỳ 5
-    {
-        id: "5",
-        name: "Kỳ 5",
-        startDate: "01/01/2025",
-        endDate: "30/04/2025",
-        status: "Sắp diễn ra",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "11",
-                                name: "Phát triển ứng dụng web",
-                                credits: 4,
-                                code: "PTUDW",
-                                classes: [
-                                    {
-                                        id: "11",
-                                        teacher: "Lê Văn M",
-                                        schedule: [
-                                            {
-                                                day: " 3",
-                                                time: "13:00 - 15:00",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "12",
-                                name: "An toàn thông tin",
-                                credits: 3,
-                                code: "ATTT",
-                                classes: [
-                                    {
-                                        id: "12",
-                                        teacher: "Phạm Thị N",
-                                        schedule: [
-                                            {
-                                                day: " 4",
-                                                time: "15:15 - 17:15",
-                                                status: "Hết chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-
-    // Kỳ 6
-    {
-        id: "6",
-        name: "Kỳ 6",
-        startDate: "01/05/2025",
-        endDate: "31/08/2025",
-        status: "Sắp diễn ra",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "13",
-                                name: "Trí tuệ nhân tạo",
-                                credits: 3,
-                                code: "TTNT",
-                                classes: [
-                                    {
-                                        id: "13",
-                                        teacher: "Nguyễn Văn O",
-                                        schedule: [
-                                            {
-                                                day: " 5",
-                                                time: "7:30 - 9:30",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                id: "14",
-                                name: "Học máy",
-                                credits: 3,
-                                code: "HM",
-                                classes: [
-                                    {
-                                        id: "14",
-                                        teacher: "Trần Thị P",
-                                        schedule: [
-                                            {
-                                                day: " 6",
-                                                time: "9:45 - 11:45",
-                                                status: "Hết chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-
-    // Kỳ 7
-    {
-        id: "7",
-        name: "Kỳ 7",
-        startDate: "01/09/2025",
-        endDate: "31/12/2025",
-        status: "Sắp diễn ra",
-        courses: [
-            {
-                id: "18.3",
-                name: "Khóa 18.3",
-                majors: [
-                    // Ngành Công nghệ thông tin
-                    {
-                        id: "cntt",
-                        name: "Công nghệ thông tin",
-                        subjects: [
-                            {
-                                id: "15",
-                                name: "Đồ án tốt nghiệp",
-                                credits: 10,
-                                code: "DATN",
-                                classes: [
-                                    {
-                                        id: "15",
-                                        teacher: "Lê Văn Q",
-                                        schedule: [
-                                            {
-                                                day: " 2",
-                                                time: "13:00 - 15:00",
-                                                status: "Còn chỗ",
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-];
+import instance from "../../../../config/axios"; // Axios instance
+import moment from "moment";
 
 const ScheduleList = () => {
-    const [expandedSemester, setExpandedSemester] = useState(null);
     const [expandedCourse, setExpandedCourse] = useState(null);
+    const [expandedSemester, setExpandedSemester] = useState(null);
     const [expandedMajor, setExpandedMajor] = useState(null);
-    const [selectedSubject, setSelectedSubject] = useState(null);
-
+    const [expandedSubject, setExpandedSubject] = useState(null);
+    const [courses, setCourses] = useState([]);
+    const [semestersByCourse, setSemestersByCourse] = useState({});
+    const [majorsBySemester, setMajorsBySemester] = useState({});
+    const [subjectsByMajor, setSubjectsByMajor] = useState({});
+    const [classroomsBySubject, setClassroomsBySubject] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const toggleSemester = (semesterId) => {
+    // Fetching courses from API
+    useEffect(() => {
+        const fetchCourses = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await instance.get("admin/courses");
+                setCourses(response.data.data);
+                console.log(response.data.data);
+            } catch (err) {
+                setError("Không thể lấy dữ liệu khóa học.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCourses();
+    }, []);
+
+    // Fetching semesters for a specific course
+    const fetchSemestersForCourse = async (courseId) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await instance.get(
+                `admin/course/${courseId}/semesters`
+            );
+            setSemestersByCourse((prev) => ({
+                ...prev,
+                [courseId]: response.data.semesters,
+            }));
+        } catch (err) {
+            setError("Không thể lấy dữ liệu kỳ học cho khóa học này.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetching majors for a specific semester and course
+    const fetchMajorsForSemester = async (courseId, semesterId) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await instance.get(
+                `admin/course/${courseId}/majors`
+            );
+            setMajorsBySemester((prev) => ({
+                ...prev,
+                [`${courseId}_${semesterId}`]: response.data.majors,
+            }));
+        } catch (err) {
+            setError("Không thể lấy dữ liệu ngành học cho kỳ học này.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSubjectsForMajor = async (courseId, semesterId, majorId) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await instance.get(
+                `admin/semester/${semesterId}/course/${courseId}/major/${majorId}/subjects`
+            );
+            setSubjectsByMajor((prev) => ({
+                ...prev,
+                [`${courseId}_${semesterId}_${majorId}`]:
+                    response.data.subjects,
+            }));
+        } catch (err) {
+            setError("Không thể lấy dữ liệu môn học cho ngành học này.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetching classrooms for a specific subject
+    const fetchClassroomsForSubject = async (subjectId) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await instance.get(
+                `admin/schedule/${subjectId}/classrooms`
+            );
+
+            setClassroomsBySubject((prev) => ({
+                ...prev,
+                [subjectId]: response.data.data,
+            }));
+        } catch (err) {
+            setError("Không thể lấy dữ liệu lớp học cho môn học này.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle toggling for each course, semester, major, and subject
+    const toggleCourse = (courseId) => {
+        setExpandedCourse(expandedCourse === courseId ? null : courseId);
+        setExpandedSemester(null);
+        if (expandedCourse !== courseId) {
+            fetchSemestersForCourse(courseId);
+        }
+    };
+
+    const toggleSemester = (courseId, semesterId) => {
         setExpandedSemester(
             expandedSemester === semesterId ? null : semesterId
         );
-        setExpandedCourse(null);
-        setExpandedMajor(null);
-        setSelectedSubject(null);
+        if (expandedSemester !== semesterId) {
+            fetchMajorsForSemester(courseId, semesterId);
+        }
     };
 
-    const toggleCourse = (courseId) => {
-        setExpandedCourse(expandedCourse === courseId ? null : courseId);
-        setExpandedMajor(null);
-        setSelectedSubject(null);
-    };
-
-    const toggleMajor = (majorId) => {
+    const toggleMajor = (courseId, semesterId, majorId) => {
         setExpandedMajor(expandedMajor === majorId ? null : majorId);
-        setSelectedSubject(null);
+        if (expandedMajor !== majorId) {
+            fetchSubjectsForMajor(courseId, semesterId, majorId);
+        }
     };
 
-    const selectSubject = (subjectId) => {
-        setSelectedSubject(selectedSubject === subjectId ? null : subjectId);
-    };
-
-    const handleScheduleClick = (scheduleId) => {
-        navigate(`details/${scheduleId}`);
+    const toggleSubject = (subjectId) => {
+        setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
+        if (expandedSubject !== subjectId) {
+            fetchClassroomsForSubject(subjectId);
+        }
     };
 
     return (
@@ -626,310 +152,322 @@ const ScheduleList = () => {
                 Quản lý lịch học
             </h2>
 
+            {loading && <p>Đang tải dữ liệu...</p>}
+
+            {error && <p className="text-red-600">{error}</p>}
+
             <div className="space-y-8">
-                {semestersData.map((semester) => {
-                    // Đặt màu sắc cho trạng thái kỳ học
-                    let statusColor = "";
-                    switch (semester.status) {
-                        case "Đang diễn ra":
-                            statusColor = "text-green-600";
-                            break;
-                        case "Sắp diễn ra":
-                            statusColor = "text-yellow-600";
-                            break;
-                        case "Kết thúc":
-                            statusColor = "text-red-600";
-                            break;
-                        default:
-                            statusColor = "text-gray-600";
-                    }
+                {courses.length > 0 ? (
+                    courses.map((course) => {
+                        let statusColor = "";
+                        switch (course.status) {
+                            case "Đang diễn ra":
+                                statusColor = "text-green-600";
+                                break;
+                            case "Chờ diễn ra":
+                                statusColor = "text-yellow-600";
+                                break;
+                            case "Kết thúc":
+                                statusColor = "text-red-600";
+                                break;
+                            default:
+                                statusColor = "text-gray-600";
+                        }
 
-                    return (
-                        <div
-                            key={semester.id}
-                            className="p-8 bg-white rounded-lg shadow-lg space-y-6"
-                        >
-                            {/* Semester Header */}
+                        return (
                             <div
-                                onClick={() => toggleSemester(semester.id)}
-                                className="cursor-pointer space-y-2"
+                                key={course.id}
+                                className="p-8 bg-white rounded-lg shadow-lg space-y-6"
                             >
-                                <h3 className="text-4xl mb-3 font-bold text-blue-600 flex items-center justify-between">
-                                    {semester.name}
-                                    {expandedSemester === semester.id ? (
-                                        <DownOutlined className="ml-2 text-2xl" />
-                                    ) : (
-                                        <RightOutlined className="ml-2 text-2xl" />
-                                    )}
-                                </h3>
-                                <div className="text-xl text-gray-700">
-                                    <p className="mb-2">
-                                        <span className="font-semibold">
-                                            Ngày bắt đầu:
-                                        </span>{" "}
-                                        {semester.startDate}
-                                    </p>
-                                    <p className="mb-2">
-                                        <span className="font-semibold">
-                                            Ngày kết thúc:
-                                        </span>{" "}
-                                        {semester.endDate}
-                                    </p>
-                                    <p className="mb-2">
-                                        <span className="font-semibold">
-                                            Trạng thái:
-                                        </span>{" "}
-                                        <span
-                                            className={`${statusColor} font-bold`}
-                                        >
-                                            {semester.status}
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            {expandedSemester === semester.id && (
-                                <div className="mt-6 space-y-6">
-                                    {semester.courses.map((course) => (
-                                        <div
-                                            key={course.id}
-                                            className="bg-gray-50 rounded-lg p-6"
-                                        >
-                                            {/* Course Header */}
-                                            <div
-                                                onClick={() =>
-                                                    toggleCourse(course.id)
-                                                }
-                                                className="cursor-pointer flex justify-between items-center"
+                                <div
+                                    onClick={() => toggleCourse(course.id)}
+                                    className="cursor-pointer space-y-2"
+                                >
+                                    <h3 className="text-4xl mb-3 font-bold text-blue-600 flex items-center justify-between">
+                                        {course.name}
+                                        {expandedCourse === course.id ? (
+                                            <DownOutlined className="ml-2 text-2xl" />
+                                        ) : (
+                                            <RightOutlined className="ml-2 text-2xl" />
+                                        )}
+                                    </h3>
+                                    <div className="text-xl text-gray-700">
+                                        <p className="mb-2">
+                                            <span className="font-semibold">
+                                                Ngày bắt đầu:
+                                            </span>{" "}
+                                            {moment(course.start_date).format(
+                                                "DD/MM/YYYY"
+                                            )}
+                                        </p>
+                                        <p className="mb-2">
+                                            <span className="font-semibold">
+                                                Ngày kết thúc:
+                                            </span>{" "}
+                                            {moment(course.end_date).format(
+                                                "DD/MM/YYYY"
+                                            )}
+                                        </p>
+                                        <p className={`text-xl text-gray-700`}>
+                                            Trạng thái:{" "}
+                                            <span
+                                                className={`text-xl ${statusColor}`}
                                             >
-                                                <h4 className="text-3xl font-semibold text-blue-500">
-                                                    {course.name}
-                                                </h4>
-                                                {expandedCourse ===
-                                                course.id ? (
-                                                    <DownOutlined className="text-2xl text-gray-600" />
-                                                ) : (
-                                                    <RightOutlined className="text-2xl text-gray-600" />
-                                                )}
-                                            </div>
+                                                {course.status}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
 
-                                            {expandedCourse === course.id && (
-                                                <div className="mt-4 space-y-4">
-                                                    {course.majors.map(
-                                                        (major) => (
-                                                            <div
-                                                                key={major.id}
-                                                                className="bg-white rounded-lg p-6 shadow"
-                                                            >
-                                                                {/* Major Header */}
-                                                                <div
-                                                                    onClick={() =>
-                                                                        toggleMajor(
-                                                                            major.id
-                                                                        )
+                                {expandedCourse === course.id && (
+                                    <div className="mt-6 space-y-6">
+                                        {semestersByCourse[course.id] ? (
+                                            semestersByCourse[course.id].map(
+                                                (semester) => (
+                                                    <div
+                                                        key={semester.id}
+                                                        className="bg-gray-50 rounded-lg p-6"
+                                                    >
+                                                        <div
+                                                            onClick={() =>
+                                                                toggleSemester(
+                                                                    course.id,
+                                                                    semester.id
+                                                                )
+                                                            }
+                                                            className="cursor-pointer"
+                                                        >
+                                                            <h4 className="text-3xl font-semibold text-blue-500">
+                                                                {semester.name}
+                                                            </h4>
+                                                        </div>
+
+                                                        {expandedSemester ===
+                                                            semester.id && (
+                                                            <div className="mt-4 space-y-4">
+                                                                <p>
+                                                                    Thông tin
+                                                                    chi tiết kỳ
+                                                                    học:{" "}
+                                                                    {
+                                                                        semester.name
                                                                     }
-                                                                    className="cursor-pointer flex justify-between items-center"
-                                                                >
-                                                                    <h5 className="text-2xl font-medium text-green-600">
-                                                                        {
-                                                                            major.name
-                                                                        }
+                                                                </p>
+
+                                                                <div className="mt-4">
+                                                                    <h5 className="font-semibold text-xl">
+                                                                        Ngành
+                                                                        học:
                                                                     </h5>
-                                                                    {expandedMajor ===
-                                                                    major.id ? (
-                                                                        <DownOutlined className="text-xl text-gray-600" />
-                                                                    ) : (
-                                                                        <RightOutlined className="text-xl text-gray-600" />
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Subjects within the Major */}
-                                                                {expandedMajor ===
-                                                                    major.id && (
-                                                                    <div className="mt-4  space-y-4">
-                                                                        {major.subjects.map(
-                                                                            (
-                                                                                subject
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        subject.id
-                                                                                    }
-                                                                                    className="bg-gray-50 rounded-lg p-6"
-                                                                                >
-                                                                                    {/* Subject Header */}
+                                                                    <div className="mt-4 space-y-4">
+                                                                        {majorsBySemester[
+                                                                            `${course.id}_${semester.id}`
+                                                                        ] ? (
+                                                                            majorsBySemester[
+                                                                                `${course.id}_${semester.id}`
+                                                                            ].map(
+                                                                                (
+                                                                                    major
+                                                                                ) => (
                                                                                     <div
-                                                                                        onClick={() =>
-                                                                                            selectSubject(
-                                                                                                subject.id
-                                                                                            )
+                                                                                        key={
+                                                                                            major.id
                                                                                         }
-                                                                                        className="cursor-pointer flex justify-between items-center"
+                                                                                        className="bg-white rounded-lg p-6 shadow"
                                                                                     >
-                                                                                        <p className="text-xl font-semibold text-indigo-600">
-                                                                                            {
-                                                                                                subject.name
-                                                                                            }{" "}
-                                                                                            -
-                                                                                            Mã
-                                                                                            môn:{" "}
-                                                                                            {
-                                                                                                subject.code
-                                                                                            }{" "}
-                                                                                            -
-                                                                                            Tín
-                                                                                            chỉ:{" "}
-                                                                                            {
-                                                                                                subject.credits
+                                                                                        <h5
+                                                                                            onClick={() =>
+                                                                                                toggleMajor(
+                                                                                                    course.id,
+                                                                                                    semester.id,
+                                                                                                    major.id
+                                                                                                )
                                                                                             }
-                                                                                        </p>
-                                                                                        {selectedSubject ===
-                                                                                        subject.id ? (
-                                                                                            <DownOutlined className="text-xl text-gray-600" />
-                                                                                        ) : (
-                                                                                            <RightOutlined className="text-xl text-gray-600" />
-                                                                                        )}
-                                                                                    </div>
+                                                                                            className="text-2xl font-medium text-green-600 cursor-pointer"
+                                                                                        >
+                                                                                            {
+                                                                                                major.name
+                                                                                            }
+                                                                                        </h5>
 
-                                                                                    {/* Classes within the Subject */}
-                                                                                    {selectedSubject ===
-                                                                                        subject.id && (
-                                                                                        <div className="mt-6 grid grid-cols-2 gap-4">
-                                                                                            {subject
-                                                                                                .classes
-                                                                                                .length ===
-                                                                                            0 ? (
-                                                                                                <div className="flex justify-center items-center">
-                                                                                                    <Button type="primary">
-                                                                                                        <Link
-                                                                                                            to={`add`}
-                                                                                                        >
-                                                                                                            Tạo
-                                                                                                            lịch
-                                                                                                            học
-                                                                                                            mới
-                                                                                                        </Link>
-                                                                                                    </Button>
-                                                                                                </div>
-                                                                                            ) : (
-                                                                                                <>
-                                                                                                    {subject.classes.map(
+                                                                                        {expandedMajor ===
+                                                                                            major.id && (
+                                                                                            <div className="mt-4 space-y-4">
+                                                                                                <h5 className="font-semibold text-xl">
+                                                                                                    Môn
+                                                                                                    học:
+                                                                                                </h5>
+                                                                                                {subjectsByMajor[
+                                                                                                    `${course.id}_${semester.id}_${major.id}`
+                                                                                                ] ? (
+                                                                                                    subjectsByMajor[
+                                                                                                        `${course.id}_${semester.id}_${major.id}`
+                                                                                                    ].map(
                                                                                                         (
-                                                                                                            classItem
+                                                                                                            subject
                                                                                                         ) => (
                                                                                                             <div
                                                                                                                 key={
-                                                                                                                    classItem.id
+                                                                                                                    subject.id
                                                                                                                 }
-                                                                                                                className="p-6 border rounded-lg bg-white shadow-md"
+                                                                                                                className="bg-white p-6 shadow rounded-lg"
                                                                                                             >
-                                                                                                                <div className="flex px-6 font-semibold text-xl text-gray-700">
-                                                                                                                    <p>
-                                                                                                                        Lớp:{" "}
-                                                                                                                        {
-                                                                                                                            classItem.id
-                                                                                                                        }{" "}
-                                                                                                                        -{" "}
-                                                                                                                    </p>
-
-                                                                                                                    <div>
-                                                                                                                        <p>
-                                                                                                                            {" Thứ " +
-                                                                                                                                classItem.schedule
-                                                                                                                                    .map(
-                                                                                                                                        (
-                                                                                                                                            sch
-                                                                                                                                        ) =>
-                                                                                                                                            sch.day
-                                                                                                                                    )
-                                                                                                                                    .join(
-                                                                                                                                        " , "
-                                                                                                                                    )}
-                                                                                                                        </p>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                                <div className="flex flex-wrap mt-2">
-                                                                                                                    {classItem.schedule.map(
-                                                                                                                        (
-                                                                                                                            sch,
-                                                                                                                            idx
-                                                                                                                        ) => (
-                                                                                                                            <div
-                                                                                                                                key={
-                                                                                                                                    idx
-                                                                                                                                }
-                                                                                                                                onClick={() =>
-                                                                                                                                    handleScheduleClick(
-                                                                                                                                        classItem.id
-                                                                                                                                    )
-                                                                                                                                }
-                                                                                                                                className={`m-2 p-4 rounded-lg cursor-pointer shadow ${
-                                                                                                                                    sch.status ===
-                                                                                                                                    "Còn chỗ"
-                                                                                                                                        ? "bg-green-100 border border-green-500"
-                                                                                                                                        : "bg-red-100 border border-red-500"
-                                                                                                                                }`}
-                                                                                                                            >
-                                                                                                                                <p className="text-base text-gray-700">
-                                                                                                                                    Thời
-                                                                                                                                    gian
-                                                                                                                                    :{" "}
-                                                                                                                                    {
-                                                                                                                                        sch.time
-                                                                                                                                    }
-                                                                                                                                </p>
-                                                                                                                                <p
-                                                                                                                                    className={`text-base font-bold ${
-                                                                                                                                        sch.status ===
-                                                                                                                                        "Còn chỗ"
-                                                                                                                                            ? "text-green-700"
-                                                                                                                                            : "text-red-700"
-                                                                                                                                    }`}
-                                                                                                                                >
-                                                                                                                                    {
-                                                                                                                                        sch.status
-                                                                                                                                    }
-                                                                                                                                </p>
-                                                                                                                            </div>
+                                                                                                                <h6
+                                                                                                                    onClick={() =>
+                                                                                                                        toggleSubject(
+                                                                                                                            subject.id
                                                                                                                         )
-                                                                                                                    )}
-                                                                                                                </div>
+                                                                                                                    }
+                                                                                                                    className="text-xl font-semibold text-indigo-600 cursor-pointer"
+                                                                                                                >
+                                                                                                                    {
+                                                                                                                        subject.name
+                                                                                                                    }
+                                                                                                                </h6>
+                                                                                                                {expandedSubject ===
+                                                                                                                    subject.id && (
+                                                                                                                    <div>
+                                                                                                                        <h6 className="font-semibold text-lg mt-4">
+                                                                                                                            Thông
+                                                                                                                            tin
+                                                                                                                            lớp:
+                                                                                                                        </h6>
+                                                                                                                        {classroomsBySubject[
+                                                                                                                            subject
+                                                                                                                                .id
+                                                                                                                        ] ? (
+                                                                                                                            classroomsBySubject[
+                                                                                                                                subject
+                                                                                                                                    .id
+                                                                                                                            ].map(
+                                                                                                                                (
+                                                                                                                                    classItem
+                                                                                                                                ) => (
+                                                                                                                                    <Link
+                                                                                                                                        to={`details/${classItem.id}`}
+                                                                                                                                    >
+                                                                                                                                        <div
+                                                                                                                                            key={
+                                                                                                                                                classItem.id
+                                                                                                                                            }
+                                                                                                                                            className="bg-gray-50 p-6 shadow rounded-lg m-2"
+                                                                                                                                        >
+                                                                                                                                            <p>
+                                                                                                                                                <strong>
+                                                                                                                                                    Lớp:
+                                                                                                                                                </strong>{" "}
+                                                                                                                                                {
+                                                                                                                                                    classItem.classroom
+                                                                                                                                                }
+                                                                                                                                            </p>
+                                                                                                                                            <p>
+                                                                                                                                                <strong>
+                                                                                                                                                    Giảng
+                                                                                                                                                    viên:
+                                                                                                                                                </strong>{" "}
+                                                                                                                                                {
+                                                                                                                                                    classItem.teacher
+                                                                                                                                                }
+                                                                                                                                            </p>
+                                                                                                                                            <p>
+                                                                                                                                                <strong>
+                                                                                                                                                    Thời
+                                                                                                                                                    gian:
+                                                                                                                                                </strong>{" "}
+                                                                                                                                                {
+                                                                                                                                                    classItem.start_date
+                                                                                                                                                }
+                                                                                                                                            </p>
+                                                                                                                                            <p>
+                                                                                                                                                <strong>
+                                                                                                                                                    Số
+                                                                                                                                                    lượng
+                                                                                                                                                    học
+                                                                                                                                                    sinh:
+                                                                                                                                                </strong>{" "}
+                                                                                                                                                {
+                                                                                                                                                    classItem.max_students
+                                                                                                                                                }
+                                                                                                                                            </p>
+                                                                                                                                        </div>
+                                                                                                                                    </Link>
+                                                                                                                                )
+                                                                                                                            )
+                                                                                                                        ) : (
+                                                                                                                            <p>
+                                                                                                                                Đang
+                                                                                                                                tải
+                                                                                                                                lớp
+                                                                                                                                học...
+                                                                                                                            </p>
+                                                                                                                        )}
+
+                                                                                                                        <Button type="primary">
+                                                                                                                            <Link
+                                                                                                                                to={`add`}
+                                                                                                                                state={{
+                                                                                                                                    courseId:
+                                                                                                                                        course.id,
+                                                                                                                                    semesterId:
+                                                                                                                                        semester.id,
+                                                                                                                                    majorId:
+                                                                                                                                        major.id,
+                                                                                                                                    subjectId:
+                                                                                                                                        subject.id,
+                                                                                                                                }}
+                                                                                                                            >
+                                                                                                                                Tạo
+                                                                                                                                lịch
+                                                                                                                                học
+                                                                                                                                mới
+                                                                                                                            </Link>
+                                                                                                                        </Button>
+                                                                                                                    </div>
+                                                                                                                )}
                                                                                                             </div>
                                                                                                         )
-                                                                                                    )}
-                                                                                                    <div className="flex justify-end items-end mt-4">
-                                                                                                        <Button type="primary">
-                                                                                                            <Link
-                                                                                                                to={`add`}
-                                                                                                            >
-                                                                                                                Tạo
-                                                                                                                mới
-                                                                                                                lịch
-                                                                                                                học
-                                                                                                            </Link>
-                                                                                                        </Button>
-                                                                                                    </div>
-                                                                                                </>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
+                                                                                                    )
+                                                                                                ) : (
+                                                                                                    <p>
+                                                                                                        Đang
+                                                                                                        tải
+                                                                                                        môn
+                                                                                                        học...
+                                                                                                    </p>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                )
                                                                             )
+                                                                        ) : (
+                                                                            <p>
+                                                                                Đang
+                                                                                tải
+                                                                                ngành
+                                                                                học...
+                                                                            </p>
                                                                         )}
                                                                     </div>
-                                                                )}
+                                                                </div>
                                                             </div>
-                                                        )
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                                        )}
+                                                    </div>
+                                                )
+                                            )
+                                        ) : (
+                                            <p>
+                                                Chưa có kỳ học cho khóa học này.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
+                ) : (
+                    <p>Chưa có khóa học nào.</p>
+                )}
             </div>
         </div>
     );

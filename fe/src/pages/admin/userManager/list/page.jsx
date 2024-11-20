@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Table,
     Avatar,
@@ -16,90 +16,19 @@ import {
     PlusOutlined,
     EditOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate, useRoutes } from "react-router-dom";
+import {
+    deleteStudent,
+    deleteTeacher,
+    deleteUser,
+    getUser,
+    getTeacher,
+    getStudent,
+    getListUser,
+    getListMajor,
+    getListCourse,
+} from "../../../../services/user-service";
 // Dữ liệu mẫu
-const accounts = {
-    classManager: [
-        {
-            id: 1,
-            name: "Nguyễn Văn A",
-            phone: "0912789789",
-            email: "quanly@example.com",
-            avatar: "",
-            dob: "01-10-2003",
-            gender: true, // true: Nam, false: Nữ
-            ethnicity: "Kinh", // Dân tộc
-            address: "Hà Nội", // Địa chỉ
-        },
-    ],
-    teachers: [
-        {
-            id: 2,
-            name: "Nguyễn Văn B",
-            phone: "0912789789",
-            email: "giangvien1@example.com",
-            avatar: "", // Ví dụ URL cho avatar
-            teacher_code: "GV001",
-            major: "Công nghệ thông tin",
-            status: 0, // 'Đang công tác'
-            dob: "01-10-2003",
-            gender: true, // true: Nam, false: Nữ
-            ethnicity: "Kinh", // Dân tộc
-            address: "Hà Nội", // Địa chỉ
-        },
-        {
-            id: 3,
-            name: "Nguyễn Văn C",
-            phone: "0912789789",
-            email: "giangvien2@example.com",
-            avatar: "", // Ví dụ URL cho avatar
-            teacher_code: "GV002",
-            major: "Kinh tế",
-            status: 1, // 'Tạm dừng'
-            dob: "01-10-2003",
-            gender: false,
-            ethnicity: "Kinh",
-            address: "TP HCM",
-        },
-    ],
-    students: [
-        {
-            id: 4,
-            name: "Nguyễn Văn D",
-            phone: "0912789789",
-            email: "hocvien1@example.com",
-            parent: "Lê Thị A",
-            avatar: "", // Ví dụ URL cho avatar
-            student_code: "SV001",
-            current_semester: 3,
-            status: 0, // 'Đang học'
-            course: "Khóa Học 1",
-            major: "Công nghệ thông tin",
-            dob: "01-10-2003",
-            gender: true,
-            ethnicity: "Kinh",
-            address: "Đà Nẵng",
-        },
-        {
-            id: 5,
-            name: "Nguyễn Văn E",
-            phone: "0912789789",
-            email: "hocvien2@example.com",
-            parent: "Lê Thị A",
-            avatar: "", // Ví dụ URL cho avatar
-            student_code: "SV002",
-            current_semester: 2,
-            status: 1, // 'Bảo lưu'
-            course: "Khóa Học 2",
-            major: "Kinh tế",
-            dob: "01-10-2003",
-            gender: false,
-            ethnicity: "Kinh",
-            address: "Nha Trang",
-        },
-    ],
-};
 
 // Hàm chuyển đổi trạng thái từ số sang chuỗi cho Học viên
 const getStudentStatus = (status) => {
@@ -132,13 +61,49 @@ const getTeacherStatus = (status) => {
 const ListUser = () => {
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [reload, setReload] = useState(false);
+    const [userDetail, setUserDetail] = useState({});
     const [recordType, setRecordType] = useState(""); // "teacher" hoặc "student" hoặc "classManager"
+    const [accounts, setAccounts] = useState({
+        classManager: [],
+        teachers: [],
+        students: [],
+    });
+
+    console.log(accounts);
+
+    const [studentPagination, setStudentPagination] = useState({
+        current_page: 1,
+        page_size: 5,
+        total: 10,
+    });
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        getListUser().then((res) => {
+            console.log(res);
+
+            setAccounts({
+                classManager: [
+                    ...res.data["Quản trị viên"].data,
+                    ...res.data["Cán bộ"].data,
+                ],
+                teachers: res.data["Giảng viên"].data,
+                students: res.data["Sinh viên"].data,
+            });
+            setStudentPagination(res.data["Sinh viên"].pagination);
+        });
+    }, []);
 
     // Hàm hiển thị thông tin chi tiết của tài khoản
     const handleDetailClick = (record, type) => {
         setSelectedRecord(record);
         setRecordType(type);
         setIsModalVisible(true);
+        getUser(record.id).then((res) => {
+            setUserDetail(res.data.data);
+        });
     };
 
     const handleModalClose = () => {
@@ -147,7 +112,9 @@ const ListUser = () => {
         setRecordType("");
     };
 
-    const handleDelete = (record) => {
+    const handleDelete = async (record) => {
+        await deleteUser(record.id);
+        setReload(!reload);
         message.success(`Đã xóa tài khoản: ${record.name}`);
     };
 
@@ -160,7 +127,14 @@ const ListUser = () => {
                 dataIndex: "avatar",
                 key: "avatar",
                 render: (avatar) => (
-                    <Avatar src={avatar} icon={!avatar && <UserOutlined />} />
+                    <Avatar
+                        src={
+                            `https://qrrhjldgdidplxjzixkd.supabase.co/storage/v1/object/public/${avatar}` || (
+                                <UserOutlined />
+                            )
+                        }
+                        icon={!avatar && <UserOutlined />}
+                    />
                 ),
             },
             {
@@ -185,7 +159,7 @@ const ListUser = () => {
             title: "Hành Động",
             key: "actions",
             render: (text, record) => (
-                <div style={{ display: "flex", gap: "10px" }}>
+                <>
                     <Button
                         type="link"
                         icon={<InfoCircleOutlined />}
@@ -202,9 +176,14 @@ const ListUser = () => {
                     >
                         Chi tiết
                     </Button>
-
-                    <Button type="link" icon={<EditOutlined />}>
-                        <Link to={`update/${record.id}`}>Sửa</Link>
+                    <Button
+                        type="link"
+                        icon={<EditOutlined />}
+                        onClick={() => {
+                            navigate("edit/" + record.id);
+                        }}
+                    >
+                        Sửa
                     </Button>
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa tài khoản này?"
@@ -214,7 +193,7 @@ const ListUser = () => {
                     >
                         <Button type="link" icon={<DeleteOutlined />} />
                     </Popconfirm>
-                </div>
+                </>
             ),
         };
 
@@ -222,7 +201,7 @@ const ListUser = () => {
     };
 
     return (
-        <div style={{ padding: "0 20px" }}>
+        <div>
             <div className="col-12 pb-8">
                 <div className="col-12 justify-between flex">
                     <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
@@ -251,7 +230,6 @@ const ListUser = () => {
                 columns={getColumns("classManager")}
                 rowKey="id"
                 pagination={false}
-                style={{ marginBottom: "20px" }}
             />
 
             {/* Tài Khoản Giảng Viên */}
@@ -260,18 +238,29 @@ const ListUser = () => {
                 dataSource={accounts.teachers}
                 columns={getColumns("teachers")}
                 rowKey="id"
-                pagination={false}
-                style={{ marginBottom: "20px" }}
+                pagination={true}
             />
 
             {/* Tài Khoản Học Viên */}
             <Divider orientation="left">#3. Sinh Viên</Divider>
             <Table
-                dataSource={accounts.students}
+                dataSource={accounts.students.slice(
+                    studentPagination.current_page - 1,
+                    5 * studentPagination.current_page
+                )}
                 columns={getColumns("students")}
                 rowKey="id"
-                pagination={false}
-                style={{ marginBottom: "20px" }}
+                onChange={(e) => {
+                    setStudentPagination((pre) => ({
+                        ...pre,
+                        current_page: e.current,
+                    }));
+                }}
+                pagination={{
+                    current: studentPagination.current_page,
+                    pageSize: 5,
+                    total: studentPagination.total,
+                }}
             />
 
             {/* Modal hiển thị chi tiết tài khoản */}
@@ -302,13 +291,17 @@ const ListUser = () => {
                     >
                         <Avatar
                             size={100}
-                            src={selectedRecord.avatar || <UserOutlined />}
+                            src={
+                                `https://qrrhjldgdidplxjzixkd.supabase.co/storage/v1/object/public/${userDetail?.avatar}` || (
+                                    <UserOutlined />
+                                )
+                            }
                             style={{ marginRight: 20 }}
                         />
                         <div>
-                            <h3>{selectedRecord.name}</h3>
-                            <p>Email: {selectedRecord.email}</p>
-                            <p>Điện Thoại: {selectedRecord.phone}</p>
+                            <h3>{userDetail.name}</h3>
+                            <p>Email: {userDetail.email}</p>
+                            <p>Điện Thoại: {userDetail.phone}</p>
                         </div>
                     </div>
                     <Divider />
@@ -318,16 +311,16 @@ const ListUser = () => {
                         {recordType === "classManager" && (
                             <>
                                 <Descriptions.Item label="Ngày Sinh">
-                                    {selectedRecord.dob}
+                                    {userDetail.dob}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Giới Tính">
-                                    {selectedRecord.gender ? "Nam" : "Nữ"}
+                                    {userDetail.gender ? "Nam" : "Nữ"}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Dân Tộc">
-                                    {selectedRecord.ethnicity}
+                                    {userDetail.ethnicity}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Địa Chỉ">
-                                    {selectedRecord.address}
+                                    {userDetail.address}
                                 </Descriptions.Item>
                             </>
                         )}
@@ -336,25 +329,25 @@ const ListUser = () => {
                         {recordType === "teacher" && (
                             <>
                                 <Descriptions.Item label="Mã Giảng Viên">
-                                    {selectedRecord.teacher_code}
+                                    {userDetail?.teacher?.teacher_code ?? ""}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Ngành Học">
-                                    {selectedRecord.major}
+                                    {userDetail.teacher?.major_name}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Trạng Thái">
-                                    {getTeacherStatus(selectedRecord.status)}
+                                    {userDetail.teacher?.status}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Ngày Sinh">
-                                    {selectedRecord.dob}
+                                    {userDetail.dob}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Giới Tính">
-                                    {selectedRecord.gender ? "Nam" : "Nữ"}
+                                    {userDetail.gender ? "Nam" : "Nữ"}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Dân Tộc">
-                                    {selectedRecord.ethnicity}
+                                    {userDetail.ethnicity}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Địa Chỉ">
-                                    {selectedRecord.address}
+                                    {userDetail.address}
                                 </Descriptions.Item>
                             </>
                         )}
@@ -363,34 +356,34 @@ const ListUser = () => {
                         {recordType === "student" && (
                             <>
                                 <Descriptions.Item label="Mã Sinh Viên">
-                                    {selectedRecord.student_code}
+                                    {userDetail?.student?.student_code}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Ngành Học">
-                                    {selectedRecord.major}
+                                    {userDetail.student?.major_name}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Khóa Học">
-                                    {selectedRecord.course}
+                                    {userDetail.student?.course_name}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Học Ký Hiện Tại">
-                                    {selectedRecord.current_semester}
+                                <Descriptions.Item label="Học Kỳ Hiện Tại">
+                                    {userDetail.student?.current_semester}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Trạng Thái">
-                                    {getStudentStatus(selectedRecord.status)}
+                                    {userDetail.student?.status}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Phụ Huynh">
-                                    {selectedRecord.parent}
+                                    {userDetail.parent}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Ngày Sinh">
-                                    {selectedRecord.dob}
+                                    {userDetail.dob}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Giới Tính">
-                                    {selectedRecord.gender ? "Nam" : "Nữ"}
+                                    {userDetail.gender ? "Nam" : "Nữ"}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Dân Tộc">
-                                    {selectedRecord.ethnicity}
+                                    {userDetail.ethnicity}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Địa Chỉ">
-                                    {selectedRecord.address}
+                                    {userDetail.address}
                                 </Descriptions.Item>
                             </>
                         )}

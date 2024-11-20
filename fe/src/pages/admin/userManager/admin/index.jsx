@@ -13,6 +13,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading";
+import { add } from "date-fns";
+
 import {
     DeleteOutlined,
     UserOutlined,
@@ -20,29 +22,23 @@ import {
     PlusOutlined,
     EditOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
 import {
-    createTeacher,
-    deleteTeacher,
-    getTeacher,
+    createUser,
+    deleteUser,
+    getUser,
 } from "../../../../services/user-service";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-const TeacherManager = () => {
+const AdminManager = () => {
     const navigate = useNavigate();
-
-    const [data, setData] = useState([]);
-
-    const [loading, setLoading] = useState(true);
-
-    const [reload, setReload] = useState(false);
-
+    const [admins, setAdmins] = useState([]);
     const fileInputRef = useRef(null);
 
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [userDetail, setUserDetail] = useState({});
     const [recordType, setRecordType] = useState("");
+    const [reload, setReload] = useState(false);
 
     const [dataImport, setDataImport] = useState([]);
 
@@ -50,28 +46,20 @@ const TeacherManager = () => {
 
     const [panigation, setPanigation] = useState({
         current_page: 1,
-        total: 12,
     });
 
+    const [loading, setLoading] = useState(true);
     useEffect(() => {
         (async () => {
             try {
-                axios;
-                const { data } = await axios.get(
-                    "http://localhost:8000/api/admin/teachers",
-                    {
-                        params: {
-                            per_page: 100,
-                        },
-                    }
-                );
-                console.log(data);
-                let pa = data.pagination;
-                setData(data.data);
-                setPanigation((pre) => ({
-                    ...pre,
-                    total: pa?.total || 10,
-                }));
+                setLoading(true);
+                const { data } = await instance.get("admin/officers");
+                let dataConcac = data.Admin.data;
+                dataConcac.concat(data.Officers.data);
+                console.log(dataConcac);
+
+                setAdmins([...data.Admin.data, ...data.Officers.data]);
+                // setLoading();
             } catch (error) {
                 console.log(error.message);
             } finally {
@@ -82,24 +70,30 @@ const TeacherManager = () => {
 
     useEffect(() => {
         if (dataImport.length > 0) {
-            handleAddTeacher();
+            handleAddAdmin();
         }
     }, [dataImport]);
 
-    async function handleAddTeacher() {
-        let textError = "Dữ liệu các hàng trên đã được thêm. Xảy ra lỗi ở dòng";
+    console.log(dataImport);
+
+    async function handleAddAdmin() {
+        let textError = "Dữ liệu các hàng trên đã được thêm, Xảy ra lỗi ở dòng";
         setLoading(true);
+
         for (let i = 0; i < dataImport.length; i++) {
+            console.log(dataImport[i]?.role);
+
             let body = {
                 ...dataImport[i],
-                teacher_status: 1,
                 avatar: null,
-                role_id: 4,
+                role_id: dataImport[i]?.role === "Cán bộ" ? 2 : 1,
+                password: "admin@2024",
             };
+
             try {
                 // Chờ cho createStudent hoàn tất trước khi tiếp tục
-                await createTeacher(body);
-                console.log(`Teacher ${i + 1} created successfully.`);
+                await createUser(body);
+                console.log(`Admin ${i + 1} created successfully.`);
             } catch (error) {
                 // setLoading(false)
                 textError = textError + " " + (i + 1);
@@ -140,28 +134,12 @@ const TeacherManager = () => {
             ),
         },
         {
-            title: "Mã giáo viên",
-            dataIndex: "teacher_code",
-            key: "teacher_code",
-            fixed: "left",
-            width: 150,
-            render: (_, res) => {
-                return (
-                    <div>
-                        {/* <img src="https://media.istockphoto.com/vectors/student-avatar-flat-icon-flat-vector-illustration-symbol-design-vector-id1212812078?k=20&m=1212812078&s=170667a&w=0&h=Pl6TaYY87D2nWwRSWmdtJJ0DKeD5vPowomY9fyeqNOs=" style={{width: 50, height: 50, borderRadius: 100}}/> */}
-                        <span>{res.teacher_code}</span>
-                    </div>
-                );
-            },
-        },
-        {
             title: "Họ và tên",
             dataIndex: "fullname",
             key: "fullname",
             width: 200,
             fixed: "left",
         },
-
         {
             title: "Email",
             dataIndex: "email",
@@ -173,19 +151,6 @@ const TeacherManager = () => {
             dataIndex: "phone",
             width: 150,
             key: "2",
-        },
-        {
-            title: "Ngành dạy",
-            dataIndex: "major_name",
-            key: "8",
-            width: 600,
-        },
-        {
-            title: "Trạng thái",
-
-            dataIndex: "status",
-            key: "8",
-            width: 500,
         },
         {
             title: "Action",
@@ -209,7 +174,7 @@ const TeacherManager = () => {
                                 `${`/admin/list-users/edit/${record.id}`}`,
                                 {
                                     state: {
-                                        type: "teachers",
+                                        type: "admins",
                                     },
                                 }
                             )
@@ -219,7 +184,10 @@ const TeacherManager = () => {
                     </Button>
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa tài khoản này?"
-                        onConfirm={() => handleDelete(record)} // Xóa tài khoản
+                        onConfirm={() => {
+                            console.log("Dô đây");
+                            handleDelete(record);
+                        }} // Xóa tài khoản
                         okText="Có"
                         cancelText="Không"
                     >
@@ -229,82 +197,70 @@ const TeacherManager = () => {
             ),
         },
     ];
-
-    const teachers = data.map((item, index) => {
+    const data = admins.map((item, index) => {
         return {
             key: item.id,
             id: item.id,
             stt: index + 1,
             fullname: item.name,
-            teacher_code: item.code,
             email: item.email,
             phone: item.phone,
-            major_name: item.major_name,
-            status: item.status,
             avatar: item.avatar,
         };
     });
 
     const handleDetailClick = (record, type) => {
         setSelectedRecord(record);
+
         setIsModalVisible(true);
-        getTeacher(record.id).then((res) => {
+        getUser(record.id).then((res) => {
             setUserDetail(res.data.data);
         });
     };
 
     const handleDelete = async (record) => {
-        await deleteTeacher(record.id);
+        console.log(record, "dô đây kh");
+
+        await deleteUser(record.id);
         setReload(!reload);
         message.success(`Đã xóa tài khoản: ${record.name}`);
     };
 
     const handleAdd = () => {
-        navigate(`/admin/list-users/add/`, {
+        navigate(`/admin/list-users/add`, {
             state: {
-                type: "teachers",
+                type: "admin",
             },
         });
     };
 
-    let dataSearch = teachers.filter((e) => {
+    let dataSearch = data.filter((e) => {
         let fullname = e?.fullname || "";
-        let teacher_code = e.teacher_code || "";
+
         if (textSearch === "") {
             return true;
         }
 
-        return (
-            fullname.search(textSearch) > -1 ||
-            teacher_code.search(textSearch) > -1
-        );
+        return fullname.search(textSearch) > -1;
     });
 
-    const handleFileChange = async (e) => {
+    const handleFileChange = (e) => {
         const file = e.target.files[0];
-        // console.log(file);
-        const formData = new FormData();
-        formData.append("file", file);
+        console.log(file);
 
-        try {
-            // Make POST request to the server
-            const response = await axios.post(
-                "http://localhost:8000/api/admin/import-teacher",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
+        if (file) {
+            const reader = new FileReader();
 
-            if (response.status === 200) {
-                setReload(true);
-                message.success("Import thành công");
-            }
-        } catch (error) {
-            console.error("Error uploading file:", error);
-            alert("Error uploading file");
+            reader.onload = (evt) => {
+                const binaryStr = evt.target.result;
+                const workbook = XLSX.read(binaryStr, { type: "binary" });
+                // Lấy dữ liệu từ sheet đầu tiên
+                const firstSheet = workbook.Sheets[workbook.SheetNames[2]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                // setData(jsonData);
+                setDataImport(jsonData);
+            };
+            reader.readAsBinaryString(file);
         }
     };
 
@@ -313,7 +269,7 @@ const TeacherManager = () => {
     }
 
     const handleExport = () => {
-        let dataExport = teachers.map(({ key, id, ...rest }) => rest);
+        let dataExport = data.map(({ key, id, ...rest }) => rest);
         // Create a new workbook
         const workbook = XLSX.utils.book_new();
 
@@ -333,44 +289,16 @@ const TeacherManager = () => {
         });
 
         // Use FileSaver to save the file
-        saveAs(blob, "teacher.xlsx");
-    };
-
-    const downloadExcel = async () => {
-        try {
-            const response = await fetch(
-                "http://localhost:8000/api/admin/export-teacher",
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type":
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-
-            // Get the file as a blob
-            const blob = await response.blob();
-
-            // Save the file
-            saveAs(blob, "downloaded_teacher.xlsx");
-        } catch (error) {
-            console.error("Failed to download file:", error);
-        }
+        saveAs(blob, "admin.xlsx");
     };
 
     return (
         <>
             <div>
                 <div className="flex justify-between mb-2">
-                    <h1>Giảng viên</h1>
-
+                    <h1>Quản trị viên</h1>
                     <div className="flex flex-row">
-                        <Button onClick={handleAdd}>Thêm giảng viên</Button>
+                        <Button onClick={handleAdd}>Thêm quản trị viên</Button>
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -378,20 +306,8 @@ const TeacherManager = () => {
                             onChange={handleFileChange}
                             style={{ display: "none" }}
                         />
-                        <Button
-                            onClick={handlePickExcel}
-                            className="ml-5"
-                            type="primary"
-                        >
-                            Import
-                        </Button>
-                        <Button
-                            onClick={downloadExcel}
-                            className="ml-5"
-                            type="default"
-                        >
-                            Export
-                        </Button>
+                        {/* <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
+          <Button onClick={handleExport} className="ml-5" type="default">Export</Button> */}
                     </div>
                 </div>
                 <div className="relative">
@@ -400,15 +316,15 @@ const TeacherManager = () => {
                         allowClear={true}
                         onChange={(e) => {
                             setTextSearch(e.target.value);
-                            if (panigation.page !== 1) {
-                                setPanigation((pre) => ({
-                                    ...pre,
-                                    current_page: 1,
-                                }));
-                            }
+                            // if (panigation.page !== 1) {
+                            //   setPanigation((pre) => ({
+                            //     ...pre,
+                            //     current_page: 1
+                            //   }))
+                            // }
                         }}
                         onClear={() => setTextSearch("")}
-                        placeholder="Tìm kiếm theo mã hoặc tên giảng viên ...."
+                        placeholder="Tìm kiếm theo mã hoặc tên quản trị viên ...."
                         className="xl:w-[300px] md:w-[180px] max-[767px]:w-[120px]"
                     />
                 </div>
@@ -423,19 +339,16 @@ const TeacherManager = () => {
                         : panigation.current_page - 1,
                     panigation.current_page * 10
                 )}
-                onChange={(e) => {
+                onChange={(e) =>
                     setPanigation((pre) => ({
                         ...pre,
                         current_page: e.current,
-                    }));
-                }}
-                // scroll={{
-                //   x: 2000,
-                // }}
+                    }))
+                }
                 pagination={{
-                    current: panigation.current_page,
+                    total: admins.length,
                     pageSize: 10,
-                    total: panigation.total,
+                    current: panigation.current_page,
                 }}
             />
 
@@ -490,15 +403,6 @@ const TeacherManager = () => {
                         {/* Thông tin cho Học Viên */}
 
                         <>
-                            <Descriptions.Item label="Mã Giảng Viên">
-                                {userDetail?.teacher_code ?? ""}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Ngành Học">
-                                {userDetail?.major_name}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Trạng Thái">
-                                {userDetail?.status}
-                            </Descriptions.Item>
                             <Descriptions.Item label="Ngày Sinh">
                                 {userDetail.dob}
                             </Descriptions.Item>
@@ -519,4 +423,4 @@ const TeacherManager = () => {
     );
 };
 
-export default TeacherManager;
+export default AdminManager;

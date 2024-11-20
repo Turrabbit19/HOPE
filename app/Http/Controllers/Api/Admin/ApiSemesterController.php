@@ -62,7 +62,7 @@ class ApiSemesterController extends Controller
     public function getAll()
     {
         try {
-            $semesters = Semester::get();
+            $semesters = Semester::orderByDesc('start_date')->get();
             $now = Carbon::now();
 
             $data = $semesters->map(function ($semester) use ($now) {

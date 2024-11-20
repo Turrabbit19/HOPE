@@ -53,6 +53,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('course/{courseId}/students', [ApiStudentController::class, 'getStudentsByCourse']);
 
         Route::apiResource('semesters', ApiSemesterController::class);
+        Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
 
         Route::apiResource('majors', ApiMajorController::class);

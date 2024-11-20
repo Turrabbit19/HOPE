@@ -236,7 +236,7 @@ class ApiScheduleController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'days_of_week' => 'required|array',
             'days_of_week.*' => 'integer',
-
+    
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
             'classrooms.*.shift_id' => 'required|exists:shifts,id',
@@ -253,40 +253,41 @@ class ApiScheduleController extends Controller
     
             $scheduleResponses = [];
     
+            // Lặp qua từng lớp học trong `classrooms`
             foreach ($data['classrooms'] as $classroom) {
-                if (Carbon::parse($classroom['end_date'])->lt(Carbon::parse($classroom['start_date']))) {
+                // Sử dụng `start_date` và `end_date` chung cho tất cả lớp học
+                $startDate = $data['start_date'];
+                $endDate = $data['end_date'];
+    
+                // Kiểm tra ngày kết thúc không nhỏ hơn ngày bắt đầu
+                if (Carbon::parse($endDate)->lt(Carbon::parse($startDate))) {
                     return response()->json([
-                        'error' => "Ngày kết thúc của lớp học {$classroom['id']} không được trước ngày bắt đầu."
+                        'error' => "Ngày kết thúc không được trước ngày bắt đầu."
                     ], 400);
                 }
     
-                $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $subjectId);
-    
-                if ($this->hasConflict($classroom)) {
-                    return response()->json([
-                        'error' => "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch."
-                    ], 409);
-                }
-    
+                // Xử lý lớp học này
                 $scheduleData = [
                     'course_id' => $courseId,
                     'semester_id' => $semesterId,
                     'major_id' => $majorId,
-                    'subject_id' => $subjectId,  
-
+                    'subject_id' => $subjectId,
+    
                     'classroom_id' => $classroom['id'],
                     'shift_id' => $classroom['shift_id'],
                     'room_id' => $classroom['room_id'],
                     'link' => $classroom['link'],
-                    'start_date' => $classroom['start_date'],
-                    'end_date' => $classroom['end_date'],
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
                 ];
     
                 $schedule = Schedule::create($scheduleData);
     
-                $days = collect($classroom['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
+                // Đồng bộ các ngày học với lịch
+                $days = collect($data['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
                 $schedule->days()->sync($days);
     
+                // Tạo các ngày học từ lịch
                 $scheduleDates = $this->createLessonDate($schedule);
     
                 $scheduleResponses[] = [
@@ -311,6 +312,7 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    
       
     private function hasTeacherConflict($teacherId, $scheduleId)
     {

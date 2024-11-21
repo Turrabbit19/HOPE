@@ -103,7 +103,7 @@ class ApiScheduleController extends Controller
                     'semester_name' => $schedule->semester->name,
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teacher->user->name,
+                    'teacher_name' => $schedule->teacher ? $schedule->teacher->user->name : "",
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
                     'link' => $schedule->link ? $schedule->link : "NULL",
@@ -220,6 +220,7 @@ class ApiScheduleController extends Controller
         $start_date = Carbon::parse($start_date);
         $end_date = Carbon::parse($end_date);
         $shift_id = $classroom['shift_id'];
+        $room_id = $classroom['room_id']; 
     
         $conflictSchedules = Schedule::where(function ($query) use ($start_date, $end_date) {
                 $query->whereBetween('start_date', [$start_date, $end_date])
@@ -233,11 +234,11 @@ class ApiScheduleController extends Controller
                 $query->whereIn('days.id', $days_of_week);
             })
             ->where('shift_id', $shift_id)
+            ->where('room_id', $room_id) 
             ->exists();
     
         return $conflictSchedules;
     }    
-
     public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
     {
         $validator = Validator::make($request->all(), [
@@ -420,7 +421,7 @@ class ApiScheduleController extends Controller
                     'semester_name' => $schedule->semester->name,
                     'major_name' => $schedule->major->name,
                     'subject_name' => $schedule->subject->name,
-                    'teacher_name' => $schedule->teacher->name,
+                    'teacher_name' => $schedule->teacher ? $schedule->teacher->user->name : "",
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
                     'link' => $schedule->link ? $schedule->link : "NULL",

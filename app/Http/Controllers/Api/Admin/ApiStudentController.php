@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
-use App\Models\Major;
 use App\Models\Student;
 use App\Models\StudentMajor;
 use App\Models\User;
@@ -214,7 +213,7 @@ class ApiStudentController extends Controller
         try {
             $student = Student::findOrFail($id);
             
-            $major = StudentMajor::with('major')
+            $majorMain = StudentMajor::with('major')
             ->where('student_id', $id)
             ->where('status', 1)
             ->firstOr();
@@ -232,7 +231,7 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $major->major->name,
+                'major_name' => $majorMain->major->name,
                 'current_semester' => $student->current_semester,
                 'status' => match($student->status) {
                     "0" => "Đang học",
@@ -286,6 +285,11 @@ class ApiStudentController extends Controller
                 'student_code' => $data['student_code'] ?? $student->student_code,
             ]));
 
+            $mainMajor = StudentMajor::where('student_id', $student->id)
+            ->where('status', 1)
+            ->with('major')
+            ->first();
+
             $studentData = [
                 'avatar' => $user->avatar,
                 'name' => $user->name,
@@ -298,7 +302,7 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
+                'major_name' => $mainMajor->major->name,
                 'current_semester' => $student->current_semester,
             ];
 

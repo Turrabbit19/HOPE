@@ -466,7 +466,7 @@ const ScheduleAdd = () => {
                         ) {
                             message.success("Thêm lịch học thành công!");
                             // Điều hướng về trang danh sách lịch học
-                            navigate("admin/schedule-list");
+                            navigate("/admin/schedule-list");
                         } else {
                             message.error("Thêm lịch học thất bại!");
                         }
@@ -488,7 +488,9 @@ const ScheduleAdd = () => {
             >
                 {selectedClasses.map((classId) => {
                     const classIdNumber = Number(classId);
-                    const classData = rooms.find((c) => c.id === classIdNumber);
+                    const classData = classrooms.find(
+                        (c) => c.id === classIdNumber
+                    );
                     const className = classData
                         ? classData.name || classData.code
                         : `ID ${classId}`;
@@ -502,9 +504,8 @@ const ScheduleAdd = () => {
                             : "Trực tiếp";
                     const classLink = details?.classLink || "";
                     const classRoom = details?.classRoom
-                        ? classrooms.find(
-                              (room) => room.id === details.classRoom
-                          )?.code
+                        ? rooms.find((room) => room.id === details.classRoom)
+                              ?.name
                         : "";
 
                     return (

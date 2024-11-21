@@ -36,7 +36,7 @@ class ApiSubjectController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 52);
+            $perPage = $request->input('per_page', 10);
 
             $subjects = Subject::paginate($perPage);
 

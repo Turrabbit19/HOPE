@@ -25,7 +25,6 @@ const ScheduleEdit = () => {
     const [scheduleData, setScheduleData] = useState([]);
     const { id: scheduleId } = useParams();
     const [subjects, setSubjects] = useState([]);
-    const [teachers, setTeachers] = useState([]);
     const [rooms, setRooms] = useState([]);
 
 
@@ -33,11 +32,9 @@ const ScheduleEdit = () => {
         const fetchData = async () => {
             try {
                 const subjectsResponse = await instance.get('/admin/subjects');
-                const teachersResponse = await instance.get('/admin/teachers');
                 const roomsResponse = await instance.get('/admin/rooms');
 
                 setSubjects(subjectsResponse.data.data);
-                setTeachers(teachersResponse.data.data);
                 setRooms(roomsResponse.data.data);
             } catch (error) {
                 console.error("Error fetching data: ", error);
@@ -69,7 +66,6 @@ const ScheduleEdit = () => {
                     }
                 });
                 form.setFieldsValue({
-                    teacher: schedule.teacher_name,
                     startDate: moment(schedule.startDate),
                     endDate: moment(schedule.endDate),
                     session: session,
@@ -131,19 +127,6 @@ const ScheduleEdit = () => {
             >
 
                 <Card title={`Thông Tin Cho Lớp ${scheduleId}`}>
-                    <Form.Item
-                        label="Giảng Viên"
-                        name="teacher"
-                        rules={[{ required: true, message: "Vui lòng chọn giảng viên!" }]}
-                    >
-                        <Select showSearch placeholder="Chọn giảng viên">
-                            {teachers.map((teacher) => (
-                                <Option key={teacher.id} value={teacher.id}>
-                                    {teacher.name}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
 
                     <Form.Item
                         label="Ngày Bắt Đầu"

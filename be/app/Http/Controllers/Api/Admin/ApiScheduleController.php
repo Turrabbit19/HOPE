@@ -403,8 +403,8 @@ class ApiScheduleController extends Controller
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
                     'link' => $schedule->link ? $schedule->link : "NULL",
-                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($schedule->start_date),
+                    'end_date' => Carbon::parse($schedule->end_date),
                     'days_of_week' => $schedule->days->map(function($day) {
                         return [
                             "Thứ" => $day->id,
@@ -524,7 +524,7 @@ class ApiScheduleController extends Controller
                             "Thứ" => $day->id,
                         ];
                     }),
-                    // 'teacher'=>$schedule->teacher,
+                    'teacher'=>$schedule->teacher ? $schedule->teacher->user->name : "NULL",
                     'students' => $schedule->classroom->students->count(),
                     'max_students' => $schedule->classroom->max_students,
                 ];

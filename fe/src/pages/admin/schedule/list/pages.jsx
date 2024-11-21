@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, Form, Input, Modal, Select, Space } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios"; // Axios instance
 import moment from "moment";
@@ -18,8 +18,10 @@ const ScheduleList = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // Fetching courses from API
+  const [selectedClassroom, setSelectedClassroom] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [majorId, setMajorId] = useState(null);
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
@@ -72,6 +74,7 @@ const ScheduleList = () => {
   };
 
   const fetchSubjectsForMajor = async (courseId, semesterId, majorId) => {
+    setMajorId(majorId);
     setLoading(true);
     setError(null);
     try {
@@ -97,7 +100,7 @@ const ScheduleList = () => {
       const response = await instance.get(
         `admin/schedule/${subjectId}/classrooms`
       );
-      
+
       setClassroomsBySubject((prev) => ({
         ...prev,
         [subjectId]: response.data.data,
@@ -136,6 +139,34 @@ const ScheduleList = () => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
     if (expandedSubject !== subjectId) {
       fetchClassroomsForSubject(subjectId);
+    }
+  };
+
+  const handleAddTeacher = async (classroomId) => {
+    setSelectedClassroom(classroomId);
+    setIsModalVisible(true);
+    const { data } = await instance.get(`admin/major/${majorId}/teachers`);
+    setTeachers(data.listTeachers || data.data);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleTeacherSubmit = async (values) => {
+    console.log(values);
+    setLoading(true);
+    setError(null);
+    try {
+      // await instance.post(`admin/schedules/assign`, );
+      // message.success("Thêm giảng viên thành công!");
+      // setIsModalVisible(false); // Close the modal
+      fetchClassroomsForSubject(selectedClassroom);
+    } catch (err) {
+      setError("Không thể thêm giảng viên.");
+      message.error("Không thể thêm giảng viên.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -288,11 +319,11 @@ const ScheduleList = () => {
                                                         classroomsBySubject[
                                                           subject.id
                                                         ].map((classItem) => (
-                                                          <Link to={`details/${classItem.id}`}>
-                                                            <div
-                                                              key={classItem.id}
-                                                              className="bg-gray-50 p-6 shadow rounded-lg m-2"
-                                                            >
+                                                          <div
+                                                            key={classItem.id}
+                                                            className="bg-gray-50 p-6 shadow rounded-lg m-2 flex justify-between"
+                                                          >
+                                                            <div>
                                                               <p>
                                                                 <strong>
                                                                   Lớp:
@@ -327,7 +358,33 @@ const ScheduleList = () => {
                                                                 }
                                                               </p>
                                                             </div>
-                                                          </Link>
+
+                                                            <div className="flex flex-col w-[20%] gap-2 justify-center">
+                                                              {classItem.teacher ==
+                                                              "NULL" ? (
+                                                                <Button
+                                                                  onClick={() =>
+                                                                    handleAddTeacher(
+                                                                      classItem.id
+                                                                    )
+                                                                  }
+                                                                >
+                                                                  Thêm giảng
+                                                                  viên
+                                                                </Button>
+                                                              ) : (
+                                                                ""
+                                                              )}
+                                                              <Button>
+                                                                <Link
+                                                                  to={`details/${classItem.id}`}
+                                                                >
+                                                                  Chi tiết lịch
+                                                                  học
+                                                                </Link>
+                                                              </Button>
+                                                            </div>
+                                                          </div>
                                                         ))
                                                       ) : (
                                                         <p>
@@ -382,6 +439,32 @@ const ScheduleList = () => {
           <p>Chưa có khóa học nào.</p>
         )}
       </div>
+      <Modal
+        title="Thêm Giảng Viên"
+        visible={isModalVisible}
+        onCancel={handleCancel}
+        footer={[]}
+      >
+        <Form onFinish={handleTeacherSubmit}>
+          <Form.Item name={teachers} label="Tên Giảng Viên">
+            <Select name="teacher" placeholder="Chọn giảng viên">
+              {teachers.map((item) => (
+                <Option key={item.id} value={item.id}>
+                  {item.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button type="default">Hủy Bỏ</Button>
+              <Button type="primary" htmlType="submit">
+                Lưu Lại
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -24,7 +24,7 @@ const { TabPane } = Tabs;
 
 const ScheduleAdd = () => {
   const [form] = Form.useForm();
-  const [selectedClasses, setSelectedClasses] = useState([]);  // Store classIds
+  const [selectedClasses, setSelectedClasses] = useState([]); // Store classIds
   const [rooms, setRooms] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
@@ -92,7 +92,7 @@ const ScheduleAdd = () => {
 
   const handleClassChange = (values) => {
     console.log(values);
-    setSelectedClasses(values);  // Store selected classIds
+    setSelectedClasses(values); // Store selected classIds
   };
 
   const calculateEndDate = async (startDate, subjectId, daysOfWeek) => {
@@ -133,6 +133,25 @@ const ScheduleAdd = () => {
   const handleFinish = async (values) => {
     debugger;
     console.log(values);
+    const abc = values.classDetails.repeatDays.map((day) => {
+      switch (day) {
+        case "Thứ 2":
+          return "2";
+        case "Thứ 3":
+          return "3";
+        case "Thứ 4":
+          return "4";
+        case "Thứ 5":
+          return "5";
+        case "Thứ 6":
+          return "6";
+        case "Thứ 7":
+          return "7";
+        default:
+          return "";
+      }
+    });
+    console.log(abc);
     try {
       const transformedValues = selectedClasses.map((classId) => {
         const classDetails = values.classDetails[classId];
@@ -143,24 +162,7 @@ const ScheduleAdd = () => {
           shift_id: classDetails.session,
           start_date: moment(classDetails.startDate).format("YYYY-MM-DD"),
           end_date: moment(endDate).format("YYYY-MM-DD"),
-          days_of_week: classDetails.repeatDays.map((day) => {
-            switch (day) {
-              case "Thứ 2":
-                return "2";
-              case "Thứ 3":
-                return "3";
-              case "Thứ 4":
-                return "4";
-              case "Thứ 5":
-                return "5";
-              case "Thứ 6":
-                return "6";
-              case "Thứ 7":
-                return "7";
-              default:
-                return "";
-            }
-          }),
+          days_of_week: abc,
           room_id:
             classDetails.learningMethod === "offline"
               ? classDetails.classRoom
@@ -191,82 +193,21 @@ const ScheduleAdd = () => {
   };
 
   const handleClassIdChange = (values) => {
-    const selectedClassDetails = classrooms.filter((classroom) =>
-      values.includes(classroom.id)  // Match the selected classIds
+    const selectedClassDetails = classrooms.filter(
+      (classroom) => values.includes(classroom.id) // Match the selected classIds
     );
-    setSelectedClasses(selectedClassDetails.map((classroom) => classroom.id));  // Store only classIds
+    setSelectedClasses(selectedClassDetails.map((classroom) => classroom.id)); // Store only classIds
   };
 
   const renderClassFields = () => {
     return selectedClasses.map((classId) => (
       <TabPane tab={`Lớp ${classId}`} key={classId}>
         <Card title={`Thông Tin Cho Lớp ${classId}`}>
-          {/* Giảng Viên */}
-          <Form.Item
-            label="Giảng Viên"
-            name={["classDetails", classId, "teacher"]}
-            rules={[{ required: true, message: "Vui lòng chọn giảng viên!" }]}>
-            <Select
-              showSearch
-              placeholder="Chọn giảng viên"
-              optionFilterProp="children">
-              {teachers.map((teacher) => (
-                <Option key={teacher.id} value={teacher.id}>
-                  {teacher.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          {/* Ngày Bắt Đầu */}
-          <Form.Item
-            label="Ngày Bắt Đầu"
-            name={["classDetails", classId, "startDate"]}
-            rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}>
-            <DatePicker
-              format="DD-MM-YYYY"
-              style={{ width: "100%" }}
-              onChange={(date, dateString) =>
-                calculateEndDate(
-                  dateString,
-                  subjectId,
-                  form.getFieldValue(["classDetails", classId, "repeatDays"])
-                )
-              }
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Thời Gian Lặp"
-            name={["classDetails", classId, "repeatDays"]}
-            rules={[{ required: true, message: "Vui lòng chọn ít nhất một ngày!" }]}>
-            <Checkbox.Group style={{ width: "100%" }}>
-              <Row>
-                {["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"].map(
-                  (day, index) => (
-                    <Col span={4} key={index}>
-                      <Checkbox value={day}>{day}</Checkbox>
-                    </Col>
-                  )
-                )}
-              </Row>
-            </Checkbox.Group>
-          </Form.Item>
-
-          <Form.Item
-            label="Ngày Kết Thúc"
-            name="endDate"
-            rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}>
-            <Input
-              value={endDate ? moment(endDate).format("DD-MM-YYYY") : ""}
-              disabled
-            />
-          </Form.Item>
-
           <Form.Item
             label="Ca Học"
             name={["classDetails", classId, "session"]}
-            rules={[{ required: true, message: "Vui lòng chọn ca học!" }]}>
+            rules={[{ required: true, message: "Vui lòng chọn ca học!" }]}
+          >
             <Select showSearch placeholder="Chọn ca học">
               {[...Array(6)].map((_, i) => (
                 <Option key={i} value={`${i + 1}`}>{`Ca ${i + 1}: ${
@@ -279,7 +220,10 @@ const ScheduleAdd = () => {
           <Form.Item
             label="Hình Thức Học"
             name={["classDetails", classId, "learningMethod"]}
-            rules={[{ required: true, message: "Vui lòng chọn hình thức học!" }]}>
+            rules={[
+              { required: true, message: "Vui lòng chọn hình thức học!" },
+            ]}
+          >
             <Select
               showSearch
               placeholder="Chọn hình thức học"
@@ -288,7 +232,8 @@ const ScheduleAdd = () => {
                   `classDetails.${classId}.classRoom`,
                   `classDetails.${classId}.classLink`,
                 ])
-              }>
+              }
+            >
               <Option value="online">Trực tuyến</Option>
               <Option value="offline">Trực tiếp</Option>
             </Select>
@@ -299,7 +244,8 @@ const ScheduleAdd = () => {
             shouldUpdate={(prevValues, currentValues) =>
               prevValues.classDetails?.[classId]?.learningMethod !==
               currentValues.classDetails?.[classId]?.learningMethod
-            }>
+            }
+          >
             {({ getFieldValue }) => {
               const learningMethod = getFieldValue([
                 "classDetails",
@@ -311,7 +257,10 @@ const ScheduleAdd = () => {
                   <Form.Item
                     label="Link Học Trực Tuyến"
                     name={["classDetails", classId, "classLink"]}
-                    rules={[{ required: true, message: "Vui lòng nhập link học!" }]}>
+                    rules={[
+                      { required: true, message: "Vui lòng nhập link học!" },
+                    ]}
+                  >
                     <Input
                       placeholder="Link phòng học"
                       prefix={<LinkOutlined />}
@@ -324,7 +273,10 @@ const ScheduleAdd = () => {
                   <Form.Item
                     label="Phòng Học"
                     name={["classDetails", classId, "classRoom"]}
-                    rules={[{ required: true, message: "Vui lòng chọn phòng học!" }]}>
+                    rules={[
+                      { required: true, message: "Vui lòng chọn phòng học!" },
+                    ]}
+                  >
                     <Select placeholder="Chọn phòng học">
                       {rooms.map((room) => (
                         <Option key={room.id} value={room.id}>
@@ -349,17 +301,20 @@ const ScheduleAdd = () => {
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        className="bg-white p-6 rounded-lg shadow-md">
+        className="bg-white p-6 rounded-lg shadow-md"
+      >
         <Form.Item
           label="Lớp Học"
           name="classes"
-          rules={[{ required: true, message: "Vui lòng chọn lớp học!" }]}>
+          rules={[{ required: true, message: "Vui lòng chọn lớp học!" }]}
+        >
           <Select
             mode="multiple"
             showSearch
             placeholder="Chọn lớp học"
             onChange={handleClassChange}
-            loading={loading}>
+            loading={loading}
+          >
             {classrooms.map((item) => (
               <Option key={item.id} value={item.id}>
                 {item.code} {/* Displaying class code */}
@@ -367,7 +322,52 @@ const ScheduleAdd = () => {
             ))}
           </Select>
         </Form.Item>
-
+        <Form.Item
+          label="Ngày Bắt Đầu"
+          name={["classDetails", "startDate"]}
+          rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
+        >
+          <DatePicker
+            format="DD-MM-YYYY"
+            style={{ width: "100%" }}
+            onChange={(date, dateString) =>
+              calculateEndDate(
+                dateString,
+                subjectId,
+                form.getFieldValue(["classDetails", "repeatDays"])
+              )
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          label="Thời Gian Lặp"
+          name={["classDetails", "repeatDays"]}
+          rules={[
+            { required: true, message: "Vui lòng chọn ít nhất một ngày!" },
+          ]}
+        >
+          <Checkbox.Group style={{ width: "100%" }}>
+            <Row>
+              {["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"].map(
+                (day, index) => (
+                  <Col span={4} key={index}>
+                    <Checkbox value={day}>{day}</Checkbox>
+                  </Col>
+                )
+              )}
+            </Row>
+          </Checkbox.Group>
+        </Form.Item>
+        <Form.Item
+          label="Ngày Kết Thúc"
+          name="endDate"
+          rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+        >
+          <Input
+            value={endDate ? moment(endDate).format("DD-MM-YYYY") : ""}
+            disabled
+          />
+        </Form.Item>
         {selectedClasses.length > 0 && <Tabs>{renderClassFields()}</Tabs>}
 
         <Form.Item>

@@ -153,42 +153,8 @@ const ListSubject = () => {
     }
   };
 
-  // Hàm xử lý thay đổi ngành học
-  const handleMajorChange = (value, index) => {
-    const updatedVariants = [...additionalVariants]; // Sao chép danh sách biến thể hiện tại
-    updatedVariants[index].major = value; // Cập nhật ngành học
-    setAdditionalVariants(updatedVariants); // Cập nhật state với danh sách biến thể mới
-  };
 
-  // Hàm xử lý thay đổi lịch học
-  const handleScheduleChange = (value, index) => {
-    const updatedVariants = [...additionalVariants];
-    updatedVariants[index].schedule = value; // Cập nhật lịch học
-    setAdditionalVariants(updatedVariants);
-  };
 
-  // Hàm xử lý thay đổi kỳ học
-  const handleSemesterChange = (value, index) => {
-    const updatedVariants = [...additionalVariants];
-    setAdditionalVariants(updatedVariants);
-  };
-
-  // Hàm thêm biến thể mới
-  const handleAddVariant = () => {
-    setAdditionalVariants([
-      // Thêm một biến thể mới vào danh sách
-      ...additionalVariants,
-      {
-        major: majors[0],
-      },
-    ]);
-  };
-
-  // Hàm xác nhận xóa khóa học
-  const confirm = (e) => {
-    console.log(e);
-    message.success("Xóa thành công !"); // Hiển thị thông báo thành công
-  };
 
   // Hàm hủy xác nhận xóa
   const cancel = (e) => {
@@ -307,7 +273,7 @@ const ListSubject = () => {
 
                   <Input.Search
                     placeholder="Tìm kiếm môn học..."
-                    onChange={handleSearch} // Sử dụng onChange để gọi hàm tìm kiếm
+                    onChange={handleSearch} 
                     style={{ width: 300 }}
                     allowClear
                   />
@@ -439,17 +405,9 @@ const ListSubject = () => {
                   </div>
                 )}
               </div>
-
-              <Pagination
-                className="mt-12"
-                align="center"
-                defaultCurrent={1}
-                total={50}
-              />
             </div>
           </div>
 
-          {/* Popup Modal Form Add */}
           <Modal
             open={isPopupVisible}
             onCancel={togglePopup}
@@ -592,7 +550,6 @@ const ListSubject = () => {
                   </Col>
                 </Row>
 
-                {/* Nút tạo môn học */}
                 <div className="flex justify-center items-center mt-4">
                   <Button type="primary" htmlType="submit">
                     {!update ? "Tạo môn học" : "Cập nhật môn học"}
@@ -602,50 +559,6 @@ const ListSubject = () => {
             </div>
           </Modal>
 
-          {/* Modal Filter */}
-          <Modal
-            title="Lọc Khóa Học"
-            visible={isModalVisible}
-            onOk={handleOk}
-            onCancel={handleCancel}
-          >
-            <Form form={form} layout="vertical">
-              <Form.Item
-                label="Chọn Ngành Học"
-                name="major"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn ngành học!",
-                  },
-                ]}
-              >
-                <Select placeholder="Chọn ngành học">
-                  <Option value="computer-science">Khoa học máy tính</Option>
-                  <Option value="data-science">Khoa học dữ liệu</Option>
-                  <Option value="web-development">Phát triển web</Option>
-                  <Option value="graphic-design">Thiết kế đồ họa</Option>
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                label="Chọn Kỳ Học"
-                name="semester"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn kỳ học!",
-                  },
-                ]}
-              >
-                <Select placeholder="Chọn kỳ học">
-                  <Option value="semester1">Kỳ 1</Option>
-                  <Option value="semester2">Kỳ 2</Option>
-                  <Option value="semester3">Kỳ 3</Option>
-                </Select>
-              </Form.Item>
-            </Form>
-          </Modal>
         </div>
       </div>
     </>

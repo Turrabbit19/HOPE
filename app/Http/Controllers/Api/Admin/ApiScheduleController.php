@@ -266,14 +266,11 @@ class ApiScheduleController extends Controller
             foreach ($data['classrooms'] as $classroom) {
                 $startDate = $data['start_date'];
                 $endDate = $data['end_date'];
-    
-                if (Carbon::parse($endDate)->lt(Carbon::parse($startDate))) {
-                    return response()->json([
-                        'error' => "Ngày kết thúc không được trước ngày bắt đầu."
-                    ], 400);
-                }
-    
-                if ($this->hasConflict($classroom, $startDate, $endDate, $data['days_of_week'])) {
+                $daysOfWeek = $data['days_of_week'];
+
+                $this->validateLessonDate($startDate, $endDate, $daysOfWeek, $subjectId);
+
+                if ($this->hasConflict($classroom, $startDate, $endDate, $daysOfWeek)) {
                     $conflictErrors[] = "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch.";
                 }
             }
@@ -331,7 +328,6 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    
     
     private function hasTeacherConflict($teacherId, $scheduleId)
     {
@@ -443,83 +439,90 @@ class ApiScheduleController extends Controller
         }
     }
 
-    public function update(Request $request, string $id)
+    public function updateByClassroomId(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'classrooms' => 'sometimes|array',
-            'classrooms.*.id' => 'sometimes|exists:classrooms,id',
-            'classrooms.*.teacher_id' => 'sometimes|exists:teachers,id',
-            'classrooms.*.shift_id' => 'sometimes|exists:shifts,id',
-            'classrooms.*.room_id' => 'nullable|sometimes|exists:rooms,id',
-            'classrooms.*.link' => 'nullable|sometimes|url',
-            'classrooms.*.start_date' => 'sometimes|date|after_or_equal:today',
-            'classrooms.*.end_date' => 'sometimes|date|after_or_equal:classrooms.*.start_date',
-            'classrooms.*.days_of_week' => 'sometimes|array',
-            'classrooms.*.days_of_week.*' => 'integer'
+            'start_date' => 'sometimes|date|after_or_equal:today',
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
+            'days_of_week' => 'sometimes|array',
+            'days_of_week.*' => 'integer',
+            'shift_id' => 'sometimes|exists:shifts,id',
+            'room_id' => 'nullable|exists:rooms,id',
+            'link' => 'nullable|sometimes|url',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-
+    
         try {
             $data = $validator->validated();
-
+    
             $schedule = Schedule::findOrFail($id);
-
-            $scheduleResponses = [];
-
-            foreach ($data['classrooms'] as $classroom) {
-                $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $schedule->subject_id);
-
-                $scheduleData = [
-                    'shift_id' => $classroom['shift_id'],
-                    'room_id' => $classroom['room_id'],
-                    'link' => $classroom['link'],
-                    'start_date' => $classroom['start_date'],
-                    'end_date' => $classroom['end_date'],
-                    'status' => $request->input('status', true)
-                ];
-
-                $scheduleClassroom = $schedule->classrooms()->updateOrCreate(['id' => $classroom['id']], $scheduleData);
-
-                $days = collect($classroom['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
-                $scheduleClassroom->days()->sync($days);
-
-                $scheduleDates = $this->createLessonDate($scheduleClassroom);
-
-                $scheduleResponses[] = [
-                    'data' => [
-                        'classroom_id' => $scheduleClassroom->classroom_id,
-                        'shift_name' => $scheduleClassroom->shift->name,
-                        'room_name' => $scheduleClassroom->room ? $scheduleClassroom->room->name : 'NULL',
-                        'link' => $scheduleClassroom->link ? $scheduleClassroom->link : "NULL",
-                        'start_date' => Carbon::parse($scheduleClassroom->start_date)->format('d/m/Y'),
-                        'end_date' => Carbon::parse($scheduleClassroom->end_date)->format('d/m/Y'),
-                    ],
-                    'scheduled_dates' => $scheduleDates
-                ];
+    
+            $startDate = $data['start_date'] ?? $schedule->start_date;
+            $endDate = $data['end_date'] ?? $schedule->end_date;
+            $daysOfWeek = $data['days_of_week'] ?? $schedule->days()->pluck('id')->toArray();
+            $subjectId = $schedule->subject_id;
+    
+            $this->validateLessonDate($startDate, $endDate, $daysOfWeek, $subjectId);
+    
+            $checkConflict = isset($data['start_date']) || isset($data['end_date']) ||
+                             isset($data['days_of_week']) || isset($data['shift_id']) || isset($data['room_id']);
+    
+            if ($checkConflict && $this->hasConflict([
+                'shift_id' => $data['shift_id'] ?? $schedule->shift_id,
+                'room_id' => $data['room_id'] ?? $schedule->room_id,
+            ], $startDate, $endDate, $daysOfWeek)) {
+                return response()->json(['error' => "Lịch học có xung đột với các lịch hiện tại."], 409);
             }
-
+    
+            $resetLessonsDay = (
+                ($startDate !== $schedule->start_date) ||
+                ($endDate !== $schedule->end_date) ||
+                ($daysOfWeek !== $schedule->days()->pluck('id')->sort()->values()->toArray())
+            );
+    
+            $schedule->update([
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'shift_id' => $data['shift_id'] ?? $schedule->shift_id,
+                'room_id' => $data['room_id'] ?? $schedule->room_id,
+                'link' => $data['link'] ?? $schedule->link,
+            ]);
+    
+            if (isset($data['days_of_week'])) {
+                $days = collect($data['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
+                $schedule->days()->sync($days);
+            }
+    
+            $scheduleDates = [];
+            if ($resetLessonsDay) {
+                $schedule->lessons()->detach();
+                $scheduleDates = $this->createLessonDate($schedule); 
+            }
+    
             return response()->json([
-                'message' => 'Cập nhật thành công và lịch học đã được cập nhật cho các lớp.',
-                'schedules' => $scheduleResponses
+                'message' => 'Cập nhật lịch học thành công',
+                'scheduled_dates' => $scheduleDates,
             ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function destroyByClassroomId(string $classroomId)
+    public function destroyByClassroomId(string $id)
     {
         try {
-            $schedule = Schedule::where('classroom_id', $classroomId)->firstOrFail();
+            $schedule = Schedule::findOrFail($id);
             
             $schedule->delete();
     
             return response()->json(['message' => 'Xóa lịch học thành công'], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lịch học cho lớp học này'], 404);
+            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }

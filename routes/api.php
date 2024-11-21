@@ -95,7 +95,8 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
 
         Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
-        Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
+        Route::post('schedule/{id}/update', [ApiScheduleController::class, 'updateByClassroomId']);
+        Route::delete('schedule/{id}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
 
     });
 

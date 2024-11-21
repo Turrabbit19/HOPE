@@ -305,15 +305,6 @@ const Router = createBrowserRouter([
             },
 
             {
-                path: "majors",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <MajorManagement />
-                    </>
-                ),
-            },
-            {
                 path: "roles",
                 element: (
                     <>

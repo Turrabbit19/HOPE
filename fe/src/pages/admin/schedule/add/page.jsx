@@ -26,16 +26,16 @@ const { Text } = Typography;
 
 const ScheduleAdd = () => {
     const [form] = Form.useForm();
-    const [activeTab, setActiveTab] = useState("configure"); // Trạng thái tab hiện tại
-    const [selectedClasses, setSelectedClasses] = useState([]); // Các lớp học đã chọn
-    const [classDetails, setClassDetails] = useState({}); // Chi tiết từng lớp học
-    const [teacherAssignments, setTeacherAssignments] = useState({}); // Phân công giáo viên
+    const [activeTab, setActiveTab] = useState("configure"); // Current tab state
+    const [selectedClasses, setSelectedClasses] = useState([]); // Selected classes
+    const [classDetails, setClassDetails] = useState({}); // Details for each class
+    const [teacherAssignments, setTeacherAssignments] = useState({}); // Teacher assignments
 
     const navigate = useNavigate();
     const location = useLocation();
     const { state } = location;
 
-    // Lấy các ID cần thiết từ state
+    // Extract necessary IDs from state
     const {
         courseId,
         semesterId,
@@ -47,7 +47,7 @@ const ScheduleAdd = () => {
         subjectName,
     } = state || {};
     console.log("Received in ScheduleAdd - majorId:", majorId);
-    // State để lưu dữ liệu từ API
+    // State to store data from API
     const [shifts, setShifts] = useState([]);
     const [classrooms, setClassrooms] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -56,21 +56,21 @@ const ScheduleAdd = () => {
     const [loadingShifts, setLoadingShifts] = useState(true);
 
     useEffect(() => {
-        // Kiểm tra xem các thông tin cần thiết đã được truyền chưa
+        // Check if necessary information is provided
         if (!courseId || !semesterId || !majorId || !subjectId) {
             message.error("Thiếu thông tin cần thiết để thêm lịch học!");
             navigate("/schedule-list");
             return;
         }
 
-        // Hàm fetch dữ liệu từ API
+        // Function to fetch data from APIs
         console.log("Major ID:", majorId);
 
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem("token");
 
-                // Gọi API song song
+                // Call APIs in parallel
                 const [shiftsRes, classroomsRes, teachersRes, roomsRes] =
                     await Promise.all([
                         axios.get("http://localhost:8000/api/admin/shifts", {
@@ -102,7 +102,7 @@ const ScheduleAdd = () => {
                         }),
                     ]);
 
-                // Kiểm tra và xử lý dữ liệu shifts
+                // Process shifts data
                 console.log("Shifts API response:", shiftsRes.data);
                 let shiftsData = shiftsRes.data;
                 if (Array.isArray(shiftsData)) {
@@ -113,7 +113,7 @@ const ScheduleAdd = () => {
                     throw new Error("Dữ liệu shifts không hợp lệ.");
                 }
 
-                // Kiểm tra và xử lý dữ liệu classrooms
+                // Process classrooms data
                 console.log("Classrooms API response:", classroomsRes.data);
                 let classroomsData = classroomsRes.data;
                 if (Array.isArray(classroomsData)) {
@@ -124,7 +124,7 @@ const ScheduleAdd = () => {
                     throw new Error("Dữ liệu classrooms không hợp lệ.");
                 }
 
-                // Kiểm tra và xử lý dữ liệu rooms
+                // Process rooms data
                 console.log("Rooms API response:", roomsRes.data.data);
                 let roomsData = roomsRes.data.data;
                 if (Array.isArray(roomsData)) {
@@ -135,7 +135,7 @@ const ScheduleAdd = () => {
                     throw new Error("Dữ liệu rooms không hợp lệ.");
                 }
 
-                // Kiểm tra và xử lý dữ liệu teachers
+                // Process teachers data
                 console.log("Teachers API response:", teachersRes.data);
                 let teachersData = teachersRes.data.listTeachers;
                 if (Array.isArray(teachersData)) {
@@ -159,41 +159,76 @@ const ScheduleAdd = () => {
         fetchData();
     }, [courseId, semesterId, majorId, subjectId, navigate]);
 
-    // Xử lý khi hoàn thành form cấu hình lớp học
+    // Watch learningMethod to trigger re-render
+    const learningMethod = Form.useWatch("learningMethod", form);
+
+    // Handle form submission for configuration
     const handleFinish = (values) => {
         console.log("Form values: ", values);
-        // Lưu trữ các lớp học đã chọn
+        // Save selected classes
         setSelectedClasses(values.classes);
-        // Lưu trữ chi tiết từng lớp học
-        setClassDetails(values.classDetails || {});
-        // Reset phân công giáo viên khi cấu hình lại lớp học
+        // Save class details (only session and classRoom/classLink)
+        const details = {};
+        values.classes.forEach((classId) => {
+            details[classId] = {
+                session: values.classDetails?.[classId]?.session || null,
+                classLink: values.classDetails?.[classId]?.classLink || "",
+                classRoom: values.classDetails?.[classId]?.classRoom || null,
+            };
+        });
+        setClassDetails(details);
+        // Reset teacher assignments
         setTeacherAssignments({});
-        // Chuyển sang tab tiếp theo
+        // Switch to teacher assignment tab
         setActiveTab("addTeacher");
         message.success("Cấu hình đã được lưu thành công!");
     };
 
-    // Xử lý khi thay đổi các lớp học đã chọn
+    // Handle class selection changes
     const handleClassChange = (values) => {
         setSelectedClasses(values);
-        // Xóa các chi tiết lớp học không còn được chọn
+        // Update classDetails to keep only selected classes
         setClassDetails((prevDetails) => {
             const updatedDetails = {};
             values.forEach((classId) => {
                 if (prevDetails[classId]) {
                     updatedDetails[classId] = prevDetails[classId];
+                } else {
+                    updatedDetails[classId] = {
+                        session: null,
+                        classLink: "",
+                        classRoom: null,
+                    };
                 }
             });
             return updatedDetails;
         });
-        // Nếu người dùng thay đổi lớp học sau khi đã tạo lịch, đặt lại trạng thái lịch học
+        // If changing classes after assignment, reset
         if (activeTab === "addTeacher") {
             setActiveTab("configure");
             setTeacherAssignments({});
         }
     };
 
-    // Hàm render các tab cho từng lớp học
+    // Handle learningMethod change to reset class details
+    const handleValuesChange = (changedValues, allValues) => {
+        if (changedValues.learningMethod) {
+            const updatedDetails = {};
+            selectedClasses.forEach((classId) => {
+                updatedDetails[classId] = {
+                    session: classDetails[classId]?.session || null,
+                    classLink: "",
+                    classRoom: null,
+                };
+            });
+            setClassDetails(updatedDetails);
+            form.setFieldsValue({
+                classDetails: updatedDetails,
+            });
+        }
+    };
+
+    // Render session and classRoom/classLink fields for each class
     const renderClassSessionFields = () => {
         if (loadingShifts) {
             return (
@@ -234,101 +269,64 @@ const ScheduleAdd = () => {
                             </Select>
                         </Form.Item>
 
-                        {/* Hiển thị dựa trên hình thức học */}
-                        <Form.Item
-                            shouldUpdate={(prevValues, currentValues) =>
-                                prevValues.classDetails &&
-                                currentValues.classDetails &&
-                                prevValues.classDetails[classId]
-                                    ?.learningMethod !==
-                                    currentValues.classDetails[classId]
-                                        ?.learningMethod
-                            }
-                        >
-                            {({ getFieldValue }) => {
-                                const learningMethod = getFieldValue([
-                                    "classDetails",
-                                    classId,
-                                    "learningMethod",
-                                ]);
-                                if (learningMethod === "online") {
-                                    return (
-                                        <Form.Item
-                                            label="Link Học Trực Tuyến"
-                                            name={[
-                                                "classDetails",
-                                                classId,
-                                                "classLink",
-                                            ]}
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng nhập link học!",
-                                                },
-                                            ]}
-                                        >
-                                            <Input
-                                                placeholder="Link học trực tuyến"
-                                                prefix={<LinkOutlined />}
-                                                style={{ width: "100%" }}
-                                            />
-                                        </Form.Item>
-                                    );
-                                } else if (learningMethod === "offline") {
-                                    return (
-                                        <Form.Item
-                                            label="Phòng Học Trực Tiếp"
-                                            name={[
-                                                "classDetails",
-                                                classId,
-                                                "classRoom",
-                                            ]}
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng chọn phòng học!",
-                                                },
-                                            ]}
-                                        >
-                                            <Select
-                                                showSearch
-                                                placeholder="Chọn phòng học"
-                                                optionFilterProp="children"
-                                            >
-                                                {rooms.map((classrooms) => (
-                                                    <Option
-                                                        key={classrooms.id}
-                                                        value={classrooms.id}
-                                                    >
-                                                        {classrooms.name}
-                                                    </Option>
-                                                ))}
-                                            </Select>
-                                        </Form.Item>
-                                    );
-                                } else {
-                                    return null;
-                                }
-                            }}
-                        </Form.Item>
+                        {/* Display classRoom or classLink based on learningMethod */}
+                        {learningMethod === "online" ? (
+                            <Form.Item
+                                label="Link Học Trực Tuyến"
+                                name={["classDetails", classId, "classLink"]}
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng nhập link học!",
+                                    },
+                                ]}
+                            >
+                                <Input
+                                    placeholder="Link học trực tuyến"
+                                    prefix={<LinkOutlined />}
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        ) : learningMethod === "offline" ? (
+                            <Form.Item
+                                label="Phòng Học Trực Tiếp"
+                                name={["classDetails", classId, "classRoom"]}
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Vui lòng chọn phòng học!",
+                                    },
+                                ]}
+                            >
+                                <Select
+                                    showSearch
+                                    placeholder="Chọn phòng học"
+                                    optionFilterProp="children"
+                                >
+                                    {rooms.map((room) => (
+                                        <Option key={room.id} value={room.id}>
+                                            {room.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        ) : null}
                     </Card>
                 </TabPane>
             );
         });
     };
 
-    // Xử lý khi chuyển tab
+    // Handle tab change
     const handleTabChange = (key) => {
         setActiveTab(key);
     };
 
-    // Hàm kiểm tra xem giáo viên đã được phân công vào ca học này chưa
+    // Check if teacher is available
     const isTeacherAvailable = (teacherId, shiftId, currentClassId) => {
         return !Object.entries(teacherAssignments).some(
             ([classId, assignedTeacherId]) => {
-                if (classId === currentClassId) return false; // Bỏ qua lớp hiện tại
+                if (classId === currentClassId) return false; // Skip current class
                 const assignedShiftId = classDetails[classId]?.session;
                 return (
                     assignedTeacherId === teacherId &&
@@ -338,7 +336,7 @@ const ScheduleAdd = () => {
         );
     };
 
-    // Xử lý khi chọn giáo viên cho một lớp
+    // Handle teacher selection for a class
     const handleTeacherSelect = (classId, teacherId) => {
         const shiftId = classDetails[classId]?.session;
         if (!shiftId) {
@@ -346,14 +344,14 @@ const ScheduleAdd = () => {
             return;
         }
 
-        // Kiểm tra xem giáo viên có sẵn không
+        // Check if teacher is available
         const available = isTeacherAvailable(teacherId, shiftId, classId);
         if (!available) {
             message.error("Giáo viên này đã bị trùng lịch dạy với lớp khác!");
             return;
         }
 
-        // Cập nhật phân công giáo viên
+        // Update teacher assignment
         setTeacherAssignments((prev) => ({
             ...prev,
             [classId]: teacherId,
@@ -361,7 +359,7 @@ const ScheduleAdd = () => {
         message.success("Phân công giáo viên thành công!");
     };
 
-    // Hàm render giao diện phân công giáo viên
+    // Render teacher assignment form
     const renderTeacherAssignment = () => {
         if (selectedClasses.length === 0) {
             return <p>Vui lòng cấu hình lớp học trước khi thêm giáo viên.</p>;
@@ -371,7 +369,7 @@ const ScheduleAdd = () => {
             <Form
                 layout="vertical"
                 onFinish={async () => {
-                    // Kiểm tra xem tất cả các lớp đã được phân công giáo viên chưa
+                    // Check if all classes have assigned teachers
                     const allAssigned = selectedClasses.every(
                         (classId) => teacherAssignments[classId]
                     );
@@ -382,17 +380,15 @@ const ScheduleAdd = () => {
                         return;
                     }
 
-                    // Chuẩn bị payload để gửi lên API
+                    // Prepare payload
                     const payload = {
-                        start_date: classDetails[selectedClasses[0]]?.startDate
-                            ? classDetails[selectedClasses[0]].startDate.format(
-                                  "YYYY-MM-DD"
-                              )
+                        start_date: form.getFieldValue("startDate")
+                            ? form
+                                  .getFieldValue("startDate")
+                                  .format("YYYY-MM-DD")
                             : null,
-                        end_date: classDetails[selectedClasses[0]]?.endDate
-                            ? classDetails[selectedClasses[0]].endDate.format(
-                                  "YYYY-MM-DD"
-                              )
+                        end_date: form.getFieldValue("endDate")
+                            ? form.getFieldValue("endDate").format("YYYY-MM-DD")
                             : null,
                         days_of_week: form
                             .getFieldValue("repeatDays")
@@ -407,38 +403,50 @@ const ScheduleAdd = () => {
                                 };
                                 return dayMapping[day];
                             }),
-                        classrooms: selectedClasses.map((classId) => {
-                            const selectedRoom = rooms.find(
-                                (room) =>
-                                    room.id === classDetails[classId]?.classRoom
-                            );
-                            if (!selectedRoom) {
-                                console.error(
-                                    `Phòng học không hợp lệ cho lớp: ${classId}, room_id: ${classDetails[classId]?.classRoom}`
+                        learning_method: form.getFieldValue("learningMethod"),
+                        classrooms: selectedClasses
+                            .map((classId) => {
+                                const selectedRoom = rooms.find(
+                                    (room) =>
+                                        room.id ===
+                                        classDetails[classId]?.classRoom
                                 );
-                                message.error(
-                                    `Phòng học không hợp lệ. Vui lòng chọn lại.`
-                                );
-                                return;
-                            }
-                            return {
-                                id: classId,
-                                shift_id: classDetails[classId]?.session,
-                                room_id: selectedRoom.id, // Lấy room_id từ danh sách phòng học
-                                link:
-                                    classDetails[classId]?.learningMethod ===
-                                    "online"
-                                        ? classDetails[classId]?.classLink
-                                        : null,
-                            };
-                        }),
+                                if (
+                                    form.getFieldValue("learningMethod") ===
+                                        "offline" &&
+                                    !selectedRoom
+                                ) {
+                                    console.error(
+                                        `Phòng học không hợp lệ cho lớp: ${classId}, room_id: ${classDetails[classId]?.classRoom}`
+                                    );
+                                    message.error(
+                                        `Phòng học không hợp lệ. Vui lòng chọn lại cho lớp ${classId}.`
+                                    );
+                                    return null;
+                                }
+                                return {
+                                    id: classId,
+                                    shift_id: classDetails[classId]?.session,
+                                    room_id:
+                                        form.getFieldValue("learningMethod") ===
+                                        "offline"
+                                            ? selectedRoom.id
+                                            : null, // Get room_id if offline
+                                    link:
+                                        form.getFieldValue("learningMethod") ===
+                                        "online"
+                                            ? classDetails[classId]?.classLink
+                                            : null,
+                                };
+                            })
+                            .filter((item) => item !== null), // Remove null items
                         teachers: selectedClasses.map((classId) => ({
                             class_id: classId,
                             teacher_id: teacherAssignments[classId],
                         })),
                     };
 
-                    // Kiểm tra xem payload đã đầy đủ chưa
+                    // Check if start_date and end_date are set
                     if (!payload.start_date || !payload.end_date) {
                         message.error(
                             "Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!"
@@ -447,9 +455,9 @@ const ScheduleAdd = () => {
                     }
 
                     try {
-                        // Lấy token
+                        // Get token
                         const token = localStorage.getItem("token");
-                        // Gọi API để thêm lịch học
+                        // Call API to add schedule
                         const response = await axios.post(
                             `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
                             payload,
@@ -465,7 +473,7 @@ const ScheduleAdd = () => {
                             response.status === 201
                         ) {
                             message.success("Thêm lịch học thành công!");
-                            // Điều hướng về trang danh sách lịch học
+                            // Navigate to schedule list
                             navigate("/admin/schedule-list");
                         } else {
                             message.error("Thêm lịch học thất bại!");
@@ -497,11 +505,6 @@ const ScheduleAdd = () => {
                     const details = classDetails[classId];
                     const shiftId = details?.session;
                     const shift = shifts.find((s) => s.id === shiftId);
-                    const learningMethod = details?.learningMethod;
-                    const learningMethodText =
-                        learningMethod === "online"
-                            ? "Trực tuyến"
-                            : "Trực tiếp";
                     const classLink = details?.classLink || "";
                     const classRoom = details?.classRoom
                         ? rooms.find((room) => room.id === details.classRoom)
@@ -510,11 +513,11 @@ const ScheduleAdd = () => {
 
                     return (
                         <Card
-                            key={classId} // Sử dụng classId làm key duy nhất
+                            key={classId} // Use classId as unique key
                             title={`Phân Công Giáo Viên Cho Lớp ${className}`}
                             style={{ marginBottom: 16 }}
                         >
-                            {/* Hiển thị thông tin chi tiết của lớp */}
+                            {/* Display class details */}
                             <div style={{ marginBottom: 16 }}>
                                 <Text strong>Ca Học:</Text>{" "}
                                 {shift
@@ -523,7 +526,9 @@ const ScheduleAdd = () => {
                             </div>
                             <div style={{ marginBottom: 8 }}>
                                 <Text strong>Hình Thức Học:</Text>{" "}
-                                {learningMethodText}
+                                {learningMethod === "online"
+                                    ? "Trực tuyến"
+                                    : "Trực tiếp"}
                             </div>
                             {learningMethod === "online" ? (
                                 <div style={{ marginBottom: 16 }}>
@@ -537,7 +542,7 @@ const ScheduleAdd = () => {
                                 </div>
                             )}
 
-                            {/* Chọn Giáo Viên */}
+                            {/* Select Teacher */}
                             <Form.Item
                                 label="Chọn Giáo Viên"
                                 required
@@ -606,17 +611,18 @@ const ScheduleAdd = () => {
                 </div>
             ) : (
                 <Tabs activeKey={activeTab} onChange={handleTabChange}>
-                    {/* Tab Cấu Hình Lớp Học */}
+                    {/* Configuration Tab */}
                     <TabPane tab="Cấu Hình Lớp Học" key="configure">
                         <Form
                             form={form}
                             layout="vertical"
                             onFinish={handleFinish}
+                            onValuesChange={handleValuesChange}
                             className="bg-white p-6 rounded-lg shadow-md"
                         >
-                            {/* Hàng 1: Lớp Học (Multiple Selection) */}
+                            {/* Row 1: Classes (Multiple Selection) */}
                             <Form.Item
-                                label="Lớp Học1"
+                                label="Lớp Học"
                                 name="classes"
                                 rules={[
                                     {
@@ -644,16 +650,12 @@ const ScheduleAdd = () => {
                                 </Select>
                             </Form.Item>
 
-                            {/* Hàng 2: Ngày Bắt Đầu và Ngày Kết Thúc */}
+                            {/* Row 2: Start Date and End Date */}
                             <Row gutter={16}>
                                 <Col span={12}>
                                     <Form.Item
                                         label="Ngày Bắt Đầu"
-                                        name={[
-                                            "classDetails",
-                                            selectedClasses[0],
-                                            "startDate",
-                                        ]}
+                                        name="startDate"
                                         rules={[
                                             {
                                                 required: true,
@@ -674,17 +676,40 @@ const ScheduleAdd = () => {
                                 <Col span={12}>
                                     <Form.Item
                                         label="Ngày Kết Thúc"
-                                        name={[
-                                            "classDetails",
-                                            selectedClasses[0],
-                                            "endDate",
-                                        ]}
+                                        name="endDate"
+                                        dependencies={["startDate"]}
                                         rules={[
                                             {
                                                 required: true,
                                                 message:
                                                     "Vui lòng chọn ngày kết thúc!",
                                             },
+                                            ({ getFieldValue }) => ({
+                                                validator(_, value) {
+                                                    if (
+                                                        !value ||
+                                                        !getFieldValue(
+                                                            "startDate"
+                                                        )
+                                                    ) {
+                                                        return Promise.resolve();
+                                                    }
+                                                    if (
+                                                        value.isAfter(
+                                                            getFieldValue(
+                                                                "startDate"
+                                                            )
+                                                        )
+                                                    ) {
+                                                        return Promise.resolve();
+                                                    }
+                                                    return Promise.reject(
+                                                        new Error(
+                                                            "Ngày kết thúc phải sau ngày bắt đầu!"
+                                                        )
+                                                    );
+                                                },
+                                            }),
                                         ]}
                                     >
                                         <DatePicker
@@ -698,7 +723,7 @@ const ScheduleAdd = () => {
                                 </Col>
                             </Row>
 
-                            {/* Hàng 3: Thời Gian Lặp */}
+                            {/* Row 3: Repeat Days */}
                             <Form.Item
                                 label="Thời Gian Lặp"
                                 name="repeatDays"
@@ -733,14 +758,10 @@ const ScheduleAdd = () => {
                                 </Checkbox.Group>
                             </Form.Item>
 
-                            {/* Hàng 4: Hình Thức Học */}
+                            {/* Row 4: Learning Method */}
                             <Form.Item
                                 label="Hình Thức Học"
-                                name={[
-                                    "classDetails",
-                                    selectedClasses[0],
-                                    "learningMethod",
-                                ]}
+                                name="learningMethod"
                                 rules={[
                                     {
                                         required: true,
@@ -759,14 +780,14 @@ const ScheduleAdd = () => {
                                 </Select>
                             </Form.Item>
 
-                            {/* Các Trường "Ca Học" Tùy Theo Lớp Được Chọn */}
+                            {/* Class-specific fields */}
                             {selectedClasses.length > 0 && (
                                 <Tabs style={{ marginTop: 24 }}>
                                     {renderClassSessionFields()}
                                 </Tabs>
                             )}
 
-                            {/* Nút Hành Động */}
+                            {/* Action Buttons */}
                             <Form.Item style={{ marginTop: 24 }}>
                                 <Space
                                     style={{
@@ -797,7 +818,7 @@ const ScheduleAdd = () => {
                         </Form>
                     </TabPane>
 
-                    {/* Tab Thêm Giáo Viên */}
+                    {/* Teacher Assignment Tab */}
                     <TabPane
                         tab="Thêm Giáo Viên"
                         key="addTeacher"

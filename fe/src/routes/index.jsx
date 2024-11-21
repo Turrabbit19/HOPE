@@ -53,6 +53,11 @@ import ListSections from "../pages/admin/section/list/page";
 import SubMajors from "../pages/admin/teaching/submajors/page";
 import DetailSubject from "../pages/admin/subjects/detail/page";
 
+import TeacherManager from "../pages/admin/userManager/teacher";
+import AdminManager from "../pages/admin/userManager/admin";
+import UserAdd from "../pages/admin/userManager/add/page";
+import ListUser from "../pages/admin/userManager/list/page";
+import UserEdit from "../pages/admin/userManager/edit/page";
 
 const Router = createBrowserRouter([
     {
@@ -166,9 +171,11 @@ const Router = createBrowserRouter([
             },
             {
                 path: "Schedule",
-                element: (<>
-                    <Schedule/>
-                </>)
+                element: (
+                    <>
+                        <Schedule />
+                    </>
+                ),
             },
             {
                 path: "list-schedule",
@@ -181,7 +188,6 @@ const Router = createBrowserRouter([
                         <ScheduleAdd />
                     </>
                 ),
-
             },
             {
                 path: "list-schedule/details/:id",
@@ -194,7 +200,56 @@ const Router = createBrowserRouter([
                         <EditSchedule />
                     </>
                 ),
+            },
 
+            {
+                path: "student_manager",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <StudentManager />
+                    </>
+                ),
+            },
+            {
+                path: "all-student",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <StudentManager />
+                    </>
+                ),
+            },
+            {
+                path: "teacher-manager",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <TeacherManager />
+                    </>
+                ),
+            },
+            {
+                path: "admin-manager",
+                element: (
+                    <>
+                        <BreadCrumb />
+                        <AdminManager />
+                    </>
+                ),
+            },
+
+            {
+                path: "list-users",
+                element: <ListUser />,
+            },
+            {
+                path: "list-users/add",
+                element: <UserAdd />,
+            },
+            {
+                path: "list-users/edit/:id",
+                element: <UserEdit />,
             },
 
             {

@@ -9,66 +9,56 @@ import {
     Popconfirm,
     Table,
 } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading";
 import { add } from "date-fns";
+
 import {
     DeleteOutlined,
     UserOutlined,
     InfoCircleOutlined,
     PlusOutlined,
     EditOutlined,
-    SearchOutlined,
 } from "@ant-design/icons";
 import {
-    createStudent,
-    deleteStudent,
+    createUser,
     deleteUser,
-    getStudent,
+    getUser,
 } from "../../../../services/user-service";
-import { useRef } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import axios from "axios";
-
-const { Search } = Input;
-
-const StudentManager = () => {
+const AdminManager = () => {
     const navigate = useNavigate();
-    const [students, setStudents] = useState([]);
+    const [admins, setAdmins] = useState([]);
+    const fileInputRef = useRef(null);
 
-    const fileInputRef = useRef(null); // Tạo ref cho input file
+    const [selectedRecord, setSelectedRecord] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [userDetail, setUserDetail] = useState({});
+    const [recordType, setRecordType] = useState("");
+    const [reload, setReload] = useState(false);
+
+    const [dataImport, setDataImport] = useState([]);
 
     const [textSearch, setTextSearch] = useState("");
 
-    const [loading, setLoading] = useState(true);
     const [panigation, setPanigation] = useState({
         current_page: 1,
-        per_page: 40,
-        total: 12,
     });
-    const [selectedRecord, setSelectedRecord] = useState(null);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [reload, setReload] = useState(false);
-    const [userDetail, setUserDetail] = useState({});
-    const [recordType, setRecordType] = useState(""); // "teacher" hoặc "student" hoặc "classManager"
 
-    const [dataImport, setDataImport] = useState([]);
+    const [loading, setLoading] = useState(true);
     useEffect(() => {
         (async () => {
             try {
                 setLoading(true);
-                const { data } = await instance.get("admin/students");
-                let pa = data.pagination;
-                // console.log(data.data.data);
-                setStudents(data.data);
-                setPanigation((pre) => ({
-                    ...pre,
-                    total: pa.total,
-                }));
+                const { data } = await instance.get("admin/officers");
+                let dataConcac = data.Admin.data;
+                dataConcac.concat(data.Officers.data);
+                console.log(dataConcac);
 
+                setAdmins([...data.Admin.data, ...data.Officers.data]);
                 // setLoading();
             } catch (error) {
                 console.log(error.message);
@@ -80,11 +70,42 @@ const StudentManager = () => {
 
     useEffect(() => {
         if (dataImport.length > 0) {
-            handleAddUser();
+            handleAddAdmin();
         }
     }, [dataImport]);
 
-    async function handleAddUser() {}
+    console.log(dataImport);
+
+    async function handleAddAdmin() {
+        let textError = "Dữ liệu các hàng trên đã được thêm, Xảy ra lỗi ở dòng";
+        setLoading(true);
+
+        for (let i = 0; i < dataImport.length; i++) {
+            console.log(dataImport[i]?.role);
+
+            let body = {
+                ...dataImport[i],
+                avatar: null,
+                role_id: dataImport[i]?.role === "Cán bộ" ? 2 : 1,
+                password: "admin@2024",
+            };
+
+            try {
+                // Chờ cho createStudent hoàn tất trước khi tiếp tục
+                await createUser(body);
+                console.log(`Admin ${i + 1} created successfully.`);
+            } catch (error) {
+                // setLoading(false)
+                textError = textError + " " + (i + 1);
+                message.error(textError);
+                setReload(!reload);
+                // message.error('Đã xãy ra lỗi vui lòng kiểm tra lại dữ liệu')
+                return;
+            }
+        }
+        message.success("Dữ liệu đã được import vào.");
+        setReload(!reload);
+    }
 
     if (loading) {
         return <Loading />;
@@ -113,28 +134,12 @@ const StudentManager = () => {
             ),
         },
         {
-            title: "Mã Sinh viên",
-            dataIndex: "student_code",
-            key: "student_code",
-            fixed: "left",
-            width: 100,
-            render: (_, res) => {
-                return (
-                    <div>
-                        {/* <img src="https://media.istockphoto.com/vectors/student-avatar-flat-icon-flat-vector-illustration-symbol-design-vector-id1212812078?k=20&m=1212812078&s=170667a&w=0&h=Pl6TaYY87D2nWwRSWmdtJJ0DKeD5vPowomY9fyeqNOs=" style={{width: 50, height: 50, borderRadius: 100}}/> */}
-                        <span>{res.student_code}</span>
-                    </div>
-                );
-            },
-        },
-        {
             title: "Họ và tên",
             dataIndex: "fullname",
             key: "fullname",
             width: 200,
             fixed: "left",
         },
-
         {
             title: "Email",
             dataIndex: "email",
@@ -147,61 +152,12 @@ const StudentManager = () => {
             width: 150,
             key: "2",
         },
-        // {
-        //   title: "Ngày sinh",
-        //   dataIndex: "dob",
-        //   width: 150,
-        //   key: "3",
-        // },
-        // {
-        //   title: "Giới tính",
-        //   dataIndex: "gender",
-        //   key: "4",
-        // },
-        // {
-        //   title: "Dân tộc",
-        //   dataIndex: "ethnicity",
-        //   key: "5",
-        // },
-        // {
-        //   title: "Địa chỉ",
-        //   dataIndex: "address",
-        //   key: "6",
-        // },
-        // {
-        //   title: "Chứ vụ",
-        //   dataIndex: "role_name",
-        //   key: "7",
-        // },
-        // {
-        //   title: "Khóa học",
-        //   dataIndex: "course_name",
-        //   key: "8",
-        //   width: 100
-        // },
-        {
-            title: "Ngành học",
-            dataIndex: "major_name",
-            key: "8",
-            width: 1000,
-        },
-        // {
-        //   title: "Môn học",
-        //   dataIndex: "semester_name",
-        //   key: "8",
-        // },
-        {
-            title: "Trạng thái",
-            dataIndex: "status",
-            key: "8",
-            width: 400,
-        },
         {
             title: "Action",
             key: "operation",
             fixed: "right",
             width: 170,
-            render: (text, record) => (
+            render: (_, record) => (
                 <div className="flex flex-row items-center justify-between">
                     <Button
                         type="link"
@@ -213,22 +169,25 @@ const StudentManager = () => {
                     <Button
                         type="link"
                         icon={<EditOutlined />}
-                        onClick={() => {
+                        onClick={() =>
                             navigate(
                                 `${`/admin/list-users/edit/${record.id}`}`,
                                 {
                                     state: {
-                                        type: "students",
+                                        type: "admins",
                                     },
                                 }
-                            );
-                        }}
+                            )
+                        }
                     >
                         Sửa
                     </Button>
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa tài khoản này?"
-                        onConfirm={() => handleDelete(record)} // Xóa tài khoản
+                        onConfirm={() => {
+                            console.log("Dô đây");
+                            handleDelete(record);
+                        }} // Xóa tài khoản
                         okText="Có"
                         cancelText="Không"
                     >
@@ -238,66 +197,31 @@ const StudentManager = () => {
             ),
         },
     ];
-    const data = students.map((item, index) => {
+    const data = admins.map((item, index) => {
         return {
             key: item.id,
             id: item.id,
             stt: index + 1,
             fullname: item.name,
-            student_code: item.student_code,
             email: item.email,
             phone: item.phone,
-            // dob: item.dob,
-            // gender: item.gender ? "Nam" : "Nữ",
-            // ethnicity: item.user.ethnicity,
-            // address: item.user.address,
-            // role: item.user.role.name,
-            // semester_name: item.semester.name,
-            major_name: item.major_name,
-            course_name: item.course_name,
-            status: item.status,
             avatar: item.avatar,
         };
     });
 
-    const handleDetailClick = (record) => {
+    const handleDetailClick = (record, type) => {
         setSelectedRecord(record);
+
         setIsModalVisible(true);
-        getStudent(record.id).then((res) => {
+        getUser(record.id).then((res) => {
             setUserDetail(res.data.data);
         });
     };
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        // console.log(file);
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            // Make POST request to the server
-            const response = await axios.post(
-                "http://localhost:8000/api/admin/import-student",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
-
-            if (response.status === 200) {
-                setReload(true);
-                message.success("Import thành công");
-            }
-        } catch (error) {
-            console.error("Error uploading file:", error);
-            alert("Error uploading file");
-        }
-    };
-
     const handleDelete = async (record) => {
-        await deleteStudent(record.id);
+        console.log(record, "dô đây kh");
+
+        await deleteUser(record.id);
         setReload(!reload);
         message.success(`Đã xóa tài khoản: ${record.name}`);
     };
@@ -305,23 +229,40 @@ const StudentManager = () => {
     const handleAdd = () => {
         navigate(`/admin/list-users/add`, {
             state: {
-                type: "students",
+                type: "admin",
             },
         });
     };
 
     let dataSearch = data.filter((e) => {
         let fullname = e?.fullname || "";
-        let student_code = e.student_code || "";
+
         if (textSearch === "") {
             return true;
         }
 
-        return (
-            fullname.search(textSearch) > -1 ||
-            student_code.search(textSearch) > -1
-        );
+        return fullname.search(textSearch) > -1;
     });
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        console.log(file);
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = (evt) => {
+                const binaryStr = evt.target.result;
+                const workbook = XLSX.read(binaryStr, { type: "binary" });
+                // Lấy dữ liệu từ sheet đầu tiên
+                const firstSheet = workbook.Sheets[workbook.SheetNames[2]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                // setData(jsonData);
+                setDataImport(jsonData);
+            };
+            reader.readAsBinaryString(file);
+        }
+    };
 
     function handlePickExcel() {
         fileInputRef.current.click();
@@ -348,43 +289,16 @@ const StudentManager = () => {
         });
 
         // Use FileSaver to save the file
-        saveAs(blob, "student.xlsx");
-    };
-
-    const downloadExcel = async () => {
-        try {
-            const response = await fetch(
-                "http://localhost:8000/api/admin/export-student",
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type":
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-
-            // Get the file as a blob
-            const blob = await response.blob();
-
-            // Save the file
-            saveAs(blob, "downloaded_student.xlsx");
-        } catch (error) {
-            console.error("Failed to download file:", error);
-        }
+        saveAs(blob, "admin.xlsx");
     };
 
     return (
         <>
             <div>
                 <div className="flex justify-between mb-2">
-                    <h1>Sinh viên</h1>
-                    <div className="flex flex-row items-center">
-                        <Button onClick={handleAdd}>Thêm sinh viên</Button>
+                    <h1>Quản trị viên</h1>
+                    <div className="flex flex-row">
+                        <Button onClick={handleAdd}>Thêm quản trị viên</Button>
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -392,20 +306,8 @@ const StudentManager = () => {
                             onChange={handleFileChange}
                             style={{ display: "none" }}
                         />
-                        <Button
-                            onClick={handlePickExcel}
-                            className="ml-5"
-                            type="primary"
-                        >
-                            Import
-                        </Button>
-                        <Button
-                            onClick={downloadExcel}
-                            className="ml-5"
-                            type="default"
-                        >
-                            Export
-                        </Button>
+                        {/* <Button onClick={handlePickExcel} className="ml-5" type="primary">Import</Button>
+          <Button onClick={handleExport} className="ml-5" type="default">Export</Button> */}
                     </div>
                 </div>
                 <div className="relative">
@@ -414,47 +316,42 @@ const StudentManager = () => {
                         allowClear={true}
                         onChange={(e) => {
                             setTextSearch(e.target.value);
-                            if (panigation.page !== 1) {
-                                setPanigation((pre) => ({
-                                    ...pre,
-                                    current_page: 1,
-                                }));
-                            }
+                            // if (panigation.page !== 1) {
+                            //   setPanigation((pre) => ({
+                            //     ...pre,
+                            //     current_page: 1
+                            //   }))
+                            // }
                         }}
                         onClear={() => setTextSearch("")}
-                        placeholder="Tìm kiếm theo mã hoặc tên sinh viên ...."
+                        placeholder="Tìm kiếm theo mã hoặc tên quản trị viên ...."
                         className="xl:w-[300px] md:w-[180px] max-[767px]:w-[120px]"
                     />
                 </div>
             </div>
 
             <Divider />
-
             <Table
                 columns={columns}
                 dataSource={dataSearch.slice(
                     panigation.current_page > 1
-                        ? (panigation.current_page - 1) * 40
+                        ? (panigation.current_page - 1) * 10
                         : panigation.current_page - 1,
-                    panigation.current_page * 40
+                    panigation.current_page * 10
                 )}
-                onChange={(e) => {
+                onChange={(e) =>
                     setPanigation((pre) => ({
                         ...pre,
                         current_page: e.current,
-                    }));
-                }}
-                // scroll={{
-                //   x: 0.1,
-                // }}
+                    }))
+                }
                 pagination={{
+                    total: admins.length,
+                    pageSize: 10,
                     current: panigation.current_page,
-                    pageSize: 40,
-                    total: panigation.total,
                 }}
             />
 
-            {/* Modal hiển thị chi tiết tài khoản */}
             {selectedRecord && (
                 <Modal
                     title={`Chi tiết ${
@@ -506,24 +403,6 @@ const StudentManager = () => {
                         {/* Thông tin cho Học Viên */}
 
                         <>
-                            <Descriptions.Item label="Mã Sinh Viên">
-                                {userDetail?.student_code}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Ngành Học">
-                                {userDetail?.major_name}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Khóa Học">
-                                {userDetail?.course_name}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Học Kỳ Hiện Tại">
-                                {userDetail?.current_semester}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Trạng Thái">
-                                {userDetail?.status}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Phụ Huynh">
-                                {userDetail.parent}
-                            </Descriptions.Item>
                             <Descriptions.Item label="Ngày Sinh">
                                 {userDetail.dob}
                             </Descriptions.Item>
@@ -544,4 +423,4 @@ const StudentManager = () => {
     );
 };
 
-export default StudentManager;
+export default AdminManager;

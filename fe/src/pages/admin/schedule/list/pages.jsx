@@ -119,7 +119,7 @@ const ScheduleList = () => {
             );
             setClassroomsBySubject((prev) => ({
                 ...prev,
-                [subjectId]: response.data.data || [],
+                [subjectId]: response.data.data || [], // Lưu theo `subjectId`
             }));
         } catch (err) {
             setError("Không thể lấy dữ liệu lớp học cho môn học này.");
@@ -344,6 +344,76 @@ const ScheduleList = () => {
                                                                                                         {expandedSubject ===
                                                                                                             subject.id && (
                                                                                                             <div>
+                                                                                                                {/* Hiển thị danh sách phòng học */}
+                                                                                                                {classroomsBySubject[
+                                                                                                                    subject
+                                                                                                                        .id
+                                                                                                                ] &&
+                                                                                                                classroomsBySubject[
+                                                                                                                    subject
+                                                                                                                        .id
+                                                                                                                ]
+                                                                                                                    .length >
+                                                                                                                    0 ? (
+                                                                                                                    classroomsBySubject[
+                                                                                                                        subject
+                                                                                                                            .id
+                                                                                                                    ].map(
+                                                                                                                        (
+                                                                                                                            classroom
+                                                                                                                        ) => (
+                                                                                                                            <div
+                                                                                                                                key={
+                                                                                                                                    classroom.id
+                                                                                                                                }
+                                                                                                                                className="bg-gray-50 p-4 rounded-lg mb-4"
+                                                                                                                            >
+                                                                                                                                <p className="text-xl font-bold text-gray-700">
+                                                                                                                                    Lớp
+                                                                                                                                    học:{" "}
+                                                                                                                                    {
+                                                                                                                                        classroom.classroom
+                                                                                                                                    }
+                                                                                                                                </p>
+                                                                                                                                <p>
+                                                                                                                                    Phòng:{" "}
+                                                                                                                                    {
+                                                                                                                                        classroom.room
+                                                                                                                                    }
+                                                                                                                                </p>
+                                                                                                                                <p>
+                                                                                                                                    Ngày
+                                                                                                                                    bắt
+                                                                                                                                    đầu:{" "}
+                                                                                                                                    {
+                                                                                                                                        classroom.start_date
+                                                                                                                                    }
+                                                                                                                                </p>
+                                                                                                                                <p>
+                                                                                                                                    Link
+                                                                                                                                    học:{" "}
+                                                                                                                                    {classroom.link ===
+                                                                                                                                    "NULL"
+                                                                                                                                        ? "Không có"
+                                                                                                                                        : classroom.link}
+                                                                                                                                </p>
+                                                                                                                            </div>
+                                                                                                                        )
+                                                                                                                    )
+                                                                                                                ) : (
+                                                                                                                    <p>
+                                                                                                                        Không
+                                                                                                                        có
+                                                                                                                        phòng
+                                                                                                                        học
+                                                                                                                        nào
+                                                                                                                        được
+                                                                                                                        tìm
+                                                                                                                        thấy.
+                                                                                                                    </p>
+                                                                                                                )}
+
+                                                                                                                {/* Nút Tạo lịch học mới */}
                                                                                                                 <Button
                                                                                                                     type="primary"
                                                                                                                     onClick={() => {
@@ -371,7 +441,6 @@ const ScheduleList = () => {
                                                                                                                         học
                                                                                                                         mới
                                                                                                                     </Link>
-                                                                                                                    ;
                                                                                                                 </Button>
                                                                                                             </div>
                                                                                                         )}

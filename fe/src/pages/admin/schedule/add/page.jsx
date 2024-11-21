@@ -137,12 +137,13 @@ const ScheduleAdd = () => {
 
                 // Kiểm tra và xử lý dữ liệu teachers
                 console.log("Teachers API response:", teachersRes.data);
-                let teachersData = teachersRes.data;
+                let teachersData = teachersRes.data.listTeachers;
                 if (Array.isArray(teachersData)) {
                     setTeachers(teachersData);
                 } else {
                     throw new Error("Dữ liệu teachers không hợp lệ.");
                 }
+
                 setLoading(false);
                 setLoadingShifts(false);
             } catch (error) {
@@ -203,8 +204,8 @@ const ScheduleAdd = () => {
         }
 
         return selectedClasses.map((classId) => {
-            const classData = rooms.find((c) => c.id === classId);
-            const className = classData ? classData.name : `ID ${classId}`;
+            const classData = classrooms.find((c) => c.id === classId);
+            const className = classData ? classData.code : `ID ${classId}`;
             console.log(className);
 
             return (
@@ -296,18 +297,14 @@ const ScheduleAdd = () => {
                                                 placeholder="Chọn phòng học"
                                                 optionFilterProp="children"
                                             >
-                                                {classrooms.map(
-                                                    (classrooms) => (
-                                                        <Option
-                                                            key={classrooms.id}
-                                                            value={
-                                                                classrooms.id
-                                                            }
-                                                        >
-                                                            {classrooms.code}
-                                                        </Option>
-                                                    )
-                                                )}
+                                                {rooms.map((classrooms) => (
+                                                    <Option
+                                                        key={classrooms.id}
+                                                        value={classrooms.id}
+                                                    >
+                                                        {classrooms.name}
+                                                    </Option>
+                                                ))}
                                             </Select>
                                         </Form.Item>
                                     );
@@ -397,21 +394,44 @@ const ScheduleAdd = () => {
                                   "YYYY-MM-DD"
                               )
                             : null,
-                        days_of_week: form.getFieldValue("repeatDays") || [],
-                        classrooms: selectedClasses.map((classId) => ({
-                            id: classId,
-                            shift_id: classDetails[classId]?.session,
-                            room_id:
-                                classDetails[classId]?.learningMethod ===
-                                "offline"
-                                    ? classDetails[classId]?.classRoom
-                                    : null,
-                            link:
-                                classDetails[classId]?.learningMethod ===
-                                "online"
-                                    ? classDetails[classId]?.classLink
-                                    : null,
-                        })),
+                        days_of_week: form
+                            .getFieldValue("repeatDays")
+                            .map((day) => {
+                                const dayMapping = {
+                                    "Thứ 2": 1,
+                                    "Thứ 3": 2,
+                                    "Thứ 4": 3,
+                                    "Thứ 5": 4,
+                                    "Thứ 6": 5,
+                                    "Thứ 7": 6,
+                                };
+                                return dayMapping[day];
+                            }),
+                        classrooms: selectedClasses.map((classId) => {
+                            const selectedRoom = rooms.find(
+                                (room) =>
+                                    room.id === classDetails[classId]?.classRoom
+                            );
+                            if (!selectedRoom) {
+                                console.error(
+                                    `Phòng học không hợp lệ cho lớp: ${classId}, room_id: ${classDetails[classId]?.classRoom}`
+                                );
+                                message.error(
+                                    `Phòng học không hợp lệ. Vui lòng chọn lại.`
+                                );
+                                return;
+                            }
+                            return {
+                                id: classId,
+                                shift_id: classDetails[classId]?.session,
+                                room_id: selectedRoom.id, // Lấy room_id từ danh sách phòng học
+                                link:
+                                    classDetails[classId]?.learningMethod ===
+                                    "online"
+                                        ? classDetails[classId]?.classLink
+                                        : null,
+                            };
+                        }),
                         teachers: selectedClasses.map((classId) => ({
                             class_id: classId,
                             teacher_id: teacherAssignments[classId],
@@ -446,7 +466,7 @@ const ScheduleAdd = () => {
                         ) {
                             message.success("Thêm lịch học thành công!");
                             // Điều hướng về trang danh sách lịch học
-                            navigate("/schedule-list");
+                            navigate("admin/schedule-list");
                         } else {
                             message.error("Thêm lịch học thất bại!");
                         }
@@ -612,12 +632,12 @@ const ScheduleAdd = () => {
                                     onChange={handleClassChange}
                                     disabled={activeTab === "addTeacher"}
                                 >
-                                    {rooms.map((classItem) => (
+                                    {classrooms.map((classItem) => (
                                         <Option
                                             key={classItem.id}
                                             value={classItem.id}
                                         >
-                                            {classItem.name}
+                                            {classItem.code}
                                         </Option>
                                     ))}
                                 </Select>

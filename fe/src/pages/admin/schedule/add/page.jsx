@@ -474,7 +474,7 @@ const ScheduleAdd = () => {
                         ) {
                             message.success("Thêm lịch học thành công!");
                             // Navigate to schedule list
-                            navigate("/admin/schedule-list");
+                            navigate("/admin/list-schedule");
                         } else {
                             message.error("Thêm lịch học thất bại!");
                         }

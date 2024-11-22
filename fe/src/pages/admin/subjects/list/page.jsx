@@ -367,7 +367,7 @@ const ListSubject = () => {
                         <div className="listCourse__item-bottom teaching__card-bottom ">
                           <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                             <img src="/assets/svg/eye.svg" alt="" />
-                            <Link to={`detail/${subject.id}`}>
+                            <Link to={`detail/${subject.id}`} state={{subjectName: subject.name, credit: subject.credit}}>
                             Chi Tiết
                             </Link>
                           </button>

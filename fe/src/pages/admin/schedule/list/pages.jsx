@@ -501,6 +501,8 @@ const ScheduleList = () => {
                                                                                                                                 major.id,
                                                                                                                             subjectId:
                                                                                                                                 subject.id,
+                                                                                                                            subjectName: 
+                                                                                                                                subject.name
                                                                                                                         }}
                                                                                                                     >
                                                                                                                         Tạo

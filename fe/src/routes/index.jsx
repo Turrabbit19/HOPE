@@ -334,7 +334,7 @@ const Router = createBrowserRouter([
             },
 
             {
-                path: "list-subject/detail/:id",
+                path: "list-subject/detail/:subjectId",
                 element: (
                     <>
                         <DetailSubject />

@@ -15,7 +15,7 @@ import {
     Radio,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import moment from "moment";
 import Loading from "../../../components/loading";
 import instance from "../../../config/axios";
@@ -37,12 +37,22 @@ const ClassRoom = () => {
   });
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const {subjectId} = useLocation().state || {};
+
+  useEffect(() => {
+    if (subjectId) {
+        console.log(subjectId);
+        setIsAddModalVisible(true);
+        form.setFieldsValue({name: subjectId});
+    }
+}, [subjectId]); 
 
   useEffect(() => {
     const fetchClassrooms = async (page) => {
       setLoading(true);
       try {
         const [classrooms, subjects] = await Promise.all([
+          // instance.get(`admin/classrooms?page=${page}`),
           instance.get(`admin/classrooms?page=${page}`),
           instance.get("admin/subjects"),
         ]);
@@ -128,7 +138,7 @@ const ClassRoom = () => {
       });
       message.success("Thêm lớp học thành công");
       const newClassroom = response.data.data;
-      setClassrooms((prevClassrooms) => [...prevClassrooms, newClassroom]);
+      setClassrooms((prevClassrooms) => [...prevClassrooms, response.data.data]);
       handleModalCancel();
       form.resetFields();
     } catch (error) {

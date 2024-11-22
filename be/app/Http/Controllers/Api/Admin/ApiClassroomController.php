@@ -14,7 +14,7 @@ class ApiClassroomController extends Controller
     public function index()
     {
         try {
-            $classrooms = Classroom::with('subject')->paginate(9);
+            $classrooms = Classroom::with('subject')->paginate(10);
 
             $data = collect($classrooms->items())->map(function($classroom) {
                 return [

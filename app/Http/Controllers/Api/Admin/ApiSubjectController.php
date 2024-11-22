@@ -47,6 +47,31 @@ class ApiSubjectController extends Controller
         }
     }
     
+    public function getAll() 
+    {
+        try {
+            $subjects = Subject::orderByDesc('id')->get();
+
+            $data = $subjects->map(function ($subject){
+                return [
+                    'id' => $subject->id,
+                    'code' => $subject->code,
+                    'name' => $subject->name,
+                    'description' => $subject->description,
+                    'credit' => $subject->credit,
+                    'order' => $subject->order,
+                    'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            }); 
+
+            return response()->json([
+                'data' => $data
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function filterSubjectsByMajor(string $majorId) 
     {
         try {

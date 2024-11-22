@@ -87,7 +87,17 @@ class ApiClassroomController extends Controller
             $data = $validator->validated();
             $classroom = Classroom::create($data);
 
-            return response()->json(['data' => $classroom, 'message' => 'Tạo mới thành công'], 201);
+            
+            $data = [
+                'id' => $classroom->id,
+                'subject_id' => $classroom->subject->id,
+                'subject_name' => $classroom->subject->name,
+                'code' => $classroom->code,
+                'max_students' => $classroom->max_students,
+                'status' => $classroom->status,
+            ];
+
+            return response()->json(['data' => $data, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }

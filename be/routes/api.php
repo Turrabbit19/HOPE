@@ -74,7 +74,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
-
+        Route::get('{subjectId}/classrooms/without-schedule', [ApiClassroomController::class, 'getClassroomsWithoutSchedule']);
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('filter/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);

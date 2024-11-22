@@ -27,4 +27,10 @@ class Classroom extends Model
     public function students() {
         return $this->belongsToMany(Student::class, 'student_classrooms');
     }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
 }

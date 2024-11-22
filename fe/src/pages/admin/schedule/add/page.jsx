@@ -19,6 +19,8 @@ import {
 import { LinkOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import moment from "moment";
+import qs from "qs";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -26,28 +28,15 @@ const { Text } = Typography;
 
 const ScheduleAdd = () => {
     const [form] = Form.useForm();
-    const [activeTab, setActiveTab] = useState("configure"); // Current tab state
-    const [selectedClasses, setSelectedClasses] = useState([]); // Selected classes
-    const [classDetails, setClassDetails] = useState({}); // Details for each class
-    const [teacherAssignments, setTeacherAssignments] = useState({}); // Teacher assignments
-
     const navigate = useNavigate();
     const location = useLocation();
     const { state } = location;
 
-    // Extract necessary IDs from state
-    const {
-        courseId,
-        semesterId,
-        majorId,
-        subjectId,
-        courseName,
-        semesterName,
-        majorName,
-        subjectName,
-    } = state || {};
+    // Trích xuất các ID cần thiết từ state
+    const { courseId, semesterId, majorId, subjectId } = state || {};
     console.log("Received in ScheduleAdd - majorId:", majorId);
-    // State to store data from API
+
+    // Các state để lưu trữ dữ liệu từ API
     const [shifts, setShifts] = useState([]);
     const [classrooms, setClassrooms] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -55,22 +44,37 @@ const ScheduleAdd = () => {
     const [loading, setLoading] = useState(true);
     const [loadingShifts, setLoadingShifts] = useState(true);
 
+    // State hiện tại của tab
+    const [activeTab, setActiveTab] = useState("configure"); // Tab hiện tại
+    const [selectedClasses, setSelectedClasses] = useState([]); // Các lớp học đã chọn
+    const [classDetails, setClassDetails] = useState({}); // Chi tiết cho mỗi lớp
+    const [teacherAssignments, setTeacherAssignments] = useState({}); // Phân công giáo viên
+
+    // State để tính toán ngày kết thúc
+    const [isCalculatingEndDate, setIsCalculatingEndDate] = useState(false);
+
+    // Giám sát các trường trong form
+    const learningMethod = Form.useWatch("learningMethod", form);
+    const startDate = Form.useWatch("startDate", form);
+    const repeatDays = Form.useWatch("repeatDays", form);
+
+    // Fetch dữ liệu khi component mount
     useEffect(() => {
-        // Check if necessary information is provided
+        // Kiểm tra nếu thiếu thông tin cần thiết
         if (!courseId || !semesterId || !majorId || !subjectId) {
             message.error("Thiếu thông tin cần thiết để thêm lịch học!");
             navigate("/schedule-list");
             return;
         }
 
-        // Function to fetch data from APIs
         console.log("Major ID:", majorId);
 
+        // Hàm để lấy dữ liệu từ API
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem("token");
 
-                // Call APIs in parallel
+                // Gọi các API song song
                 const [shiftsRes, classroomsRes, teachersRes, roomsRes] =
                     await Promise.all([
                         axios.get("http://localhost:8000/api/admin/shifts", {
@@ -94,7 +98,6 @@ const ScheduleAdd = () => {
                                 },
                             }
                         ),
-
                         axios.get("http://localhost:8000/api/admin/rooms", {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -102,7 +105,7 @@ const ScheduleAdd = () => {
                         }),
                     ]);
 
-                // Process shifts data
+                // Xử lý dữ liệu shifts
                 console.log("Shifts API response:", shiftsRes.data);
                 let shiftsData = shiftsRes.data;
                 if (Array.isArray(shiftsData)) {
@@ -113,7 +116,7 @@ const ScheduleAdd = () => {
                     throw new Error("Dữ liệu shifts không hợp lệ.");
                 }
 
-                // Process classrooms data
+                // Xử lý dữ liệu classrooms
                 console.log("Classrooms API response:", classroomsRes.data);
                 let classroomsData = classroomsRes.data;
                 if (Array.isArray(classroomsData)) {
@@ -124,7 +127,7 @@ const ScheduleAdd = () => {
                     throw new Error("Dữ liệu classrooms không hợp lệ.");
                 }
 
-                // Process rooms data
+                // Xử lý dữ liệu rooms
                 console.log("Rooms API response:", roomsRes.data.data);
                 let roomsData = roomsRes.data.data;
                 if (Array.isArray(roomsData)) {
@@ -135,7 +138,7 @@ const ScheduleAdd = () => {
                     throw new Error("Dữ liệu rooms không hợp lệ.");
                 }
 
-                // Process teachers data
+                // Xử lý dữ liệu teachers
                 console.log("Teachers API response:", teachersRes.data);
                 let teachersData = teachersRes.data.listTeachers;
                 if (Array.isArray(teachersData)) {
@@ -159,35 +162,103 @@ const ScheduleAdd = () => {
         fetchData();
     }, [courseId, semesterId, majorId, subjectId, navigate]);
 
-    // Watch learningMethod to trigger re-render
-    const learningMethod = Form.useWatch("learningMethod", form);
+    // useEffect để tính toán ngày kết thúc khi startDate hoặc repeatDays thay đổi
+    useEffect(() => {
+        // Hàm để tính toán ngày kết thúc
+        const calculateEndDate = async () => {
+            if (!startDate || !repeatDays || repeatDays.length === 0) {
+                // Không tính toán nếu thiếu trường cần thiết
+                return;
+            }
 
-    // Handle form submission for configuration
-    const handleFinish = (values) => {
-        console.log("Form values: ", values);
-        // Save selected classes
-        setSelectedClasses(values.classes);
-        // Save class details (only session and classRoom/classLink)
-        const details = {};
-        values.classes.forEach((classId) => {
-            details[classId] = {
-                session: values.classDetails?.[classId]?.session || null,
-                classLink: values.classDetails?.[classId]?.classLink || "",
-                classRoom: values.classDetails?.[classId]?.classRoom || null,
-            };
-        });
-        setClassDetails(details);
-        // Reset teacher assignments
-        setTeacherAssignments({});
-        // Switch to teacher assignment tab
-        setActiveTab("addTeacher");
-        message.success("Cấu hình đã được lưu thành công!");
+            if (!subjectId) {
+                message.error("Thiếu subject_id để tính toán ngày kết thúc!");
+                return;
+            }
+
+            setIsCalculatingEndDate(true);
+
+            try {
+                const token = localStorage.getItem("token");
+                const dayMapping = {
+                    "Thứ 2": 1,
+                    "Thứ 3": 2,
+                    "Thứ 4": 3,
+                    "Thứ 5": 4,
+                    "Thứ 6": 5,
+                    "Thứ 7": 6,
+                };
+
+                const daysOfWeek = repeatDays.map((day) => dayMapping[day]);
+
+                const response = await axios.get(
+                    "http://localhost:8000/api/admin/calculate-end-date",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        params: {
+                            start_date: startDate.format("YYYY-MM-DD"), // Định dạng "YYYY-MM-DD"
+                            subject_id: subjectId,
+                            days_of_week: daysOfWeek, // Gửi dưới dạng mảng
+                        },
+                        paramsSerializer: (params) =>
+                            qs.stringify(params, { arrayFormat: "brackets" }), // Sử dụng arrayFormat 'brackets' để gửi mảng đúng cách
+                    }
+                );
+
+                if (response.data && response.data.end_date) {
+                    const endDate = moment(
+                        response.data.end_date,
+                        "YYYY-MM-DD"
+                    );
+                    form.setFieldsValue({ endDate });
+                    message.success("Ngày kết thúc đã được tính toán tự động!");
+                } else {
+                    message.error("Không nhận được ngày kết thúc từ API.");
+                }
+            } catch (error) {
+                console.error("Error calculating end date:", error);
+                if (
+                    error.response &&
+                    error.response.data &&
+                    error.response.data.errors
+                ) {
+                    const apiErrors = error.response.data.errors;
+                    Object.values(apiErrors).forEach((errArray) => {
+                        errArray.forEach((errMsg) => {
+                            message.error(errMsg);
+                        });
+                    });
+                } else {
+                    message.error("Không thể tính toán ngày kết thúc.");
+                }
+            } finally {
+                setIsCalculatingEndDate(false);
+            }
+        };
+
+        calculateEndDate();
+    }, [startDate, repeatDays, subjectId, form]);
+
+    // Hàm kiểm tra xem giáo viên có sẵn sàng hay không
+    const isTeacherAvailable = (teacherId, shiftId, currentClassId) => {
+        return !Object.entries(teacherAssignments).some(
+            ([classId, assignedTeacherId]) => {
+                if (classId === currentClassId) return false; // Bỏ qua lớp hiện tại
+                const assignedShiftId = classDetails[classId]?.session;
+                return (
+                    assignedTeacherId === teacherId &&
+                    assignedShiftId === shiftId
+                );
+            }
+        );
     };
 
-    // Handle class selection changes
+    // Xử lý khi chọn lớp học
     const handleClassChange = (values) => {
         setSelectedClasses(values);
-        // Update classDetails to keep only selected classes
+        // Cập nhật classDetails chỉ giữ lại các lớp đã chọn
         setClassDetails((prevDetails) => {
             const updatedDetails = {};
             values.forEach((classId) => {
@@ -203,14 +274,14 @@ const ScheduleAdd = () => {
             });
             return updatedDetails;
         });
-        // If changing classes after assignment, reset
+        // Nếu thay đổi lớp sau khi phân công, reset lại
         if (activeTab === "addTeacher") {
             setActiveTab("configure");
             setTeacherAssignments({});
         }
     };
 
-    // Handle learningMethod change to reset class details
+    // Xử lý thay đổi giá trị trong form
     const handleValuesChange = (changedValues, allValues) => {
         if (changedValues.learningMethod) {
             const updatedDetails = {};
@@ -228,7 +299,57 @@ const ScheduleAdd = () => {
         }
     };
 
-    // Render session and classRoom/classLink fields for each class
+    // Xử lý khi chuyển tab
+    const handleTabChange = (key) => {
+        setActiveTab(key);
+    };
+
+    // Xử lý khi chọn giáo viên cho một lớp
+    const handleTeacherSelect = (classId, teacherId) => {
+        const shiftId = classDetails[classId]?.session;
+        if (!shiftId) {
+            message.error("Vui lòng chọn ca học trước!");
+            return;
+        }
+
+        // Kiểm tra xem giáo viên có sẵn sàng hay không
+        const available = isTeacherAvailable(teacherId, shiftId, classId);
+        if (!available) {
+            message.error("Giáo viên này đã bị trùng lịch dạy với lớp khác!");
+            return;
+        }
+
+        // Cập nhật phân công giáo viên
+        setTeacherAssignments((prev) => ({
+            ...prev,
+            [classId]: teacherId,
+        }));
+        message.success("Phân công giáo viên thành công!");
+    };
+
+    // Xử lý khi submit cấu hình lớp học
+    const handleFinish = (values) => {
+        console.log("Form values: ", values);
+        // Lưu các lớp đã chọn
+        setSelectedClasses(values.classes);
+        // Lưu chi tiết lớp học (chỉ session và classRoom/classLink)
+        const details = {};
+        values.classes.forEach((classId) => {
+            details[classId] = {
+                session: values.classDetails?.[classId]?.session || null,
+                classLink: values.classDetails?.[classId]?.classLink || "",
+                classRoom: values.classDetails?.[classId]?.classRoom || null,
+            };
+        });
+        setClassDetails(details);
+        // Reset phân công giáo viên
+        setTeacherAssignments({});
+        // Chuyển sang tab phân công giáo viên
+        setActiveTab("addTeacher");
+        message.success("Cấu hình đã được lưu thành công!");
+    };
+
+    // Hàm render các trường session và classRoom/classLink cho mỗi lớp
     const renderClassSessionFields = () => {
         if (loadingShifts) {
             return (
@@ -269,7 +390,7 @@ const ScheduleAdd = () => {
                             </Select>
                         </Form.Item>
 
-                        {/* Display classRoom or classLink based on learningMethod */}
+                        {/* Hiển thị classRoom hoặc classLink dựa trên learningMethod */}
                         {learningMethod === "online" ? (
                             <Form.Item
                                 label="Link Học Trực Tuyến"
@@ -317,49 +438,7 @@ const ScheduleAdd = () => {
         });
     };
 
-    // Handle tab change
-    const handleTabChange = (key) => {
-        setActiveTab(key);
-    };
-
-    // Check if teacher is available
-    const isTeacherAvailable = (teacherId, shiftId, currentClassId) => {
-        return !Object.entries(teacherAssignments).some(
-            ([classId, assignedTeacherId]) => {
-                if (classId === currentClassId) return false; // Skip current class
-                const assignedShiftId = classDetails[classId]?.session;
-                return (
-                    assignedTeacherId === teacherId &&
-                    assignedShiftId === shiftId
-                );
-            }
-        );
-    };
-
-    // Handle teacher selection for a class
-    const handleTeacherSelect = (classId, teacherId) => {
-        const shiftId = classDetails[classId]?.session;
-        if (!shiftId) {
-            message.error("Vui lòng chọn ca học trước!");
-            return;
-        }
-
-        // Check if teacher is available
-        const available = isTeacherAvailable(teacherId, shiftId, classId);
-        if (!available) {
-            message.error("Giáo viên này đã bị trùng lịch dạy với lớp khác!");
-            return;
-        }
-
-        // Update teacher assignment
-        setTeacherAssignments((prev) => ({
-            ...prev,
-            [classId]: teacherId,
-        }));
-        message.success("Phân công giáo viên thành công!");
-    };
-
-    // Render teacher assignment form
+    // Hàm render form phân công giáo viên
     const renderTeacherAssignment = () => {
         if (selectedClasses.length === 0) {
             return <p>Vui lòng cấu hình lớp học trước khi thêm giáo viên.</p>;
@@ -369,7 +448,7 @@ const ScheduleAdd = () => {
             <Form
                 layout="vertical"
                 onFinish={async () => {
-                    // Check if all classes have assigned teachers
+                    // Kiểm tra xem tất cả các lớp đã được phân công giáo viên chưa
                     const allAssigned = selectedClasses.every(
                         (classId) => teacherAssignments[classId]
                     );
@@ -380,15 +459,15 @@ const ScheduleAdd = () => {
                         return;
                     }
 
-                    // Prepare payload
+                    // Chuẩn bị payload
                     const payload = {
                         start_date: form.getFieldValue("startDate")
                             ? form
                                   .getFieldValue("startDate")
-                                  .format("YYYY-MM-DD")
+                                  .format("YYYY-MM-DD") // Định dạng "YYYY-MM-DD"
                             : null,
                         end_date: form.getFieldValue("endDate")
-                            ? form.getFieldValue("endDate").format("YYYY-MM-DD")
+                            ? form.getFieldValue("endDate").format("YYYY-MM-DD") // Định dạng "YYYY-MM-DD"
                             : null,
                         days_of_week: form
                             .getFieldValue("repeatDays")
@@ -431,7 +510,7 @@ const ScheduleAdd = () => {
                                         form.getFieldValue("learningMethod") ===
                                         "offline"
                                             ? selectedRoom.id
-                                            : null, // Get room_id if offline
+                                            : null, // Lấy room_id nếu offline
                                     link:
                                         form.getFieldValue("learningMethod") ===
                                         "online"
@@ -439,14 +518,14 @@ const ScheduleAdd = () => {
                                             : null,
                                 };
                             })
-                            .filter((item) => item !== null), // Remove null items
+                            .filter((item) => item !== null), // Loại bỏ các mục null
                         teachers: selectedClasses.map((classId) => ({
                             class_id: classId,
                             teacher_id: teacherAssignments[classId],
                         })),
                     };
 
-                    // Check if start_date and end_date are set
+                    // Kiểm tra xem start_date và end_date đã được đặt chưa
                     if (!payload.start_date || !payload.end_date) {
                         message.error(
                             "Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!"
@@ -455,9 +534,9 @@ const ScheduleAdd = () => {
                     }
 
                     try {
-                        // Get token
+                        // Lấy token
                         const token = localStorage.getItem("token");
-                        // Call API to add schedule
+                        // Gọi API để thêm lịch học
                         const response = await axios.post(
                             `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
                             payload,
@@ -473,7 +552,7 @@ const ScheduleAdd = () => {
                             response.status === 201
                         ) {
                             message.success("Thêm lịch học thành công!");
-                            // Navigate to schedule list
+                            // Điều hướng đến danh sách lịch học
                             navigate("/admin/list-schedule");
                         } else {
                             message.error("Thêm lịch học thất bại!");
@@ -513,11 +592,11 @@ const ScheduleAdd = () => {
 
                     return (
                         <Card
-                            key={classId} // Use classId as unique key
+                            key={classId} // Sử dụng classId làm key duy nhất
                             title={`Phân Công Giáo Viên Cho Lớp ${className}`}
                             style={{ marginBottom: 16 }}
                         >
-                            {/* Display class details */}
+                            {/* Hiển thị chi tiết lớp học */}
                             <div style={{ marginBottom: 16 }}>
                                 <Text strong>Ca Học:</Text>{" "}
                                 {shift
@@ -542,7 +621,7 @@ const ScheduleAdd = () => {
                                 </div>
                             )}
 
-                            {/* Select Teacher */}
+                            {/* Chọn Giáo Viên */}
                             <Form.Item
                                 label="Chọn Giáo Viên"
                                 required
@@ -611,7 +690,7 @@ const ScheduleAdd = () => {
                 </div>
             ) : (
                 <Tabs activeKey={activeTab} onChange={handleTabChange}>
-                    {/* Configuration Tab */}
+                    {/* Tab Cấu Hình Lớp Học */}
                     <TabPane tab="Cấu Hình Lớp Học" key="configure">
                         <Form
                             form={form}
@@ -620,7 +699,7 @@ const ScheduleAdd = () => {
                             onValuesChange={handleValuesChange}
                             className="bg-white p-6 rounded-lg shadow-md"
                         >
-                            {/* Row 1: Classes (Multiple Selection) */}
+                            {/* Lựa chọn lớp học (chọn nhiều) */}
                             <Form.Item
                                 label="Lớp Học"
                                 name="classes"
@@ -650,7 +729,7 @@ const ScheduleAdd = () => {
                                 </Select>
                             </Form.Item>
 
-                            {/* Row 2: Start Date and End Date */}
+                            {/* Chọn ngày bắt đầu và kết thúc */}
                             <Row gutter={16}>
                                 <Col span={12}>
                                     <Form.Item
@@ -665,7 +744,7 @@ const ScheduleAdd = () => {
                                         ]}
                                     >
                                         <DatePicker
-                                            format="DD-MM-YYYY"
+                                            format="DD-MM-YYYY" // Định dạng hiển thị "DD-MM-YYYY"
                                             style={{ width: "100%" }}
                                             disabled={
                                                 activeTab === "addTeacher"
@@ -677,7 +756,6 @@ const ScheduleAdd = () => {
                                     <Form.Item
                                         label="Ngày Kết Thúc"
                                         name="endDate"
-                                        dependencies={["startDate"]}
                                         rules={[
                                             {
                                                 required: true,
@@ -713,7 +791,7 @@ const ScheduleAdd = () => {
                                         ]}
                                     >
                                         <DatePicker
-                                            format="DD-MM-YYYY"
+                                            format="DD-MM-YYYY" // Định dạng hiển thị "DD-MM-YYYY"
                                             style={{ width: "100%" }}
                                             disabled={
                                                 activeTab === "addTeacher"
@@ -723,7 +801,19 @@ const ScheduleAdd = () => {
                                 </Col>
                             </Row>
 
-                            {/* Row 3: Repeat Days */}
+                            {/* Hiển thị loading khi đang tính toán ngày kết thúc */}
+                            {isCalculatingEndDate && (
+                                <Row>
+                                    <Col span={24}>
+                                        <Spin
+                                            size="small"
+                                            tip="Đang tính toán ngày kết thúc..."
+                                        />
+                                    </Col>
+                                </Row>
+                            )}
+
+                            {/* Chọn thời gian lặp */}
                             <Form.Item
                                 label="Thời Gian Lặp"
                                 name="repeatDays"
@@ -758,7 +848,7 @@ const ScheduleAdd = () => {
                                 </Checkbox.Group>
                             </Form.Item>
 
-                            {/* Row 4: Learning Method */}
+                            {/* Chọn hình thức học */}
                             <Form.Item
                                 label="Hình Thức Học"
                                 name="learningMethod"
@@ -780,14 +870,14 @@ const ScheduleAdd = () => {
                                 </Select>
                             </Form.Item>
 
-                            {/* Class-specific fields */}
+                            {/* Các trường cụ thể cho từng lớp */}
                             {selectedClasses.length > 0 && (
                                 <Tabs style={{ marginTop: 24 }}>
                                     {renderClassSessionFields()}
                                 </Tabs>
                             )}
 
-                            {/* Action Buttons */}
+                            {/* Các nút hành động */}
                             <Form.Item style={{ marginTop: 24 }}>
                                 <Space
                                     style={{
@@ -818,7 +908,7 @@ const ScheduleAdd = () => {
                         </Form>
                     </TabPane>
 
-                    {/* Teacher Assignment Tab */}
+                    {/* Tab Thêm Giáo Viên */}
                     <TabPane
                         tab="Thêm Giáo Viên"
                         key="addTeacher"

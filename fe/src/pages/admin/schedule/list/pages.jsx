@@ -2,11 +2,10 @@ import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import instance from "../../../../config/axios"; // Axios instance
+import instance from "../../../../config/axios";
 import moment from "moment";
 
 const ScheduleList = () => {
-    // State variables
     const [expandedCourse, setExpandedCourse] = useState(null);
     const [expandedSemester, setExpandedSemester] = useState(null);
     const [expandedMajor, setExpandedMajor] = useState(null);
@@ -18,9 +17,10 @@ const ScheduleList = () => {
     const [classroomsBySubject, setClassroomsBySubject] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [classroomsCache, setClassroomsCache] = useState([]);
     const navigate = useNavigate();
 
-    // Fetch courses on component mount
+    // Lấy danh sách các khóa học khi component được mount
     useEffect(() => {
         const fetchCourses = async () => {
             setLoading(true);
@@ -38,7 +38,7 @@ const ScheduleList = () => {
         fetchCourses();
     }, []);
 
-    // Fetching semesters for a specific course
+    // Lấy danh sách kỳ học cho một khóa học cụ thể
     const fetchSemestersForCourse = async (courseId) => {
         setLoading(true);
         setError(null);
@@ -61,7 +61,7 @@ const ScheduleList = () => {
         }
     };
 
-    // Fetching majors for a specific course
+    // Lấy danh sách ngành học cho một khóa học cụ thể
     const fetchMajorsForCourse = async (courseId) => {
         setLoading(true);
         setError(null);
@@ -81,7 +81,7 @@ const ScheduleList = () => {
         }
     };
 
-    // Fetching subjects for a specific major
+    // Lấy danh sách môn học cho một ngành học cụ thể
     const fetchSubjectsForMajor = async (courseId, semesterId, majorId) => {
         setLoading(true);
         setError(null);
@@ -105,7 +105,7 @@ const ScheduleList = () => {
         }
     };
 
-    // Fetching classrooms for a specific subject
+    // Lấy danh sách phòng học cho một môn học cụ thể
     const fetchClassroomsForSubject = async (subjectId) => {
         setLoading(true);
         setError(null);
@@ -128,7 +128,7 @@ const ScheduleList = () => {
         }
     };
 
-    // Handle toggling for each course, semester, major, and subject
+    // Xử lý mở rộng/tắt mở rộng cho từng khóa học, kỳ học, ngành học và môn học
     const toggleCourse = (courseId) => {
         setExpandedCourse(expandedCourse === courseId ? null : courseId);
         setExpandedSemester(null);
@@ -165,6 +165,54 @@ const ScheduleList = () => {
         }
     };
 
+    // Hàm xử lý khi nhấp vào phòng học
+    const handleClassroomClick = (classroomId) => {
+        console.log("ID của phòng học:", classroomId);
+        navigate(`details/${classroomId}`);
+    };
+
+    // // Lấy danh sách phòng học
+    // useEffect(() => {
+    //     const fetchClassrooms = async () => {
+    //         try {
+    //             const response = await instance.get(`/admin/classrooms`);
+    //             setClassroomsCache(response.data?.data || []);
+    //         } catch (err) {
+    //             console.error("Không thể lấy danh sách lớp học:", err.message);
+    //         }
+    //     };
+
+    //     fetchClassrooms();
+    // }, []);
+    // // Lấy id phòng học
+    // const getClassroom = (classroomCode) => {
+    //     const classroom = classroomsCache.find(
+    //         (cls) => cls.code.toLowerCase() === classroomCode.toLowerCase()
+    //     );
+
+    //     if (!classroom) {
+    //         console.error(`Không tìm thấy lớp học với mã: ${classroomCode}`);
+    //         throw new Error(`Không tìm thấy lớp học với mã: ${classroomCode}`);
+    //     }
+
+    //     return classroom.id;
+    // };
+    // // Xóa phòng học
+    // const deleteClassroom = async (classroomCode) => {
+    //     try {
+    //         const classroomId = getClassroom(classroomCode); // Lấy ID từ cache
+    //         console.log("Đang xóa lớp học với ID:", classroomId);
+
+    //         await instance.delete(`/admin/schedule/${classroomId}/destroy`);
+
+    //         console.log(
+    //             `Đã xóa lớp học với mã ${classroomCode} và ID ${classroomId}`
+    //         );
+    //     } catch (err) {
+    //         console.error("Không thể xóa lớp học:", err.message);
+    //     }
+    // };
+
     return (
         <div className="mx-auto p-10 bg-blue-50 min-h-screen">
             <h2 className="text-4xl font-extrabold text-center text-blue-600 mb-10">
@@ -172,12 +220,14 @@ const ScheduleList = () => {
             </h2>
 
             {loading && <p>Đang tải dữ liệu...</p>}
-
+            {/* Hiển thị thông báo lỗi nếu có */}
             {error && <p className="text-red-600">{error}</p>}
 
             <div className="space-y-8">
+                {/* Kiểm tra nếu có khóa học */}
                 {courses.length > 0 ? (
                     courses.map((course) => {
+                        // Xác định màu sắc cho trạng thái của khóa học
                         let statusColor = "";
                         switch (course.status) {
                             case "Đang diễn ra":
@@ -198,6 +248,7 @@ const ScheduleList = () => {
                                 key={course.id}
                                 className="p-8 bg-white rounded-lg shadow-lg space-y-6"
                             >
+                                {/* Tiêu đề khóa học với khả năng mở rộng */}
                                 <div
                                     onClick={() => toggleCourse(course.id)}
                                     className="cursor-pointer space-y-2"
@@ -238,8 +289,10 @@ const ScheduleList = () => {
                                     </div>
                                 </div>
 
+                                {/* Nếu khóa học đang được mở rộng, hiển thị các kỳ học và ngành học */}
                                 {expandedCourse === course.id && (
                                     <div className="mt-6 space-y-6">
+                                        {/* Kiểm tra nếu có kỳ học */}
                                         {semestersByCourse[course.id] &&
                                         semestersByCourse[course.id].length >
                                             0 ? (
@@ -249,6 +302,7 @@ const ScheduleList = () => {
                                                         key={semester.id}
                                                         className="bg-gray-50 rounded-lg p-6"
                                                     >
+                                                        {/* Tiêu đề kỳ học với khả năng mở rộng */}
                                                         <div
                                                             onClick={() =>
                                                                 toggleSemester(
@@ -269,9 +323,11 @@ const ScheduleList = () => {
                                                             )}
                                                         </div>
 
+                                                        {/* Nếu kỳ học đang được mở rộng, hiển thị các ngành học */}
                                                         {expandedSemester ===
                                                             semester.id && (
                                                             <div className="mt-4 space-y-4">
+                                                                {/* Kiểm tra nếu có ngành học */}
                                                                 {majorsByCourse[
                                                                     course.id
                                                                 ] &&
@@ -291,6 +347,7 @@ const ScheduleList = () => {
                                                                                 }
                                                                                 className="bg-white rounded-lg p-6 shadow"
                                                                             >
+                                                                                {/* Tiêu đề ngành học với khả năng mở rộng */}
                                                                                 <h5
                                                                                     onClick={() =>
                                                                                         toggleMajor(
@@ -306,9 +363,11 @@ const ScheduleList = () => {
                                                                                     }
                                                                                 </h5>
 
+                                                                                {/* Nếu ngành học đang được mở rộng, hiển thị các môn học */}
                                                                                 {expandedMajor ===
                                                                                     major.id && (
                                                                                     <div className="mt-4 space-y-4">
+                                                                                        {/* Kiểm tra nếu có môn học */}
                                                                                         {subjectsByMajor[
                                                                                             `${course.id}_${semester.id}_${major.id}`
                                                                                         ] &&
@@ -329,6 +388,7 @@ const ScheduleList = () => {
                                                                                                         }
                                                                                                         className="bg-white p-6 shadow rounded-lg"
                                                                                                     >
+                                                                                                        {/* Tiêu đề môn học với khả năng mở rộng */}
                                                                                                         <h6
                                                                                                             onClick={() =>
                                                                                                                 toggleSubject(
@@ -341,6 +401,7 @@ const ScheduleList = () => {
                                                                                                                 subject.name
                                                                                                             }
                                                                                                         </h6>
+                                                                                                        {/* Nếu môn học đang được mở rộng, hiển thị danh sách phòng học */}
                                                                                                         {expandedSubject ===
                                                                                                             subject.id && (
                                                                                                             <div>
@@ -366,7 +427,12 @@ const ScheduleList = () => {
                                                                                                                                 key={
                                                                                                                                     classroom.id
                                                                                                                                 }
-                                                                                                                                className="bg-gray-50 p-4 rounded-lg mb-4"
+                                                                                                                                className="bg-gray-50 p-4 rounded-lg mb-4 cursor-pointer hover:bg-gray-200"
+                                                                                                                                onClick={() =>
+                                                                                                                                    handleClassroomClick(
+                                                                                                                                        classroom.id
+                                                                                                                                    )
+                                                                                                                                }
                                                                                                                             >
                                                                                                                                 <p className="text-xl font-bold text-gray-700">
                                                                                                                                     Lớp

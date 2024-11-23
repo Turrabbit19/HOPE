@@ -167,9 +167,14 @@ const ScheduleList = () => {
     };
 
     // Hàm xử lý khi nhấp vào phòng học
-    const handleClassroomClick = (classroomId) => {
+    const handleClassroomClick = (classroomId, subjectId, majorId) => {
         console.log("ID của phòng học:", classroomId);
-        navigate(`details/${classroomId}`);
+        navigate(`details/${classroomId}`, {
+          state: {
+            subjectId: subjectId,
+            majorId: majorId
+          }
+        });
     };
 
     // // Lấy danh sách phòng học
@@ -431,7 +436,9 @@ const ScheduleList = () => {
                                                                                                                                 className="bg-gray-50 p-4 rounded-lg mb-4 cursor-pointer hover:bg-gray-200"
                                                                                                                                 onClick={() =>
                                                                                                                                     handleClassroomClick(
-                                                                                                                                        classroom.id
+                                                                                                                                        classroom.id,
+                                                                                                                                        subject.id,
+                                                                                                                                        major.id
                                                                                                                                     )
                                                                                                                                 }
                                                                                                                             >

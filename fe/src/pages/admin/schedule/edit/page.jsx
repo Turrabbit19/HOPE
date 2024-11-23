@@ -27,12 +27,14 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-const ScheduleEdit = () => {
+const ScheduleAdd = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;
-    const {id} = useParams();
+
+  // Trích xuất các ID cần thiết từ state
+  const { subjectId, majorId } = state || {};
 
   // Các state để lưu trữ dữ liệu từ API
   const [shifts, setShifts] = useState([]);
@@ -56,17 +58,62 @@ const ScheduleEdit = () => {
   const startDate = Form.useWatch("startDate", form);
   const repeatDays = Form.useWatch("repeatDays", form);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isModalVisibleCal, setIsModalVisibleCal] = useState(false);
+  const { id } = useParams();
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const apiHeaders = { Authorization: `Bearer ${token}` };
+        const schedule = await axios.get(
+            `http://localhost:8000/api/admin/schedules/${id}`,
+            { headers: apiHeaders }
+          );
+          const scheduleData = schedule.data.data;
+          scheduleData.days_of_week.map(item => console.log(item));
+          const daysMap = {
+            2: "Thứ 2",
+            3: "Thứ 3",
+            4: "Thứ 4",
+            5: "Thứ 5",
+            6: "Thứ 6",
+            7: "Thứ 7",
+          };
+    
+          const formattedDays = scheduleData.days_of_week.map(
+            (item) => daysMap[item["Thứ"]] || "Không xác định"
+          );
+          let learningMethod;
+          if(scheduleData.link == 'NULL') {
+            learningMethod = 'offline'
+          }else {
+            learningMethod = 'online'
+          }
+        //   handleClassChange()
+          console.log(scheduleData);
+          handleClassChange([id]);
+          form.setFieldsValue({
+            classes: scheduleData.classroom_name,
+            repeatDays: formattedDays,
+            startDate: moment(scheduleData.start_date),
+            endDate: moment(scheduleData.end_date),
+            learningMethod: learningMethod,
+            classDetails: {
+                [id]: {
+                  session: scheduleData.shift_id,
+                  classRoom: scheduleData.room_id
+                },
+              },
+              teacherAssignments: {
+                [id]: scheduleData.teacher_id,
+              },
+          })
+      } catch(e) {
+        console.log(e.message);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
-    // Kiểm tra nếu thiếu thông tin cần thiết
-    debugger;
-    
-
-    console.log("Major ID:", majorId);
-
-    // Hàm để lấy dữ liệu từ API
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -108,7 +155,6 @@ const ScheduleEdit = () => {
         } catch (error) {
           console.error("Error fetching classrooms:", error);
           message.error("Không thể tải dữ liệu classrooms.");
-          setIsModalVisible(true);
         }
 
         // Fetch Teachers
@@ -158,7 +204,7 @@ const ScheduleEdit = () => {
     };
 
     fetchData();
-  }, [courseId, semesterId, majorId, subjectId, navigate]);
+  }, [subjectId, navigate]);
 
   // useEffect để tính toán ngày kết thúc khi startDate hoặc repeatDays thay đổi
   useEffect(() => {
@@ -210,12 +256,10 @@ const ScheduleEdit = () => {
           form.setFieldsValue({ endDate });
           message.success("Ngày kết thúc đã được tính toán tự động!");
         } else {
-          message.error("Không nhận được ngày kết thúc từ API.");
-          setIsModalVisibleCal(true);
+        //   message.error("Không nhận được ngày kết thúc từ API.");
         }
       } catch (error) {
-        setIsModalVisibleCal(true);
-        console.error("Error calculating end date:", error);
+        // console.error("Error calculating end date:", error);
         if (
           error.response &&
           error.response.data &&
@@ -224,12 +268,11 @@ const ScheduleEdit = () => {
           const apiErrors = error.response.data.errors;
           Object.values(apiErrors).forEach((errArray) => {
             errArray.forEach((errMsg) => {
-              message.error(errMsg);
+            //   message.error(errMsg);
             });
           });
         } else {
-          setIsModalVisibleCal(true);
-          message.error("Không thể tính toán ngày kết thúc.");
+        //   message.error("Không thể tính toán ngày kết thúc.");
         }
       } finally {
         setIsCalculatingEndDate(false);
@@ -280,6 +323,7 @@ const ScheduleEdit = () => {
   const handleValuesChange = (changedValues, allValues) => {
     if (changedValues.learningMethod) {
       const updatedDetails = {};
+      debugger
       selectedClasses.forEach((classId) => {
         updatedDetails[classId] = {
           session: classDetails[classId]?.session || null,
@@ -519,15 +563,15 @@ const ScheduleEdit = () => {
             // Lấy token
             const token = localStorage.getItem("token");
             // Gọi API để thêm lịch học
-            const response = await axios.post(
-              `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
-              payload,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
+            // const response = await axios.post(
+            //   `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
+            //   payload,
+            //   {
+            //     headers: {
+            //       Authorization: `Bearer ${token}`,
+            //     },
+            //   }
+            // );
 
             if (response.status === 200 || response.status === 201) {
               message.success("Thêm lịch học thành công!");
@@ -823,7 +867,7 @@ const ScheduleEdit = () => {
                       htmlType="submit"
                       disabled={activeTab === "addTeacher"}
                     >
-                      Tạo mới
+                      Cập nhật
                     </Button>
                   </Space>
                 </Space>
@@ -845,4 +889,4 @@ const ScheduleEdit = () => {
   );
 };
 
-export default ScheduleEdit;
+export default ScheduleAdd;

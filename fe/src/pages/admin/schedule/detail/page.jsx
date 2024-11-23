@@ -20,7 +20,8 @@ const MyCalendar = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const { id } = useParams();
-  const { data, setData } = useState({});
+  const {subjectId, majorId } = useLocation().state || {};
+  console.log(subjectId, majorId);
   const generateEvents = (scheduleData) => {
     const events = [];
     const currentDate = new Date();
@@ -110,7 +111,7 @@ const MyCalendar = () => {
           style={{ height: 500 }}
         />
       </div>
-      <Link to={`edit`}>Chỉnh sửa</Link>
+      <Link to={`edit`} state={{subjectId: subjectId, majorId: majorId}}>Chỉnh sửa</Link>
     </>
   );
 };

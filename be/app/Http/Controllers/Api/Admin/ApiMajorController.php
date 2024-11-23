@@ -100,6 +100,7 @@ class ApiMajorController extends Controller
             'description' => 'required|string',
             'status' => 'boolean',
             'major_id' => 'max:50',
+            'main' => 'max:50',
         ]);
 
         if ($validator->fails()) {

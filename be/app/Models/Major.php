@@ -15,7 +15,8 @@ class Major extends Model
         'name',
         'description',
         'status',
-        'major_id'
+        'major_id',
+        'main'
     ];
     protected $casts = [
         'status' => 'boolean',

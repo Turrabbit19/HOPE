@@ -37,7 +37,7 @@ const Teach = () => {
 
                 setMajors(response.data.data);
             } catch (error) {
-                message.error("Không thể tải dữ liệu chuyên ngành");
+                message.error("Không thể tải dữ liệu ngành");
             }
         };
 
@@ -49,7 +49,7 @@ const Teach = () => {
     //           const response = await instance.get('/admin/main/majors');
     //           setMainMajors(response.data.data);
     //       } catch (error) {
-    //           message.error("Không thể tải dữ liệu chuyên ngành");
+    //           message.error("Không thể tải dữ liệu ngành");
     //       }
     //   };
 
@@ -101,13 +101,15 @@ const Teach = () => {
                     )
                 );
                 notification.success({
-                  message: "Cập nhật chuyên ngành thành công"
+                  message: "Cập nhật ngành thành công"
                 })
             } else {
-              const response = await instance.post('/admin/majors', values);
+                const payload = { ...values, main: 1};
+                console.log(payload);
+              const response = await instance.post('/admin/majors', payload);
                 setMajors([...majors, { id: majors.length + 1, ...response.data.data }]);
                 notification.success({
-                  message: "Thêm mới chuyên ngành thành công"
+                  message: "Thêm mới ngành thành công"
                 })
             }
             handleModalCancel();
@@ -156,7 +158,7 @@ const Teach = () => {
 
                         <div>
                             <Input.Search
-                                placeholder="Tìm kiếm chuyên ngành..."
+                                placeholder="Tìm kiếm ngành..."
                                 onSearch={handleSearch}
                                 onChange={(e) => handleSearch(e.target.value)}
                                 style={{ width: 300 }}
@@ -190,7 +192,7 @@ const Teach = () => {
                                                 src="/assets/svg/share.svg"
                                                 alt=""
                                             />
-                                            Tên chuyên ngành:{" "}
+                                            Tên ngành:{" "}
                                             <p className="text-red-300 uppercase ml-2 font-bold">
                                                 {major.name}
                                             </p>
@@ -207,13 +209,13 @@ const Teach = () => {
                                         <div className="mt-6 flex flex-col gap-8 pb-6">
                                             <div className="flex gap-6">
                                                 <p className="text-[#9E9E9E]">
-                                                    Mã chuyên ngành:
+                                                    Mã ngành:
                                                 </p>
                                                 <p className="font-bold text-[#000]">
                                                     {major.code}
                                                 </p>
                                             </div>
-                                            <div className="flex gap-6">
+                                            {/* <div className="flex gap-6">
                                                 <p className="text-[#9E9E9E]">
                                                     Trạng thái :
                                                 </p>
@@ -227,7 +229,7 @@ const Teach = () => {
                                                         {major.status}
                                                     </span>
                                                 </div>
-                                            </div>
+                                            </div> */}
                                             <div className="flex gap-6">
                                                 <p className="text-[#9E9E9E]">
                                                     Mô tả:
@@ -251,11 +253,11 @@ const Teach = () => {
                                                 src="/assets/svg/setting.svg"
                                                 alt="setting"
                                             />
-                                            Quản lý chuyên ngành
+                                            Quản lý ngành
                                         </Link>
 
                                         <Popconfirm
-                                            title="Xóa chuyên ngành"
+                                            title="Xóa ngành"
                                             onConfirm={() =>
                                                 confirmDelete(major.id)
                                             }
@@ -285,7 +287,7 @@ const Teach = () => {
                     ) : (
                         <div className="col-12 text-center">
                             <p className="text-red-500 font-bold text-lg">
-                                Không tìm thấy chuyên ngành
+                                Không tìm thấy ngành
                             </p>
                         </div>
                     )}
@@ -303,8 +305,8 @@ const Teach = () => {
             <Modal
                 title={
                     editingMajor
-                        ? "Sửa Thông Tin Chuyên Ngành"
-                        : "Thêm Mới Chuyên Ngành"
+                        ? "Sửa Thông Tin Ngành"
+                        : "Thêm Mới Ngành"
                 }
                 open={isEditModalVisible || isAddModalVisible}
                 onCancel={handleModalCancel}
@@ -335,7 +337,7 @@ const Teach = () => {
                                     {
                                         min: 4,
                                         message:
-                                            "Mã chuyên ngành phải có ít nhất 4 ký tự",
+                                            "Mã ngành phải có ít nhất 4 ký tự",
                                     },
                                 ]}
                             >
@@ -353,11 +355,11 @@ const Teach = () => {
                                     {
                                         min: 6,
                                         message:
-                                            "Tên chuyên ngành phải có ít nhất 6 ký tự",
+                                            "Tên ngành phải có ít nhất 6 ký tự",
                                     },
                                 ]}
                             >
-                                <Input placeholder="Tên chuyên ngành" />
+                                <Input placeholder="Tên ngành" />
                             </Form.Item>
                         </div>
 

@@ -50,6 +50,9 @@ const ScheduleAdd = () => {
     const [classDetails, setClassDetails] = useState({}); // Chi tiết cho mỗi lớp
     const [teacherAssignments, setTeacherAssignments] = useState({}); // Phân công giáo viên
 
+    // State để lưu mapping classroom_id => schedule_id
+    const [createdSchedules, setCreatedSchedules] = useState({});
+
     // State để tính toán ngày kết thúc
     const [isCalculatingEndDate, setIsCalculatingEndDate] = useState(false);
 
@@ -278,6 +281,7 @@ const ScheduleAdd = () => {
         if (activeTab === "addTeacher") {
             setActiveTab("configure");
             setTeacherAssignments({});
+            setCreatedSchedules({});
         }
     };
 
@@ -327,8 +331,95 @@ const ScheduleAdd = () => {
         message.success("Phân công giáo viên thành công!");
     };
 
+    // Hàm gọi API để thêm lịch học
+    const addSchedules = async (payload) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.post(
+                `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
+                payload,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log("Add Schedules Response:", response.data); // Log phản hồi
+
+            if (response.status === 201 || response.status === 200) {
+                message.success("Thêm lịch học thành công!");
+                // Extract classroom_id và schedule_id từ phản hồi
+                const schedules = response.data.schedules;
+                const scheduleMap = {};
+                schedules.forEach((schedule) => {
+                    scheduleMap[String(schedule.classroom_id)] =
+                        schedule.schedule_id; // Chuyển classroom_id thành string để tránh lỗi type
+                });
+                console.log("Schedule Map:", scheduleMap); // Log scheduleMap
+                setCreatedSchedules(scheduleMap);
+                return scheduleMap;
+            } else {
+                message.error("Thêm lịch học thất bại!");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error adding schedule:", error);
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.error
+            ) {
+                message.error(
+                    `Thêm lịch học thất bại: ${error.response.data.error}`
+                );
+            } else {
+                message.error("Thêm lịch học thất bại!");
+            }
+            return null;
+        }
+    };
+
+    // Hàm gọi API để phân công giáo viên
+    const assignTeachers = async (payload) => {
+        console.log("Assign Teachers Payload:", payload); // Log payload
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.post(
+                `http://localhost:8000/api/admin/schedules/assign`,
+                payload,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.status === 200 || response.status === 201) {
+                message.success("Phân công giáo viên thành công!");
+                // Điều hướng đến danh sách lịch học
+                navigate("/admin/list-schedule");
+            } else {
+                message.error("Phân công giáo viên thất bại!");
+            }
+        } catch (error) {
+            console.error("Error assigning teachers:", error);
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.error
+            ) {
+                message.error(
+                    `Phân công giáo viên thất bại: ${error.response.data.error}`
+                );
+            } else {
+                message.error("Phân công giáo viên thất bại!");
+            }
+        }
+    };
+
     // Xử lý khi submit cấu hình lớp học
-    const handleFinish = (values) => {
+    const handleFinish = async (values) => {
         console.log("Form values: ", values);
         // Lưu các lớp đã chọn
         setSelectedClasses(values.classes);
@@ -342,11 +433,47 @@ const ScheduleAdd = () => {
             };
         });
         setClassDetails(details);
-        // Reset phân công giáo viên
-        setTeacherAssignments({});
-        // Chuyển sang tab phân công giáo viên
-        setActiveTab("addTeacher");
-        message.success("Cấu hình đã được lưu thành công!");
+
+        // Chuẩn bị payload cho API addSchedules
+        const payload = {
+            classrooms: values.classes.map((classId) => ({
+                id: classId,
+                shift_id: details[classId].session,
+                room_id: details[classId].classRoom,
+                link:
+                    learningMethod === "online"
+                        ? details[classId].classLink
+                        : null,
+                start_date: values.startDate
+                    ? values.startDate.format("YYYY-MM-DD")
+                    : null,
+                end_date: values.endDate
+                    ? values.endDate.format("YYYY-MM-DD")
+                    : null,
+                days_of_week: values.repeatDays.map((day) => {
+                    const dayMapping = {
+                        "Thứ 2": 1,
+                        "Thứ 3": 2,
+                        "Thứ 4": 3,
+                        "Thứ 5": 4,
+                        "Thứ 6": 5,
+                        "Thứ 7": 6,
+                    };
+                    return dayMapping[day];
+                }),
+            })),
+        };
+
+        // Gọi API để thêm lịch học
+        const scheduleMap = await addSchedules(payload);
+
+        if (scheduleMap) {
+            // Reset phân công giáo viên
+            setTeacherAssignments({});
+            // Chuyển sang tab phân công giáo viên
+            setActiveTab("addTeacher");
+            message.success("Cấu hình đã được lưu thành công!");
+        }
     };
 
     // Hàm render các trường session và classRoom/classLink cho mỗi lớp
@@ -461,116 +588,16 @@ const ScheduleAdd = () => {
 
                     // Chuẩn bị payload
                     const payload = {
-                        start_date: form.getFieldValue("startDate")
-                            ? form
-                                  .getFieldValue("startDate")
-                                  .format("YYYY-MM-DD") // Định dạng "YYYY-MM-DD"
-                            : null,
-                        end_date: form.getFieldValue("endDate")
-                            ? form.getFieldValue("endDate").format("YYYY-MM-DD") // Định dạng "YYYY-MM-DD"
-                            : null,
-                        days_of_week: form
-                            .getFieldValue("repeatDays")
-                            .map((day) => {
-                                const dayMapping = {
-                                    "Thứ 2": 1,
-                                    "Thứ 3": 2,
-                                    "Thứ 4": 3,
-                                    "Thứ 5": 4,
-                                    "Thứ 6": 5,
-                                    "Thứ 7": 6,
-                                };
-                                return dayMapping[day];
-                            }),
-                        learning_method: form.getFieldValue("learningMethod"),
-                        classrooms: selectedClasses
-                            .map((classId) => {
-                                const selectedRoom = rooms.find(
-                                    (room) =>
-                                        room.id ===
-                                        classDetails[classId]?.classRoom
-                                );
-                                if (
-                                    form.getFieldValue("learningMethod") ===
-                                        "offline" &&
-                                    !selectedRoom
-                                ) {
-                                    console.error(
-                                        `Phòng học không hợp lệ cho lớp: ${classId}, room_id: ${classDetails[classId]?.classRoom}`
-                                    );
-                                    message.error(
-                                        `Phòng học không hợp lệ. Vui lòng chọn lại cho lớp ${classId}.`
-                                    );
-                                    return null;
-                                }
-                                return {
-                                    id: classId,
-                                    shift_id: classDetails[classId]?.session,
-                                    room_id:
-                                        form.getFieldValue("learningMethod") ===
-                                        "offline"
-                                            ? selectedRoom.id
-                                            : null, // Lấy room_id nếu offline
-                                    link:
-                                        form.getFieldValue("learningMethod") ===
-                                        "online"
-                                            ? classDetails[classId]?.classLink
-                                            : null,
-                                };
-                            })
-                            .filter((item) => item !== null), // Loại bỏ các mục null
-                        teachers: selectedClasses.map((classId) => ({
-                            class_id: classId,
+                        schedules: selectedClasses.map((classId) => ({
                             teacher_id: teacherAssignments[classId],
+                            schedule_id: createdSchedules[String(classId)], // Đảm bảo classId là string
                         })),
                     };
 
-                    // Kiểm tra xem start_date và end_date đã được đặt chưa
-                    if (!payload.start_date || !payload.end_date) {
-                        message.error(
-                            "Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!"
-                        );
-                        return;
-                    }
+                    console.log("Assign Teachers Payload:", payload); // Log payload
 
-                    try {
-                        // Lấy token
-                        const token = localStorage.getItem("token");
-                        // Gọi API để thêm lịch học
-                        const response = await axios.post(
-                            `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
-                            payload,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${token}`,
-                                },
-                            }
-                        );
-
-                        if (
-                            response.status === 200 ||
-                            response.status === 201
-                        ) {
-                            message.success("Thêm lịch học thành công!");
-                            // Điều hướng đến danh sách lịch học
-                            navigate("/admin/list-schedule");
-                        } else {
-                            message.error("Thêm lịch học thất bại!");
-                        }
-                    } catch (error) {
-                        console.error("Error adding schedule:", error);
-                        if (
-                            error.response &&
-                            error.response.data &&
-                            error.response.data.error
-                        ) {
-                            message.error(
-                                `Thêm lịch học thất bại: ${error.response.data.error}`
-                            );
-                        } else {
-                            message.error("Thêm lịch học thất bại!");
-                        }
-                    }
+                    // Gọi API để phân công giáo viên
+                    await assignTeachers(payload);
                 }}
             >
                 {selectedClasses.map((classId) => {
@@ -592,7 +619,7 @@ const ScheduleAdd = () => {
 
                     return (
                         <Card
-                            key={classId} // Sử dụng classId làm key duy nhất
+                            key={classId}
                             title={`Phân Công Giáo Viên Cho Lớp ${className}`}
                             style={{ marginBottom: 16 }}
                         >
@@ -777,13 +804,18 @@ const ScheduleAdd = () => {
                                                             getFieldValue(
                                                                 "startDate"
                                                             )
+                                                        ) ||
+                                                        value.isSame(
+                                                            getFieldValue(
+                                                                "startDate"
+                                                            )
                                                         )
                                                     ) {
                                                         return Promise.resolve();
                                                     }
                                                     return Promise.reject(
                                                         new Error(
-                                                            "Ngày kết thúc phải sau ngày bắt đầu!"
+                                                            "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!"
                                                         )
                                                     );
                                                 },

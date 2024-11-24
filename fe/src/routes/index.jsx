@@ -55,6 +55,8 @@ import AdminManager from "../pages/admin/userManager/admin";
 import UserAdd from "../pages/admin/userManager/add/page";
 import ListUser from "../pages/admin/userManager/list/page";
 import UserEdit from "../pages/admin/userManager/edit/page";
+import Curriculum from "../pages/admin/curriculum/list/page";
+import CurriculumDetail from "../pages/admin/curriculum/detail/page";
 
 const Router = createBrowserRouter([
     {
@@ -440,6 +442,25 @@ const Router = createBrowserRouter([
                 element: (
                     <>
                         <ClassRoom />
+                    </>
+                ),
+            },
+
+            // Curriculum
+            {
+                path: "list-curriculum",
+                element: (
+                    <>
+                        <Curriculum />
+                    </>
+                ),
+            },
+
+            {
+                path: "list-curriculum/detail/:id",
+                element: (
+                    <>
+                        <CurriculumDetail />
                     </>
                 ),
             },

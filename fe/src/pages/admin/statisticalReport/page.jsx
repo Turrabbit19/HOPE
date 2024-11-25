@@ -23,7 +23,7 @@ ChartJS.register(
 
 const StatisticalReport = () => {
   const [chartData, setChartData] = useState(null);
-  const [links, setLinks] = useState([]); // Store the links
+  const [courseData, setCourseData] = useState([]); // Store the structured course data
   const navigate = useNavigate();  // Initialize useNavigate hook
 
   useEffect(() => {
@@ -31,25 +31,28 @@ const StatisticalReport = () => {
       try {
         const { data } = await instance.get(`admin/statistics/studentByCourse`);
 
-        const courseIds = Object.keys(data);
-        const courseNames = courseIds.map(id => data[id].course_name);
-        const studentCounts = courseIds.map(id => data[id].student_count);
+        // Create structured course data
+        const courses = Object.keys(data).map((courseId) => ({
+          course_id: courseId,
+          course_name: data[courseId].course_name,
+          student_count: data[courseId].student_count,
+        }));
+
+        // Set chart data
+        setCourseData(courses);
 
         setChartData({
-          labels: courseNames,
+          labels: courses.map((course) => course.course_name), // Use course_name as labels
           datasets: [
             {
               label: "Tổng số học sinh đang học theo khóa",
-              data: studentCounts,
+              data: courses.map((course) => course.student_count), // Use student_count for data
               backgroundColor: "rgba(75, 192, 192, 0.2)",
               borderColor: "rgba(75, 192, 192, 1)",
               borderWidth: 1,
             },
           ],
         });
-
-        const generatedLinks = courseIds.map((id) => `/admin/statistical-report/${id}`);
-        setLinks(generatedLinks);
 
       } catch (error) {
         console.log(error.message);
@@ -64,8 +67,8 @@ const StatisticalReport = () => {
 
   const handleChartClick = (event, elements) => {
     if (elements.length > 0) {
-      const index = elements[0].index;
-      const courseId = Object.keys(chartData.datasets[0].data)[index];
+      const index = elements[0].index; // Get the index of the clicked element
+      const courseId = courseData[index].course_id; // Get the course_id from the structured data
 
       navigate(`/admin/statistical-report/${courseId}/major`);
     }

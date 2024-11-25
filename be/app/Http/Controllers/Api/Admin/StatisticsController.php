@@ -37,18 +37,31 @@ class StatisticsController extends Controller
     public function getStudentCountByMajorInCourse(string $id)
     {
         try {
-            $studentCounts = Student::where('course_id', $id)
-                ->join('student_majors', 'students.id', '=', 'student_majors.student_id')
-                ->join('majors', 'student_majors.major_id', '=', 'majors.id')
-                ->where('majors.main', 1)
-                ->select('majors.id as major_id', 'majors.name as major_name', \DB::raw('count(students.id) as student_count'))
-                ->groupBy('majors.id', 'majors.name')
+            $majorsWithCounts = Major::whereHas('students', function ($query) use ($id) {
+                $query->where('course_id', $id);
+            })
+                ->withCount([
+                    'students' => function ($query) use ($id) {
+                        $query->where('course_id', $id);
+                    }
+                ])
+                ->where('main', 1)
                 ->get();
 
-            return response()->json($studentCounts);
+            $result = $majorsWithCounts->map(function ($major) {
+                return [
+                    'major_id' => $major->id,
+                    'major_name' => $major->name,
+                    'student_count' => $major->students_count,
+                ];
+            });
+
+            return response()->json($result);
 
         } catch (Exception $e) {
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+
+
 }

@@ -12,6 +12,7 @@ import {
     BookFilled,
     ReadOutlined,
     BellOutlined,
+    AreaChartOutlined
 } from "@ant-design/icons";
 
 const AsideAdmin = () => {
@@ -107,6 +108,11 @@ const AsideAdmin = () => {
             key: "sub3",
             icon: <BellOutlined />,
             label: <Link to="/admin/list-sections">Quản lý thông báo</Link>,
+        },
+        {
+            key: "subô",
+            icon: <AreaChartOutlined />,
+            label: <Link to="/admin/statistical-report">Thống kê</Link>,
         },
     ];
 

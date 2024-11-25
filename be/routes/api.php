@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
 
+use App\Http\Controllers\api\admin\StatisticsController;
 use App\Http\Controllers\Api\Auth\ApiAuthController;
 
 use App\Http\Controllers\Api\Client\ApiClientController;
@@ -110,6 +111,8 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
         Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
 
+        Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
+        Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
     });
 
     Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')

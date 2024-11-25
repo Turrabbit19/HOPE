@@ -58,6 +58,8 @@ import AdminManager from "../pages/admin/userManager/admin";
 import UserAdd from "../pages/admin/userManager/add/page";
 import ListUser from "../pages/admin/userManager/list/page";
 import UserEdit from "../pages/admin/userManager/edit/page";
+import StatisticalReport from "../pages/admin/statisticalReport/page";
+import StatisticalMajorReport from "../pages/admin/statisticalReport/major/page";
 
 const Router = createBrowserRouter([
     {
@@ -286,6 +288,16 @@ const Router = createBrowserRouter([
                     },
                 ],
             },
+            {
+                path: "statistical-report",
+                element: <StatisticalReport />,
+            },
+
+            {
+                path: "statistical-report/:id/major",
+                element: <StatisticalMajorReport />,
+            },
+
             {
                 path: "list-schedule",
                 element: <ScheduleList />,

@@ -373,25 +373,6 @@ const ListCourse = () => {
           >
             <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item
-            label="Quản lý học tập"
-            name="plan_id"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng không để trống",
-              },
-            ]}
-          >
-            {/* <Select
-              placeholder="Chọn ngành học"
-              options={plans.map((plan) => ({
-                label: plan.name,
-                value: plan.id,
-              }))}
-            /> */}
-          </Form.Item>
-
           <Form.Item>
             <Space>
               <Button onClick={handleModalCancel}>Hủy</Button>

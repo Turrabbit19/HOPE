@@ -113,6 +113,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
+        Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
     });
 
     Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')

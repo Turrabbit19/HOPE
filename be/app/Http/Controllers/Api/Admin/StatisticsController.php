@@ -63,5 +63,43 @@ class StatisticsController extends Controller
         }
     }
 
+    public function getStudentandTeacherCountByMajorInCourse()
+    {
+        try {
+            $currentDate = now();
+
+            $majorsWithCounts = Major::whereHas('students', function ($query) use ($currentDate) {
+                $query->join('courses', 'courses.id', '=', 'students.course_id')
+                      ->whereDate('courses.start_date', '<=', $currentDate)
+                      ->whereDate('courses.end_date', '>=', $currentDate);
+            })
+            ->withCount([
+                'students' => function ($query) use ($currentDate) {
+                    $query->join('courses', 'courses.id', '=', 'students.course_id')
+                          ->whereDate('courses.start_date', '<=', $currentDate)
+                          ->whereDate('courses.end_date', '>=', $currentDate);
+                },
+                'teachers'
+            ])
+            ->get();
+
+            $result = $majorsWithCounts->map(function ($major) {
+                return [
+                    'major_id' => $major->id,
+                    'major_name' => $major->name,
+                    'student_count' => $major->students_count,
+                    'teacher_count' => $major->teachers_count,
+                ];
+            });
+
+            return response()->json($result);
+
+        } catch (Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+
+    }
+
+
 
 }

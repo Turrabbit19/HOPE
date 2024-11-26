@@ -80,6 +80,19 @@ const AsideAdmin = () => {
         },
     ];
 
+    const statistical_report = [
+        {
+            name: "Sinh viên - Khóa học",
+            link: "/admin/statistical-report",
+            icon: <UserOutlined />,
+        },
+        {
+            name: "Sinh viên - Giảng viên",
+            link: "/admin/statistical-report/teacher-student",
+            icon: <TeamOutlined />,
+        },
+    ];
+
     const { Sider } = Layout;
 
     const items2 = [
@@ -113,6 +126,11 @@ const AsideAdmin = () => {
             key: "subô",
             icon: <AreaChartOutlined />,
             label: <Link to="/admin/statistical-report">Thống kê</Link>,
+            children: statistical_report.map((item, index) => ({
+                key: `sub2-${index + 1}`,
+                icon: item.icon,
+                label: <Link to={item.link}>{item.name}</Link>,
+            })),
         },
     ];
 

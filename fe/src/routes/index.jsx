@@ -60,6 +60,7 @@ import ListUser from "../pages/admin/userManager/list/page";
 import UserEdit from "../pages/admin/userManager/edit/page";
 import StatisticalReport from "../pages/admin/statisticalReport/page";
 import StatisticalMajorReport from "../pages/admin/statisticalReport/major/page";
+import StatisticalTeacherStudent from "../pages/admin/statisticalReport/teacher/page";
 
 const Router = createBrowserRouter([
     {
@@ -291,6 +292,11 @@ const Router = createBrowserRouter([
             {
                 path: "statistical-report",
                 element: <StatisticalReport />,
+            },
+
+            {
+                path: "statistical-report/teacher-student",
+                element: <StatisticalTeacherStudent />,
             },
 
             {

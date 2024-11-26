@@ -8,14 +8,13 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement, // Import for Pie chart
+  ArcElement,
 } from "chart.js";
-import { LeftCircleOutlined } from "@ant-design/icons"; // Correctly import LeftCircleOutlined
+import { LeftCircleOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useParams } from "react-router-dom";
 import instance from "../../../../config/axios";
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -23,13 +22,13 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement // Register ArcElement for Pie chart
+  ArcElement
 );
 
 const StatisticalMajorReport = () => {
   const [data, setData] = useState([]);
-  const [chartType, setChartType] = useState("bar"); // Track chart type (bar or pie)
-  const { id } = useParams(); // Get the course ID from URL parameters
+  const [chartType, setChartType] = useState("bar");
+  const { id } = useParams();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,23 +36,22 @@ const StatisticalMajorReport = () => {
         const response = await instance.get(
           `admin/statistics/${id}/studentByMajor`
         );
-        console.log(response.data); // Log data for debugging
+        console.log(response.data);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-    fetchData(); // Call the fetch function
-  }, [id]); // Re-fetch data when the `id` changes
+    fetchData();
+  }, [id]);
 
   const chartData = {
-    labels: data.map((item) => item.major_name), // Names of the majors
+    labels: data.map((item) => item.major_name),
     datasets: [
       {
-        label: "Số lượng sinh viên", // Label for the chart
-        data: data.map((item) => item.student_count), // Student count for each major
-        // For Bar chart, use a single color
-        backgroundColor: "rgba(75, 192, 192, 0.2)", // Single color for bar chart
+        label: "Số lượng sinh viên",
+        data: data.map((item) => item.student_count),
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
       },

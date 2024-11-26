@@ -1,0 +1,38 @@
+.ant-picker-calendar th {
+    font-weight: bold;
+}
+
+.ant-picker-calendar th:nth-child(1)::before {
+    content: "Thứ 2";
+    font-weight: 700;
+}
+.ant-picker-calendar th:nth-child(2)::before {
+    content: "Thứ 3";
+}
+.ant-picker-calendar th:nth-child(3)::before {
+    content: "Thứ 4";
+}
+.ant-picker-calendar th:nth-child(4)::before {
+    content: "Thứ 5";
+}
+.ant-picker-calendar th:nth-child(5)::before {
+    content: "Thứ 6";
+}
+.ant-picker-calendar th:nth-child(6)::before {
+    content: "Thứ 7";
+}
+.ant-picker-calendar th:nth-child(7)::before {
+    content: "Chủ Nhật";
+}
+
+/* Ẩn nội dung gốc */
+.ant-picker-calendar th > div {
+    visibility: hidden; /* Hoàn toàn ẩn nội dung mặc định */
+}
+
+/* Hiển thị nội dung tùy chỉnh */
+.ant-picker-calendar th::before {
+    display: block;
+    text-align: center;
+    font-weight: bold;
+}

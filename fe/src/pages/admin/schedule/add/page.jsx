@@ -308,7 +308,6 @@ const ScheduleAdd = () => {
         setActiveTab(key);
     };
 
-    // Xử lý khi chọn giáo viên cho một lớp
     const handleTeacherSelect = (classId, teacherId) => {
         const shiftId = classDetails[classId]?.session;
         if (!shiftId) {
@@ -345,7 +344,7 @@ const ScheduleAdd = () => {
                 }
             );
 
-            console.log("Add Schedules Response:", response.data); // Log phản hồi
+            console.log("Phản hồi từ Add Schedules:", response.data); // Log phản hồi
 
             if (response.status === 201 || response.status === 200) {
                 message.success("Thêm lịch học thành công!");
@@ -353,10 +352,10 @@ const ScheduleAdd = () => {
                 const schedules = response.data.schedules;
                 const scheduleMap = {};
                 schedules.forEach((schedule) => {
-                    scheduleMap[String(schedule.classroom_id)] =
-                        schedule.schedule_id; // Chuyển classroom_id thành string để tránh lỗi type
+                    scheduleMap[String(schedule.data.classroom_id)] =
+                        schedule.data.schedule_id;
                 });
-                console.log("Schedule Map:", scheduleMap); // Log scheduleMap
+                console.log("Bản đồ Schedule:", scheduleMap); // Log scheduleMap
                 setCreatedSchedules(scheduleMap);
                 return scheduleMap;
             } else {
@@ -565,7 +564,6 @@ const ScheduleAdd = () => {
         });
     };
 
-    // Hàm render form phân công giáo viên
     const renderTeacherAssignment = () => {
         if (selectedClasses.length === 0) {
             return <p>Vui lòng cấu hình lớp học trước khi thêm giáo viên.</p>;
@@ -590,7 +588,7 @@ const ScheduleAdd = () => {
                     const payload = {
                         schedules: selectedClasses.map((classId) => ({
                             teacher_id: teacherAssignments[classId],
-                            schedule_id: createdSchedules[String(classId)], // Đảm bảo classId là string
+                            schedule_id: createdSchedules[String(classId)], // Đảm bảo classId là string và có schedule_id
                         })),
                     };
 

@@ -325,6 +325,7 @@ class ApiScheduleController extends Controller
     
                 $scheduleResponses[] = [
                     'data' => [
+                        'schedule_id' => $schedule->id,
                         'subject_name' => $schedule->subject->name,
                         'classroom_id' => $schedule->classroom_id,
                         'shift_name' => $schedule->shift->name,

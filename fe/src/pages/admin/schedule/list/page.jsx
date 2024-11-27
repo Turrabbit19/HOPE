@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Select, Space } from "antd";
+import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import moment from "moment";
@@ -10,9 +10,9 @@ const ScheduleList = () => {
   const [expandedSemester, setExpandedSemester] = useState(null);
   const [expandedMajor, setExpandedMajor] = useState(null);
   const [expandedSubject, setExpandedSubject] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [semestersByCourse, setSemestersByCourse] = useState({});
-  const [majorsByCourse, setMajorsByCourse] = useState({});
+  const [semesters, setSemesters] = useState([]);
+  const [coursesBySemester, setCoursesBySemester] = useState({});
+  const [majorsBySemester, setMajorsBySemester] = useState({});
   const [subjectsByMajor, setSubjectsByMajor] = useState({});
   const [classroomsBySubject, setClassroomsBySubject] = useState({});
   const [loading, setLoading] = useState(false);
@@ -22,52 +22,57 @@ const ScheduleList = () => {
 
   // Lấy danh sách các khóa học khi component được mount
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchSemesters = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await instance.get("admin/courses");
-        setCourses(response.data.data);
-        console.log("Courses data:", response.data.data);
+        const response = await instance.get("admin/all/semesters");
+        setSemesters(response.data.data);
+        console.log("Semesters data:", response.data.data);
       } catch (err) {
-        setError("Không thể lấy dữ liệu khóa học.");
+        setError("Không thể lấy dữ liệu kỳ học.");
       } finally {
         setLoading(false);
       }
     };
-    fetchCourses();
+    fetchSemesters();
   }, []);
 
-  const fetchSemestersForCourse = async (courseId) => {
+  // Lấy danh sách kỳ học cho một khóa học cụ thể
+  const fetchCoursesForSemester = async (semesterId) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await instance.get(`admin/course/${courseId}/semesters`);
-      console.log(`Semesters for course ${courseId}:`, response.data.semesters);
-      setSemestersByCourse((prev) => ({
+      const response = await instance.get(
+        `admin/semester/${semesterId}/courses`
+      );
+      console.log(`Courses for semester ${semesterId}:`, response.data.courses);
+      setCoursesBySemester((prev) => ({
         ...prev,
-        [courseId]: response.data.semesters || [],
+        [semesterId]: response.data.courses || [],
       }));
     } catch (err) {
-      setError("Không thể lấy dữ liệu kỳ học cho khóa học này.");
+      setError("Không thể lấy dữ liệu khóa học cho kỳ học này.");
     } finally {
       setLoading(false);
     }
   };
 
   // Lấy danh sách ngành học cho một khóa học cụ thể
-  const fetchMajorsForCourse = async (courseId) => {
+  const fetchMajorsForSemester = async (semesterId, courseId) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await instance.get(`admin/course/${courseId}/majors`);
-      console.log("Majors data:", response.data.majors);
-      setMajorsByCourse((prev) => ({
+      const response = await instance.get(
+        `admin/semester/${semesterId}/${courseId}/majors`
+      );
+      console.log("Majors data:", response.data.majors); // Kiểm tra dữ liệu majors
+      setMajorsBySemester((prev) => ({
         ...prev,
-        [courseId]: response.data.majors || [],
+        [`${semesterId}_${courseId}`]: response.data.majors || [],
       }));
     } catch (err) {
-      setError("Không thể lấy dữ liệu ngành học cho khóa học này.");
+      setError("Không thể lấy dữ liệu ngành học cho kỳ học này.");
     } finally {
       setLoading(false);
     }
@@ -114,49 +119,73 @@ const ScheduleList = () => {
   };
 
   // Xử lý mở rộng/tắt mở rộng cho từng khóa học, kỳ học, ngành học và môn học
-  const toggleCourse = (courseId) => {
-    setExpandedCourse(expandedCourse === courseId ? null : courseId);
-    setExpandedSemester(null);
+  const toggleSemester = (semesterId) => {
+    setExpandedSemester((prev) => {
+      const newSemester = prev === semesterId ? null : semesterId;
+
+      // Chỉ gọi API nếu không có khóa học cho kỳ học này
+      if (newSemester && !coursesBySemester[semesterId]) {
+        fetchCoursesForSemester(newSemester);
+      }
+
+      return newSemester;
+    });
+    // Reset các trạng thái con khi thay đổi kỳ học
+    setExpandedCourse(null);
     setExpandedMajor(null);
     setExpandedSubject(null);
-    if (expandedCourse !== courseId) {
-      fetchSemestersForCourse(courseId);
-    }
   };
 
-  const toggleSemester = (courseId, semesterId) => {
-    setExpandedSemester(expandedSemester === semesterId ? null : semesterId);
+  const toggleCourse = (semesterId, courseId) => {
+    setExpandedCourse((prev) => {
+      const newCourse = prev === courseId ? null : courseId;
+
+      if (newCourse && !majorsBySemester[`${semesterId}_${courseId}`]) {
+        fetchMajorsForSemester(semesterId, newCourse); // Gọi API nếu chưa có dữ liệu
+      }
+
+      return newCourse;
+    });
+
     setExpandedMajor(null);
     setExpandedSubject(null);
-    if (expandedSemester !== semesterId) {
-      fetchMajorsForCourse(courseId);
-    }
   };
 
-  const toggleMajor = (courseId, semesterId, majorId) => {
-    setExpandedMajor(expandedMajor === majorId ? null : majorId);
+  const toggleMajor = (semesterId, courseId, majorId) => {
+    setExpandedMajor((prev) => {
+      const newMajor = prev === majorId ? null : majorId;
+
+      if (
+        newMajor &&
+        !subjectsByMajor[`${semesterId}_${courseId}_${majorId}`]
+      ) {
+        fetchSubjectsForMajor(semesterId, courseId, newMajor);
+      }
+
+      return newMajor;
+    });
+
+    // Reset môn học khi thay đổi ngành học
     setExpandedSubject(null);
-    if (expandedMajor !== majorId) {
-      fetchSubjectsForMajor(courseId, semesterId, majorId);
-    }
   };
 
   const toggleSubject = (subjectId) => {
-    setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
-    if (expandedSubject !== subjectId) {
-      fetchClassroomsForSubject(subjectId);
-    }
+    setExpandedSubject((prev) => {
+      const newSubject = prev === subjectId ? null : subjectId;
+
+      // Kiểm tra nếu chưa có phòng học cho môn học này, nếu có thì gọi API
+      if (newSubject && !classroomsBySubject[subjectId]) {
+        fetchClassroomsForSubject(newSubject);
+      }
+
+      return newSubject;
+    });
   };
 
   // Hàm xử lý khi nhấp vào phòng học
-  const handleClassroomClick = (classroomId, subjectId, majorId) => {
+  const handleClassroomClick = (classroomId) => {
     console.log("ID của phòng học:", classroomId);
-    navigate(`details/${classroomId}`, {
-      state: {
-        subjectId: subjectId,
-        majorId: majorId,
-      },
-    });
+    navigate(`details/${classroomId}`);
   };
 
   // // Lấy danh sách phòng học
@@ -213,11 +242,11 @@ const ScheduleList = () => {
 
       <div className="space-y-8">
         {/* Kiểm tra nếu có khóa học */}
-        {courses.length > 0 ? (
-          courses.map((course) => {
+        {semesters.length > 0 ? (
+          semesters.map((semester) => {
             // Xác định màu sắc cho trạng thái của khóa học
             let statusColor = "";
-            switch (course.status) {
+            switch (semester.status) {
               case "Đang diễn ra":
                 statusColor = "text-green-600";
                 break;
@@ -233,17 +262,17 @@ const ScheduleList = () => {
 
             return (
               <div
-                key={course.id}
+                key={semester.id}
                 className="p-8 bg-white rounded-lg shadow-lg space-y-6"
               >
                 {/* Tiêu đề khóa học với khả năng mở rộng */}
                 <div
-                  onClick={() => toggleCourse(course.id)}
+                  onClick={() => toggleSemester(semester.id)}
                   className="cursor-pointer space-y-2"
                 >
                   <h3 className="text-4xl mb-3 font-bold text-blue-600 flex items-center justify-between">
-                    {course.name}
-                    {expandedCourse === course.id ? (
+                    {semester.name}
+                    {expandedSemester === semester.id ? (
                       <DownOutlined className="ml-2 text-2xl" />
                     ) : (
                       <RightOutlined className="ml-2 text-2xl" />
@@ -252,43 +281,41 @@ const ScheduleList = () => {
                   <div className="text-xl text-gray-700">
                     <p className="mb-2">
                       <span className="font-semibold">Ngày bắt đầu:</span>{" "}
-                      {moment(course.start_date).format("DD/MM/YYYY")}
+                      {moment(semester.start_date).format("DD/MM/YYYY")}
                     </p>
                     <p className="mb-2">
                       <span className="font-semibold">Ngày kết thúc:</span>{" "}
-                      {moment(course.end_date).format("DD/MM/YYYY")}
+                      {moment(semester.end_date).format("DD/MM/YYYY")}
                     </p>
                     <p className={`text-xl text-gray-700`}>
                       Trạng thái:{" "}
                       <span className={`text-xl ${statusColor}`}>
-                        {course.status}
+                        {semester.status}
                       </span>
                     </p>
                   </div>
                 </div>
 
                 {/* Nếu khóa học đang được mở rộng, hiển thị các kỳ học và ngành học */}
-                {expandedCourse === course.id && (
+                {expandedSemester === semester.id && (
                   <div className="mt-6 space-y-6">
                     {/* Kiểm tra nếu có kỳ học */}
-                    {semestersByCourse[course.id] &&
-                    semestersByCourse[course.id].length > 0 ? (
-                      semestersByCourse[course.id].map((semester) => (
+                    {coursesBySemester[semester.id] &&
+                    coursesBySemester[semester.id].length > 0 ? (
+                      coursesBySemester[semester.id].map((course) => (
                         <div
-                          key={semester.id}
+                          key={course.id}
                           className="bg-gray-50 rounded-lg p-6"
                         >
                           {/* Tiêu đề kỳ học với khả năng mở rộng */}
                           <div
-                            onClick={() =>
-                              toggleSemester(course.id, semester.id)
-                            }
+                            onClick={() => toggleCourse(semester.id, course.id)}
                             className="cursor-pointer flex items-center justify-between"
                           >
                             <h4 className="text-3xl font-semibold text-blue-500">
-                              {semester.name}
+                              Kì {course.order}: {course.course_name}
                             </h4>
-                            {expandedSemester === semester.id ? (
+                            {expandedCourse === course.id ? (
                               <DownOutlined className="ml-2 text-2xl" />
                             ) : (
                               <RightOutlined className="ml-2 text-2xl" />
@@ -296,12 +323,17 @@ const ScheduleList = () => {
                           </div>
 
                           {/* Nếu kỳ học đang được mở rộng, hiển thị các ngành học */}
-                          {expandedSemester === semester.id && (
+                          {expandedCourse === course.id && (
                             <div className="mt-4 space-y-4">
                               {/* Kiểm tra nếu có ngành học */}
-                              {majorsByCourse[course.id] &&
-                              majorsByCourse[course.id].length > 0 ? (
-                                majorsByCourse[course.id].map((major) => (
+                              {majorsBySemester[
+                                `${semester.id}_${course.id}`
+                              ] &&
+                              majorsBySemester[`${semester.id}_${course.id}`]
+                                .length > 0 ? (
+                                majorsBySemester[
+                                  `${semester.id}_${course.id}`
+                                ].map((major) => (
                                   <div
                                     key={major.id}
                                     className="bg-white rounded-lg p-6 shadow"
@@ -365,9 +397,7 @@ const ScheduleList = () => {
                                                         className="bg-gray-50 p-4 rounded-lg mb-4 cursor-pointer hover:bg-gray-200"
                                                         onClick={() =>
                                                           handleClassroomClick(
-                                                            classroom.id,
-                                                            subject.id,
-                                                            major.id
+                                                            classroom.id
                                                           )
                                                         }
                                                       >
@@ -416,8 +446,6 @@ const ScheduleList = () => {
                                                         semesterId: semester.id,
                                                         majorId: major.id,
                                                         subjectId: subject.id,
-                                                        subjectName:
-                                                          subject.name,
                                                       }}
                                                     >
                                                       Tạo lịch học mới

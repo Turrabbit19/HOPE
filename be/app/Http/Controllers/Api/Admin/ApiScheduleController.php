@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Classroom;
 use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\MajorSubject;
@@ -25,8 +26,9 @@ class ApiScheduleController extends Controller
 
             $data = $semesterOrder->map(function ($so) {
                 return [
+                    'id' => $so->course->id,
+                    'course_name' => $so->course->name,
                     'order' => $so->order,
-                    'course' => $so->course->name
                 ];
             });
 
@@ -38,18 +40,21 @@ class ApiScheduleController extends Controller
         }
     }
 
-    public function getMajorsByCourse($courseId)
+    public function getMajorsByCourse($semesterId, $courseId)
     {
         try {
+            $order = CourseSemester::where('course_id', $courseId)
+                    ->where('semester_id', $semesterId)->value('order');
+
             $majors = Major::whereHas('students.course', fn($query) => $query->where('id', $courseId))
-            ->withCount('students')
-            ->get();        
+                    ->whereHas('subjects', fn($query) => $query->where('subjects.order', $order))
+                    ->withCount('students')
+                    ->get();        
     
             $data = $majors->map(function ($major) {
                 return [
                     'id' => $major->id,
                     'name' => $major->name,
-                    'credit' => $major->credit,
                     'student_count' => $major->students_count,
                 ];
             });
@@ -242,16 +247,15 @@ class ApiScheduleController extends Controller
     public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
     {
         $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'days_of_week' => 'required|array',
-            'days_of_week.*' => 'integer',
-    
             'classrooms' => 'required|array',
             'classrooms.*.id' => 'required|exists:classrooms,id',
             'classrooms.*.shift_id' => 'required|exists:shifts,id',
             'classrooms.*.room_id' => 'nullable|exists:rooms,id',
             'classrooms.*.link' => 'nullable|sometimes|url',
+            'classrooms.*.start_date' => 'required|date|after_or_equal:today',
+            'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
+            'classrooms.*.days_of_week' => 'required|array',
+            'classrooms.*.days_of_week.*' => 'integer'
         ]);
     
         if ($validator->fails()) {
@@ -262,18 +266,31 @@ class ApiScheduleController extends Controller
             $data = $validator->validated();
             $scheduleResponses = [];
             $conflictErrors = [];
-    
+            $conflictClassrooms = []; 
+
             foreach ($data['classrooms'] as $classroom) {
-                $startDate = $data['start_date'];
-                $endDate = $data['end_date'];
-                $daysOfWeek = $data['days_of_week'];
-
+                $startDate = $classroom['start_date'];
+                $endDate = $classroom['end_date'];
+                $daysOfWeek = $classroom['days_of_week'];
+            
                 $this->validateLessonDate($startDate, $endDate, $daysOfWeek, $subjectId);
-
+            
+                $classroomDetails = Classroom::find($classroom['id']);
+                $classroomCode = $classroomDetails->code;
+            
                 if ($this->hasConflict($classroom, $startDate, $endDate, $daysOfWeek)) {
-                    $conflictErrors[] = "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch.";
+                    $conflictClassrooms[] = $classroomCode; 
                 }
             }
+            
+            if (!empty($conflictClassrooms)) {
+                $conflictCodes = implode(', ', $conflictClassrooms);
+                $conflictErrors[] = "Các lớp {$conflictCodes} có trùng ca học hoặc ngày học đã được lên lịch.";
+            }
+            
+            if (!empty($conflictErrors)) {
+                return response()->json(['error' => $conflictErrors], 409);
+            }         
     
             if (count($conflictErrors) > 0) {
                 return response()->json([
@@ -282,8 +299,8 @@ class ApiScheduleController extends Controller
             }
     
             foreach ($data['classrooms'] as $classroom) {
-                $startDate = $data['start_date'];
-                $endDate = $data['end_date'];
+                $startDate = $classroom['start_date'];
+                $endDate = $classroom['end_date'];
     
                 $scheduleData = [
                     'course_id' => $courseId,
@@ -301,7 +318,7 @@ class ApiScheduleController extends Controller
     
                 $schedule = Schedule::create($scheduleData);
     
-                $days = collect($data['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
+                $days = collect($classroom['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
                 $schedule->days()->sync($days);
     
                 $scheduleDates = $this->createLessonDate($schedule);

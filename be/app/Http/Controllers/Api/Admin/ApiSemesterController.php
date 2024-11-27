@@ -77,8 +77,8 @@ class ApiSemesterController extends Controller
                 return [
                     'id' => $semester->id,
                     'name' => $semester->name,
-                    'start_date' => Carbon::parse($semester->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($semester->end_date)->format('d/m/Y'),
+                    'start_date' => Carbon::parse($semester->start_date),
+                    'end_date' => Carbon::parse($semester->end_date),
                     'status' => $status
                 ];
             });

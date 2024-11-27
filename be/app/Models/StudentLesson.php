@@ -8,4 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class StudentLesson extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'student_id',
+        'lesson_id',
+        'status'
+    ];
+
+    protected $casts = [
+        'status' => 'boolean'
+    ];
 }

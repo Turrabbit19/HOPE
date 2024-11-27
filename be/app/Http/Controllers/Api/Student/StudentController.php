@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Schedule;
+use App\Models\ScheduleLesson;
 use App\Models\Shift;
 use App\Models\Student;
 use App\Models\StudentClassroom;
+use App\Models\StudentLesson;
 use App\Models\StudentMajor;
 use App\Models\StudentSchedule;
 use App\Models\StudyDay;
@@ -210,7 +212,8 @@ class StudentController extends Controller
             StudentClassroom::create([
                 'student_id' => $student->id,
                 'classroom_id' => $newSchedule->classroom_id,
-                'study_date' => $newSchedule->start_date
+                'study_start' => $newSchedule->start_date,
+                'study_end' => $newSchedule->end_date,
             ]);
     
             $data = [

@@ -95,7 +95,7 @@ class ApiAuthController extends Controller
             $student = Student::with('course')->where('user_id', $user->id)->first();
             if ($student) {
                 $data['student'] = [
-                    'course_id' => $student->course->name,
+                    'course_name' => $student->course->name,
                     'current_semester' => $student->current_semester,
                     'student_code' => $student->student_code,
                     'status' => $this->getStudentStatus($student->status),
@@ -107,7 +107,7 @@ class ApiAuthController extends Controller
             $teacher = Teacher::where('user_id', $user->id)->first();
             if ($teacher) {
                 $data['teacher'] = [
-                    'major_id' => $teacher->major_id,
+                    'major_name' => $teacher->major->name,
                     'teacher_code' => $teacher->teacher_code,
                     'status' => $this->getTeacherStatus($teacher->status),
                 ];

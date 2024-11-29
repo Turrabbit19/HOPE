@@ -37,9 +37,7 @@ import ListSemester from "../pages/admin/semesters/list/page";
 import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
 import ListRooms from "../pages/admin/rooms/page";
-import SyllabusAdd from "../pages/admin/syllabus/add/page";
-import SyllabusList from "../pages/admin/syllabus/page";
-import SyllabusEdit from "../pages/admin/syllabus/edit/page";
+import SyllabusList from "../pages/admin/syllabus/list/page";
 import ListCourse from "../pages/admin/courses/list/page";
 import ScheduleAdd from "../pages/admin/schedule/add/page";
 import Schedule from "../pages/admin/schedule/page";
@@ -62,6 +60,7 @@ import StatisticalReport from "../pages/admin/statisticalReport/page";
 import StatisticalMajorReport from "../pages/admin/statisticalReport/major/page";
 import StatisticalTeacherStudent from "../pages/admin/statisticalReport/teacher/page";
 import MailManagement from "../pages/admin/mail/page";
+import CurriculumDetail from "../pages/admin/syllabus/detail/page";
 
 const Router = createBrowserRouter([
     {
@@ -94,18 +93,11 @@ const Router = createBrowserRouter([
                 path: "list-syllabus",
                 element: <SyllabusList />,
             },
+
             {
-                path: "list-syllabus/add",
-                element: <SyllabusAdd />,
+                path: "list-syllabus/detail/:id",
+                element: <CurriculumDetail />,
             },
-            {
-                path: "list-syllabus/edit/:id",
-                element: <SyllabusEdit />,
-            },
-            // {
-            //     path: "list-syllabus/detail/:id",
-            //     element: <SyllabusDetai />,
-            // },
             {
                 path: "list",
                 element: (

@@ -15,4 +15,9 @@ class Course extends Model
         'start_date',
         'end_date'
     ];
+
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
 }

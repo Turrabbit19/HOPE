@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Admin\ApiSemesterController;
 use App\Http\Controllers\Api\Admin\ApiShiftController;
 use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
+use App\Http\Controllers\Api\Admin\ApiSyllabusController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
 
 use App\Http\Controllers\api\admin\StatisticsController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\PayPalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
@@ -116,6 +118,15 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
         Route::post('send-email', [MailController::class, 'sendEmail']);
+
+
+        Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
+        Route::get('major/{majorId}/courses', [ApiSyllabusController::class, 'getCoursesByMajor']);
+        Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
+
+
+        Route::post('/paypal/verify-payment', [PayPalController::class, 'verifyPayment']);
+
     });
 
     Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')

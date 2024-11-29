@@ -1,92 +1,145 @@
-import React from "react";
-import { Card, Descriptions, Button } from "antd";
+import React, { useEffect, useState } from "react";
+import instance from "../../../../config/axios";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeftOutlined } from "@ant-design/icons";
 
-const syllabuses = [
-    {
-        id: 1,
-        name: "Khoa học Máy tính",
-        description: "Tìm hiểu về lập trình và cấu trúc dữ liệu",
-        credits: 3,
-        semester: 1,
-        subjects: ["Giới thiệu về Lập trình", "Cấu trúc Dữ liệu"],
-    },
-    {
-        id: 2,
-        name: "Kỹ thuật Điện",
-        description: "Nghiên cứu các nguyên lý điện và điện tử",
-        credits: 4,
-        semester: 2,
-        subjects: ["Nguyên lý Điện", "Mạch Điện"],
-    },
+const tabs = [
+  { id: "curriculum", label: "Curriculum", icon: "📅" },
+  { id: "overview", label: "Overview", icon: "ℹ️" },
+  { id: "plos", label: "PLOs", icon: "🎓" },
+  { id: "ploMappings", label: "PLO Mappings", icon: "🔗" },
+  { id: "subjects", label: "Subjects", icon: "📋" },
+  { id: "statistics", label: "Statistics", icon: "📊" },
 ];
 
-const SyllabusDetail = () => {
-    const { id } = useParams();
-    const syllabus = syllabuses.find((item) => item.id === parseInt(id));
+const CurriculumDetail = () => {
+  const [activeTab, setActiveTab] = useState("curriculum");
+  const [semesters, setSemesters] = useState([]);
+  const { id } = useParams();
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await instance.get(`admin/syllabus/${id}/all`);
+        console.log(data);
+        setSemesters(data);
+      } catch (error) {
+        console.log(error.message);
+      }
+    })();
+  }, []);
+  return (
+    <div className="bg-gray-100 min-h-screen p-6">
+      {/* Tabs Header */}
+      <div className="flex items-center space-x-4 border-b border-gray-300 mb-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center space-x-2 px-4 py-2 transition ${
+              activeTab === tab.id
+                ? "bg-white text-blue-700 font-semibold border border-gray-300 border-b-4 border-r-2 rounded-t-md"
+                : "text-gray-500 hover:text-blue-700"
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
 
-    if (!syllabus) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <p className="text-red-500 text-xl">Syllabus không tồn tại!</p>
-            </div>
-        );
-    }
-
-    return (
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
-            <Link to="/admin/list-syllabus" className="mb-6 inline-block">
-                <Button icon={<ArrowLeftOutlined />} type="primary">
-                    Quay lại Danh Sách
-                </Button>
-            </Link>
-            <Card
-                title={
-                    <h1 className="text-[#1167B4] text-2xl font-bold">
-                        Chi Tiết Kế Hoạch Học Tập: {syllabus.name}
-                    </h1>
-                }
-                bordered={false}
-                style={{
-                    boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
-                    overflow: "hidden",
-                }}
-                bodyStyle={{ padding: "20px" }}
-            >
-                <Descriptions
-                    title="Thông Tin Chi Tiết"
-                    bordered
-                    layout="vertical"
-                    column={1}
-                    labelStyle={{ fontWeight: "bold", fontSize: "16px" }}
-                    style={{ overflowWrap: "break-word" }}
+      {/* Content */}
+      <div className="bg-white shadow-md p-6 rounded-lg mt-8">
+        {activeTab === "curriculum" && (
+          <div>
+            {/* Curriculum Content */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+              {semesters.map((semester, index) => (
+                <div
+                  key={index}
+                  className="bg-white shadow border border-gray-300 rounded-lg"
                 >
-                    <Descriptions.Item label="Tên Syllabus">
-                        {syllabus.name}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Tín chỉ">
-                        {syllabus.credits}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Kỳ học">
-                        Kỳ {syllabus.semester}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Môn học">
-                        {syllabus.subjects.join(", ")}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Mô tả">
-                        {syllabus.description}
-                    </Descriptions.Item>
-                </Descriptions>
-                <div className="mt-6 flex justify-end gap-4">
-                    <Link to={`edit/${syllabus.id}`}>
-                        <Button type="primary">Sửa Thông Tin</Button>
-                    </Link>
-                    <Button danger>Xóa Syllabus</Button>
+                  {/* Header */}
+                  <div className="bg-blue-100 px-4 py-2 flex justify-between items-center">
+                    <span className="font-bold text-blue-700">
+                      Học kỳ {semester.order}
+                    </span>
+                    <div className="flex space-x-2">
+                      <span className="text-gray-600 text-sm">
+                        {semester.total_credit} Credits
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-200 text-gray-700 text-sm font-semibold">
+                        <th className="border px-2 py-1">STT</th>
+                        <th className="border px-2 py-1">Môn học</th>
+                        <th className="border px-2 py-1">Tín chỉ</th>
+                        <th className="border px-2 py-1">Hình thức</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {semester.subjects.map((subject, subIndex) => (
+                        <tr
+                          key={subIndex}
+                          className={
+                            subIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                          }
+                        >
+                          <td className="border px-2 py-1 text-center">
+                            {subIndex + 1}
+                          </td>
+                          <td className="border px-2 py-1 text-left text-blue-600">
+                            <Link to={`/admin/list-subject/detail/${subject.id}`} state={{subjectName: subject.name}}>{subject.name}</Link>
+                          </td>
+                          <td className="border px-2 py-1 text-center">
+                            {subject.credit}
+                          </td>
+                          <td
+                            className={`border px-2 py-1 text-center ${
+                              subject.type === "BLE"
+                                ? "text-green-500"
+                                : subject.type === "ONL"
+                                ? "text-yellow-500"
+                                : "text-red-500"
+                            }`}
+                          >
+                            {subject.type}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-            </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab !== "curriculum" && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              {tabs.find((tab) => tab.id === activeTab)?.label} Content
+            </h2>
+            <p>Nội dung của : {activeTab} tab.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-12 bg-gray-50 border-t border-gray-200 py-4 text-center text-md">
+        <div className="mb-2">
+          <a href="#" className="text-blue-600 hover:underline">
+            Phản hồi ý kiến giảng viên
+          </a>
         </div>
-    );
+        <div className="text-gray-500">
+          © 2024 by Hope Edu no1. All rights reserved.
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default SyllabusDetail;
+export default CurriculumDetail;

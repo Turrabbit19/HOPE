@@ -26,6 +26,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
+use App\Http\Controllers\MailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
@@ -114,6 +115,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
+        Route::post('send-email', [MailController::class, 'sendEmail']);
     });
 
     Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')

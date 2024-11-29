@@ -61,6 +61,7 @@ import UserEdit from "../pages/admin/userManager/edit/page";
 import StatisticalReport from "../pages/admin/statisticalReport/page";
 import StatisticalMajorReport from "../pages/admin/statisticalReport/major/page";
 import StatisticalTeacherStudent from "../pages/admin/statisticalReport/teacher/page";
+import MailManagement from "../pages/admin/mail/page";
 
 const Router = createBrowserRouter([
     {
@@ -320,6 +321,10 @@ const Router = createBrowserRouter([
             {
                 path: "list-schedule/details/:id",
                 element: <ScheduleDetail />,
+            },
+            {
+                path: "mail",
+                element: <MailManagement />,
             },
 
             {

@@ -244,14 +244,13 @@ class StudentController extends Controller
     public function getTimetable() 
     {
         $user = Auth::user();
-
+    
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
-
-            $timetable = StudentSchedule::where('student_id', $student->id)
-            ->get();
-
-            $data = $timetable->map(function($tt) {
+    
+            $timetable = StudentSchedule::where('student_id', $student->id)->get();
+    
+            $data = $timetable->map(function($tt) use ($student) {
                 return [
                     'id' => $tt->schedule->id,
                     'subject_name' => $tt->schedule->subject->name,
@@ -261,16 +260,35 @@ class StudentController extends Controller
                     'link' => $tt->schedule->link ?? "Null",
                     'start_date' => Carbon::parse($tt->schedule->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
-                    'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) {
+                    'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) use ($student, $tt) {
+                        $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
+                            ->setTimeFrom(Carbon::parse($tt->schedule->shift->start_time));
+    
+                        $currentDateTime = now();
+    
+                        if ($currentDateTime < $lessonDateTime) {
+                            $status = "Chưa rõ"; 
+                        } else {
+                            $studentLesson = StudentLesson::where('student_id', $student->id)
+                                ->where('lesson_id', $lesson->pivot->lesson_id)
+                                ->first();
+    
+                            if (!$studentLesson) {
+                                $status = "Vắng"; 
+                            } else {
+                                $status = $studentLesson->status === 1 ? "Có mặt" : "Vắng";
+                            }
+                        }
+    
                         return [
                             'name' => $lesson->name,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
-                            'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
+                            'status' => $status,
                         ];
                     }),
                 ];
             });
-
+    
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);

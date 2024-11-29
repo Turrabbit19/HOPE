@@ -92,6 +92,44 @@ class TeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getTimetable() 
+    {
+        $user = Auth::user();
+
+        try {
+            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
+
+            $timetable = Schedule::where('teacher_id', $teacher->id)
+            ->where('end_date', '>=', Carbon::now())
+            ->get();
+
+            $data = $timetable->map(function($tt) {
+                return [
+                    'id' => $tt->id,
+                    'subject_name' => $tt->subject->name,
+                    'shift_name' => $tt->shift->name,
+                    'room_name' => $tt->room->name ?? "Null",
+                    'link' => $tt->link ?? "Null",
+                    'start_date' => Carbon::parse($tt->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($tt->end_date)->format('d/m/Y'),
+                    'schedule_lessons' => $tt->lessons->map(function ($lesson) {
+                        return [
+                            'name' => $lesson->name,
+                            'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
+                            'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Hoàn thành" : "Chưa hoàn thành",
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
+        }
+    }
     
     public function getDetailSchedule(string $scheduleId) {
         $user = Auth::user();

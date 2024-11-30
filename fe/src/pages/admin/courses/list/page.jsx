@@ -29,20 +29,25 @@ const ListCourse = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [id, setId] = useState();
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const [courses, plans] = await Promise.all([
+        const [coursesResponse, plansResponse] = await Promise.all([
           instance.get("admin/courses"),
           // instance.get("admin/plans"),
         ]);
-        console.log(courses.data.data);
-        setCourses(courses.data.data);
-        // setPlans(plans.data.data);
+        console.log(coursesResponse.data.data);
+        setCourses(coursesResponse.data.data);
+        // setPlans(plansResponse.data.data);
       } catch (error) {
         console.log(error.message);
-        notification.success({
+        notification.error({
           message: "Lỗi lấy dữ liệu",
         });
       } finally {
@@ -53,18 +58,27 @@ const ListCourse = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
+    setCurrentPage(1);
   };
 
   const filteredCourses = courses.filter((course) =>
     course.name.toLowerCase().includes(searchTerm)
   );
 
+  // Determine which courses to display based on search and pagination
+  const displayCourses = searchTerm.trim() === "" ? courses : filteredCourses;
+
+  const paginatedCourses = displayCourses.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const showEditModal = (course) => {
     setEditingCourse(course);
     form.setFieldsValue({
       name: course.name,
-      start_date: moment(course.startDate),
-      end_date: moment(course.endDate),
+      start_date: moment(course.start_date),
+      end_date: moment(course.end_date),
       plan_id: course.plan_id,
     });
     setId(course.id);
@@ -112,7 +126,7 @@ const ListCourse = () => {
     };
     try {
       setLoading(true);
-      const response = instance.put(`admin/courses/${id}`, formattedValues);
+      await instance.put(`admin/courses/${id}`, formattedValues);
       notification.success({
         message: "Cập nhật khóa học thành công",
       });
@@ -174,7 +188,9 @@ const ListCourse = () => {
       setCourses((prev) => [...prev, restoredCourse]);
     } catch (error) {
       console.log(error.message);
-      message.error("Khôi phục thất bại thất bại");
+      notification.error({
+        message: "Khôi phục thất bại",
+      });
     } finally {
       setLoading(false);
     }
@@ -203,7 +219,6 @@ const ListCourse = () => {
                 style={{ width: 300 }}
                 allowClear
               />
-
             </div>
           </div>
 
@@ -217,14 +232,14 @@ const ListCourse = () => {
             </Button>
 
             <span className="font-bold text-[14px] text-[#000]">
-              {filteredCourses.length} items
+              {displayCourses.length} items
             </span>
           </div>
         </div>
         <div className="row row-cols-2 g-3">
-          {courses.length > 0 ? (
-            courses.map((course, index) => (
-              <div className="col" key={index}>
+          {paginatedCourses.length > 0 ? (
+            paginatedCourses.map((course, index) => (
+              <div className="col" key={course.id}>
                 <div className="teaching__card">
                   <div className="teaching__card-top">
                     <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
@@ -313,12 +328,16 @@ const ListCourse = () => {
           )}
         </div>
 
-        <Pagination
-          className="mt-12"
-          align="center"
-          defaultCurrent={1}
-          total={50}
-        />
+        {/* Pagination Component */}
+        {displayCourses.length > pageSize && (
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={displayCourses.length}
+            onChange={(page) => setCurrentPage(page)}
+            style={{ marginTop: 16, textAlign: "center" }}
+          />
+        )}
       </div>
 
       <Modal
@@ -372,24 +391,6 @@ const ListCourse = () => {
             ]}
           >
             <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item
-            label="Quản lý học tập"
-            name="plan_id"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng không để trống",
-              },
-            ]}
-          >
-            {/* <Select
-              placeholder="Chọn ngành học"
-              options={plans.map((plan) => ({
-                label: plan.name,
-                value: plan.id,
-              }))}
-            /> */}
           </Form.Item>
 
           <Form.Item>

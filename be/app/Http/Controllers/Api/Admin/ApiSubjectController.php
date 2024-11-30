@@ -29,7 +29,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
-                    'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
+                    'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
             }); 
 
@@ -60,7 +60,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
-                    'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
+                    'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
             }); 
 
@@ -125,7 +125,7 @@ class ApiSubjectController extends Controller
             'description' => 'nullable|string|max:255', 
             'credit' => 'required|integer|min:1|max:19',
             'order' => 'required|integer|min:1|max:9',
-            'status' => 'boolean',
+            'form' => 'required|boolean|in:0,1',
             'majors' => 'required|array',
             'majors.*.id' => 'required|exists:majors,id',
         ]);
@@ -161,7 +161,7 @@ class ApiSubjectController extends Controller
                 'description' => $subject->description,
                 'credit' => $subject->credit,
                 'order' => $subject->order,
-                'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
+                'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 'majors' => $subject->majors->map(function ($major) {
                     return [
                         'id' => $major->id,
@@ -186,7 +186,7 @@ class ApiSubjectController extends Controller
             'description' => 'nullable|string|max:255', 
             'credit' => 'sometimes|integer|min:1|max:19',
             'order' => 'sometimes|integer|min:1|max:9',
-            'status' => 'sometimes|boolean',
+            'form' => 'sometimes|boolean|in:0,1',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',
         ]);

@@ -26,7 +26,7 @@ const Teach = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [form] = Form.useForm();
   const [isMajorSelected, setIsMajorSelected] = useState(false); // State for checkbox
-  const itemsPerPage = 6; // Limit to 6 items per page
+  const itemsPerPage = 10; // Limit to 6 items per page
   const [idMajor, setId] = useState();
   const [mainMajors, setMainMajors] = useState([]);
   useEffect(() => {
@@ -101,9 +101,10 @@ const Teach = () => {
           message: "Cập nhật ngành thành công",
         });
       } else {
-        const payload = { ...values, main: 1 };
-        console.log(payload);
-        const response = await instance.post("/admin/majors", payload);
+        const response = await instance.post(`/admin/majors`, {
+          ...values,
+          main: 1,
+        });
         setMajors([
           ...majors,
           { id: majors.length + 1, ...response.data.data },

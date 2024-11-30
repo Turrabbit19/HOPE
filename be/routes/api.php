@@ -191,6 +191,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);
+        Route::get('timetable', [TeacherController::class, 'getTimetable']);
         Route::get('schedule/{scheduleId}/detail', [TeacherController::class, 'getDetailSchedule']);
         Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailsClassroom']);
         Route::get('schedule/{scheduleId}/{lesson_id}/students', [TeacherController::class, 'getDetailClassroom']);

@@ -42,6 +42,10 @@ const ListSubject = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     (async () => {
       try {
@@ -101,14 +105,15 @@ const ListSubject = () => {
 
     if (value.trim() === "") {
       // Nếu input trống, hiển thị tất cả các khóa học
-      setFilteredCourses(allCourses);
+      setFilteredCourses(subjects);
     } else {
       // Lọc khóa học theo tên
-      const filtered = allCourses.filter((course) =>
+      const filtered = subjects.filter((course) =>
         course.name.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredCourses(filtered);
     }
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const togglePopup = () => {
@@ -128,7 +133,7 @@ const ListSubject = () => {
         name: values.name,
         description: values.description,
         credit: values.credit,
-        status: values.status,
+        form: values.form,
         majors: values.majors.map((id) => ({ id })),
         order: values.order,
         code: values.code,
@@ -180,7 +185,7 @@ const ListSubject = () => {
       name: values.name,
       description: values.description,
       credit: values.credit,
-      status: values.status,
+      form: values.form,
       order: values.order,
       majors: majors.map((m) => m.id),
     });
@@ -252,6 +257,16 @@ const ListSubject = () => {
   if (loading) {
     return <Loading />;
   }
+
+  // Determine which subjects to display based on search and pagination
+  const displaySubjects =
+    searchValue.trim() === "" ? subjects : filteredCourses;
+
+  const paginatedSubjects = displaySubjects.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <>
       <div className="listCourse">
@@ -285,7 +300,7 @@ const ListSubject = () => {
                   </button>
                   <div className="flex gap-6 items-center">
                     <span className="font-bold text-[14px] text-[#000]">
-                      {subjects.length} items
+                      {displaySubjects.length} items
                     </span>
 
                     <Button type="primary" onClick={handleShowModalFilter}>
@@ -296,8 +311,8 @@ const ListSubject = () => {
               </div>
 
               <div className="row row-cols-2 g-3">
-                {subjects.length > 0 ? (
-                  subjects.map((subject) => (
+                {paginatedSubjects.length > 0 ? (
+                  paginatedSubjects.map((subject) => (
                     <div className="col" key={subject.id}>
                       <div className="listCourse__item ">
                         <div className="listCourse__item-top flex justify-between items-center">
@@ -315,7 +330,7 @@ const ListSubject = () => {
                             <div className="listCourse__item-status_group">
                               <div className="flex gap-2 listCourse__item-status">
                                 <span className="ml-3 text-[#9E9E9E]">
-                                  Trạng thái :
+                                  Hình thức:
                                 </span>
 
                                 <div className="flex gap-1 bg-[#44cc151a]">
@@ -325,7 +340,7 @@ const ListSubject = () => {
                                     alt=""
                                   />
                                   <span className="text-[#44CC15] text-[12px]">
-                                    {subject.status}
+                                    {subject.form}
                                   </span>
                                 </div>
                               </div>
@@ -408,6 +423,21 @@ const ListSubject = () => {
                   </div>
                 )}
               </div>
+
+              {/* Pagination Component */}
+              {displaySubjects.length > pageSize && (
+                <Pagination
+                  align="center"
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={displaySubjects.length}
+                  onChange={(page) => setCurrentPage(page)}
+                  style={{
+                    marginTop: 16,
+                    textAlign: "center",
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -508,21 +538,23 @@ const ListSubject = () => {
                             },
                           ]}
                         >
-                          <InputNumber placeholder="kỳ học" min={1} max={9} />
+                          <InputNumber placeholder="Kỳ học" min={1} max={9} />
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
-                        <Form.Item label="Trạng thái" name="status" rules={[]}>
+                        <Form.Item label="Hình thức" name="form" rules={[]}>
                           <Select
-                            defaultValue="0"
-                            placeholder="Chọn trạng thái"
+                            placeholder="Chọn hình thức"
                             options={[
                               {
                                 value: "0",
-                                label: "Đang hoạt động",
+                                label: "Trực tiếp",
                               },
-                              { value: "1", label: "Tạm dừng" },
+                              {
+                                value: "1",
+                                label: "Trực tuyến",
+                              },
                             ]}
                           />
                         </Form.Item>

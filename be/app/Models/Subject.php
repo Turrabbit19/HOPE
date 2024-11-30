@@ -15,7 +15,14 @@ class Subject extends Model
         'name',
         'description',
         'credit',
-        'order'
+        'order',
+        'form',
+        'status'
+    ];
+
+    protected $casts = [
+        'form' => 'boolean',
+        'status' => 'boolean'
     ];
     
     public function majors()

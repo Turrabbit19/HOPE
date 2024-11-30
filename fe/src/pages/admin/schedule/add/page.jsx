@@ -277,17 +277,59 @@ const ScheduleAdd = () => {
     }
   };
 
-  // Xử lý thay đổi giá trị trong form
+  const fetchSubjectById = async (subjectId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/admin/subjects/${subjectId}`
+      );
+      const data = response.data;
+      console.log(data);
+
+      return data;
+    } catch (error) {
+      console.error("Error getting subject:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (subjectId) {
+      fetchSubjectById(subjectId).then((subject) => {
+        if (subject && subject.form !== undefined) {
+          const method =
+            subject.form === "Trực tuyến" ? "Trực tuyến" : "Trực tiếp";
+
+          form.setFieldsValue({ learningMethod: method });
+
+          const updatedDetails = {};
+          selectedClasses.forEach((classId) => {
+            updatedDetails[classId] = {
+              session: classDetails[classId]?.session || null,
+              classLink: method === "Trực tuyến" ? "" : null,
+              classRoom: method === "Trực tiếp" ? "" : null,
+            };
+          });
+
+          setClassDetails(updatedDetails);
+          form.setFieldsValue({ classDetails: updatedDetails });
+        }
+      });
+    }
+  }, [subjectId, form, selectedClasses, classDetails]);
+
   const handleValuesChange = (changedValues, allValues) => {
     if (changedValues.learningMethod) {
+      const method = changedValues.learningMethod;
       const updatedDetails = {};
+
       selectedClasses.forEach((classId) => {
         updatedDetails[classId] = {
           session: classDetails[classId]?.session || null,
-          classLink: "",
-          classRoom: null,
+          classLink: method === "Trực tuyến" ? "" : null,
+          classRoom: method === "Trực tiếp" ? "" : null,
         };
       });
+
       setClassDetails(updatedDetails);
       form.setFieldsValue({
         classDetails: updatedDetails,
@@ -421,7 +463,8 @@ const ScheduleAdd = () => {
         id: classId,
         shift_id: details[classId].session,
         room_id: details[classId].classRoom,
-        link: learningMethod === "online" ? details[classId].classLink : null,
+        link:
+          learningMethod === "Trực tuyến" ? details[classId].classLink : null,
         start_date: values.startDate
           ? values.startDate.format("YYYY-MM-DD")
           : null,
@@ -494,39 +537,31 @@ const ScheduleAdd = () => {
             </Form.Item>
 
             {/* Hiển thị classRoom hoặc classLink dựa trên learningMethod */}
-            {learningMethod === "online" ? (
+            {form.getFieldValue("learningMethod") === "Trực tuyến" ? (
               <Form.Item
                 label="Link Học Trực Tuyến"
                 name={["classDetails", classId, "classLink"]}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập link học!",
+                    message: "Vui lòng nhập link học trực tuyến!",
                   },
                 ]}
               >
                 <Input
                   placeholder="Link học trực tuyến"
                   prefix={<LinkOutlined />}
-                  style={{ width: "100%" }}
                 />
               </Form.Item>
-            ) : learningMethod === "offline" ? (
+            ) : (
               <Form.Item
                 label="Phòng Học Trực Tiếp"
                 name={["classDetails", classId, "classRoom"]}
                 rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn phòng học!",
-                  },
+                  { required: true, message: "Vui lòng chọn phòng học!" },
                 ]}
               >
-                <Select
-                  showSearch
-                  placeholder="Chọn phòng học"
-                  optionFilterProp="children"
-                >
+                <Select placeholder="Chọn phòng học">
                   {rooms.map((room) => (
                     <Option key={room.id} value={room.id}>
                       {room.name}
@@ -534,7 +569,7 @@ const ScheduleAdd = () => {
                   ))}
                 </Select>
               </Form.Item>
-            ) : null}
+            )}
           </Card>
         </TabPane>
       );
@@ -602,9 +637,9 @@ const ScheduleAdd = () => {
               </div>
               <div style={{ marginBottom: 8 }}>
                 <Text strong>Hình Thức Học:</Text>{" "}
-                {learningMethod === "online" ? "Trực tuyến" : "Trực tiếp"}
+                {learningMethod === "Trực tuyến" ? "Trực tuyến" : "Trực tiếp"}
               </div>
-              {learningMethod === "online" ? (
+              {learningMethod === "Trực tuyến" ? (
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Link Học Trực Tuyến:</Text>{" "}
                   {classLink || "Chưa nhập"}
@@ -799,27 +834,13 @@ const ScheduleAdd = () => {
                 </Checkbox.Group>
               </Form.Item>
 
-              {/* Chọn hình thức học */}
-              <Form.Item
-                label="Hình Thức Học"
-                name="learningMethod"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn hình thức học!",
-                  },
-                ]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Chọn hình thức học"
-                  optionFilterProp="children"
-                  disabled={activeTab === "addTeacher"}
-                >
-                  <Option value="online">Trực tuyến</Option>
-                  <Option value="offline">Trực tiếp</Option>
-                </Select>
-              </Form.Item>
+              {/* Hình thức học */}
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Hình Thức Học: </Text>
+                {form.getFieldValue("learningMethod") === "Trực tuyến"
+                  ? "Trực tuyến"
+                  : "Trực tiếp"}
+              </div>
 
               {/* Các trường cụ thể cho từng lớp */}
               {selectedClasses.length > 0 && (

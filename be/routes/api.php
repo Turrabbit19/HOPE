@@ -104,6 +104,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
         Route::get('major/{majorId}/courses', [ApiSyllabusController::class, 'getCoursesByMajor']);
+        Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
 
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);

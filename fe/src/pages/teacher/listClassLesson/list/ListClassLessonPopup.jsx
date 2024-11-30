@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import ScheduleDetail from './ScheduleDetail';
+import ListClassLessonDetail from './ListClassLessonDetail';
 
-const ScheduleDetailPopup = ({ schedule, onClose, token }) => {
+const ListClassLessonPopup = ({ schedule, onClose, token }) => {
   const [scheduleDetail, setScheduleDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchScheduleDetail = async () => {
+    const fetchScheduleDetail = async () => { 
       try {
         const response = await fetch(`http://127.0.0.1:8000/api/teacher/schedule/${schedule.id}/detail`, {
           headers: {
@@ -37,7 +37,7 @@ const ScheduleDetailPopup = ({ schedule, onClose, token }) => {
           <div className="mt-2 px-7 py-3">
             {loading && <p>Đang tải...</p>}
             {error && <p className="text-red-500">Lỗi: {error}</p>}
-            {scheduleDetail && <ScheduleDetail scheduleData={scheduleDetail} />}
+            {scheduleDetail && <ListClassLessonDetail scheduleData={scheduleDetail} />}
           </div>
           <div className="items-center px-4 py-3">
             <button
@@ -53,5 +53,4 @@ const ScheduleDetailPopup = ({ schedule, onClose, token }) => {
   );
 };
 
-export default ScheduleDetailPopup;
-
+export default ListClassLessonPopup;

@@ -69,10 +69,10 @@ const AsideTeacher = () => {
         </nav>
       </div>
       <div className="mb-4">
-        <h2 className="mb-2 text font-semibold">Lịch dạy</h2>
+        <h2 className="mb-2 text font-semibold">Danh sách lớp học</h2>
         <nav className="space-y-2">
           <Link
-            to="schedule"
+            to="listclasslesson"
             className="flex items-center p-2 text text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition duration-300"
           >
             <svg
@@ -92,10 +92,10 @@ const AsideTeacher = () => {
               <path d="M2 8h20"></path>
               <path d="M6 4v4"></path>
             </svg>
-            Lịch dạy
+            Danh sách lớp học
           </Link>
-          {/* <Link
-            to="class-registration"
+          <Link
+            to="timetable"
             className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
           >
             <svg
@@ -115,8 +115,8 @@ const AsideTeacher = () => {
               <path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"></path>
               <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
             </svg>
-            Đăng kí lịch học
-          </Link> */}
+            Lịch dạy
+          </Link>
 
           {/* <a
                         href="#"

@@ -107,6 +107,7 @@ class TeacherController extends Controller
             $data = $timetable->map(function($tt) {
                 return [
                     'id' => $tt->id,
+                    'classroom_code' => $tt->classroom->code,
                     'subject_name' => $tt->subject->name,
                     'shift_name' => $tt->shift->name,
                     'room_name' => $tt->room->name ?? "Null",
@@ -142,6 +143,7 @@ class TeacherController extends Controller
             ->firstOrFail();
 
             $data = [
+                'id' => $scheduleInfor->id,
                 'classroom' => $scheduleInfor->classroom->code,
                 'subject_name' => $scheduleInfor->subject->name,
                 'shift_name' => $scheduleInfor->shift->name,
@@ -267,14 +269,14 @@ class TeacherController extends Controller
                 ->where('lesson_id', $lessonId)
                 ->firstOrFail();
     
-            $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time); 
-            $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time); 
+            // $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time); 
+            // $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time); 
     
-            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
+            // $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
             
-            if ($currentDateTime < $lessonStartTime) {
-                return response()->json(['message' => 'Chưa đến giờ học.'], 400);
-            }
+            // if ($currentDateTime < $lessonStartTime) {
+            //     return response()->json(['message' => 'Chưa đến giờ học.'], 400);
+            // }
     
             $classroomId = $scheduleInfor->classroom->id;
             $listStudents = StudentClassroom::where('classroom_id', $classroomId)->get();

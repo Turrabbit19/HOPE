@@ -71,7 +71,9 @@ import SchoolLogin from "../pages/student/login/page";
 import LayoutClient from "../components/layout/layoutStudent";
 import LayoutTeacher from "../components/layout/layoutTeacher";
 import TeacherInfo from "../pages/teacher/teacherDashboard/page";
-import TeacherSchedule from "../pages/teacher/schedule/page";
+import ClassLessonTable from "../pages/teacher/listClassLesson/page";
+import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
+
 
 const Router = createBrowserRouter([
   {
@@ -508,8 +510,12 @@ const Router = createBrowserRouter([
         element: <TeacherInfo />,
       },
       {
-        path: "schedule",
-        element: < TeacherSchedule />,
+        path: "listclasslesson",
+        element: < ClassLessonTable />,
+      },
+      {
+        path: "timetable",
+        element: <TeacherTimetable />
       }
     ],
   },

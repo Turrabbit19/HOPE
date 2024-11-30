@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ScheduleDetailPopup from './ScheduleDetailPopup';
+import ListClassLessonPopup from './list/ListClassLessonPopup';
 
 export default function ScheduleTable() {
   const [schedules, setSchedules] = useState([]);
@@ -101,7 +101,7 @@ export default function ScheduleTable() {
         </tbody>
       </table>
       {isPopupOpen && (
-        <ScheduleDetailPopup
+        <ListClassLessonPopup
           schedule={selectedSchedule}
           onClose={() => setIsPopupOpen(false)}
           token={token}

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\PlanSubject;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -36,20 +38,39 @@ class ApiMajorController extends Controller
     public function getMainMajors() {
         try {
             $mainMajors = Major::where('main', 1)->get();
-            
-            $data = $mainMajors->map(function ($mm) {
+    
+            $currentDate = Carbon::now();
+    
+            $data = $mainMajors->map(function ($mm) use ($currentDate) {
+                $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
+                        $query->where('major_id', $mm->id);
+                    })
+                    ->where('start_date', '<=', $currentDate)
+                    ->where('end_date', '>=', $currentDate)
+                    ->withCount('students')
+                    ->get();
+    
+                $courseData = $courses->map(function ($course) {
+                    return [
+                        'id' => $course->id,
+                        'name' => $course->name,
+                    ];
+                });
+    
                 return [
                     'id' => $mm->id,
                     'code' => $mm->code,
                     'name' => $mm->name,
                     'description' => $mm->description,
                     'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+                    'courses' => $courseData->isEmpty() ? null : $courseData,
                 ];
             });
-
+    
             return response()->json(['data' => $data], 200);
+    
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
         }
     }
 

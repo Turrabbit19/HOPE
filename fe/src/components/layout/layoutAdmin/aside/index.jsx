@@ -50,7 +50,7 @@ const AsideAdmin = () => {
     },
     {
       name: "Kế hoạch học tập",
-      link: "/admin/list-curriculum",
+      link: "/admin/list-syllabus",
       icon: <BookFilled />,
     },
     {

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-
+use App\Models\Major;
 use App\Models\MajorSubject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -102,5 +102,50 @@ class ApiSyllabusController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-    }    
+    }  
+    
+    public function getMajorAndSubMajor()
+    {
+        try {
+            $mainMajors = Major::where('main', 1)->get();
+
+            $currentDate = Carbon::now();
+
+            $data = $mainMajors->map(function ($mm) use ($currentDate) {
+                $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
+                    $query->where('major_id', $mm->id);
+                })
+                    ->where('start_date', '<=', $currentDate)
+                    ->where('end_date', '>=', $currentDate)
+                    ->withCount('students')
+                    ->get();
+
+                $courseData = $courses->isEmpty() ? [] : $courses->map(function ($course) {
+                    return [
+                        'id' => $course->id,
+                        'name' => $course->name,
+                    ];
+                });
+
+                return [
+                    'id' => $mm->id,
+                    'code' => $mm->code,
+                    'name' => $mm->name,
+                    'children' => $mm->children->map(function ($child) use ($courseData) {
+                        return [
+                            'id' => $child->id,
+                            'code' => $child->code,
+                            'name' => $child->name,
+                            'courses' => $courseData,
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json( $data, 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

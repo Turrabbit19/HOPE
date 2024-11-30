@@ -107,6 +107,7 @@ class TeacherController extends Controller
             $data = $timetable->map(function($tt) {
                 return [
                     'id' => $tt->id,
+                    'classroom_code' => $tt->classroom->code,
                     'subject_name' => $tt->subject->name,
                     'shift_name' => $tt->shift->name,
                     'room_name' => $tt->room->name ?? "Null",
@@ -142,6 +143,7 @@ class TeacherController extends Controller
             ->firstOrFail();
 
             $data = [
+                'id' => $scheduleInfor->id,
                 'classroom' => $scheduleInfor->classroom->code,
                 'subject_name' => $scheduleInfor->subject->name,
                 'shift_name' => $scheduleInfor->shift->name,

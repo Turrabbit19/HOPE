@@ -2,27 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Transaction;
 use Illuminate\Http\Request;
-use PayPal\Api\Payment;
-use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Rest\ApiContext;
+use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Api\Payment;
 
 class PayPalController extends Controller
 {
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'student_id' => 'required|integer',
+            'payment_id' => 'required|string',
+            'amount' => 'required|numeric',
+        ]);
 
-    // public function verifyPayment(Request $request)
-    // {
-    //     $paymentId = $request->input('id'); // ID của giao dịch PayPal
-    //     try {
-    //         $payment = Payment::get($paymentId, $this->apiContext);
+        $transaction = new Transaction();
+        $transaction->student_id = $validated['student_id'];
+        $transaction->payment_id = $validated['payment_id'];
+        $transaction->amount = $validated['amount'];
+        $transaction->save();
 
-    //         if ($payment->getState() === 'approved') {
-    //             return response()->json(['success' => true, 'message' => 'Payment verified']);
-    //         } else {
-    //             return response()->json(['success' => false, 'message' => 'Payment not approved'], 400);
-    //         }
-    //     } catch (\Exception $e) {
-    //         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-    //     }
-    // }
+        return response()->json(['success' => true, 'message' => 'Transaction saved successfully']);
+    }
+
 }

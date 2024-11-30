@@ -121,11 +121,13 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
 
         Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
+        Route::get('syllabus/{majorId}/all-subjects', [ApiSyllabusController::class, 'getAllSubjects']);
+        Route::get('getCountType/{majorId}', [ApiSyllabusController::class, 'getCountType']);
         Route::get('major/{majorId}/courses', [ApiSyllabusController::class, 'getCoursesByMajor']);
         Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
 
 
-        Route::post('/paypal/verify-payment', [PayPalController::class, 'verifyPayment']);
+        Route::apiResource('paypal', PayPalController::class);
 
     });
 

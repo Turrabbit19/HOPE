@@ -17,7 +17,7 @@ class Student extends Model
         'student_code',
         'status'
     ];
-    
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -41,5 +41,9 @@ class Student extends Model
     public function schedules()
     {
         return $this->belongsToMany(Schedule::class, 'student_schedules');
+    }
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 }

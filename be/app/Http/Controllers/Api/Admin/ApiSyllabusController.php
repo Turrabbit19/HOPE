@@ -15,51 +15,51 @@ use Illuminate\Support\Facades\Validator;
 class ApiSyllabusController extends Controller
 {
     public function getSubjectsFromOrder(string $majorId)
-{
-    try {
-        $basicId = 1;
+    {
+        try {
+            $basicId = 1;
 
-        $subjects = MajorSubject::whereIn('major_id', [$majorId, $basicId])
-            ->with('subject')
-            ->get()
-            ->groupBy('subject.order')
-            ->map(function ($subjects, $order) {
-                $totalCredit = $subjects->sum(function ($majorSubject) {
-                    return $majorSubject->subject->credit;
-                });
+            $subjects = MajorSubject::whereIn('major_id', [$majorId, $basicId])
+                ->with('subject')
+                ->get()
+                ->groupBy('subject.order')
+                ->map(function ($subjects, $order) {
+                    $totalCredit = $subjects->sum(function ($majorSubject) {
+                        return $majorSubject->subject->credit;
+                    });
 
-                return [
-                    'order' => $order,
-                    'total_credit' => $totalCredit,
-                    'subjects' => $subjects->map(function ($majorSubject) {
-                        $subject = $majorSubject->subject;
-                        return [
-                            'id' => $subject->id,
-                            'code' => $subject->code,
-                            'name' => $subject->name,
-                            'credit' => $subject->credit,
-                            'description' => $subject->description,
-                            'status' => $subject->status,
-                        ];
-                    })->values()
-                ];
-            })
-            ->values();
+                    return [
+                        'order' => $order,
+                        'total_credit' => $totalCredit,
+                        'subjects' => $subjects->map(function ($majorSubject) {
+                            $subject = $majorSubject->subject;
+                            return [
+                                'id' => $subject->id,
+                                'code' => $subject->code,
+                                'name' => $subject->name,
+                                'credit' => $subject->credit,
+                                'description' => $subject->description,
+                                'form' => $subject->form,
+                            ];
+                        })->values()
+                    ];
+                })
+                ->values();
 
-        if ($subjects->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Không tìm thấy môn học cho ngành với ID: ' . $majorId
-            ], 404);
+            if ($subjects->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy môn học cho ngành với ID: ' . $majorId
+                ], 404);
+            }
+
+            return response()->json($subjects, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
-
-        return response()->json($subjects, 200);
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
-    } catch (\Exception $e) {
-        return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
     }
-}
 
 
     public function getCoursesByMajor($majorId)
@@ -146,10 +146,63 @@ class ApiSyllabusController extends Controller
                 ];
             });
 
-            return response()->json( $data, 200);
+            return response()->json($data, 200);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getCountType(string $majorId)
+    {
+        try {
+            $basicId = 1;
+            $subjects = MajorSubject::whereIn('major_id', [$majorId, $basicId])
+                ->with('subject')
+                ->get()
+                ->groupBy('subject.form')
+                ->map(function ($group) {
+                    return $group->count();
+                });
+                return response()->json($subjects, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function getAllSubjects(string $majorId)
+    {
+        try {
+            $basicId = 1;
+
+            $subjects = MajorSubject::whereIn('major_id', [$majorId, $basicId])
+                ->with('subject')
+                ->get()
+                ->map(function ($majorSubject) {
+                    $subject = $majorSubject->subject;
+                    return [
+                        'id' => $subject->id,
+                        'code' => $subject->code,
+                        'name' => $subject->name,
+                        'credit' => $subject->credit,
+                        'description' => $subject->description,
+                        'form' => $subject->form
+                    ];
+                });
+
+            if ($subjects->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy môn học cho ngành với ID: ' . $majorId
+                ], 404);
+            }
+
+            return response()->json(
+                $subjects
+            , 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
     }
 }

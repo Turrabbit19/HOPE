@@ -13,7 +13,8 @@ import {
     ReadOutlined,
     BellOutlined,
     AreaChartOutlined,
-    MailOutlined
+    MailOutlined,
+    BankFilled
 } from "@ant-design/icons";
 
 const AsideAdmin = () => {
@@ -137,6 +138,11 @@ const AsideAdmin = () => {
             key: "sub5",
             icon: <MailOutlined />,
             label: <Link to="/admin/mail">Quản lý Mail</Link>,
+        },
+        {
+            key: "sub6",
+            icon: <BankFilled />,
+            label: <Link to="/admin/tuition-fee">Quản lý học phí</Link>,
         },
     ];
 

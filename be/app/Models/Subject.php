@@ -15,9 +15,11 @@ class Subject extends Model
         'name',
         'description',
         'credit',
-        'order'
+        'order',
+        'status',
+        'form'
     ];
-    
+
     public function majors()
     {
         return $this->belongsToMany(Major::class, 'major_subjects');

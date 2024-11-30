@@ -61,6 +61,7 @@ import StatisticalMajorReport from "../pages/admin/statisticalReport/major/page"
 import StatisticalTeacherStudent from "../pages/admin/statisticalReport/teacher/page";
 import MailManagement from "../pages/admin/mail/page";
 import CurriculumDetail from "../pages/admin/syllabus/detail/page";
+import TuitionFee from "../pages/admin/tuition-fee/page";
 
 const Router = createBrowserRouter([
     {
@@ -317,6 +318,10 @@ const Router = createBrowserRouter([
             {
                 path: "mail",
                 element: <MailManagement />,
+            },
+            {
+                path: "tuition-fee",
+                element: <TuitionFee />,
             },
 
             {

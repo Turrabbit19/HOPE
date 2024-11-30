@@ -69,6 +69,9 @@ import StudentDashboard from "../pages/student/studentDashboard/page";
 import NotificationPage from "../pages/student/notification/page";
 import SchoolLogin from "../pages/student/login/page";
 import LayoutClient from "../components/layout/layoutStudent";
+import LayoutTeacher from "../components/layout/layoutTeacher";
+import TeacherInfo from "../pages/teacher/teacherDashboard/page";
+import TeacherSchedule from "../pages/teacher/schedule/page";
 
 const Router = createBrowserRouter([
   {
@@ -494,6 +497,20 @@ const Router = createBrowserRouter([
           </>
         ),
       },
+    ],
+  },
+  {
+    path: "teacher",
+    element: <LayoutTeacher />,
+    children: [
+      {
+        path: "home",
+        element: <TeacherInfo />,
+      },
+      {
+        path: "schedule",
+        element: < TeacherSchedule />,
+      }
     ],
   },
   {

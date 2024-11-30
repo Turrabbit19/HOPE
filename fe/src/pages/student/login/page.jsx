@@ -51,6 +51,9 @@ export default function SchoolLogin() {
       } else if (userRole === "Quản trị viên") {
         navigate("/admin");
         console.log("Đã chuyển hướng tới trang /admin");
+      }else if(userRole === "Giảng viên"){
+        navigate("/teacher/home");
+        console.log("Đã chuyển hướng tới trang giảng viên");
       } else {
         navigate("/");
         console.log("Đã chuyển hướng tới trang /");

@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class StudentController extends Controller
+class   StudentController extends Controller
 {
     public function getStudentDetail()
     {

@@ -103,6 +103,8 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::delete('schedule/{id}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
 
         Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
+        Route::get('syllabus/{majorId}/{subMajorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrderWSubMajor']);
+        Route::get('syllabus/{majorId}/all-subjects', [ApiSyllabusController::class, 'getAllSubjects']);
         Route::get('major/{majorId}/courses', [ApiSyllabusController::class, 'getCoursesByMajor']);
         Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
 

@@ -35,6 +35,7 @@ const CurriculumDetail = () => {
             name: subject.name,
             credits: subject.credit,
             description: subject.description,
+            form: subject.form,
           })),
         }));
 
@@ -100,6 +101,7 @@ const CurriculumDetail = () => {
                         <th className="border px-2 py-1">STT</th>
                         <th className="border px-2 py-1">Môn học</th>
                         <th className="border px-2 py-1">Tín chỉ</th>
+                        <th className="border px-2 py-1">Hình thức</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -113,6 +115,17 @@ const CurriculumDetail = () => {
                           </td>
                           <td className="border px-2 py-1 text-center">
                             {subject.credits}
+                          </td>
+                          <td
+                            className={`border px-2 py-1 text-center ${
+                              subject.form === "ONL"
+                                ? "text-green-500"
+                                : subject.form === "OFF"
+                                ? "text-red-500"
+                                : ""
+                            }`}
+                          >
+                            {subject.form}
                           </td>
                         </tr>
                       ))}

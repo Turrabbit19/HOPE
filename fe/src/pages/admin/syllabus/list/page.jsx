@@ -22,7 +22,6 @@ const Curriculum = () => {
         const { data } = await instance.get(`admin/getMajorAndSubMajor`);
         setCurriculums(data);
 
-        // Set the first child as the default selected child if available
         if (data.length > 0 && data[0].children.length > 0) {
           setActiveChildId(data[0].children[0].id);
         }
@@ -89,19 +88,23 @@ const Curriculum = () => {
               </button>
               <div className="flex items-center text-lg font-medium text-gray-500">
                 {curriculum.children.map((className) => {
-                  // Check if this child matches the selected child ID
                   if (className.id === parseInt(activeChildId)) {
                     return (
                       className.courses.length > 0 && (
                         <React.Fragment key={className.id}>
-                          {className.courses.map((item) => (
-                            <a
-                              key={item.id}
-                              href={`list-syllabus/detail/${className.id}`}
-                              className="hover:underline"
-                            >
-                              <div>{item.name}</div>
-                            </a>
+                          {className.courses.map((item, courseIndex) => (
+                            <React.Fragment key={item.id}>
+                              <a
+                                href={`list-syllabus/detail/${curriculum.id}`} // Use curriculum.id as Major ID
+                                className="hover:underline"
+                              >
+                                <div>{item.name}</div>
+                              </a>
+                              {/* Hiển thị dấu phân cách chỉ sau các khóa học trừ khóa học cuối cùng */}
+                              {courseIndex < className.courses.length - 1 && (
+                                <span className="mx-2">|</span>
+                              )}
+                            </React.Fragment>
                           ))}
                         </React.Fragment>
                       )
@@ -116,7 +119,7 @@ const Curriculum = () => {
               <div className="mt-4 bg-gray-100 p-4 rounded shadow">
                 <p className="text-lg font-semibold">Thông tin chi tiết:</p>
                 <ul className="mt-2 text-base text-gray-700">
-                  <li>- Chuyên ngành: 1</li>
+                  <li>- Chuyên ngành: {curriculum.name}</li>
                   <li>- Môn chính thức/lựa chọn: 34/0</li>
                   <li>- Tín chỉ chính thức/lựa chọn: 99/0</li>
                   <li>- Thời lượng: 1057H/72H/2400H</li>

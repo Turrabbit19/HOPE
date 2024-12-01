@@ -33,7 +33,7 @@ class ApiSyllabusController extends Controller
                                 'name' => $subject->name,
                                 'credit' => $subject->credit,
                                 'description' => $subject->description,
-                                'status' => $subject->status,
+                                'form' => $subject->form ? "ONL" : "OFF",
                             ];
                         })->values()
                     ];
@@ -57,6 +57,52 @@ class ApiSyllabusController extends Controller
             return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getSubjectsFromOrderWSubMajor(string $majorId, string $subMajorId)
+    {
+        try {
+            $basicId = 1; 
+
+            $subjects = MajorSubject::whereIn('major_id', [$majorId, $subMajorId, $basicId])
+                ->with('subject')
+                ->get()
+                ->groupBy('subject.order')
+                ->map(function ($subjects, $order) {
+                    return [
+                        'order' => $order,
+                        'subjects' => $subjects->map(function ($majorSubject) {
+                            $subject = $majorSubject->subject;
+                            return [
+                                'id' => $subject->id,
+                                'code' => $subject->code,
+                                'name' => $subject->name,
+                                'credit' => $subject->credit,
+                                'description' => $subject->description,
+                                'form' => $subject->form ? "ONL" : "OFF",
+                            ];
+                        })->values()
+                    ];
+                })
+                ->values();
+
+            if ($subjects->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy môn học cho ngành chính ID: ' . $majorId . ' và ngành hẹp ID: ' . $subMajorId
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $subjects
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId . ' hoặc ' . $subMajorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
+        }
+    }
+
  
     public function getCoursesByMajor($majorId)
     {
@@ -146,6 +192,44 @@ class ApiSyllabusController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAllSubjects(string $majorId)
+    {
+        try {
+            $basicId = 1;
+
+            $subjects = MajorSubject::whereIn('major_id', [$majorId, $basicId])
+                ->with('subject')
+                ->get()
+                ->map(function ($majorSubject) {
+                    $subject = $majorSubject->subject;
+                    return [
+                        'id' => $subject->id,
+                        'code' => $subject->code,
+                        'name' => $subject->name,
+                        'credit' => $subject->credit,
+                        'description' => $subject->description,
+                        'form' => $subject->form ? "ONL" : "OFF",
+                    ];
+                });
+
+            if ($subjects->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy môn học cho ngành với ID: ' . $majorId
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $subjects
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
     }
 }

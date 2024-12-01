@@ -253,7 +253,6 @@ const ScheduleAdd = () => {
   // Xử lý khi chọn lớp học
   const handleClassChange = (values) => {
     setSelectedClasses(values);
-    // Cập nhật classDetails chỉ giữ lại các lớp đã chọn
     setClassDetails((prevDetails) => {
       const updatedDetails = {};
       values.forEach((classId) => {
@@ -269,7 +268,8 @@ const ScheduleAdd = () => {
       });
       return updatedDetails;
     });
-    // Nếu thay đổi lớp sau khi phân công, reset lại
+
+    // Nếu bạn đang thay đổi tab, hãy giữ lại các state cũ
     if (activeTab === "addTeacher") {
       setActiveTab("configure");
       setTeacherAssignments({});
@@ -283,11 +283,10 @@ const ScheduleAdd = () => {
         `http://localhost:8000/api/admin/subjects/${subjectId}`
       );
       const data = response.data;
-      console.log(data);
 
       return data;
     } catch (error) {
-      console.error("Error getting subject:", error);
+      console.error("Lỗi khi lấy dữ liệu môn học:", error);
       return null;
     }
   };
@@ -295,27 +294,28 @@ const ScheduleAdd = () => {
   useEffect(() => {
     if (subjectId) {
       fetchSubjectById(subjectId).then((subject) => {
-        if (subject && subject.form !== undefined) {
+        console.log(subject);
+        if (subject && subject.data && subject.data.form !== undefined) {
           const method =
-            subject.form === "Trực tuyến" ? "Trực tuyến" : "Trực tiếp";
-
+            subject.data.form === "Trực tuyến" ? "Online" : "Offline";
           form.setFieldsValue({ learningMethod: method });
 
           const updatedDetails = {};
           selectedClasses.forEach((classId) => {
             updatedDetails[classId] = {
               session: classDetails[classId]?.session || null,
-              classLink: method === "Trực tuyến" ? "" : null,
-              classRoom: method === "Trực tiếp" ? "" : null,
+              classLink: method === "Online" ? "" : null,
+              classRoom: method === "Offline" ? "" : null,
             };
           });
 
-          setClassDetails(updatedDetails);
-          form.setFieldsValue({ classDetails: updatedDetails });
+          if (JSON.stringify(updatedDetails) !== JSON.stringify(classDetails)) {
+            setClassDetails(updatedDetails);
+          }
         }
       });
     }
-  }, [subjectId, form, selectedClasses, classDetails]);
+  }, [subjectId, selectedClasses]);
 
   const handleValuesChange = (changedValues, allValues) => {
     if (changedValues.learningMethod) {
@@ -325,15 +325,16 @@ const ScheduleAdd = () => {
       selectedClasses.forEach((classId) => {
         updatedDetails[classId] = {
           session: classDetails[classId]?.session || null,
-          classLink: method === "Trực tuyến" ? "" : null,
-          classRoom: method === "Trực tiếp" ? "" : null,
+          classLink: method === "Online" ? "" : null,
+          classRoom: method === "Offline" ? "" : null,
         };
       });
 
-      setClassDetails(updatedDetails);
-      form.setFieldsValue({
-        classDetails: updatedDetails,
-      });
+      // Chỉ set lại nếu có sự thay đổi thực sự
+      if (JSON.stringify(updatedDetails) !== JSON.stringify(classDetails)) {
+        setClassDetails(updatedDetails);
+        form.setFieldsValue({ classDetails: updatedDetails });
+      }
     }
   };
 
@@ -537,7 +538,7 @@ const ScheduleAdd = () => {
             </Form.Item>
 
             {/* Hiển thị classRoom hoặc classLink dựa trên learningMethod */}
-            {form.getFieldValue("learningMethod") === "Trực tuyến" ? (
+            {form.getFieldValue("learningMethod") === "Online" ? (
               <Form.Item
                 label="Link Học Trực Tuyến"
                 name={["classDetails", classId, "classLink"]}
@@ -637,9 +638,9 @@ const ScheduleAdd = () => {
               </div>
               <div style={{ marginBottom: 8 }}>
                 <Text strong>Hình Thức Học:</Text>{" "}
-                {learningMethod === "Trực tuyến" ? "Trực tuyến" : "Trực tiếp"}
+                {learningMethod === "Online" ? "Online" : "Offline"}
               </div>
-              {learningMethod === "Trực tuyến" ? (
+              {learningMethod === "Online" ? (
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Link Học Trực Tuyến:</Text>{" "}
                   {classLink || "Chưa nhập"}
@@ -837,9 +838,9 @@ const ScheduleAdd = () => {
               {/* Hình thức học */}
               <div style={{ marginBottom: 16 }}>
                 <Text strong>Hình Thức Học: </Text>
-                {form.getFieldValue("learningMethod") === "Trực tuyến"
-                  ? "Trực tuyến"
-                  : "Trực tiếp"}
+                {form.getFieldValue("learningMethod") === "Online"
+                  ? "Online"
+                  : "Offline"}
               </div>
 
               {/* Các trường cụ thể cho từng lớp */}

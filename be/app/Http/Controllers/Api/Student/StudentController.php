@@ -254,6 +254,7 @@ class   StudentController extends Controller
                 return [
                     'id' => $tt->schedule->id,
                     'subject_name' => $tt->schedule->subject->name,
+                    'classroom_code' => $tt->schedule->classroom->code,
                     'teacher_name' => $tt->schedule->teacher->user->name,
                     'shift_name' => $tt->schedule->shift->name,
                     'room_name' => $tt->schedule->room->name ?? "Null",
@@ -276,7 +277,7 @@ class   StudentController extends Controller
                             if (!$studentLesson) {
                                 $status = "Vắng"; 
                             } else {
-                                $status = $studentLesson->status === 1 ? "Có mặt" : "Vắng";
+                                $status = $studentLesson->status == 1 ? "Có mặt" : "Vắng";
                             }
                         }
     

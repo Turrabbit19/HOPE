@@ -144,11 +144,11 @@ export default function DashboardActions() {
   const getStatusColor = (status) => {
     switch (status) {
       case "Có mặt":
-        return "text-green-600";
+        return "bg-green-100";
       case "Vắng":
-        return "text-red-600";
+        return "bg-red-100";
       default:
-        return "text-gray-600";
+        return "bg-gray-100";
     }
   };
 
@@ -250,7 +250,9 @@ export default function DashboardActions() {
               return (
                 <div
                   key={shift}
-                  className="bg-white shadow-sm rounded-lg p-6 relative border border-gray-200"
+                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
+                    lesson ? getStatusColor(lesson.status) : "bg-white"
+                  }`}
                 >
                   <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
                     {shift}
@@ -259,9 +261,7 @@ export default function DashboardActions() {
                     <div>
                       <p>{schedule.room_name}</p>
                       <p>{schedule.subject_name}</p>
-                      <p className={`font-medium ${getStatusColor(lesson.status)}`}>
-                        {lesson.status}
-                      </p>
+                      <p>{schedule.classroom_code}</p>
                       <button
                         onClick={() => openPopup(schedule, lesson)}
                         className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
@@ -324,7 +324,9 @@ export default function DashboardActions() {
                       return (
                         <td
                           key={day}
-                          className="p-3 text-center border border-gray-200"
+                          className={`p-3 text-center border border-gray-200 ${
+                            lesson ? getStatusColor(lesson.status) : ""
+                          }`}
                         >
                           {schedule && lesson ? (
                             <div>
@@ -332,9 +334,7 @@ export default function DashboardActions() {
                                 {schedule.subject_name}
                               </p>
                               <p>{schedule.room_name}</p>
-                              <p className={`font-medium ${getStatusColor(lesson.status)}`}>
-                                {lesson.status}
-                              </p>
+                              <p>{schedule.classroom_code}</p>
                               <button
                                 onClick={() => openPopup(schedule, lesson)}
                                 className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
@@ -487,7 +487,7 @@ export default function DashboardActions() {
                   <span className="font-semibold mr-2">Ngày:</span>{" "}
                   {selectedSchedule.lesson.date}
                 </p>
-                <p className="flex items-center text-gray-700">
+                <p className={`flex items-center text-gray-700 ${getStatusColor(selectedSchedule.lesson.status)}`}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 mr-2 text-gray-500"
@@ -503,9 +503,7 @@ export default function DashboardActions() {
                     />
                   </svg>
                   <span className="font-semibold mr-2">Trạng thái:</span>{" "}
-                  <span className={`font-medium ${getStatusColor(selectedSchedule.lesson.status)}`}>
-                    {selectedSchedule.lesson.status}
-                  </span>
+                  {selectedSchedule.lesson.status}
                 </p>
 
                 {selectedSchedule.link !== "NULL" && (

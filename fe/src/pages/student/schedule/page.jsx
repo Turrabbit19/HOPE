@@ -19,6 +19,7 @@ export default function DashboardActions() {
   const [error, setError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const daysOfWeek = [
     "Thứ 2",
@@ -34,6 +35,14 @@ export default function DashboardActions() {
   useEffect(() => {
     setSelectedDay(getCurrentDay());
     fetchSchedules();
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      refreshData();
+    }, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(pollInterval);
   }, []);
 
   const fetchSchedules = async () => {
@@ -74,6 +83,10 @@ export default function DashboardActions() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const getCurrentDay = () => {
@@ -125,6 +138,18 @@ export default function DashboardActions() {
   const closePopup = () => {
     setShowPopup(false);
     setSelectedSchedule(null);
+    refreshData();
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Có mặt":
+        return "bg-green-100";
+      case "Vắng":
+        return "bg-red-100";
+      default:
+        return "bg-gray-100";
+    }
   };
 
   if (isLoading) {
@@ -136,7 +161,7 @@ export default function DashboardActions() {
   }
 
   return (
-    <div className="space-y-6  mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50 w-full">
+    <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50 w-full">
       <div className="bg-white shadow-md rounded-lg p-6">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2">
@@ -184,8 +209,8 @@ export default function DashboardActions() {
             </svg>
           </button>
           <div className="flex flex-col items-center">
-            <span className=" text-gray-500 mb-1">Tuần hiện tại</span>
-            <div className="text-center font-bold text text-gray-700">
+            <span className="text-gray-500 mb-1">Tuần hiện tại</span>
+            <div className="text-center font-bold text-gray-700">
               {format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} -{" "}
               {format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}
             </div>
@@ -225,16 +250,18 @@ export default function DashboardActions() {
               return (
                 <div
                   key={shift}
-                  className="bg-white shadow-sm rounded-lg p-6 relative border border-gray-200"
+                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
+                    lesson ? getStatusColor(lesson.status) : "bg-white"
+                  }`}
                 >
-                  <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1  font-semibold rounded-br-lg rounded-tl-lg">
+                  <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
                     {shift}
                   </div>
                   {schedule && lesson ? (
                     <div>
-                      {/* <p className="font-semibold">{schedule.teacher_name}</p> */}
                       <p>{schedule.room_name}</p>
                       <p>{schedule.subject_name}</p>
+                      <p>{schedule.classroom_code}</p>
                       <button
                         onClick={() => openPopup(schedule, lesson)}
                         className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
@@ -266,7 +293,7 @@ export default function DashboardActions() {
                     >
                       <div className="flex flex-col">
                         <span>{day}</span>
-                        <span className="text text-gray-500 font-normal">
+                        <span className="text-gray-500 font-normal">
                           {format(addDays(startOfCurrentWeek, index), "dd/MM", {
                             locale: vi,
                           })}
@@ -277,7 +304,7 @@ export default function DashboardActions() {
                 </tr>
               </thead>
               <tbody>
-                {shifts.map((shift, shiftIndex) => (
+                {shifts.map((shift) => (
                   <tr
                     key={shift}
                     className="hover:bg-gray-50 transition-colors duration-150"
@@ -297,7 +324,9 @@ export default function DashboardActions() {
                       return (
                         <td
                           key={day}
-                          className="p-3 text-center border border-gray-200"
+                          className={`p-3 text-center border border-gray-200 ${
+                            lesson ? getStatusColor(lesson.status) : ""
+                          }`}
                         >
                           {schedule && lesson ? (
                             <div>
@@ -305,7 +334,7 @@ export default function DashboardActions() {
                                 {schedule.subject_name}
                               </p>
                               <p>{schedule.room_name}</p>
-
+                              <p>{schedule.classroom_code}</p>
                               <button
                                 onClick={() => openPopup(schedule, lesson)}
                                 className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
@@ -458,7 +487,7 @@ export default function DashboardActions() {
                   <span className="font-semibold mr-2">Ngày:</span>{" "}
                   {selectedSchedule.lesson.date}
                 </p>
-                <p className="flex items-center text-gray-700">
+                <p className={`flex items-center text-gray-700 ${getStatusColor(selectedSchedule.lesson.status)}`}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 mr-2 text-gray-500"
@@ -520,3 +549,4 @@ export default function DashboardActions() {
     </div>
   );
 }
+

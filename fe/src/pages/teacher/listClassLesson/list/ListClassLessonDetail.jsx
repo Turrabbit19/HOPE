@@ -6,22 +6,21 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [attendanceStatus, setAttendanceStatus] = useState({});
 
-  // Check if the date is today's date
   const isCurrentDate = (dateString) => {
     const today = new Date();
     const lessonDate = new Date(dateString.split('/').reverse().join('-'));
     return today.toDateString() === lessonDate.toDateString();
   };
 
-  // Handle fetching students when the "Điểm danh" button is clicked
   const handleAttendance = async (lessonId) => {
-    if (loading) return; // Prevent duplicate calls during loading
+    if (loading) return;
 
     setLoading(true);
     setError(null);
 
-    const token = localStorage.getItem('token'); // Get token from localStorage
+    const token = localStorage.getItem('token');
 
     if (!token) {
       setError('Không tìm thấy token. Vui lòng đăng nhập lại.');
@@ -34,7 +33,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
         `http://127.0.0.1:8000/api/teacher/schedule/${ScheduleInfor.id}/${lessonId}/students`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Send token in header
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -43,20 +42,79 @@ const ListClassLessonDetail = ({ scheduleData }) => {
         throw new Error('Failed to fetch data from server');
       }
 
-      const data = await response.json(); // Parse JSON data
+      const data = await response.json();
 
-      // Use the correct structure for the students list
       if (data.ListStudents) {
-        setStudents(data.ListStudents); // Assuming the ListStudents field contains student info
+        setStudents(data.ListStudents);
         setSelectedLesson((prevSelectedLesson) =>
           prevSelectedLesson === lessonId ? null : lessonId
         );
+        // Initialize attendance status for each student
+        const initialStatus = {};
+        data.ListStudents.forEach(student => {
+          initialStatus[student.student_id] = student.status === 'Có mặt' ? 1 : 0;
+        });
+        setAttendanceStatus(initialStatus);
       } else {
         setError('Không có dữ liệu sinh viên.');
       }
     } catch (err) {
       console.error('Error fetching student data:', err);
       setError('Không thể lấy danh sách sinh viên. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleAttendance = (studentId) => {
+    setAttendanceStatus(prevStatus => ({
+      ...prevStatus,
+      [studentId]: prevStatus[studentId] === 1 ? 0 : 1
+    }));
+  };
+
+  const submitAttendance = async (lessonId) => {
+    setLoading(true);
+    setError(null);
+
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setError('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      setLoading(false);
+      return;
+    }
+
+    const attendanceData = {
+      attendance: Object.entries(attendanceStatus).map(([student_id, status]) => ({
+        student_id: parseInt(student_id),
+        status
+      }))
+    };
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/teacher/attendance/${ScheduleInfor.id}/${lessonId}/mark`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(attendanceData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to submit attendance');
+      }
+
+      const result = await response.json();
+      console.log('Attendance submitted successfully:', result);
+      // Update the local state or refetch the student list here if needed
+    } catch (err) {
+      console.error('Error submitting attendance:', err);
+      setError('Không thể cập nhật điểm danh. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -115,10 +173,11 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${lesson.status === 'Đã học'
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        lesson.status === 'Đã học'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
-                        }`}
+                      }`}
                     >
                       {lesson.status}
                     </span>
@@ -126,10 +185,11 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleAttendance(lesson.id)}
-                      className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${loading && selectedLesson === lesson.id
+                      className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${
+                        loading && selectedLesson === lesson.id
                           ? 'opacity-50 cursor-not-allowed'
                           : ''
-                        }`}
+                      }`}
                       disabled={loading && selectedLesson === lesson.id}
                     >
                       {loading && selectedLesson === lesson.id
@@ -149,13 +209,23 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                             Danh sách sinh viên:
                           </h6>
                           {Array.isArray(students) && students.length > 0 ? (
-                            <ul className="list-disc list-inside space-y-1">
+                            <ul className="space-y-2">
                               {students.map((student) => (
                                 <li
                                   key={student.student_id}
-                                  className="text-sm text-gray-600"
+                                  className="flex items-center justify-between text-sm text-gray-600"
                                 >
-                                  {student.student_name} - {student.status}
+                                  <span>{student.student_name}</span>
+                                  <button
+                                    onClick={() => toggleAttendance(student.student_id)}
+                                    className={`px-3 py-1 rounded ${
+                                      attendanceStatus[student.student_id] === 1
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-red-500 text-white'
+                                    }`}
+                                  >
+                                    {attendanceStatus[student.student_id] === 1 ? 'Có mặt' : 'Vắng mặt'}
+                                  </button>
                                 </li>
                               ))}
                             </ul>
@@ -163,6 +233,15 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                             <p className="text-sm text-gray-500">
                               Không có sinh viên trong danh sách.
                             </p>
+                          )}
+                          {students.length > 0 && (
+                            <button
+                              onClick={() => submitAttendance(lesson.id)}
+                              className="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
+                              disabled={loading}
+                            >
+                              {loading ? 'Đang cập nhật...' : 'Cập nhật điểm danh'}
+                            </button>
                           )}
                         </>
                       )}

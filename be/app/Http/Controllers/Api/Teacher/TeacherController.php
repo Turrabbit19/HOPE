@@ -344,12 +344,12 @@ class TeacherController extends Controller
                 ->where('lesson_id', $lesson_id)
                 ->firstOrFail();
     
-            $currentDateTime = now();
-            $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->end_time);
+            // $currentDateTime = now();
+            // $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->end_time);
     
-            if ($currentDateTime < $lessonEndTime) {
-                return response()->json(['message' => 'Lịch học chưa đến giờ.'], 400);
-            }
+            // if ($currentDateTime < $lessonEndTime) {
+            //     return response()->json(['message' => 'Lịch học chưa đến giờ.'], 400);
+            // }
     
             DB::beginTransaction();
     

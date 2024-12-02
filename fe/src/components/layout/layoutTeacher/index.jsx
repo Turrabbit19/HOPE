@@ -10,16 +10,18 @@ const LayoutTeacher = () => {
       <AsideTeacher />
 
       {/* Phần nội dung chính của ứng dụng */}
-      <main className="flex-1 p-8 bg-white overflow-y-auto">
+      <div className="flex-1 flex flex-col">
         <HeaderTeacher />
 
-        <div className="max-w-[1470px] mx-auto">
-          {/* Nội dung từ route con sẽ được hiển thị tại đây */}
-          <Outlet />
-        </div>
+        <main className="flex-1 p-8 bg-white overflow-y-auto">
+          <div className="max-w-[1470px] mx-auto">
+            {/* Nội dung từ route con sẽ được hiển thị tại đây */}
+            <Outlet />
+          </div>
+        </main>
 
         <Footer />
-      </main>
+      </div>
     </div>
   );
 };

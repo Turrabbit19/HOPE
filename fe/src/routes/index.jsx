@@ -8,7 +8,6 @@ import BreadCrumb from "./breadcrumb";
 import MajorManagement from "../pages/admin/major";
 import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
-import CoursesManager from "../pages/admin/courses";
 import SemesterManage from "../pages/admin/semesters";
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
@@ -380,15 +379,7 @@ const Router = createBrowserRouter([
                 ),
             },
             //
-            {
-                path: "courses",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <CoursesManager />
-                    </>
-                ),
-            },
+
 
             //
             {

@@ -42,6 +42,7 @@ class ApiScheduleController extends Controller
     {
         try {
             $majors = Major::whereHas('students.course', fn($query) => $query->where('id', $courseId))
+            ->where('id', '!=', 1)
             ->withCount('students')
             ->get();
 

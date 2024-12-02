@@ -63,6 +63,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);
         Route::get('export-teacher', [ApiTeacherController::class, 'exportTeacher']);
         Route::post('import-teacher', [ApiTeacherController::class, 'importTeacher']);
+        Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
 
         Route::apiResource('courses', ApiCourseController::class);
         Route::get('course/{id}/restore', [ApiCourseController::class, 'restore']);

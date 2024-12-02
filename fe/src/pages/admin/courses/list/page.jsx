@@ -203,7 +203,6 @@ const ListCourse = () => {
                 style={{ width: 300 }}
                 allowClear
               />
-
             </div>
           </div>
 
@@ -277,29 +276,32 @@ const ListCourse = () => {
                       <img src="/assets/svg/setting.svg" alt="setting" />
                       Quản Lý Khóa Học
                     </Link>
-                    <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
-                      <img src="/assets/svg/eye.svg" alt="detail" />
-                      Chi Tiết
-                    </button>
-                    <Popconfirm
-                      title="Xóa khóa học"
-                      onConfirm={() => confirmDelete(course.id)}
-                      okText="Có"
-                      cancelText="Không"
-                    >
-                      <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                        <img src="/assets/svg/remove.svg" alt="remove" />
-                        Xóa khỏi Danh Sách
-                      </button>
-                    </Popconfirm>
+                    {course.status === "Đang diễn ra" ||
+                    course.status === "Kết thúc" ? (
+                      ""
+                    ) : (
+                      <>
+                        <Popconfirm
+                          title="Xóa khóa học"
+                          onConfirm={() => confirmDelete(course.id)}
+                          okText="Có"
+                          cancelText="Không"
+                        >
+                          <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                            <img src="/assets/svg/remove.svg" alt="remove" />
+                            Xóa khỏi Danh Sách
+                          </button>
+                        </Popconfirm>
 
-                    <button
-                      className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                      onClick={() => showEditModal(course)}
-                    >
-                      <EditOutlined />
-                      Sửa Thông Tin
-                    </button>
+                        <button
+                          className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                          onClick={() => showEditModal(course)}
+                        >
+                          <EditOutlined />
+                          Sửa Thông Tin
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

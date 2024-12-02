@@ -118,6 +118,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
         Route::post('send-email', [MailController::class, 'sendEmail']);
+        Route::post('send-email/teacher', [MailController::class, 'sendEmailToTeacher']);
 
 
         Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
@@ -128,6 +129,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
 
         Route::apiResource('paypal', PayPalController::class);
+        Route::post( 'paypal/getTransactionsByCourse', [PayPalController::class,'getTransactionsByCourse']);
 
     });
 

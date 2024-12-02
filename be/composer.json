@@ -16,7 +16,8 @@
         "maatwebsite/excel": "^3.1",
         "paypal/paypal-server-sdk": "^0.6.0",
         "predis/predis": "*",
-        "pusher/pusher-php-server": "^7.2"
+        "pusher/pusher-php-server": "^7.2",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

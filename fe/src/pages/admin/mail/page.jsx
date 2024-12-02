@@ -1,63 +1,64 @@
+import { Button, Form, Input } from "antd";
 import React, { useState } from "react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import instance from "../../../config/axios";
-import { notification } from "antd";
 
 const MailManagement = () => {
-  const style = { layout: "vertical" };
-  const [amount, setAmount] = useState(10.00)
-  const createOrder = async (data, actions) => {
-    try {
-      return actions.order.create({
-        purchase_units: [
-          {
-            amount: {
-              value: amount,
-            },
-          },
-        ],
-      });
-    } catch (err) {
-      console.log("Error creating order:", err.message);
-      throw new Error("Error creating PayPal order");
-    }
-  };
+  // const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  let infor = {
-    student_id: 2,
-    payment_id: '',
-    amount: amount,
-  }
+  // const handleSignIn = () => {
+  //   setIsAuthenticated(true);
+  // };
 
-  const onApprove = async (data, actions) => {
-    try {
-      const details = await actions.order.capture();
-      infor.payment_id = details.id;
-      const response = await instance.post(`admin/paypal`, infor)
-      notification.success({
-        message: "Thanh toán học phí thành công"
-      })
-    } catch (err) {
-      console.error("Error in onApprove:", err.message);
-    }
-  };
+  // const handleSignOut = () => {
+  //   setIsAuthenticated(false);
+  // };
 
   return (
-    <PayPalScriptProvider
-      options={{
-        clientId:
-          "AUxabASNDpkW7wNFNpvbTD7k2FfqUID-BWIEk9qq9FVGpNImUq74PH3oPMQyjMMwqHIauqWB0shiW4Ex",
-      }}
-    >
-      <PayPalButtons
-        style={style}
-        disabled={false}
-        forceReRender={[style]}
-        fundingSource={undefined}
-        createOrder={createOrder}
-        onApprove={onApprove}
-      />
-    </PayPalScriptProvider>
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: "20px" }}>
+      <h2>Contact Us</h2>
+      <Form
+        // onFinish={onFinish}
+        layout="vertical"
+        initialValues={{ name: "", email: "", subject: "", message: "" }}
+      >
+        <Form.Item
+          label="Name"
+          name="name"
+          rules={[{ required: true, message: "Please enter your name!" }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[{ required: true, message: "Please enter your email!" }, { type: 'email', message: 'Please enter a valid email!' }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Subject"
+          name="subject"
+          rules={[{ required: true, message: "Please enter the subject!" }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Message"
+          name="message"
+          rules={[{ required: true, message: "Please enter your message!" }]}
+        >
+          <Input.TextArea rows={4} />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Send Email
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 };
 

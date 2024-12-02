@@ -94,6 +94,23 @@ const AsideAdmin = () => {
             icon: <TeamOutlined />,
         },
     ];
+    const mail = [
+        {
+            name: "Quản lý mail",
+            link: "/admin/mail",
+            icon: <UserOutlined />,
+        },
+        {
+            name: "Sinh viên",
+            link: "/admin/mail/student",
+            icon: <UserOutlined />,
+        },
+        {
+            name: "Giảng viên",
+            link: "/admin/mail/teacher",
+            icon: <TeamOutlined />,
+        },
+    ];
 
     const { Sider } = Layout;
 
@@ -138,6 +155,11 @@ const AsideAdmin = () => {
             key: "sub5",
             icon: <MailOutlined />,
             label: <Link to="/admin/mail">Quản lý Mail</Link>,
+            children: mail.map((item, index) => ({
+                key: `sub2-${index + 1}`,
+                icon: item.icon,
+                label: <Link to={item.link}>{item.name}</Link>,
+            })),
         },
         {
             key: "sub6",

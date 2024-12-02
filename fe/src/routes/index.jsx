@@ -8,7 +8,6 @@ import BreadCrumb from "./breadcrumb";
 import MajorManagement from "../pages/admin/major";
 import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
-import SemesterManage from "../pages/admin/semesters";
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
 import StudentManager from "../pages/admin/userManager/student";
@@ -382,15 +381,7 @@ const Router = createBrowserRouter([
 
 
             //
-            {
-                path: "semesters",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <SemesterManage />
-                    </>
-                ),
-            },
+
             // Giao diện list semester
             {
                 path: "list-semesters",

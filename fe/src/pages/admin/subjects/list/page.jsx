@@ -100,10 +100,8 @@ const ListSubject = () => {
     setSearchValue(value);
 
     if (value.trim() === "") {
-      // Nếu input trống, hiển thị tất cả các khóa học
       setFilteredCourses(allCourses);
     } else {
-      // Lọc khóa học theo tên
       const filtered = allCourses.filter((course) =>
         course.name.toLowerCase().includes(value.toLowerCase())
       );
@@ -112,7 +110,9 @@ const ListSubject = () => {
   };
 
   const togglePopup = () => {
-    setIsPopupVisible(!isPopupVisible); // Đảo ngược trạng thái hiển thị
+    setIsPopupVisible(!isPopupVisible);
+    form.resetFields();
+    setUpdate(false);
     setAdditionalVariants([
       {
         major: majors[0],
@@ -120,7 +120,6 @@ const ListSubject = () => {
     ]);
   };
 
-  // Hàm xử lý khi form được gửi
   const handleFormSubmit = async (values) => {
     setLoading(true);
     try {
@@ -128,16 +127,17 @@ const ListSubject = () => {
         name: values.name,
         description: values.description,
         credit: values.credit,
-        status: values.status,
         majors: values.majors.map((id) => ({ id })),
         order: values.order,
-        code: values.code
+        code: values.code,
+        form: values.form,
+        status: 0
       };
       console.log(payload);
       const response = await instance.post("/admin/subjects", payload);
       const newSubject = response.data.data;
       message.success("Thêm môn học mới thành công !!!");
-      setIsPopupVisible(!isPopupVisible);
+      togglePopup();
       form.resetFields();
       setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
     } catch (error) {
@@ -153,13 +153,8 @@ const ListSubject = () => {
     }
   };
 
-
-
-
-  // Hàm hủy xác nhận xóa
   const cancel = (e) => {
     console.log(e);
-    // message.error("Click on No");
   };
 
   const getMajorIdBySubjectId = async (subjectId) => {
@@ -171,13 +166,12 @@ const ListSubject = () => {
     return response.data.data;
   };
 
-  // Hàm mở modal chỉnh sửa khóa học
   const openEditModal = async (values) => {
-    debugger
+    debugger;
+    console.log(values);
     setIsPopupVisible(!isPopupVisible);
     setUpdate(true);
     const majors = await getMajorIdBySubjectId(values.id);
-    console.log(majors);
     form.setFieldsValue({
       code: values.code,
       name: values.name,
@@ -185,7 +179,8 @@ const ListSubject = () => {
       credit: values.credit,
       status: values.status,
       order: values.order,
-      majors: majors.map(m => m.id),
+      form: values.form,
+      majors: majors.map((m) => m.id),
     });
     setInitialValues(values.id);
   };
@@ -219,27 +214,22 @@ const ListSubject = () => {
     }
   };
 
-  // Hàm đóng modal chỉnh sửa khóa học
   const closeEditModal = () => {
     setIsEditModalVisible(false);
     form.resetFields();
   };
 
-  // State cho modal lọc khóa học
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Hàm hiển thị modal lọc khóa học
   const handleShowModalFilter = () => {
     setIsModalVisible(true);
   };
 
-  // Hàm xử lý khi nhấn OK trong modal lọc
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
         console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
-        // Xử lý lọc ở đây
         setIsModalVisible(false); // Đóng modal sau khi xử lý xong
       })
       .catch((info) => {
@@ -247,9 +237,8 @@ const ListSubject = () => {
       });
   };
 
-  // Hàm hủy bỏ việc hiển thị modal
   const handleCancel = () => {
-    setIsModalVisible(false); // Ẩn modal lọc
+    setIsModalVisible(false);
   };
 
   if (loading) {
@@ -273,7 +262,7 @@ const ListSubject = () => {
 
                   <Input.Search
                     placeholder="Tìm kiếm môn học..."
-                    onChange={handleSearch} 
+                    onChange={handleSearch}
                     style={{ width: 300 }}
                     allowClear
                   />
@@ -328,7 +317,9 @@ const ListSubject = () => {
                                     alt=""
                                   />
                                   <span className="text-[#44CC15] text-[12px]">
-                                    {subject.status}
+                                    {subject.status
+                                      ? "Đang hoạt động"
+                                      : "Tạm dừng"}
                                   </span>
                                 </div>
                               </div>
@@ -337,6 +328,13 @@ const ListSubject = () => {
                                 Code:
                                 <span className="text-black ml-2">
                                   {subject.code}
+                                </span>
+                              </p>
+
+                              <p className="text-[#9E9E9E] mt-3 ml-3">
+                                Hình thức:
+                                <span className="text-black ml-2">
+                                  {subject.form ? "ONLINE" : "OFFLINE"}
                                 </span>
                               </p>
 
@@ -367,8 +365,14 @@ const ListSubject = () => {
                         <div className="listCourse__item-bottom teaching__card-bottom ">
                           <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                             <img src="/assets/svg/eye.svg" alt="" />
-                            <Link to={`detail/${subject.id}`} state={{subjectName: subject.name, credit: subject.credit}}>
-                            Chi Tiết
+                            <Link
+                              to={`detail/${subject.id}`}
+                              state={{
+                                subjectName: subject.name,
+                                credit: subject.credit,
+                              }}
+                            >
+                              Chi Tiết
                             </Link>
                           </button>
 
@@ -510,20 +514,37 @@ const ListSubject = () => {
                       </Col>
 
                       <Col span={12}>
-                        <Form.Item label="Trạng thái" name="status" rules={[]}>
+                        <Form.Item label="Hình thức" name="form">
                           <Select
-                            defaultValue="0"
-                            placeholder="Chọn trạng thái"
+                            placeholder="Chọn hình thức học"
                             options={[
                               {
-                                value: "0",
-                                label: "Đang hoạt động",
+                                value: 0,
+                                label: "OFFLINE",
                               },
-                              { value: "1", label: "Tạm dừng" },
+                              { value: 1, label: "ONLINE" },
                             ]}
                           />
                         </Form.Item>
                       </Col>
+                      {update ? (
+                        <Col span={12}>
+                          <Form.Item label="Trạng thái" name="status">
+                            <Select
+                              placeholder="Chọn trạng thái"
+                              options={[
+                                {
+                                  value: 0,
+                                  label: "Tạm dừng",
+                                },
+                                { value: 1, label: "Đang hoạt động" },
+                              ]}
+                            />
+                          </Form.Item>
+                        </Col>
+                      ) : (
+                        ""
+                      )}
                     </Row>
                   </Col>
 
@@ -558,7 +579,6 @@ const ListSubject = () => {
               </Form>
             </div>
           </Modal>
-
         </div>
       </div>
     </>

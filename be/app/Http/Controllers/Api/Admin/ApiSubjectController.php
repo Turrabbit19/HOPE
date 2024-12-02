@@ -48,7 +48,8 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
-                    'status' => $subject->status ? "Đang hoạt động" : "Tạm dừng",
+                    'form' => $subject->form,
+                    'status' => $subject->status,
                 ];
             });
 
@@ -110,6 +111,7 @@ class ApiSubjectController extends Controller
             'order' => 'required|integer|min:1|max:9',
             'status' => 'boolean',
             'majors' => 'required|array',
+            'form' => 'required|boolean',
             'majors.*.id' => 'required|exists:majors,id',
         ]);
 
@@ -127,7 +129,18 @@ class ApiSubjectController extends Controller
 
             $subject->majors()->sync($majors);
 
-            return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
+            $responseData = [
+                'id' => $subject->id,
+                'code' => $subject->code,
+                'name' => $subject->name,
+                'description' => $subject->description,
+                'credit' => $subject->credit,
+                'order' => $subject->order,
+                'form' => $subject->form,
+                'status' => $subject->status,
+            ];
+
+            return response()->json(['data' => $responseData, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -170,6 +183,7 @@ class ApiSubjectController extends Controller
             'credit' => 'sometimes|integer|min:1|max:19',
             'order' => 'sometimes|integer|min:1|max:9',
             'status' => 'sometimes',
+            'form' => 'sometimes',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',
         ]);
@@ -191,7 +205,18 @@ class ApiSubjectController extends Controller
                 $subject->majors()->sync($majors);
             }
 
-            return response()->json(['data' => $data, 'message' => 'Cập nhật thành công'], 200);
+            $responseData = [
+                'id' => $subject->id,
+                'code' => $subject->code,
+                'name' => $subject->name,
+                'description' => $subject->description,
+                'credit' => $subject->credit,
+                'order' => $subject->order,
+                'form' => $subject->form,
+                'status' => $subject->status,
+            ];
+
+            return response()->json(['data' => $responseData, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {

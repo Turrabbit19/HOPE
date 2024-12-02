@@ -10,7 +10,6 @@ import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
 import CoursesManager from "../pages/admin/courses";
 import SemesterManage from "../pages/admin/semesters";
-import SubjectManager from "../pages/admin/subjects";
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
 import StudentManager from "../pages/admin/userManager/student";
@@ -423,15 +422,6 @@ const Router = createBrowserRouter([
                 ),
             },
 
-            {
-                path: "subjects",
-                element: (
-                    <>
-                        <BreadCrumb />
-                        <SubjectManager />
-                    </>
-                ),
-            },
             {
                 path: "list-course",
                 element: (

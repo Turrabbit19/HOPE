@@ -331,4 +331,40 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getStudentsByMajorAndCourse(string $majorId, $courseId){
+        try {
+            $students = Student::with('user', 'course', 'majors')
+                ->where('course_id', $courseId)
+                ->whereHas('majors', function($q) use ($majorId) {
+                    $q->where('major_id', $majorId);
+                })
+                ->get();
+    
+            $data = $students->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'avatar' => $student->user->avatar,
+                    'student_code' => $student->student_code,
+                    'name' => $student->user->name,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'course_name' => $student->course->name,
+                    'current_semester' => $student->current_semester,
+                    'status' => match($student->status) {
+                        "0" => "Đang học",
+                        "1" => "Bảo lưu",
+                        "2" => "Hoàn thành",
+                        default => "Không xác định"
+                    }
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy dữ liệu cho course hoặc major'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }    
 }

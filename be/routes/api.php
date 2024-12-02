@@ -42,6 +42,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::apiResource('students', ApiStudentController::class);
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
+        Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
 
         Route::apiResource('teachers', ApiTeacherController::class);
         Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);

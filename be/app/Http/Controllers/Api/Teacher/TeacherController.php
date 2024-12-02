@@ -269,14 +269,14 @@ class TeacherController extends Controller
                 ->where('lesson_id', $lessonId)
                 ->firstOrFail();
     
-            // $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time); 
-            // $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time); 
+            $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time); 
+            $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time); 
     
-            // $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
+            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
             
-            // if ($currentDateTime < $lessonStartTime) {
-            //     return response()->json(['message' => 'Chưa đến giờ học.'], 400);
-            // }
+            if ($currentDateTime < $lessonStartTime) {
+                return response()->json(['message' => 'Chưa đến giờ học.'], 400);
+            }
     
             $classroomId = $scheduleInfor->classroom->id;
             $listStudents = StudentClassroom::where('classroom_id', $classroomId)->get();
@@ -344,12 +344,12 @@ class TeacherController extends Controller
                 ->where('lesson_id', $lesson_id)
                 ->firstOrFail();
     
-            // $currentDateTime = now();
-            // $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->end_time);
+            $currentDateTime = now();
+            $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->end_time);
     
-            // if ($currentDateTime < $lessonEndTime) {
-            //     return response()->json(['message' => 'Lịch học chưa đến giờ.'], 400);
-            // }
+            if ($currentDateTime < $lessonEndTime) {
+                return response()->json(['message' => 'Lịch học chưa đến giờ.'], 400);
+            }
     
             DB::beginTransaction();
     

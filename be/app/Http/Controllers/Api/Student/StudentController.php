@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseSemester;
 use App\Models\Schedule;
 use App\Models\ScheduleLesson;
 use App\Models\Shift;
@@ -67,6 +68,38 @@ class   StudentController extends Controller
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
     
+            $currentCourseSemester = CourseSemester::where('course_id', $student->course_id)
+            ->where('order', $student->current_semester)
+            ->join('semesters', 'semesters.id', '=', 'course_semesters.semester_id')
+            ->select('semesters.start_date', 'semesters.end_date')
+            ->first();
+
+            if (!$currentCourseSemester) {
+                return response()->json(['error' => 'Không tìm thấy thông tin kỳ học.'], 404);
+            }
+
+            $startDate = Carbon::parse($currentCourseSemester->start_date);
+            $registrationStart = $startDate->copy()->subDays(7); 
+            $registrationEnd = $registrationStart->copy()->addDays(3); 
+            $now = Carbon::now();
+
+            if ($now->lt($registrationStart)) {
+                return response()->json(['error' => 'Thời gian đăng ký chưa bắt đầu.'], 403);
+            }
+
+            if ($now->gt($registrationEnd)) {
+                return response()->json(['error' => 'Thời gian đăng ký đã kết thúc.'], 403);
+            }
+
+            $timeLeft = $now->diff($registrationEnd);
+            $formattedTimeLeft = sprintf(
+                "%d ngày, %d giờ, %d phút, %d giây",
+                $timeLeft->d,
+                $timeLeft->h,
+                $timeLeft->i,
+                $timeLeft->s
+            );
+
             $registeredSubjects = StudentSchedule::where('student_id', $student->id)
                 ->join('schedules', 'schedules.id', '=', 'student_schedules.schedule_id')
                 ->pluck('schedules.subject_id')
@@ -90,7 +123,11 @@ class   StudentController extends Controller
                 ];
             });
     
-            return response()->json(['subjects' => $listSubjects], 200);
+            return response()->json([
+                'message' => 'Bạn còn thời gian để đăng ký.',
+                'time_left' => $formattedTimeLeft,
+                'subjects' => $listSubjects
+            ], 200);
     
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);

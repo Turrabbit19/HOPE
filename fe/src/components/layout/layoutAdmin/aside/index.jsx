@@ -13,6 +13,9 @@ import {
   ReadOutlined,
   BellOutlined,
   AreaChartOutlined,
+  FormOutlined,
+  BarsOutlined,
+  DatabaseOutlined,
 } from "@ant-design/icons";
 
 const AsideAdmin = () => {
@@ -25,12 +28,12 @@ const AsideAdmin = () => {
       icon: <UserOutlined />,
     },
     {
-      name: "Quản Lý sinh viên",
+      name: "Quản lý Sinh viên",
       link: "/admin/all-student",
       icon: <TeamOutlined />,
     },
     {
-      name: "Quản lý giảng viên",
+      name: "Quản lý Giảng viên",
       link: "/admin/teacher-manager",
       icon: <UserOutlined />,
     },
@@ -49,14 +52,9 @@ const AsideAdmin = () => {
       icon: <ReadOutlined />,
     },
     {
-      name: "Kế hoạch học tập",
-      link: "/admin/list-syllabus",
-      icon: <BookFilled />,
-    },
-    {
       name: "Quản lý khóa học",
       link: "/admin/list-course",
-      icon: <BookOutlined />,
+      icon: <DatabaseOutlined />,
     },
     {
       name: "Quản lý kỳ học",
@@ -72,6 +70,14 @@ const AsideAdmin = () => {
       name: "Quản lý lớp học",
       link: "/admin/classrooms",
       icon: <ReadOutlined />,
+    },
+  ];
+
+  const schedules = [
+    {
+      name: "Kế hoạch học tập",
+      link: "/admin/list-syllabus",
+      icon: <BookFilled />,
     },
     {
       name: "Quản lý lịch học",
@@ -97,20 +103,10 @@ const AsideAdmin = () => {
 
   const items2 = [
     {
-      key: "sub4",
+      key: "sub1",
       icon: <AreaChartOutlined />,
       label: <Link to="/admin/statistical-report">Thống kê</Link>,
       children: statistical_report.map((item, index) => ({
-        key: `sub2-${index + 1}`,
-        icon: item.icon,
-        label: <Link to={item.link}>{item.name}</Link>,
-      })),
-    },
-    {
-      key: "sub1",
-      icon: <BookOutlined />,
-      label: "Quản lý chương trình dạy",
-      children: study_manager.map((item, index) => ({
         key: `sub1-${index + 1}`,
         icon: item.icon,
         label: <Link to={item.link}>{item.name}</Link>,
@@ -118,17 +114,37 @@ const AsideAdmin = () => {
     },
     {
       key: "sub2",
+      icon: <BarsOutlined />,
+      label: "Quản lý chương trình dạy",
+      children: study_manager.map((item, index) => ({
+        key: `sub2-${index + 1}`,
+        icon: item.icon,
+        label: <Link to={item.link}>{item.name}</Link>,
+      })),
+    },
+    {
+      key: "sub3",
+      icon: <FormOutlined />,
+      label: "Kế hoạch và lịch học",
+      children: schedules.map((item, index) => ({
+        key: `sub3-${index + 1}`,
+        icon: item.icon,
+        label: <Link to={item.link}>{item.name}</Link>,
+      })),
+    },
+    {
+      key: "sub4",
       icon: <TeamOutlined />,
       label: "Quản lý nhân lực",
       children: navigates.map((item, index) => ({
-        key: `sub2-${index + 1}`,
+        key: `sub4-${index + 1}`,
         icon: item.icon,
         label: <Link to={item.link}>{item.name}</Link>,
       })),
     },
 
     {
-      key: "sub3",
+      key: "sub5",
       icon: <BellOutlined />,
       label: <Link to="/admin/list-sections">Quản lý thông báo</Link>,
     },

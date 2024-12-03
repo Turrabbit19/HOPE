@@ -52,8 +52,8 @@ class ApiCourseController extends Controller
                 return [
                     "id" => $value->semester->id,
                     "name" => $value->semester->name,
-                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
-                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
+                    "start_date" => Carbon::parse($value->semester->start_date),
+                    "end_date" => Carbon::parse($value->semester->end_date),
                     "order" => "Kì học thứ"." ".$value->order
                 ];
             });

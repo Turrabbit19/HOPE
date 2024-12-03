@@ -134,14 +134,21 @@ class TeacherController extends Controller
     
     public function getDetailSchedule(string $scheduleId) {
         $user = Auth::user();
-
+    
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
+    
             $scheduleInfor = Schedule::where('teacher_id', $teacher->id)
-            ->where('id', $scheduleId)
-            ->firstOrFail();
-
+                ->where('id', $scheduleId)
+                ->firstOrFail();
+    
+            $now = Carbon::now(); // Thời gian hiện tại
+            $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time);
+            $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
+    
+            // Kiểm tra xem thời gian hiện tại có nằm trong ca học hay không
+            $isCurrentShift = $now->between($shiftStartTime, $shiftEndTime);
+    
             $data = [
                 'id' => $scheduleInfor->id,
                 'classroom' => $scheduleInfor->classroom->code,
@@ -151,25 +158,37 @@ class TeacherController extends Controller
                 'link' => $scheduleInfor->link ?? "Null",
                 'start_date' => Carbon::parse($scheduleInfor->start_date)->format('d/m/Y'),
                 'end_date' => Carbon::parse($scheduleInfor->end_date)->format('d/m/Y'),
-                'schedule_lessons' => $scheduleInfor->lessons->map(function ($lesson) {
+                'schedule_lessons' => $scheduleInfor->lessons->map(function ($lesson) use ($now, $shiftStartTime, $shiftEndTime, $isCurrentShift) {
+                    $studyDate = Carbon::parse($lesson->pivot->study_date);
+    
+                    if ($studyDate->lt($now) && !$studyDate->isToday()) {
+                        $status = "Đã hoàn thành";
+                    } elseif ($studyDate->isToday() && $isCurrentShift) {
+                        $status = "Đang dạy";
+                    } elseif ($studyDate->gt($now)) {
+                        $status = "Chưa hoàn thành";
+                    } else {
+                        $status = "Chưa hoàn thành";
+                    }
+    
                     return [
                         'id' => $lesson->id,
                         'name' => $lesson->name,
                         'description' => $lesson->description,
-                        'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
-                        'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Đã học" : "Chưa học",
+                        'date' => $studyDate->format('d/m/Y'),
+                        'status' => $status,
                     ];
                 }),
             ];
-
+    
             return response()->json(['ScheduleInfor' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
-    }
-
+    }    
+    
     public function getDetailsClassroom(string $scheduleId) {
         $user = Auth::user();
     

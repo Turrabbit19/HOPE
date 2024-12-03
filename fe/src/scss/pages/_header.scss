@@ -1,0 +1,36 @@
+.header_wrapper {
+    background: rgba(255, 255, 255);
+    border-bottom: 1px solid #888888;
+    box-shadow: 1px 1px 3px #888888;
+    margin-bottom: 32px;
+}
+.header {
+    display: flex;
+    padding: 24px 0;
+    justify-content: space-between;
+    align-items: center;
+
+    &__right,
+    &__left {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__btn-select {
+        margin-top: 3px;
+    }
+
+    &__user {
+        &-avatar {
+            display: block;
+            width: 36px;
+            height: 36px;
+            object-fit: cover;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #eee;
+        }
+    }
+}

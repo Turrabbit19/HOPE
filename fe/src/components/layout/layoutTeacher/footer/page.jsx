@@ -1,36 +1,42 @@
 export default function Footer() {
   return (
-    <footer className="bg-gray-100">
-      <div className=" mx-auto px-4 py-10 md:py-20">
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
-          <div className="flex flex-col items-center md:items-start">
+    <footer className="bg-gradient-to-br from-teal-50 to-blue-50 shadow-lg rounded-t-lg">
+      <div className="container mx-auto px-6 py-10 md:py-16">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
+          {/* Logo và mô tả */}
+          <div className="text-center md:text-left">
             <img
               src="https://caodang.fpt.edu.vn/wp-content/uploads/logo-3.png"
-              alt=""
+              alt="Logo"
+              className="w-32 mx-auto md:mx-0"
             />
-            <p className=" text-gray-600 text-center md:text-left">
+            <p className="text-gray-700 mt-4">
               Providing quality education since 2000
             </p>
           </div>
 
-          <nav className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4 text">
-            <a href="#" className="hover:text-primary transition-colors">
+          {/* Navigation */}
+          <nav className="flex flex-wrap justify-center md:justify-end gap-6 text-gray-700">
+            <a href="#" className="hover:text-teal-600 transition duration-300">
               Home
             </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            <a href="#" className="hover:text-teal-600 transition duration-300">
               About Us
             </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            <a href="#" className="hover:text-teal-600 transition duration-300">
               Services
             </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            <a href="#" className="hover:text-teal-600 transition duration-300">
               Contact
             </a>
           </nav>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-200 text text-center text-gray-600">
-          © {new Date().getFullYear()} HOPE. All rights reserved.
+        {/* Phần bản quyền */}
+        <div className="mt-12 pt-6 border-t border-gray-200 text-center">
+          <p className="text-gray-600 text-sm">
+            © {new Date().getFullYear()} <span className="font-semibold">HOPE</span>. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

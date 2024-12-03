@@ -23,11 +23,9 @@ export default function ScheduleTable() {
         const response = await fetch('http://127.0.0.1:8000/api/teacher/schedules', {
           headers: {
             Authorization: `Bearer ${token}`,
-          }
+          },
         });
-        if (!response.ok) {
-          throw new Error('Không thể lấy dữ liệu lịch học');
-        }
+        if (!response.ok) throw new Error('Không thể lấy dữ liệu lịch học');
         const data = await response.json();
         setSchedules(data.data);
         setLoading(false);
@@ -36,7 +34,6 @@ export default function ScheduleTable() {
         setLoading(false);
       }
     };
-
     fetchSchedules();
   }, [token]);
 
@@ -45,69 +42,82 @@ export default function ScheduleTable() {
     setIsPopupOpen(true);
   };
 
-  if (loading) return <div className="text-center py-4">Đang tải...</div>;
-  if (error) return <div className="text-center py-4 text-red-500">Lỗi: {error}</div>;
-  if (!schedules || schedules.length === 0) return <div className="text-center py-4">Không có dữ liệu lịch học</div>;
+  if (loading) return <div className="text-center py-4 animate-pulse text-gray-600">Đang tải...</div>;
+  if (error) return <div className="text-center py-4 text-red-500">{`Lỗi: ${error}`}</div>;
+  if (!schedules.length) return <div className="text-center py-4 text-gray-500">Không có dữ liệu lịch học</div>;
 
   return (
-    <div className="schedule-table bg-white shadow-lg rounded-lg p-6 sm:p-8 max-w-full mx-auto my-8 overflow-x-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Danh sách lớp học</h2>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lớp học</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khóa học</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Học kỳ</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngành</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Môn học</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ca học</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng học</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Các ngày trong tuần</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {schedules.map((schedule) => (
-            <tr key={schedule.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.classroom}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.course_name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.semester_name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.major_name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.subject_name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.shift_name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.room_name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.start_date}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.end_date}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {schedule.days_of_week.map((day, index) => (
-                  <span key={index} className="inline-block mr-2">
-                    {Object.entries(day)[0][0]} {Object.entries(day)[0][1]}
-                    {index < schedule.days_of_week.length - 1 ? ',' : ''}
-                  </span>
+    <div className="bg-gray-100 min-h-screen py-8">
+      <div className=" mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 p-6 text-gray-700 text-center">
+          <h2 className="text-3xl font-semibold">Danh sách lớp học</h2>
+        </div>
+        <div className="p-6 overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+            <thead className="bg-blue-100 text-gray-700">
+              <tr>
+                {[
+                  'Lớp học',
+                  'Khóa học',
+                  'Học kỳ',
+                  'Ngành',
+                  'Môn học',
+                  'Ca học',
+                  'Phòng học',
+                  'Ngày bắt đầu',
+                  'Ngày kết thúc',
+                  'Các ngày trong tuần',
+                  'Chi tiết',
+                ].map((header) => (
+                  <th key={header} className="py-3 px-4 text-left text-sm font-medium">
+                    {header}
+                  </th>
                 ))}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <button
-                  onClick={() => handleDetailClick(schedule)}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Chi tiết
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {isPopupOpen && (
-        <ListClassLessonPopup
-          schedule={selectedSchedule}
-          onClose={() => setIsPopupOpen(false)}
-          token={token}
-        />
-      )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {schedules.map((schedule) => (
+                <tr key={schedule.id} className="hover:bg-gray-50 transition duration-200">
+                  <td className="px-6 py-4 text-gray-600">{schedule.classroom}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.course_name}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.semester_name}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.major_name}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.subject_name}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.shift_name}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.room_name}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.start_date}</td>
+                  <td className="px-6 py-4 text-gray-600">{schedule.end_date}</td>
+                  <td className="px-6 py-4">
+                    {schedule.days_of_week.map((day, index) => (
+                      <span
+                        key={index}
+                        className="bg-green-100 text-green-800 px-2 py-1 rounded-full mr-2"
+                      >
+                        {Object.entries(day)[0][0]} {Object.entries(day)[0][1]}
+                      </span>
+                    ))}
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleDetailClick(schedule)}
+                      className="bg-teal-400 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition"
+                    >
+                      Chi tiết
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {isPopupOpen && (
+          <ListClassLessonPopup
+            schedule={selectedSchedule}
+            onClose={() => setIsPopupOpen(false)}
+            token={token}
+          />
+        )}
+      </div>
     </div>
   );
 }
-

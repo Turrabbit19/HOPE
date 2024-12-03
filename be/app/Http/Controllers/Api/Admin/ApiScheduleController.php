@@ -40,7 +40,33 @@ class ApiScheduleController extends Controller
         }
     }
 
-    public function getMajorsByCourse($semesterId, $courseId)
+    public function getMajorsByCourse($courseId)
+    {
+        try {
+            $majors = Major::whereHas('students.course', fn($query) => $query->where('id', $courseId))
+            ->where('id', '!=', 1)
+            ->withCount('students')
+            ->get();
+
+            $data = $majors->map(function ($major) {
+                return [
+                    'id' => $major->id,
+                    'name' => $major->name,
+                    'credit' => $major->credit,
+                    'student_count' => $major->students_count,
+                ];
+            });
+
+            return response()->json(['majors' => $data], 200);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getMajorsByCourseAndSemester($semesterId, $courseId)
     {
         try {
             $order = CourseSemester::where('course_id', $courseId)

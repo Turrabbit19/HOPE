@@ -332,15 +332,15 @@ class ApiStudentController extends Controller
         }
     }
 
-    public function getStudentsByMajorAndCourse(string $majorId, $courseId){
+    public function getStudentsByMajorAndCourse(string $courseId, $majorId){
         try {
-            $students = Student::with('user', 'course', 'majors')
-                ->where('course_id', $courseId)
+            $students = Student::with('user', 'majors', 'course')
+            ->where('course_id', $courseId)
                 ->whereHas('majors', function($q) use ($majorId) {
                     $q->where('major_id', $majorId);
                 })
                 ->get();
-    
+
             $data = $students->map(function ($student) {
                 return [
                     'id' => $student->id,

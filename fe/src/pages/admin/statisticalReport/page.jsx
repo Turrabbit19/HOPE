@@ -24,7 +24,7 @@ ChartJS.register(
 const StatisticalReport = () => {
   const [chartData, setChartData] = useState(null);
   const [courseData, setCourseData] = useState([]); // Store the structured course data
-  const navigate = useNavigate();  // Initialize useNavigate hook
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +53,6 @@ const StatisticalReport = () => {
             },
           ],
         });
-
       } catch (error) {
         console.log(error.message);
       }

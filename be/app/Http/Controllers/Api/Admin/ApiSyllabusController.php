@@ -195,6 +195,23 @@ class ApiSyllabusController extends Controller
         }
     }
 
+    public function getCountType(string $majorId)
+    {
+        try {
+            $basicId = 1;
+            $subjects = MajorSubject::whereIn('major_id', [$majorId, $basicId])
+                ->with('subject')
+                ->get()
+                ->groupBy('subject.form')
+                ->map(function ($group) {
+                    return $group->count();
+                });
+                return response()->json($subjects, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function getAllSubjects(string $majorId)
     {
         try {

@@ -29,25 +29,20 @@ const ListCourse = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [id, setId] = useState();
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
-
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const [coursesResponse, plansResponse] = await Promise.all([
+        const [courses, plans] = await Promise.all([
           instance.get("admin/courses"),
           // instance.get("admin/plans"),
         ]);
-        console.log(coursesResponse.data.data);
-        setCourses(coursesResponse.data.data);
-        // setPlans(plansResponse.data.data);
+        console.log(courses.data.data);
+        setCourses(courses.data.data);
+        // setPlans(plans.data.data);
       } catch (error) {
         console.log(error.message);
-        notification.error({
+        notification.success({
           message: "Lỗi lấy dữ liệu",
         });
       } finally {
@@ -58,27 +53,18 @@ const ListCourse = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
-    setCurrentPage(1);
   };
 
   const filteredCourses = courses.filter((course) =>
     course.name.toLowerCase().includes(searchTerm)
   );
 
-  // Determine which courses to display based on search and pagination
-  const displayCourses = searchTerm.trim() === "" ? courses : filteredCourses;
-
-  const paginatedCourses = displayCourses.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   const showEditModal = (course) => {
     setEditingCourse(course);
     form.setFieldsValue({
       name: course.name,
-      start_date: moment(course.start_date),
-      end_date: moment(course.end_date),
+      start_date: moment(course.startDate),
+      end_date: moment(course.endDate),
       plan_id: course.plan_id,
     });
     setId(course.id);
@@ -126,7 +112,7 @@ const ListCourse = () => {
     };
     try {
       setLoading(true);
-      await instance.put(`admin/courses/${id}`, formattedValues);
+      const response = instance.put(`admin/courses/${id}`, formattedValues);
       notification.success({
         message: "Cập nhật khóa học thành công",
       });
@@ -188,9 +174,7 @@ const ListCourse = () => {
       setCourses((prev) => [...prev, restoredCourse]);
     } catch (error) {
       console.log(error.message);
-      notification.error({
-        message: "Khôi phục thất bại",
-      });
+      message.error("Khôi phục thất bại thất bại");
     } finally {
       setLoading(false);
     }
@@ -232,14 +216,14 @@ const ListCourse = () => {
             </Button>
 
             <span className="font-bold text-[14px] text-[#000]">
-              {displayCourses.length} items
+              {filteredCourses.length} items
             </span>
           </div>
         </div>
         <div className="row row-cols-2 g-3">
-          {paginatedCourses.length > 0 ? (
-            paginatedCourses.map((course, index) => (
-              <div className="col" key={course.id}>
+          {courses.length > 0 ? (
+            courses.map((course, index) => (
+              <div className="col" key={index}>
                 <div className="teaching__card">
                   <div className="teaching__card-top">
                     <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
@@ -292,29 +276,32 @@ const ListCourse = () => {
                       <img src="/assets/svg/setting.svg" alt="setting" />
                       Quản Lý Khóa Học
                     </Link>
-                    <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
-                      <img src="/assets/svg/eye.svg" alt="detail" />
-                      Chi Tiết
-                    </button>
-                    <Popconfirm
-                      title="Xóa khóa học"
-                      onConfirm={() => confirmDelete(course.id)}
-                      okText="Có"
-                      cancelText="Không"
-                    >
-                      <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                        <img src="/assets/svg/remove.svg" alt="remove" />
-                        Xóa khỏi Danh Sách
-                      </button>
-                    </Popconfirm>
+                    {course.status === "Đang diễn ra" ||
+                    course.status === "Kết thúc" ? (
+                      ""
+                    ) : (
+                      <>
+                        <Popconfirm
+                          title="Xóa khóa học"
+                          onConfirm={() => confirmDelete(course.id)}
+                          okText="Có"
+                          cancelText="Không"
+                        >
+                          <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                            <img src="/assets/svg/remove.svg" alt="remove" />
+                            Xóa khỏi Danh Sách
+                          </button>
+                        </Popconfirm>
 
-                    <button
-                      className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                      onClick={() => showEditModal(course)}
-                    >
-                      <EditOutlined />
-                      Sửa Thông Tin
-                    </button>
+                        <button
+                          className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                          onClick={() => showEditModal(course)}
+                        >
+                          <EditOutlined />
+                          Sửa Thông Tin
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -328,16 +315,12 @@ const ListCourse = () => {
           )}
         </div>
 
-        {/* Pagination Component */}
-        {displayCourses.length > pageSize && (
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={displayCourses.length}
-            onChange={(page) => setCurrentPage(page)}
-            style={{ marginTop: 16, textAlign: "center" }}
-          />
-        )}
+        <Pagination
+          className="mt-12"
+          align="center"
+          defaultCurrent={1}
+          total={50}
+        />
       </div>
 
       <Modal
@@ -392,7 +375,6 @@ const ListCourse = () => {
           >
             <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
           </Form.Item>
-
           <Form.Item>
             <Space>
               <Button onClick={handleModalCancel}>Hủy</Button>

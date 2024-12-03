@@ -374,17 +374,6 @@ const ListSemester = () => {
                         <img src="/assets/svg/eye.svg" alt="detail" />
                         Chi Tiết
                       </button>
-                      <Popconfirm
-                        title="Xóa kỳ học"
-                        onConfirm={() => confirmDelete(semester.id)}
-                        okText="Có"
-                        cancelText="Không"
-                      >
-                        <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                          <img src="/assets/svg/remove.svg" alt="remove" />
-                          Xóa khỏi Danh Sách
-                        </button>
-                      </Popconfirm>
 
                       <button
                         className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"

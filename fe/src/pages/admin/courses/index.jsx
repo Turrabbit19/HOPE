@@ -79,7 +79,7 @@ const CoursesManager = () => {
       name: item.name,
       start_date: item.start_date,
       end_date: item.end_date,
-      status: <span>Đang học</span>
+      status: <span>Đang học</span>,
     };
   });
 

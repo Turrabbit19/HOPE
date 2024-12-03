@@ -314,9 +314,7 @@ const DetailSubject = () => {
           <div className="teaching__card-top flex justify-between items-center mb-4">
             <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
               Tên lớp:{" "}
-              <span className="text-red-300 uppercase ml-2">
-                {item.code}
-              </span>
+              <span className="text-red-300 uppercase ml-2">{item.code}</span>
             </h2>
           </div>
           <div className="teaching__card-body">
@@ -336,9 +334,7 @@ const DetailSubject = () => {
       ))
     ) : (
       <div className="col-12 text-center">
-        <p className="text-red-500 font-bold text-lg">
-          Không tìm thấy lớp học
-        </p>
+        <p className="text-red-500 font-bold text-lg">Không tìm thấy lớp học</p>
       </div>
     );
 
@@ -480,7 +476,10 @@ const DetailSubject = () => {
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
                     {[...Array(lectureCount)].map((_, index) => (
-                      <TabPane tab={`Bài học ${index + 1}`} key={`lecture-${index}`}>
+                      <TabPane
+                        tab={`Bài học ${index + 1}`}
+                        key={`lecture-${index}`}
+                      >
                         <Card
                           type="inner"
                           title={`Thông tin Bài học ${index + 1}`}

@@ -10,7 +10,6 @@ import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
 import CoursesManager from "../pages/admin/courses";
 import SemesterManage from "../pages/admin/semesters";
-import SubjectManager from "../pages/admin/subjects";
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
 import StudentManager from "../pages/admin/userManager/student";
@@ -74,7 +73,6 @@ import LayoutTeacher from "../components/layout/layoutTeacher";
 import TeacherInfo from "../pages/teacher/teacherDashboard/page";
 import ClassLessonTable from "../pages/teacher/listClassLesson/page";
 import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
-
 
 const Router = createBrowserRouter([
   {
@@ -423,15 +421,6 @@ const Router = createBrowserRouter([
       },
 
       {
-        path: "subjects",
-        element: (
-          <>
-            <BreadCrumb />
-            <SubjectManager />
-          </>
-        ),
-      },
-      {
         path: "list-course",
         element: (
           <>
@@ -496,12 +485,12 @@ const Router = createBrowserRouter([
       },
       {
         path: "listclasslesson",
-        element: < ClassLessonTable />,
+        element: <ClassLessonTable />,
       },
       {
         path: "timetable",
-        element: <TeacherTimetable />
-      }
+        element: <TeacherTimetable />,
+      },
     ],
   },
   {

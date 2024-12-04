@@ -142,11 +142,10 @@ class TeacherController extends Controller
                 ->where('id', $scheduleId)
                 ->firstOrFail();
     
-            $now = Carbon::now(); // Thời gian hiện tại
+            $now = Carbon::now(); 
             $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time);
             $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
     
-            // Kiểm tra xem thời gian hiện tại có nằm trong ca học hay không
             $isCurrentShift = $now->between($shiftStartTime, $shiftEndTime);
     
             $data = [
@@ -158,19 +157,23 @@ class TeacherController extends Controller
                 'link' => $scheduleInfor->link ?? "Null",
                 'start_date' => Carbon::parse($scheduleInfor->start_date)->format('d/m/Y'),
                 'end_date' => Carbon::parse($scheduleInfor->end_date)->format('d/m/Y'),
-                'schedule_lessons' => $scheduleInfor->lessons->map(function ($lesson) use ($now, $shiftStartTime, $shiftEndTime, $isCurrentShift) {
+                'schedule_lessons' => $scheduleInfor->lessons->map(function ($lesson) use ($now, $shiftEndTime, $isCurrentShift) {
                     $studyDate = Carbon::parse($lesson->pivot->study_date);
-    
-                    if ($studyDate->lt($now) && !$studyDate->isToday()) {
-                        $status = "Đã hoàn thành";
-                    } elseif ($studyDate->isToday() && $isCurrentShift) {
-                        $status = "Đang dạy";
-                    } elseif ($studyDate->gt($now)) {
-                        $status = "Chưa hoàn thành";
+
+                    if ($studyDate->isToday()) {
+                        if ($isCurrentShift) {
+                            $status = "Đang dạy";
+                        } elseif ($now->gt($shiftEndTime)) {
+                            $status = "Đã hoàn thành"; 
+                        } else {
+                            $status = "Chưa hoàn thành"; 
+                        }
+                    } elseif ($studyDate->lt($now)) {
+                        $status = "Đã hoàn thành"; 
                     } else {
-                        $status = "Chưa hoàn thành";
+                        $status = "Chưa hoàn thành"; 
                     }
-    
+
                     return [
                         'id' => $lesson->id,
                         'name' => $lesson->name,
@@ -180,7 +183,6 @@ class TeacherController extends Controller
                     ];
                 }),
             ];
-    
             return response()->json(['ScheduleInfor' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
@@ -350,7 +352,7 @@ class TeacherController extends Controller
             $data = $request->validate([
                 'attendance' => 'required|array',
                 'attendance.*.student_id' => 'required|exists:students,id',
-                'attendance.*.status' => 'required|in:0,1', 
+                'attendance.*.status' => 'required|in:0,1',
             ]);
     
             $attendanceData = $data['attendance'];
@@ -364,17 +366,18 @@ class TeacherController extends Controller
                 ->firstOrFail();
     
             $currentDateTime = now();
-            $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->end_time);
+            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->start_time);
+            $lessonEndTime = $lessonStartTime->copy()->addMinutes(15);
     
-            if ($currentDateTime < $lessonEndTime) {
-                return response()->json(['message' => 'Lịch học chưa đến giờ.'], 400);
+            if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonEndTime) {
+                return response()->json(['message' => 'Chỉ có thể điểm danh trong 15 phút đầu buổi học.'], 400);
             }
     
             DB::beginTransaction();
     
             foreach ($attendanceData as $attendance) {
                 $studentId = $attendance['student_id'];
-                $status = $attendance['status']; 
+                $status = $attendance['status'];
     
                 $studentLesson = StudentLesson::where('student_id', $studentId)
                     ->where('lesson_id', $lesson_id)
@@ -405,5 +408,5 @@ class TeacherController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-    }
+    }    
 }

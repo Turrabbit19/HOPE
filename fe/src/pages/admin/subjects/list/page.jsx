@@ -117,7 +117,9 @@ const ListSubject = () => {
   };
 
   const togglePopup = () => {
-    setIsPopupVisible(!isPopupVisible); // Đảo ngược trạng thái hiển thị
+    setIsPopupVisible(!isPopupVisible);
+    form.resetFields();
+    setUpdate(false);
     setAdditionalVariants([
       {
         major: majors[0],
@@ -137,12 +139,14 @@ const ListSubject = () => {
         majors: values.majors.map((id) => ({ id })),
         order: values.order,
         code: values.code,
+        form: values.form,
+        status: 0,
       };
       console.log(payload);
       const response = await instance.post("/admin/subjects", payload);
       const newSubject = response.data.data;
       message.success("Thêm môn học mới thành công !!!");
-      setIsPopupVisible(!isPopupVisible);
+      togglePopup();
       form.resetFields();
       setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
     } catch (error) {
@@ -187,6 +191,7 @@ const ListSubject = () => {
       credit: values.credit,
       form: values.form,
       order: values.order,
+      form: values.form,
       majors: majors.map((m) => m.id),
     });
     setInitialValues(values.id);

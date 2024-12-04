@@ -104,7 +104,7 @@ const DetailSubject = () => {
     if (lecture) {
       setlectureId(lecture.id);
     }
-    setLectureCount(credit * 6);
+    setLectureCount(credit * 4);
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -464,7 +464,7 @@ const DetailSubject = () => {
                 {/* Trường nhập số lượng bài học */}
                 <Form.Item
                   name="lectureCount"
-                  label="Tổng số bài học của môn tính theo tín ( số tín x 6 )"
+                  label="Tổng số tiết học của môn tính theo tín ( số tín x 4 )"
                   initialValue={lectureCount}
                 >
                   <InputNumber
@@ -481,17 +481,17 @@ const DetailSubject = () => {
                   <Tabs defaultActiveKey="1" type="card">
                     {[...Array(lectureCount)].map((_, index) => (
                       <TabPane
-                        tab={`Bài học ${index + 1}`}
+                        tab={`Tiết ${index + 1}`}
                         key={`lecture-${index}`}
                       >
                         <Card
                           type="inner"
-                          title={`Thông tin Bài học ${index + 1}`}
+                          title={`Thông tin chi tiết ${index + 1}`}
                           className="mb-4"
                         >
                           <Form.Item
                             name={["lectures", index, "name"]}
-                            label="Tên Bài Giảng"
+                            label="Tên tiết học"
                             rules={[
                               {
                                 required: true,

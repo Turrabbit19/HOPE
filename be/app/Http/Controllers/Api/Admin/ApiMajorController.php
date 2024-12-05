@@ -258,17 +258,17 @@ class ApiMajorController extends Controller
         try {
             $major = MajorSubject::where('major_id', $majorId)->get();
 
-            $subjectsByMajor = $major->map(function ($major) {
+            $subjectsByMajor = $major->map(function ($mm) {
                 return [
-                    'id' => $major->subject->id,
-                    'name' => $major->subject->name,
-                    'description' => $major->subject->description,
-                    'credit' => $major->subject->credit,
-                    'order' => $major->subject->order,
+                    'code' => $mm->subject->code,
+                    'id' => $mm->subject->id,
+                    'name' => $mm->subject->name,
+                    'description' => $mm->subject->description,
+                    'credit' => $mm->subject->credit,
+                    'order' => $mm->subject->order,
                 ];
             });
             return response()->json(['data' => $subjectsByMajor], 200);
->>>>>>> origin/demo
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
         } catch (\Exception $e) {

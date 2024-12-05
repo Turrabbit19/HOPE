@@ -51,27 +51,27 @@ class ApiCourseController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
-
+    }
     public function getSemestersByCourse($courseId)
     {
         try {
             $semestersByCourse = CourseSemester::where('course_id', $courseId)
 
-            ->with('semester')
+                ->with('semester')
 
-            ->get();
+                ->get();
 
-            $data = $semestersByCourse->map(function($value){
+            $data = $semestersByCourse->map(function ($value) {
                 return [
                     "id" => $value->semester->id,
                     "name" => $value->semester->name,
                     "start_date" => Carbon::parse($value->semester->start_date),
                     "end_date" => Carbon::parse($value->semester->end_date),
-                    "order" => "Kì học thứ"." ".$value->order
+                    "order" => "Kì học thứ" . " " . $value->order
                 ];
             });
 
-        return response()->json(["semesters" => $data], 200);
+            return response()->json(["semesters" => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
         } catch (\Exception $e) {
@@ -118,14 +118,14 @@ class ApiCourseController extends Controller
             }
 
             $data = [
-                    'id' => $course->id,
-                    'name' => $course->name,
+                'id' => $course->id,
+                'name' => $course->name,
 
-                    'start_date' => Carbon::parse($course->start_date),
-                    'end_date' => Carbon::parse($course->end_date),
+                'start_date' => Carbon::parse($course->start_date),
+                'end_date' => Carbon::parse($course->end_date),
 
-                    'status' => $status
-                ];
+                'status' => $status
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -193,4 +193,4 @@ class ApiCourseController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-
+}

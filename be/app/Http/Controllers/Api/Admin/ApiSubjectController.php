@@ -32,7 +32,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
-                    'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
+                    'form' => $subject->form,
                 ];
             });
 
@@ -63,7 +63,8 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
-                    'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
+                    'form' => $subject->form,
+                    'status' => $subject->status
                 ];
             });
 
@@ -94,7 +95,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
-                    'form' => $subject->form ? 'Trực tuyến' : 'Trực tiếp',
+                    'form' => $subject->form,
                 ];
             });
 
@@ -145,7 +146,7 @@ class ApiSubjectController extends Controller
             'order' => 'required|integer|min:1|max:9',
             'form' => 'required|boolean|in:0,1',
             'majors' => 'required|array',
-
+            'status' => 'boolean',
             'majors.*.id' => 'required|exists:majors,id',
         ]);
 
@@ -169,7 +170,7 @@ class ApiSubjectController extends Controller
                 'description' => $subject->description,
                 'credit' => $subject->credit,
                 'order' => $subject->order,
-                'form' => $subject->form,
+                'form' => $subject->form ? 'Trực tiếp' : 'Trực tuyến',
                 'status' => $subject->status,
             ];
 
@@ -350,7 +351,8 @@ class ApiSubjectController extends Controller
             foreach ($validatedData as $lessonData) {
                 $lessonData['subject_id'] = $id;
                 $lesson = Lesson::create($lessonData);
-                $lessons[] = $lesson;
+                // $lessons[] = $lesson;
+                $lessons[] = $lesson->only(['id', 'name', 'description']);
             }
 
             return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);

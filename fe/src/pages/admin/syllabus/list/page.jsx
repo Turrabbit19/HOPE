@@ -21,6 +21,7 @@ const Curriculum = () => {
     (async () => {
       try {
         const { data } = await instance.get(`admin/getMajorAndSubMajor`);
+        console.log(data);
         setCurriculums(data);
 
         if (data.length > 0 && data[0].children.length > 0) {

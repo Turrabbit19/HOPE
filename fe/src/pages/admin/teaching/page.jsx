@@ -35,7 +35,7 @@ const Teach = () => {
     const fetchMajors = async () => {
       try {
         const response = await instance.get("/admin/main/majors");
-
+        console.log(response);
         setMajors(response.data.data);
       } catch (error) {
         message.error("Không thể tải dữ liệu ngành");

@@ -16,7 +16,6 @@ class Subject extends Model
         'description',
         'credit',
         'order',
-
         'form',
         'status'
     ];

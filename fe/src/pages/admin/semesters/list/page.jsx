@@ -31,7 +31,6 @@ const ListSemester = () => {
   const [additionalVariants, setAdditionalVariants] = useState([]);
   const [id, setId] = useState();
 
-
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -102,7 +101,6 @@ const ListSemester = () => {
     });
     setIsEditModalVisible(true);
   };
-
 
   console.log(additionalVariants);
 
@@ -314,19 +312,15 @@ const ListSemester = () => {
               </Button>
 
               <span className="font-bold text-[14px] text-[#000]">
-
                 {displaySemesters.length} items
-
               </span>
             </div>
           </div>
 
           <div className="row row-cols-2 g-3">
-
             {paginatedSemesters.length > 0 ? (
               paginatedSemesters.map((semester, index) => (
                 <div className="col" key={semester.id}>
-
                   <div className="teaching__card">
                     <div className="teaching__card-top">
                       <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
@@ -372,24 +366,33 @@ const ListSemester = () => {
                     </div>
 
                     <div className="teaching__card-bottom">
-                      <Link
-                        to="list"
-                        className="flex items-center gap-3 text-[#1167B4] font-bold"
-                      >
-                        <img src="/assets/svg/setting.svg" alt="setting" />
-                        Quản Lý Kỳ Học
-                      </Link>
-                      <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
-                        <img src="/assets/svg/eye.svg" alt="detail" />
-                        Chi Tiết
-                      </button>
-                      <button
-                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                        onClick={() => showEditModal(semester)}
-                      >
-                        <EditOutlined />
-                        Sửa Thông Tin
-                      </button>
+                    <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                          >
+                            <img src="/assets/svg/eye.svg" alt="detail" />
+                            Chi tiết
+                          </button>
+                      {semester.status === "Đang diễn ra" ||
+                      semester.status === "Kết thúc" ? (
+                        ""
+                      ) : (
+                        <>
+                          <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                            onClick={() => confirmDelete(semester.id)}
+                          >
+                            <img src="/assets/svg/eye.svg" alt="detail" />
+                            Xóa
+                          </button>
+                          <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                            onClick={() => showEditModal(semester)}
+                          >
+                            <EditOutlined />
+                            Sửa Thông Tin
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -402,7 +405,6 @@ const ListSemester = () => {
               </div>
             )}
           </div>
-
 
           {/* Pagination Component */}
           {displaySemesters.length > pageSize && (
@@ -422,7 +424,6 @@ const ListSemester = () => {
           onCancel={handleModalCancel}
           footer={null}
           centered
-
           width={600}
         >
           <div className="createScheduleForm pb-6">
@@ -436,7 +437,6 @@ const ListSemester = () => {
               onFinish={isEditModalVisible ? onHandleUpdate : handleModalOk}
               autoComplete="off"
             >
-
               <Form.Item
                 label="Tên Kỳ Học"
                 name="name"

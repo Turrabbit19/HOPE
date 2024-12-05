@@ -24,10 +24,8 @@ const MajorDetailSubject = () => {
   const { subId, subjectId } = useParams();
   const { credit } = useLocation().state || {};
   console.log(credit);
-  // Trạng thái dữ liệu môn học
   const [loading, setLoading] = useState(true);
   const [form] = useForm();
-  // Các biến trạng thái khác
   const [activeTab, setActiveTab] = useState("lecture");
   const [isLectureModalVisible, setIsLectureModalVisible] = useState(false);
   const [isClassroomModalVisible, setIsClassroomModalVisible] = useState(false);
@@ -101,10 +99,11 @@ const MajorDetailSubject = () => {
   };
 
   const showLectureModal = (lecture = null) => {
+    debugger
     if (lecture) {
       setlectureId(lecture.id);
     }
-    setLectureCount(credit * 6);
+    setLectureCount(credit * 4);
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -382,7 +381,7 @@ const MajorDetailSubject = () => {
       {activeTab === "lecture" ? (
         <>
           <div className="flex justify-end mb-4">
-            {lectureData.length !== credit * 6 ? (
+            {lectureData.length !== credit * 4 ? (
               <Button
                 type="primary"
                 icon={<PlusOutlined />}

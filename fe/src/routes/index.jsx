@@ -377,28 +377,7 @@ const Router = createBrowserRouter([
           </>
         ),
       },
-      //
-      {
-        path: "courses",
-        element: (
-          <>
-            <BreadCrumb />
-            <CoursesManager />
-          </>
-        ),
-      },
 
-      //
-      {
-        path: "semesters",
-        element: (
-          <>
-            <BreadCrumb />
-            <SemesterManage />
-          </>
-        ),
-      },
-      // Giao diện list semester
       {
         path: "list-semesters",
         element: (
@@ -409,7 +388,6 @@ const Router = createBrowserRouter([
       },
       //
 
-      // giao diện list khóa học
       {
         path: "list-subject",
         element: (

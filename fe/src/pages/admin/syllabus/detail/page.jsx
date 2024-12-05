@@ -63,7 +63,7 @@ const CurriculumDetail = () => {
   }, [activeTab, id]);
   const pieData = statistics
     ? {
-        labels: ["Offline (Học trực tiếp)", "Online (Học trực tuyến)"],
+        labels: ["OFFLINE (Học trực tiếp)", "ONLINE (Học trực tuyến)"],
         datasets: [
           {
             data: [statistics["1"], statistics["0"]],
@@ -120,14 +120,14 @@ const CurriculumDetail = () => {
       dataIndex: "form",
       key: "form",
       render: (form) => (
-        <span style={{ color: form === 1 ? "red" : "green" }}>
-          {form === 1 ? "Online" : "Offline"}
+        <span style={{ color: form ? "red" : "green" }}>
+          {form ? "ONLINE" : "OFFLINE"}
         </span>
       ),
       align: "center",
       filters: [
-        { text: "Online", value: 1 },
-        { text: "Offline", value: 0 },
+        { text: "ONLINE", value: true },
+        { text: "OFFLINE", value: false },
       ],
       onFilter: (value, record) => record.form === value,
       filterMultiple: false,
@@ -175,7 +175,7 @@ const CurriculumDetail = () => {
                     </span>
                     <div className="flex space-x-2">
                       <span className="text-gray-600 text-sm">
-                        {semester.total_credit} Credits
+                        {semester.total_credit} Tín
 
                       </span>
                     </div>
@@ -215,7 +215,7 @@ const CurriculumDetail = () => {
                           </td>
                           <td
                             className={`border px-2 py-1 text-center ${
-                              subject.form == "1"
+                              subject.form == 1
                                 ? "text-red-500"
                                 : "text-green-500"
                             }`}

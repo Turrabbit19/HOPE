@@ -21,7 +21,6 @@ import {
   createStudent,
   createUser,
   createTeacher,
->>>>>>> origin/demo
 } from "../../../../services/user-service";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 const { Option } = Select;

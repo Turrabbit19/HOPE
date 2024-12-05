@@ -62,7 +62,7 @@ const MajorSubject = () => {
         subjects.map((subject) => (
           <Link
             to={`detail/${subject.id}`}
-            state={{ subjectName: subject.name, credit: subject.credits}}
+            state={{ subjectName: subject.name, credit: subject.credit}}
             key={subject.id}
             style={{ textDecoration: "none" }}
           >
@@ -83,12 +83,12 @@ const MajorSubject = () => {
               </div>
               <div style={{ marginBottom: "8px" }}>
                 <Text>
-                  Số tín chỉ: <strong>{subject.credits}</strong>
+                  Số tín chỉ: <strong>{subject.credit}</strong>
                 </Text>
               </div>
-              <div style={{ marginBottom: "8px" }}>
+              {/* <div style={{ marginBottom: "8px" }}>
                 <Text>Trạng thái: {renderStatusTag(subject.status)}</Text>
-              </div>
+              </div> */}
 
               <Text>Mô tả: {subject.description}</Text>
             </Card>

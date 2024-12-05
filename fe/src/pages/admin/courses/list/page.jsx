@@ -63,9 +63,8 @@ const ListCourse = () => {
     setEditingCourse(course);
     form.setFieldsValue({
       name: course.name,
-      start_date: moment(course.startDate),
-      end_date: moment(course.endDate),
-      plan_id: course.plan_id,
+      start_date: moment(course.start_date),
+      end_date: moment(course.end_date),
     });
     setId(course.id);
     setIsEditModalVisible(true);

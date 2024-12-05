@@ -365,13 +365,13 @@ class TeacherController extends Controller
                 ->where('lesson_id', $lesson_id)
                 ->firstOrFail();
     
-            // $currentDateTime = now();
-            // $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->start_time);
-            // $lessonEndTime = $lessonStartTime->copy()->addMinutes(15);
+            $currentDateTime = now();
+            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->start_time);
+            $lessonEndTime = $lessonStartTime->copy()->addMinutes(60);
     
-            // if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonEndTime) {
-            //     return response()->json(['message' => 'Chỉ có thể điểm danh trong 15 phút đầu buổi học.'], 400);
-            // }
+            if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonEndTime) {
+                return response()->json(['message' => 'Chỉ có thể điểm danh trong 60 phút đầu buổi học.'], 400);
+            }
     
             DB::beginTransaction();
     

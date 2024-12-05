@@ -108,14 +108,14 @@ export default function SchoolLogin() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8" autoComplete="on">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tên đăng nhập
+                Mail
               </label>
               <input
                 type="email"
-                value={email}
+                value={email}s
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 placeholder="Nhập email của bạn"

@@ -7,6 +7,8 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [attendanceStatus, setAttendanceStatus] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false); // To control modal visibility
+  const [successMessage, setSuccessMessage] = useState(""); // To show success message
 
   const isCurrentDate = (dateString) => {
     const today = new Date();
@@ -39,6 +41,11 @@ const ListClassLessonDetail = ({ scheduleData }) => {
       );
 
       if (!response.ok) {
+        if (response.status === 400) {
+          setError("Đã quá giờ điểm danh.");
+        } else {
+          setError("Failed to fetch data from server");
+        }
         throw new Error("Failed to fetch data from server");
       }
 
@@ -55,6 +62,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
             student.status === "Có mặt" ? 1 : 0;
         });
         setAttendanceStatus(initialStatus);
+        setIsModalOpen(true); // Open the modal when students data is fetched
       } else {
         setError("Không có dữ liệu sinh viên.");
       }
@@ -76,6 +84,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   const submitAttendance = async (lessonId) => {
     setLoading(true);
     setError(null);
+    setSuccessMessage(""); // Reset success message
 
     const token = localStorage.getItem("token");
 
@@ -107,18 +116,30 @@ const ListClassLessonDetail = ({ scheduleData }) => {
         }
       );
 
+      if (response.status === 400) {
+        throw new Error("Chỉ có thể điểm danh trong 15 phút đầu buổi học.");
+      }
+
       if (!response.ok) {
-        throw new Error("Failed to submit attendance");
+        throw new Error("Không thể tải danh sách sinh viên");
       }
 
       const result = await response.json();
       console.log("Attendance submitted successfully:", result);
+      setSuccessMessage("Điểm danh thành công!");
     } catch (err) {
       console.error("Error submitting attendance:", err);
       setError("Không thể cập nhật điểm danh. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setStudents([]);
+    setAttendanceStatus({});
   };
 
   return (
@@ -204,67 +225,77 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                 ? "Đang tải..."
                 : "Điểm danh"}
             </button>
-
-            {selectedLesson === lesson.id && (
-              <div className="mt-6">
-                {error ? (
-                  <p className="text-red-500 text-lg">{error}</p>
-                ) : (
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h5 className="text-xl font-semibold mb-4 text-gray-700">
-                      Danh sách sinh viên:
-                    </h5>
-                    {Array.isArray(students) && students.length > 0 ? (
-                      <ul className="space-y-4">
-                        {students.map((student) => (
-                          <li
-                            key={student.student_id}
-                            className="flex items-center justify-between bg-white p-4 rounded-md shadow-sm"
-                          >
-                            <span className="text-lg text-gray-700">
-                              {student.student_name}
-                            </span>
-                            <button
-                              onClick={() =>
-                                toggleAttendance(student.student_id)
-                              }
-                              className={`px-4 py-2 rounded-lg text-lg font-medium transition-colors duration-200 ${
-                                attendanceStatus[student.student_id] === 1
-                                  ? "bg-green-500 hover:bg-green-600 text-white"
-                                  : "bg-red-500 hover:bg-red-600 text-white"
-                              }`}
-                            >
-                              {attendanceStatus[student.student_id] === 1
-                                ? "Có mặt"
-                                : "Vắng mặt"}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-lg text-gray-500">
-                        Không có sinh viên trong danh sách.
-                      </p>
-                    )}
-                    {students.length > 0 && (
-                      <button
-                        onClick={() => submitAttendance(lesson.id)}
-                        className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out text-lg"
-                        disabled={loading}
-                      >
-                        {loading ? "Đang cập nhật..." : "Cập nhật điểm danh"}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         ))}
       </div>
+
+      {/* Modal to show student list */}
+      {isModalOpen && (
+  <div
+    className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+    onClick={closeModal} // Đóng modal khi nhấn ra ngoài
+  >
+    <div
+      className="bg-white rounded-lg p-6 max-w-lg w-full shadow-lg relative"
+      onClick={(e) => e.stopPropagation()} // Ngăn không đóng khi nhấn vào bên trong modal
+    >
+      <button
+        onClick={closeModal}
+        className="absolute top-0 right-0 p-4 text-lg font-bold text-gray-500"
+      >
+        &times;
+      </button>
+      <h5 className="text-xl font-semibold mb-4 text-gray-700">
+        Danh sách sinh viên:
+      </h5>
+      {Array.isArray(students) && students.length > 0 ? (
+        <ul className="space-y-4">
+          {students.map((student) => (
+            <li
+              key={student.student_id}
+              className="flex items-center justify-between bg-white p-4 rounded-md shadow-sm"
+            >
+              <span className="text-lg text-gray-700">
+                {student.student_name}
+              </span>
+              <button
+                onClick={() => toggleAttendance(student.student_id)}
+                className={`px-4 py-2 rounded-lg text-lg font-medium transition-colors duration-200 ${
+                  attendanceStatus[student.student_id] === 1
+                    ? "bg-green-500 hover:bg-green-600 text-white"
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
+              >
+                {attendanceStatus[student.student_id] === 1
+                  ? "Có mặt"
+                  : "Vắng mặt"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-lg text-gray-500">
+          Không có sinh viên trong danh sách.
+        </p>
+      )}
+      {students.length > 0 && (
+        <button
+          onClick={() => submitAttendance(selectedLesson)}
+          className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out text-lg"
+          disabled={loading}
+        >
+          {loading ? "Đang cập nhật..." : "Cập nhật điểm danh"}
+        </button>
+      )}
+      {successMessage && (
+        <p className="mt-4 text-green-500 font-semibold">{successMessage}</p>
+      )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
 
 export default ListClassLessonDetail;
-

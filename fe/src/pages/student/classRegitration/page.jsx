@@ -29,7 +29,7 @@ export default function CourseRegistration() {
     fetchSubjects();
     fetchShifts();
   }, []);
-
+  
   useEffect(() => {
     let timer;
     if (timeLeft) {
@@ -246,7 +246,7 @@ export default function CourseRegistration() {
           <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
 
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
-              Đăng ký khóa học
+              Đăng ký lớp học
             </span>
 
           </h1>

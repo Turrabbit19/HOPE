@@ -151,7 +151,7 @@ export default function Component() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 min-h-screen w-full">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 w-full">
       {/* Left Column */}
       <div className="w-full lg:w-1/2 space-y-8">
         {/* User Profile Card */}
@@ -421,9 +421,9 @@ export default function Component() {
         </div>
 
         {/* Assignments */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Bài tập</h3>
-          <ul className="space-y-4">
+        {/* <div className="bg-white p-6 rounded-lg shadow"> */}
+          {/* <h3 className="text-lg font-semibold mb-4">Bài tập</h3> */}
+          {/* <ul className="space-y-4">
             {[
               {
                 name: "1st Quarterly",
@@ -462,8 +462,8 @@ export default function Component() {
                 )}
               </li>
             ))}
-          </ul>
-        </div>
+          </ul> */}
+        {/* </div> */}
       </div>
     </div>
   );

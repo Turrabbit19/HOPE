@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
+
   Form,
   Input,
   Button,
@@ -28,6 +29,7 @@ import { uploadMultipleFiles } from "../../../../utils/upload";
 const { Option } = Select;
 
 const UserAdd = () => {
+
   const { state } = useLocation();
 
   const [role, setRole] = useState(""); // Không có vai trò nào chọn ban đầu
@@ -497,6 +499,7 @@ const UserAdd = () => {
             >
                 <Input.Password placeholder="Nhập mật khẩu" />
             </Form.Item> */}
+
 
         <div className="flex items-center justify-center">
           <Form.Item>

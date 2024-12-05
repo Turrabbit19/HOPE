@@ -24,7 +24,7 @@ class Subject extends Model
         'form' => 'boolean',
         'status' => 'boolean'
     ];
-    
+
     public function majors()
     {
         return $this->belongsToMany(Major::class, 'major_subjects');
@@ -39,4 +39,6 @@ class Subject extends Model
     {
         return $this->hasMany(Schedule::class);
     }
+
 }
+

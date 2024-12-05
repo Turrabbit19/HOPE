@@ -17,7 +17,7 @@ import {
   BugOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"; // Import CSS cho React Quill
+import "react-quill/dist/quill.snow.css";
 import moment from "moment";
 import instance from "../../../../config/axios";
 

@@ -42,7 +42,6 @@ const ListSubject = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -54,6 +53,7 @@ const ListSubject = () => {
           instance.get("admin/all/subjects"),
           instance.get("admin/sub/majors"),
         ]);
+        console.log(data.data);
         setMajors(majors.data.data);
         setSubjects(data.data);
       } catch (error) {
@@ -63,6 +63,7 @@ const ListSubject = () => {
       }
     })();
   }, []);
+  
 
   const onHandleDelete = async (id) => {
     try {
@@ -104,20 +105,21 @@ const ListSubject = () => {
     setSearchValue(value);
 
     if (value.trim() === "") {
-      // Nếu input trống, hiển thị tất cả các khóa học
       setFilteredCourses(subjects);
     } else {
-      // Lọc khóa học theo tên
       const filtered = subjects.filter((course) =>
         course.name.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredCourses(filtered);
     }
+
     setCurrentPage(1); // Reset to first page on search
   };
 
   const togglePopup = () => {
-    setIsPopupVisible(!isPopupVisible); // Đảo ngược trạng thái hiển thị
+    setIsPopupVisible(!isPopupVisible);
+    form.resetFields();
+    setUpdate(false);
     setAdditionalVariants([
       {
         major: majors[0],
@@ -125,7 +127,6 @@ const ListSubject = () => {
     ]);
   };
 
-  // Hàm xử lý khi form được gửi
   const handleFormSubmit = async (values) => {
     setLoading(true);
     try {
@@ -133,16 +134,17 @@ const ListSubject = () => {
         name: values.name,
         description: values.description,
         credit: values.credit,
-        form: values.form,
         majors: values.majors.map((id) => ({ id })),
         order: values.order,
         code: values.code,
+        form: values.form,
+        status: 0,
       };
       console.log(payload);
       const response = await instance.post("/admin/subjects", payload);
       const newSubject = response.data.data;
       message.success("Thêm môn học mới thành công !!!");
-      setIsPopupVisible(!isPopupVisible);
+      togglePopup();
       form.resetFields();
       setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
     } catch (error) {
@@ -158,7 +160,6 @@ const ListSubject = () => {
     }
   };
 
-  // Hàm hủy xác nhận xóa
   const cancel = (e) => {
     console.log(e);
     // message.error("Click on No");
@@ -176,6 +177,7 @@ const ListSubject = () => {
   // Hàm mở modal chỉnh sửa khóa học
   const openEditModal = async (values) => {
     debugger;
+    console.log(values);
     setIsPopupVisible(!isPopupVisible);
     setUpdate(true);
     const majors = await getMajorIdBySubjectId(values.id);
@@ -185,8 +187,9 @@ const ListSubject = () => {
       name: values.name,
       description: values.description,
       credit: values.credit,
-      form: values.form,
+      status: values.status ? 1 : 0,
       order: values.order,
+      form: values.form ? 1 : 0,
       majors: majors.map((m) => m.id),
     });
     setInitialValues(values.id);
@@ -221,27 +224,23 @@ const ListSubject = () => {
     }
   };
 
-  // Hàm đóng modal chỉnh sửa khóa học
   const closeEditModal = () => {
     setIsEditModalVisible(false);
     form.resetFields();
   };
 
-  // State cho modal lọc khóa học
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Hàm hiển thị modal lọc khóa học
   const handleShowModalFilter = () => {
     setIsModalVisible(true);
   };
 
-  // Hàm xử lý khi nhấn OK trong modal lọc
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
         console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
-        // Xử lý lọc ở đây
+
         setIsModalVisible(false); // Đóng modal sau khi xử lý xong
       })
       .catch((info) => {
@@ -249,16 +248,13 @@ const ListSubject = () => {
       });
   };
 
-  // Hàm hủy bỏ việc hiển thị modal
   const handleCancel = () => {
-    setIsModalVisible(false); // Ẩn modal lọc
+    setIsModalVisible(false);
   };
 
   if (loading) {
     return <Loading />;
   }
-
-  // Determine which subjects to display based on search and pagination
   const displaySubjects =
     searchValue.trim() === "" ? subjects : filteredCourses;
 
@@ -304,7 +300,7 @@ const ListSubject = () => {
                     </span>
 
                     <Button type="primary" onClick={handleShowModalFilter}>
-                      Lọc Khóa Học
+                      Lọc môn Học
                     </Button>
                   </div>
                 </div>
@@ -340,15 +336,22 @@ const ListSubject = () => {
                                     alt=""
                                   />
                                   <span className="text-[#44CC15] text-[12px]">
-                                    {subject.form}
+                                    {subject.form ? "Trực tuyến" : "Trực tiếp"}
                                   </span>
                                 </div>
                               </div>
-
                               <p className="text-[#9E9E9E] mt-3 ml-3">
                                 Code:
                                 <span className="text-black ml-2">
                                   {subject.code}
+                                </span>
+                              </p>
+                              <p className="text-[#9E9E9E] mt-3 ml-3">
+                                Trạng thái:
+                                <span className="text-black ml-2">
+                                  {subject.status
+                                    ? "Đang hoạt động"
+                                    : "Tạm dừng"}
                                 </span>
                               </p>
 
@@ -375,7 +378,6 @@ const ListSubject = () => {
                             </div>
                           </div>
                         </div>
-
                         <div className="listCourse__item-bottom teaching__card-bottom pb-3 border !mx-[-1px]">
                           <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                             <img src="/assets/svg/eye.svg" alt="" />
@@ -389,28 +391,33 @@ const ListSubject = () => {
                               Chi Tiết
                             </Link>
                           </button>
+                          {subject.status ? (
+                            ""
+                          ) : (
+                            <>
+                              <Popconfirm
+                                title="Xóa môn học"
+                                description={`Bạn có chắc chắn muốn xóa môn học ${subject.name} không? `}
+                                onConfirm={() => onHandleDelete(subject.id)}
+                                onCancel={cancel}
+                                okText="Có"
+                                cancelText="Không"
+                              >
+                                <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                                  <img src="/assets/svg/remove.svg" alt="" />
+                                  Xóa khỏi Danh Sách
+                                </button>
+                              </Popconfirm>
 
-                          <Popconfirm
-                            title="Xóa môn học"
-                            description={`Bạn có chắc chắn muốn xóa môn học ${subject.name} không? `}
-                            onConfirm={() => onHandleDelete(subject.id)}
-                            onCancel={cancel}
-                            okText="Có"
-                            cancelText="Không"
-                          >
-                            <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                              <img src="/assets/svg/remove.svg" alt="" />
-                              Xóa khỏi Danh Sách
-                            </button>
-                          </Popconfirm>
-
-                          <button
-                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                            onClick={() => openEditModal(subject)}
-                          >
-                            <EditOutlined />
-                            Sửa Thông Tin
-                          </button>
+                              <button
+                                className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                                onClick={() => openEditModal(subject)}
+                              >
+                                <EditOutlined />
+                                Sửa Thông Tin
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -543,22 +550,46 @@ const ListSubject = () => {
                       </Col>
 
                       <Col span={12}>
-                        <Form.Item label="Hình thức" name="form" rules={[]}>
+                        <Form.Item
+                          label="Hình thức"
+                          name="form"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng chọn hình thức!",
+                            },
+                          ]}
+                        >
                           <Select
-                            placeholder="Chọn hình thức"
+                            placeholder="Chọn hình thức học"
                             options={[
                               {
-                                value: "0",
+                                value: 0,
                                 label: "Trực tiếp",
                               },
-                              {
-                                value: "1",
-                                label: "Trực tuyến",
-                              },
+                              { value: 1, label: "Trực tuyến" },
                             ]}
                           />
                         </Form.Item>
                       </Col>
+                      {update ? (
+                        <Col span={12}>
+                          <Form.Item label="Trạng thái" name="status">
+                            <Select
+                              placeholder="Chọn trạng thái"
+                              options={[
+                                {
+                                  value: 0,
+                                  label: "Tạm dừng",
+                                },
+                                { value: 1, label: "Đang hoạt động" },
+                              ]}
+                            />
+                          </Form.Item>
+                        </Col>
+                      ) : (
+                        ""
+                      )}
                     </Row>
                   </Col>
 

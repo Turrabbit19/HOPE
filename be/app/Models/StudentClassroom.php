@@ -15,6 +15,7 @@ class StudentClassroom extends Model
         'classroom_id',
         'study_start',
         'study_end',
+
     ];
 
 

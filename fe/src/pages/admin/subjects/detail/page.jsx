@@ -104,7 +104,7 @@ const DetailSubject = () => {
     if (lecture) {
       setlectureId(lecture.id);
     }
-    setLectureCount(credit * 6);
+    setLectureCount(credit * 4);
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -271,30 +271,32 @@ const DetailSubject = () => {
   // Render các thẻ bài giảng
   const renderLectureCards = () =>
     lectureData.length > 0 ? (
-      lectureData.map((lecture) => (
-        <Card
-          key={lecture.id}
-          title={
-            <span className="text-[#1167B4] font-bold text-3xl">
-              {lecture.name}
-            </span>
-          }
-          className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
-          headStyle={{ backgroundColor: "#f0f8ff", padding: "16px" }}
-          bodyStyle={{ padding: "16px", fontSize: "16px" }}
-        >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {lectureData.map((lecture) => (
           <Card
+            key={lecture.id}
             title={
-              <span className="font-bold text-black">Mô tả bài giảng</span>
+              <span className="text-[#1167B4] font-bold text-3xl">
+                {lecture.name}
+              </span>
             }
-            bordered={false}
-            className="mb-4"
+            className="shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
+            headStyle={{ backgroundColor: "#f0f8ff", padding: "16px" }}
+            bodyStyle={{ padding: "16px", fontSize: "16px" }}
           >
-            <p className="text-gray-700">{lecture.description}</p>
+            <Card
+              title={
+                <span className="font-bold text-black">Mô tả bài giảng</span>
+              }
+              bordered={false}
+              className="mb-4"
+            >
+              <p className="text-gray-700">{lecture.description}</p>
+            </Card>
+            {renderLectureActionButtons(lecture)}
           </Card>
-          {renderLectureActionButtons(lecture)}
-        </Card>
-      ))
+        ))}
+      </div>
     ) : (
       <div className="col-12 text-center">
         <p className="text-red-500 font-bold text-lg">
@@ -306,32 +308,34 @@ const DetailSubject = () => {
   // Render các thẻ lớp học
   const renderClassroomCards = () =>
     classData.length > 0 ? (
-      classData.map((item) => (
-        <Card
-          key={item.id}
-          className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
-        >
-          <div className="teaching__card-top flex justify-between items-center mb-4">
-            <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
-              Tên lớp:{" "}
-              <span className="text-red-300 uppercase ml-2">{item.code}</span>
-            </h2>
-          </div>
-          <div className="teaching__card-body">
-            <div className="mt-6 flex flex-col gap-4 pb-6">
-              <div className="flex gap-6">
-                <p className="text-[#9E9E9E]">Số học sinh:</p>
-                <p className="text-[#000]">{item.max_students}</p>
-              </div>
-              <div className="flex gap-6">
-                <p className="text-[#9E9E9E]">Trạng thái:</p>
-                <p className="text-[#000]">{item.status}</p>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {classData.map((item) => (
+          <Card
+            key={item.id}
+            className="shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className="teaching__card-top flex justify-between items-center mb-4">
+              <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
+                Tên lớp:{" "}
+                <span className="text-red-300 uppercase ml-2">{item.code}</span>
+              </h2>
             </div>
-            {renderClassroomActionButtons(item)}
-          </div>
-        </Card>
-      ))
+            <div className="teaching__card-body">
+              <div className="mt-6 flex flex-col gap-4 pb-6">
+                <div className="flex gap-6">
+                  <p className="text-[#9E9E9E]">Số học sinh:</p>
+                  <p className="text-[#000]">{item.max_students}</p>
+                </div>
+                <div className="flex gap-6">
+                  <p className="text-[#9E9E9E]">Trạng thái:</p>
+                  <p className="text-[#000]">{item.status}</p>
+                </div>
+              </div>
+              {renderClassroomActionButtons(item)}
+            </div>
+          </Card>
+        ))}
+      </div>
     ) : (
       <div className="col-12 text-center">
         <p className="text-red-500 font-bold text-lg">Không tìm thấy lớp học</p>
@@ -460,7 +464,8 @@ const DetailSubject = () => {
                 {/* Trường nhập số lượng bài học */}
                 <Form.Item
                   name="lectureCount"
-                  label="Tổng số bài học của môn tính theo tín ( số tín x 6 )"
+
+                  label="Tổng số tiết học của môn tính theo tín ( số tín x 4 )"
                   initialValue={lectureCount}
                 >
                   <InputNumber
@@ -476,18 +481,21 @@ const DetailSubject = () => {
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
                     {[...Array(lectureCount)].map((_, index) => (
+
                       <TabPane
-                        tab={`Bài học ${index + 1}`}
+                        tab={`Tiết ${index + 1}`}
                         key={`lecture-${index}`}
                       >
                         <Card
                           type="inner"
-                          title={`Thông tin Bài học ${index + 1}`}
+                          title={`Thông tin chi tiết ${index + 1}`}
                           className="mb-4"
                         >
                           <Form.Item
                             name={["lectures", index, "name"]}
-                            label="Tên Bài Giảng"
+
+                            label="Tên tiết học"
+
                             rules={[
                               {
                                 required: true,
@@ -555,13 +563,15 @@ const DetailSubject = () => {
               <Form
                 layout="vertical"
                 initialValues={{
-                  name: currentClassroom?.name || "",
-                  students: currentClassroom?.students || 1,
+
+                  code: currentClassroom?.code || "",
+                  max_students: currentClassroom?.max_students || 1,
+
                 }}
                 onFinish={handleEditClassroom}
               >
                 <Form.Item
-                  name="name"
+                  name="code"
                   label="Tên Lớp"
                   rules={[
                     {
@@ -574,7 +584,7 @@ const DetailSubject = () => {
                 </Form.Item>
 
                 <Form.Item
-                  name="students"
+                  name="max_students"
                   label="Số Học Sinh"
                   rules={[
                     {
@@ -584,15 +594,17 @@ const DetailSubject = () => {
                     {
                       type: "number",
                       min: 1,
-                      max: 40,
-                      message: "Số học sinh phải từ 1 đến 40",
+
+                      max: 50,
+                      message: "Số học sinh phải từ 1 đến 50",
                     },
                   ]}
                 >
                   <InputNumber
                     min={1}
-                    max={40}
-                    placeholder="Nhập số học sinh (tối đa 40)"
+
+                    max={50}
+                    placeholder="Nhập số học sinh (tối đa 50)"
                     className="w-full"
                   />
                 </Form.Item>
@@ -664,7 +676,8 @@ const DetailSubject = () => {
                           </Form.Item>
 
                           <Form.Item
-                            name={["classrooms", index, "students"]}
+
+                            name={["classrooms", index, "max_students"]}
                             label="Số Học Sinh"
                             rules={[
                               {
@@ -674,15 +687,17 @@ const DetailSubject = () => {
                               {
                                 type: "number",
                                 min: 1,
-                                max: 40,
-                                message: "Số học sinh phải từ 1 đến 40",
+
+                                max: 50,
+                                message: "Số học sinh phải từ 1 đến 50",
                               },
                             ]}
                           >
                             <InputNumber
                               min={1}
-                              max={40}
-                              placeholder="Nhập số học sinh (tối đa 40)"
+                              max={50}
+                              placeholder="Nhập số học sinh (tối đa 50)"
+
                               className="w-full"
                             />
                           </Form.Item>

@@ -24,10 +24,8 @@ const MajorDetailSubject = () => {
   const { subId, subjectId } = useParams();
   const { credit } = useLocation().state || {};
   console.log(credit);
-  // Trạng thái dữ liệu môn học
   const [loading, setLoading] = useState(true);
   const [form] = useForm();
-  // Các biến trạng thái khác
   const [activeTab, setActiveTab] = useState("lecture");
   const [isLectureModalVisible, setIsLectureModalVisible] = useState(false);
   const [isClassroomModalVisible, setIsClassroomModalVisible] = useState(false);
@@ -101,10 +99,11 @@ const MajorDetailSubject = () => {
   };
 
   const showLectureModal = (lecture = null) => {
+    debugger
     if (lecture) {
       setlectureId(lecture.id);
     }
-    setLectureCount(credit * 6);
+    setLectureCount(credit * 4);
     setIsEditing(lecture !== null);
     setCurrentLecture(lecture);
     setIsLectureModalVisible(true);
@@ -270,6 +269,7 @@ const MajorDetailSubject = () => {
   // Render các thẻ bài giảng
   const renderLectureCards = () =>
     lectureData.length > 0 ? (
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {lectureData.map((lecture) => (
           <Card
@@ -317,7 +317,9 @@ const MajorDetailSubject = () => {
           <div className="teaching__card-top flex justify-between items-center mb-4">
             <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
               Tên lớp:{" "}
+
               <span className="text-red-300 uppercase ml-2">{item.code}</span>
+
             </h2>
           </div>
           <div className="teaching__card-body">
@@ -337,7 +339,9 @@ const MajorDetailSubject = () => {
       ))
     ) : (
       <div className="col-12 text-center">
+
         <p className="text-red-500 font-bold text-lg">Không tìm thấy lớp học</p>
+
       </div>
     );
 
@@ -377,7 +381,7 @@ const MajorDetailSubject = () => {
       {activeTab === "lecture" ? (
         <>
           <div className="flex justify-end mb-4">
-            {lectureData.length !== credit * 6 ? (
+            {lectureData.length !== credit * 4 ? (
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -479,10 +483,12 @@ const MajorDetailSubject = () => {
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
                     {[...Array(lectureCount)].map((_, index) => (
+
                       <TabPane
                         tab={`Bài học ${index + 1}`}
                         key={`lecture-${index}`}
                       >
+
                         <Card
                           type="inner"
                           title={`Thông tin Bài học ${index + 1}`}

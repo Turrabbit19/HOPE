@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+
 use App\Models\Course;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\PlanSubject;
 use Carbon\Carbon;
+
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +21,9 @@ class ApiMajorController extends Controller
         try {
             $majors = Major::get();
 
+
             $data = $majors->map(function($major) {
+
                 return [
                     'id' => $major->id,
                     'code' => $major->code,
@@ -35,12 +39,13 @@ class ApiMajorController extends Controller
         }
     }
 
+
     public function getMainMajors() {
         try {
             $mainMajors = Major::where('main', 1)->get();
-    
+
             $currentDate = Carbon::now();
-    
+
             $data = $mainMajors->map(function ($mm) use ($currentDate) {
                 $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
                         $query->where('major_id', $mm->id);
@@ -49,30 +54,50 @@ class ApiMajorController extends Controller
                     ->where('end_date', '>=', $currentDate)
                     ->withCount('students')
                     ->get();
-    
+
                 $courseData = $courses->map(function ($course) {
                     return [
                         'id' => $course->id,
                         'name' => $course->name,
                     ];
                 });
-    
+
                 return [
                     'id' => $mm->id,
                     'code' => $mm->code,
                     'name' => $mm->name,
                     'description' => $mm->description,
                     'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+
                     'courses' => $courseData->isEmpty() ? null : $courseData,
                 ];
             });
-    
+
             return response()->json(['data' => $data], 200);
-    
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
         }
     }
+    // public function getSubMajors(string $id)
+    // {
+    //     try {
+    //         $mainMajors = Major::where('major_id', $id)->get() ;
+
+    //         $data = $mainMajors->map(function ($mm) {
+    //             return [
+    //                 'id' => $mm->id,
+    //                 'code' => $mm->code,
+    //                 'name' => $mm->name,
+    //                 'description' => $mm->description,
+    //                 'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+    //             ];
+    //         });
+    //         return response()->json(['data' => $data], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+    //     }
+    // }
 
     public function getAllSubMajors()
     {
@@ -93,7 +118,8 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
     }
-    
+
+
     public function getSubMajors(string $majorId)
     {
         try {
@@ -116,6 +142,7 @@ class ApiMajorController extends Controller
         }
     }
 
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -123,19 +150,23 @@ class ApiMajorController extends Controller
             'name' => 'required|string|max:50|unique:majors,name',
             'description' => 'required|string',
             'status' => 'boolean',
+
             'main' => 'nullable|integer',
             'major_id' => 'nullable|integer|exists:majors,id'
+
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+
         try {
             $data = $validator->validated();
             $major = Major::create($data);
 
             return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -146,12 +177,14 @@ class ApiMajorController extends Controller
         try {
             $major = Major::findOrFail($id);
             $data = [
+
                     'id' => $major->id,
                     'code' => $major->code,
                     'name' => $major->name,
                     'description' => $major->description,
                     'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
+
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -176,7 +209,6 @@ class ApiMajorController extends Controller
 
         try {
             $major = Major::findOrFail($id);
-            
             $data = $validator->validated();
             $major->update($data);
 
@@ -219,19 +251,21 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    
-    public function getAllSubjects(string $majorId) 
-    {   
+
+
+    public function getAllSubjects(string $majorId)
+    {
         try {
             $major = MajorSubject::where('major_id', $majorId)->get();
-    
-            $subjectsByMajor = $major->map(function ($major) {
+
+            $subjectsByMajor = $major->map(function ($mm) {
                 return [
-                    'id' => $major->subject->id,
-                    'name' => $major->subject->name,
-                    'description' => $major->subject->description,
-                    'credit' => $major->subject->credit,
-                    'order' => $major->subject->order,
+                    'code' => $mm->subject->code,
+                    'id' => $mm->subject->id,
+                    'name' => $mm->subject->name,
+                    'description' => $mm->subject->description,
+                    'credit' => $mm->subject->credit,
+                    'order' => $mm->subject->order,
                 ];
             });
             return response()->json(['data' => $subjectsByMajor], 200);
@@ -241,4 +275,6 @@ class ApiMajorController extends Controller
             return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
     }
+
 }
+

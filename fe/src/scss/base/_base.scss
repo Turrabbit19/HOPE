@@ -6,6 +6,7 @@
 *,
 ::after,
 ::before {
+
   box-sizing: border-box !important;
 }
 
@@ -53,6 +54,7 @@ input,
 label,
 textarea,
 select {
+
   padding: 0;
   font-family: inherit;
   font-size: inherit;
@@ -83,10 +85,12 @@ img.svg-green {
 
 i,
 em {
+
   font-style: italic;
 }
 
 b,
 strong {
+
   font-weight: 600;
 }

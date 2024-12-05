@@ -65,7 +65,9 @@ const StatisticalTeacherStudent = () => {
   };
   return (
     <div style={{ width: "80%", margin: "0 auto" }}>
+
       <h2>Biểu đồ số Sinh Viên và Giảng Viên</h2>
+
       <Bar data={chartData} options={options} />
     </div>
   );

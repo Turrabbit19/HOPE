@@ -31,7 +31,6 @@ const ListSemester = () => {
   const [additionalVariants, setAdditionalVariants] = useState([]);
   const [id, setId] = useState();
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -61,6 +60,7 @@ const ListSemester = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
+
     setCurrentPage(1); // Reset to first page on search
   };
 
@@ -138,6 +138,7 @@ const ListSemester = () => {
       setLoading(true);
       const response = await instance.post("admin/semesters", formattedValues);
       notification.success({ message: "Thêm kỳ học thành công" });
+
       setSemesters([...semesters, { ...response.data.data }]);
       form.resetFields();
     } catch (error) {
@@ -171,6 +172,7 @@ const ListSemester = () => {
       });
     } catch (error) {
       console.error("Error deleting semester:", error);
+
       notification.error({
         message: "Xóa thất bại",
       });
@@ -191,6 +193,7 @@ const ListSemester = () => {
       setSemesters((prev) => [...prev, restoredSemester]);
     } catch (error) {
       console.log(error.message);
+
       message.error("Khôi phục thất bại");
     } finally {
       setLoading(false);
@@ -363,25 +366,33 @@ const ListSemester = () => {
                     </div>
 
                     <div className="teaching__card-bottom">
-                      <Link
-                        to="list"
-                        className="flex items-center gap-3 text-[#1167B4] font-bold"
-                      >
-                        <img src="/assets/svg/setting.svg" alt="setting" />
-                        Quản Lý Kỳ Học
-                      </Link>
-                      <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
-                        <img src="/assets/svg/eye.svg" alt="detail" />
-                        Chi Tiết
-                      </button>
-
-                      <button
-                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                        onClick={() => showEditModal(semester)}
-                      >
-                        <EditOutlined />
-                        Sửa Thông Tin
-                      </button>
+                    <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                          >
+                            <img src="/assets/svg/eye.svg" alt="detail" />
+                            Chi tiết
+                          </button>
+                      {semester.status === "Đang diễn ra" ||
+                      semester.status === "Kết thúc" ? (
+                        ""
+                      ) : (
+                        <>
+                          <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                            onClick={() => confirmDelete(semester.id)}
+                          >
+                            <img src="/assets/svg/eye.svg" alt="detail" />
+                            Xóa
+                          </button>
+                          <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                            onClick={() => showEditModal(semester)}
+                          >
+                            <EditOutlined />
+                            Sửa Thông Tin
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -472,7 +483,6 @@ const ListSemester = () => {
                   placeholder="Ngày kết thúc"
                 />
               </Form.Item>
-
               <div className="flex justify-center items-center mt-4">
                 <Button type="primary" htmlType="submit">
                   {isEditModalVisible ? "Cập nhật kỳ học" : "Tạo kỳ học"}

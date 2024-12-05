@@ -20,45 +20,58 @@ class ApiCourseController extends Controller
             $now = Carbon::now();
 
             $data = $courses->map(function ($course) use ($now) {
+                $currentSemester = $course->semesters()
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
+                    ->first();
+
+                $semesterOrder = $currentSemester ? $currentSemester->pivot->order : null;
+
                 if ($now->lt(Carbon::parse($course->start_date))) {
-                    $status = "Chờ diễn ra"; 
+                    $status = "Chờ diễn ra";
                 } elseif ($now->between(Carbon::parse($course->start_date), Carbon::parse($course->end_date))) {
-                    $status = "Đang diễn ra"; 
+                    $status = "Đang diễn ra";
                 } elseif ($now->gt(Carbon::parse($course->end_date))) {
-                    $status = "Kết thúc"; 
+                    $status = "Kết thúc";
                 }
+
+
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
                     'start_date' => Carbon::parse($course->start_date),
                     'end_date' => Carbon::parse($course->end_date),
-                    'status' => $status
+                    'status' => $status,
+                    'semester_order' => $semesterOrder,
                 ];
             });
+
+
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function getSemestersByCourse($courseId)
     {
         try {
             $semestersByCourse = CourseSemester::where('course_id', $courseId)
-            ->with('semester') 
-            ->get();
 
-            $data = $semestersByCourse->map(function($value){
+                ->with('semester')
+
+                ->get();
+
+            $data = $semestersByCourse->map(function ($value) {
                 return [
                     "id" => $value->semester->id,
                     "name" => $value->semester->name,
-                    "start_date" => Carbon::parse($value->semester->start_date)->format('d/m/Y'),
-                    "end_date" => Carbon::parse($value->semester->end_date)->format('d/m/Y'),
-                    "order" => "Kì học thứ"." ".$value->order
+                    "start_date" => Carbon::parse($value->semester->start_date),
+                    "end_date" => Carbon::parse($value->semester->end_date),
+                    "order" => "Kì học thứ" . " " . $value->order
                 ];
             });
 
-        return response()->json(["semesters" => $data], 200);
+            return response()->json(["semesters" => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
         } catch (\Exception $e) {
@@ -81,7 +94,7 @@ class ApiCourseController extends Controller
         try {
             $data = $validator->validated();
             $course = Course::create($data);
-            
+
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -95,20 +108,24 @@ class ApiCourseController extends Controller
             $now = Carbon::now();
 
             if ($now->lt(Carbon::parse($course->start_date))) {
-                $status = "Chờ diễn ra"; 
+
+                $status = "Chờ diễn ra";
             } elseif ($now->between(Carbon::parse($course->start_date), Carbon::parse($course->end_date))) {
-                $status = "Đang diễn ra"; 
+                $status = "Đang diễn ra";
             } elseif ($now->gt(Carbon::parse($course->end_date))) {
-                $status = "Kết thúc"; 
+                $status = "Kết thúc";
+
             }
 
             $data = [
-                    'id' => $course->id,
-                    'name' => $course->name,
-                    'start_date' => Carbon::parse($course->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($course->end_date)->format('d/m/Y'),
-                    'status' => $status
-                ];
+                'id' => $course->id,
+                'name' => $course->name,
+
+                'start_date' => Carbon::parse($course->start_date),
+                'end_date' => Carbon::parse($course->end_date),
+
+                'status' => $status
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {

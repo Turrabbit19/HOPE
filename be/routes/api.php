@@ -16,32 +16,50 @@ use App\Http\Controllers\Api\Admin\ApiStudentController;
 use App\Http\Controllers\Api\Admin\ApiSubjectController;
 use App\Http\Controllers\Api\Admin\ApiSyllabusController;
 use App\Http\Controllers\Api\Admin\ApiTeacherController;
+
 use App\Http\Controllers\api\admin\StatisticsController;
 use App\Http\Controllers\Api\Auth\ApiAuthController;
+
+use App\Http\Controllers\Api\Client\ApiClientController;
+
+use App\Http\Controllers\Auth\GoogleController;
 
 use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
+use App\Http\Controllers\MailController;
+use App\Http\Controllers\PayPalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
-Route::post('login', [ApiAuthController::class, 'login']);
-Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
+// Route::post('login', [ApiAuthController::class, 'login']);
+// Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
+// Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
-    Route::prefix('admin')
+Route::post('google-login', [GoogleController::class, 'googleLogin']);
+
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle']);
+
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+    Route::
+    // middleware(['auth:sanctum', 'role:Quản trị viên'])->
+    prefix('admin')
+
         ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
-        
+
+
         Route::apiResource('officers', ApiOfficerController::class);
 
         Route::apiResource('students', ApiStudentController::class);
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
+
         Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
 
         Route::apiResource('teachers', ApiTeacherController::class);
@@ -49,16 +67,18 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('export-teacher', [ApiTeacherController::class, 'exportTeacher']);
         Route::post('import-teacher', [ApiTeacherController::class, 'importTeacher']);
 
+
         Route::apiResource('courses', ApiCourseController::class);
         Route::get('course/{id}/restore', [ApiCourseController::class, 'restore']);
         Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
         Route::get('course/{courseId}/students', [ApiStudentController::class, 'getStudentsByCourse']);
+
         Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
 
         Route::apiResource('semesters', ApiSemesterController::class);
         Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
-
+        Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']);
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
@@ -69,13 +89,14 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('all/subjects', [ApiSubjectController::class, 'getAll']);
         Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
-        Route::get('filter/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
+        Route::get('filter-by-major/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
 
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
         Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
 
         Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
+
         Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
 
         Route::apiResource('rooms', ApiRoomController::class);
@@ -88,12 +109,21 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::apiResource('notifications', ApiNotificationController::class);
         Route::apiResource('shifts', ApiShiftController::class);
 
+
         Route::apiResource('classrooms', ApiClassroomController::class);
         Route::get('{subjectId}/classrooms/without-schedule', [ApiClassroomController::class, 'getClassroomsWithoutSchedule']);
 
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
         Route::get('semester/{semesterId}/courses', [ApiScheduleController::class, 'getCoursesBySemester']);
+        Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
+        Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
+        Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
+        Route::get('schedule/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
+        Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
+
+        Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
+        Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
         Route::get('semester/{semesterId}/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourseAndSemester']);
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
@@ -113,6 +143,20 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
+        Route::post('send-email', [MailController::class, 'sendEmail']);
+        Route::post('send-email/teacher', [MailController::class, 'sendEmailToTeacher']);
+
+
+        Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
+        Route::get('syllabus/{majorId}/all-subjects', [ApiSyllabusController::class, 'getAllSubjects']);
+        Route::get('getCountType/{majorId}', [ApiSyllabusController::class, 'getCountType']);
+        Route::get('major/{majorId}/courses', [ApiSyllabusController::class, 'getCoursesByMajor']);
+        // Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
+
+
+        Route::apiResource('paypal', PayPalController::class);
+        Route::post( 'paypal/getTransactionsByCourse', [PayPalController::class,'getTransactionsByCourse']);
+
     });
 
     Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
@@ -135,10 +179,12 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
+
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
+
         Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
         Route::get('filter/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
@@ -182,6 +228,9 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
 
         Route::get('timetable', [StudentController::class, 'getTimetable']);
 
+
+        Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
+        Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);
         Route::get('notifications', [StudentNoticeController::class, 'getStudentNotifications']);
         Route::get('notification/{id}', [StudentNoticeController::class, 'detailNotification']);
 
@@ -196,6 +245,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);
+
         Route::get('timetable', [TeacherController::class, 'getTimetable']);
         Route::get('schedule/{scheduleId}/detail', [TeacherController::class, 'getDetailSchedule']);
         Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailsClassroom']);

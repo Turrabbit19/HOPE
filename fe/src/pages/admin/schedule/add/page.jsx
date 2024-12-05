@@ -15,6 +15,7 @@ import {
   message,
   Typography,
   Spin,
+  Modal,
 } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -33,6 +34,7 @@ const ScheduleAdd = () => {
   const { state } = location;
 
   // Trích xuất các ID cần thiết từ state
+
   const { courseId, semesterId, majorId, subjectId } = state || {};
   console.log("Received in ScheduleAdd - majorId:", majorId);
 
@@ -50,7 +52,7 @@ const ScheduleAdd = () => {
   const [classDetails, setClassDetails] = useState({}); // Chi tiết cho mỗi lớp
   const [teacherAssignments, setTeacherAssignments] = useState({}); // Phân công giáo viên
 
-  // State để lưu mapping classroom_id => schedule_id
+
   const [createdSchedules, setCreatedSchedules] = useState({});
 
   // State để tính toán ngày kết thúc
@@ -61,9 +63,8 @@ const ScheduleAdd = () => {
   const startDate = Form.useWatch("startDate", form);
   const repeatDays = Form.useWatch("repeatDays", form);
 
-  // Fetch dữ liệu khi component mount
+
   useEffect(() => {
-    // Kiểm tra nếu thiếu thông tin cần thiết
     if (!courseId || !semesterId || !majorId || !subjectId) {
       message.error("Thiếu thông tin cần thiết để thêm lịch học!");
       navigate("/schedule-list");
@@ -153,6 +154,7 @@ const ScheduleAdd = () => {
         setLoading(false);
         setLoadingShifts(false);
       } catch (error) {
+
         console.error("Error fetching data:", error);
         message.error(`Không thể tải dữ liệu cần thiết: ${error.message}`);
         setLoading(false);
@@ -182,6 +184,7 @@ const ScheduleAdd = () => {
       try {
         const token = localStorage.getItem("token");
         const dayMapping = {
+
           "Thứ 2": 2,
           "Thứ 3": 3,
           "Thứ 4": 4,
@@ -214,6 +217,7 @@ const ScheduleAdd = () => {
           message.success("Ngày kết thúc đã được tính toán tự động!");
         } else {
           message.error("Không nhận được ngày kết thúc từ API.");
+
         }
       } catch (error) {
         console.error("Error calculating end date:", error);
@@ -250,7 +254,6 @@ const ScheduleAdd = () => {
     );
   };
 
-  // Xử lý khi chọn lớp học
   const handleClassChange = (values) => {
     setSelectedClasses(values);
     setClassDetails((prevDetails) => {
@@ -268,6 +271,7 @@ const ScheduleAdd = () => {
       });
       return updatedDetails;
     });
+
 
     // Nếu bạn đang thay đổi tab, hãy giữ lại các state cũ
     if (activeTab === "addTeacher") {
@@ -365,6 +369,7 @@ const ScheduleAdd = () => {
     message.success("Phân công giáo viên thành công!");
   };
 
+
   // Hàm gọi API để thêm lịch học
   const addSchedules = async (payload) => {
     try {
@@ -458,6 +463,7 @@ const ScheduleAdd = () => {
     });
     setClassDetails(details);
 
+
     // Chuẩn bị payload cho API addSchedules
     const payload = {
       classrooms: values.classes.map((classId) => ({
@@ -538,6 +544,7 @@ const ScheduleAdd = () => {
             </Form.Item>
 
             {/* Hiển thị classRoom hoặc classLink dựa trên learningMethod */}
+
             {form.getFieldValue("learningMethod") === "Online" ? (
               <Form.Item
                 label="Link Học Trực Tuyến"
@@ -545,6 +552,7 @@ const ScheduleAdd = () => {
                 rules={[
                   {
                     required: true,
+
                     message: "Vui lòng nhập link học trực tuyến!",
                   },
                 ]}
@@ -552,6 +560,7 @@ const ScheduleAdd = () => {
                 <Input
                   placeholder="Link học trực tuyến"
                   prefix={<LinkOutlined />}
+
                 />
               </Form.Item>
             ) : (
@@ -559,6 +568,7 @@ const ScheduleAdd = () => {
                 label="Phòng Học Trực Tiếp"
                 name={["classDetails", classId, "classRoom"]}
                 rules={[
+
                   { required: true, message: "Vui lòng chọn phòng học!" },
                 ]}
               >
@@ -570,12 +580,14 @@ const ScheduleAdd = () => {
                   ))}
                 </Select>
               </Form.Item>
+
             )}
           </Card>
         </TabPane>
       );
     });
   };
+
 
   const renderTeacherAssignment = () => {
     if (selectedClasses.length === 0) {
@@ -597,6 +609,7 @@ const ScheduleAdd = () => {
 
           // Chuẩn bị payload
           const payload = {
+
             schedules: selectedClasses.map((classId) => ({
               teacher_id: teacherAssignments[classId],
               schedule_id: createdSchedules[String(classId)], // Đảm bảo classId là string và có schedule_id
@@ -605,7 +618,6 @@ const ScheduleAdd = () => {
 
           console.log("Assign Teachers Payload:", payload); // Log payload
 
-          // Gọi API để phân công giáo viên
           await assignTeachers(payload);
         }}
       >
@@ -625,6 +637,7 @@ const ScheduleAdd = () => {
 
           return (
             <Card
+
               key={classId}
               title={`Phân Công Giáo Viên Cho Lớp ${className}`}
               style={{ marginBottom: 16 }}
@@ -638,6 +651,7 @@ const ScheduleAdd = () => {
               </div>
               <div style={{ marginBottom: 8 }}>
                 <Text strong>Hình Thức Học:</Text>{" "}
+
                 {learningMethod === "Online" ? "Online" : "Offline"}
               </div>
               {learningMethod === "Online" ? (
@@ -778,6 +792,7 @@ const ScheduleAdd = () => {
                           if (!value || !getFieldValue("startDate")) {
                             return Promise.resolve();
                           }
+
                           if (
                             value.isAfter(getFieldValue("startDate")) ||
                             value.isSame(getFieldValue("startDate"))
@@ -834,6 +849,7 @@ const ScheduleAdd = () => {
                   </Row>
                 </Checkbox.Group>
               </Form.Item>
+
 
               {/* Hình thức học */}
               <div style={{ marginBottom: 16 }}>

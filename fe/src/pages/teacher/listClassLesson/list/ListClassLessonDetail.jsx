@@ -122,176 +122,149 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-6">
-      <h4 className="text-2xl font-bold mb-4 text-gray-800">
+    <div className="bg-white shadow-lg rounded-lg p-6 max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">
         {ScheduleInfor.subject_name}
-      </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="space-y-2">
-          <p className="text-gray-600">
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="space-y-4">
+          <p className="text-xl text-gray-700">
             <span className="font-semibold">Lớp học:</span>{" "}
             {ScheduleInfor.classroom}
           </p>
-          <p className="text-gray-600">
+          <p className="text-xl text-gray-700">
             <span className="font-semibold">Ca học:</span>{" "}
             {ScheduleInfor.shift_name}
           </p>
         </div>
-        <div className="space-y-2">
-          <p className="text-gray-600">
+        <div className="space-y-4">
+          <p className="text-xl text-gray-700">
             <span className="font-semibold">Phòng:</span>{" "}
             {ScheduleInfor.room_name}
           </p>
-          <p className="text-gray-600">
+          <p className="text-xl text-gray-700">
             <span className="font-semibold">Liên kết:</span>{" "}
-            {ScheduleInfor.link}
+            <a href={ScheduleInfor.link} className="text-blue-600 hover:underline">
+              {ScheduleInfor.link}
+            </a>
           </p>
         </div>
       </div>
-      <p className="text-gray-600 mb-6">
+      <p className="text-xl text-gray-700 mb-8">
         <span className="font-semibold">Thời gian:</span>{" "}
         {ScheduleInfor.start_date} - {ScheduleInfor.end_date}
       </p>
 
-      <h5 className="text-xl font-bold mb-4 text-gray-800">
+      <h3 className="text-2xl font-bold mb-6 text-gray-800">
         Danh sách buổi học:
-      </h5>
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {["Tên", "Mô tả", "Ngày", "Trạng thái", "Điểm danh"].map(
-                (header) => (
-                  <th
-                    key={header}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {header}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {ScheduleInfor.schedule_lessons.map((lesson) => (
-              <React.Fragment key={lesson.id}>
-                <tr
-                  className={`${
-                    isCurrentDate(lesson.date) ? "bg-blue-50" : ""
-                  } hover:bg-gray-50 transition-colors duration-200`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="text-sm font-medium text-gray-900">
-                        {lesson.name}
-                      </div>
-                      {isCurrentDate(lesson.date) && (
-                        <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Hôm nay
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {lesson.description}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{lesson.date}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        lesson.status === "Đã học"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {lesson.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleAttendance(lesson.id)}
-                      className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${
-                        loading && selectedLesson === lesson.id
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                      disabled={loading && selectedLesson === lesson.id}
-                    >
-                      {loading && selectedLesson === lesson.id
-                        ? "Đang tải..."
-                        : "Điểm danh"}
-                    </button>
-                  </td>
-                </tr>
-                {selectedLesson === lesson.id && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4">
-                      {error ? (
-                        <p className="text-red-500 text-sm">{error}</p>
-                      ) : (
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h6 className="font-semibold mb-4 text-gray-700">
-                            Danh sách sinh viên:
-                          </h6>
-                          {Array.isArray(students) && students.length > 0 ? (
-                            <ul className="space-y-2">
-                              {students.map((student) => (
-                                <li
-                                  key={student.student_id}
-                                  className="flex items-center justify-between bg-white p-3 rounded-md shadow-sm"
-                                >
-                                  <span className="text-sm text-gray-600">
-                                    {student.student_name}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      toggleAttendance(student.student_id)
-                                    }
-                                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
-                                      attendanceStatus[student.student_id] === 1
-                                        ? "bg-green-500 hover:bg-green-600 text-white"
-                                        : "bg-red-500 hover:bg-red-600 text-white"
-                                    }`}
-                                  >
-                                    {attendanceStatus[student.student_id] === 1
-                                      ? "Có mặt"
-                                      : "Vắng mặt"}
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm text-gray-500">
-                              Không có sinh viên trong danh sách.
-                            </p>
-                          )}
-                          {students.length > 0 && (
-                            <button
-                              onClick={() => submitAttendance(lesson.id)}
-                              className="mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
-                              disabled={loading}
-                            >
-                              {loading
-                                ? "Đang cập nhật..."
-                                : "Cập nhật điểm danh"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
+      </h3>
+      <div className="space-y-6">
+        {ScheduleInfor.schedule_lessons.map((lesson) => (
+          <div
+            key={lesson.id}
+            className={`bg-white rounded-lg shadow-md p-6 ${
+              isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
+            }`}
+          >
+            <div className="flex flex-wrap justify-between items-center mb-4">
+              <h4 className="text-xl font-semibold text-gray-800">
+                {lesson.name}
+                {isCurrentDate(lesson.date) && (
+                  <span className="ml-2 px-2 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                    Hôm nay
+                  </span>
                 )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+              </h4>
+              <span
+                className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                  lesson.status === "Đã hoàn thành"
+                    ? "bg-green-100 text-green-800"
+                    : lesson.status === "Đang dạy"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {lesson.status}
+              </span>
+            </div>
+            <p className="text-lg text-gray-600 mb-4">{lesson.description}</p>
+            <p className="text-lg text-gray-600 mb-4">
+              <span className="font-semibold">Ngày:</span> {lesson.date}
+            </p>
+            <button
+              onClick={() => handleAttendance(lesson.id)}
+              className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${
+                loading && selectedLesson === lesson.id
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              disabled={loading && selectedLesson === lesson.id}
+            >
+              {loading && selectedLesson === lesson.id
+                ? "Đang tải..."
+                : "Điểm danh"}
+            </button>
+
+            {selectedLesson === lesson.id && (
+              <div className="mt-6">
+                {error ? (
+                  <p className="text-red-500 text-lg">{error}</p>
+                ) : (
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h5 className="text-xl font-semibold mb-4 text-gray-700">
+                      Danh sách sinh viên:
+                    </h5>
+                    {Array.isArray(students) && students.length > 0 ? (
+                      <ul className="space-y-4">
+                        {students.map((student) => (
+                          <li
+                            key={student.student_id}
+                            className="flex items-center justify-between bg-white p-4 rounded-md shadow-sm"
+                          >
+                            <span className="text-lg text-gray-700">
+                              {student.student_name}
+                            </span>
+                            <button
+                              onClick={() =>
+                                toggleAttendance(student.student_id)
+                              }
+                              className={`px-4 py-2 rounded-lg text-lg font-medium transition-colors duration-200 ${
+                                attendanceStatus[student.student_id] === 1
+                                  ? "bg-green-500 hover:bg-green-600 text-white"
+                                  : "bg-red-500 hover:bg-red-600 text-white"
+                              }`}
+                            >
+                              {attendanceStatus[student.student_id] === 1
+                                ? "Có mặt"
+                                : "Vắng mặt"}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-lg text-gray-500">
+                        Không có sinh viên trong danh sách.
+                      </p>
+                    )}
+                    {students.length > 0 && (
+                      <button
+                        onClick={() => submitAttendance(lesson.id)}
+                        className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out text-lg"
+                        disabled={loading}
+                      >
+                        {loading ? "Đang cập nhật..." : "Cập nhật điểm danh"}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
 export default ListClassLessonDetail;
+

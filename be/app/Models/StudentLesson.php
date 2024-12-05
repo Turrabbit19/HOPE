@@ -9,6 +9,7 @@ class StudentLesson extends Model
 {
     use HasFactory;
 
+
     protected $fillable = [
         'student_id',
         'lesson_id',
@@ -18,4 +19,5 @@ class StudentLesson extends Model
     protected $casts = [
         'status' => 'boolean'
     ];
+
 }

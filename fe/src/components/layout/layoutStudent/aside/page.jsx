@@ -198,9 +198,9 @@ const AsideClient = () => {
         </nav>
       </div>
       <div>
-        <h2 className="mb-2 text font-semibold">PEOPLES</h2>
+        {/* <h2 className="mb-2 text font-semibold">PEOPLES</h2> */}
         <nav className="space-y-2">
-          <a
+          {/* <a
             href="#"
             className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
           >
@@ -221,7 +221,7 @@ const AsideClient = () => {
               <path d="M10 10a4 4 0 0 0 2-4"></path>
             </svg>
             User
-          </a>
+          </a> */}
           {/* <a
                         href="#"
                         className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"

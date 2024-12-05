@@ -6,13 +6,18 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "google/apiclient": "^2.18",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
+        "laravel/socialite": "*",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.5",
         "maatwebsite/excel": "^3.1",
-        "pusher/pusher-php-server": "^7.2"
+        "paypal/paypal-server-sdk": "^0.6.0",
+        "predis/predis": "*",
+        "pusher/pusher-php-server": "^7.2",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

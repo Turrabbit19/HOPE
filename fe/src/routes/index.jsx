@@ -5,11 +5,9 @@ import NotFound from "../components/NotFound";
 import Loading from "../components/loading";
 import ScrollToTopButton from "../components/scrollToTopButton";
 import BreadCrumb from "./breadcrumb";
-import MajorManagement from "../pages/admin/major";
 import Role from "../pages/admin/roles";
 import UserManager from "../pages/admin/userManager";
-import CoursesManager from "../pages/admin/courses";
-import SemesterManage from "../pages/admin/semesters";
+
 import SectionManage from "../pages/admin/sections";
 import NotificationManage from "../pages/admin/notification";
 import StudentManager from "../pages/admin/userManager/student";
@@ -35,6 +33,7 @@ import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
 import ListRooms from "../pages/admin/rooms/page";
 
+
 import SyllabusList from "../pages/admin/syllabus/list/page";
 
 import ListCourse from "../pages/admin/courses/list/page";
@@ -44,6 +43,7 @@ import EditSchedule from "../pages/admin/schedule/edit/page";
 import MajorSubject from "../pages/admin/teaching/subject/page";
 import CourseDetail from "../pages/admin/courses/detail/page";
 import MajorDetailSubject from "../pages/admin/teaching/subjectdetail/page";
+
 import ScheduleList from "../pages/admin/schedule/list/page";
 import ScheduleDetail from "../pages/admin/schedule/detail/page";
 import ListSections from "../pages/admin/section/list/page";
@@ -377,28 +377,7 @@ const Router = createBrowserRouter([
           </>
         ),
       },
-      //
-      {
-        path: "courses",
-        element: (
-          <>
-            <BreadCrumb />
-            <CoursesManager />
-          </>
-        ),
-      },
 
-      //
-      {
-        path: "semesters",
-        element: (
-          <>
-            <BreadCrumb />
-            <SemesterManage />
-          </>
-        ),
-      },
-      // Giao diện list semester
       {
         path: "list-semesters",
         element: (
@@ -409,7 +388,6 @@ const Router = createBrowserRouter([
       },
       //
 
-      // giao diện list khóa học
       {
         path: "list-subject",
         element: (

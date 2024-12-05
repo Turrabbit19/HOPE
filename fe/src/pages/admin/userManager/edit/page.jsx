@@ -26,6 +26,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 const { Option } = Select;
 import moment from "moment";
 import {
+
   deleteStudent,
   deleteTeacher,
   deleteUser,
@@ -40,6 +41,7 @@ import {
 import { uploadMultipleFiles } from "../../../../utils/upload";
 
 const UserEdit = () => {
+
   const { state } = useLocation();
 
   console.log(state);
@@ -123,7 +125,7 @@ const UserEdit = () => {
           form.setFieldValue("role", "admin1");
           setRole("admin1");
           break;
-        case "admin":
+        case "Quản trị viên":
           setRoleNumber(1);
           form.setFieldValue("role", "admin");
 
@@ -145,7 +147,6 @@ const UserEdit = () => {
     }
 
     form.setFieldValue("gender", res.data.data["gender"] === "Nam");
-    // console.log(res.data)
   }
 
   const [form] = Form.useForm();
@@ -464,6 +465,7 @@ const UserEdit = () => {
             </Form.Item>
             {/* Vai trò */}
             {/* <Form.Item
+
               label="Vai Trò"
               name="role"
               rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
@@ -475,6 +477,7 @@ const UserEdit = () => {
                 <Radio value="admin1">Quản Trị Viên</Radio>
               </Radio.Group>
             </Form.Item> */}
+
             {/* Các trường hiển thị theo vai trò */}
             {role === "student" && (
               <Row gutter={16}>
@@ -577,6 +580,7 @@ const UserEdit = () => {
             >
                 <Input.Password placeholder="Nhập mật khẩu" />
             </Form.Item> */}
+
 
         <div className="flex items-center justify-center">
           <Form.Item>

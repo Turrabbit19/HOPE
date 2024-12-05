@@ -20,11 +20,31 @@ export default function CourseRegistration() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [message, setMessage] = useState("");
+
+
 
   useEffect(() => {
     fetchSubjects();
     fetchShifts();
   }, []);
+
+  useEffect(() => {
+    let timer;
+    if (timeLeft) {
+      timer = setInterval(() => {
+        setTimeLeft(prevTime => {
+          if (prevTime <= 1000) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prevTime - 1000;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   useEffect(() => {
     if (selectedSubject?.id && selectedShift?.id) {
@@ -55,6 +75,10 @@ export default function CourseRegistration() {
         }
       );
 
+      if (response.status === 403) {
+        throw new Error("Thời gian đăng ký đã kết thúc.");
+      }
+
       if (!response.ok) {
         throw new Error("Không thể tải danh sách môn học");
       }
@@ -63,6 +87,12 @@ export default function CourseRegistration() {
       console.log("Subjects data received:", data);
       if (data && data.subjects && Array.isArray(data.subjects)) {
         setSubjects(data.subjects);
+        setMessage(data.message);
+        if (data.time_left) {
+          const [days, hours, minutes, seconds] = data.time_left.split(', ').map(part => parseInt(part));
+          const totalMilliseconds = ((days * 24 + hours) * 60 + minutes) * 60 + seconds * 1000;
+          setTimeLeft(totalMilliseconds);
+        }
       } else {
         console.error("Unexpected subjects data structure:", data);
         setSubjects([]);
@@ -74,6 +104,16 @@ export default function CourseRegistration() {
       setIsLoading(false);
     }
   };
+  const formatTime = (milliseconds) => {
+    if (milliseconds === null) return "";
+    const seconds = Math.floor((milliseconds / 1000) % 60);
+    const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
+    const hours = Math.floor((milliseconds / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
+
+    return `${days} ngày, ${hours} giờ, ${minutes} phút, ${seconds} giây`;
+  };
+
 
   const fetchShifts = async () => {
     setIsLoading(true);
@@ -204,11 +244,25 @@ export default function CourseRegistration() {
       <div className="flex-grow py-12 px-4 sm:px-6 lg:px-8">
         <div className=" mx-auto">
           <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
+
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
               Đăng ký khóa học
             </span>
-          </h1>
 
+          </h1>
+          {message && (
+            <div className="text-center mb-6">
+              <p className="text-xl font-semibold text-blue-600">{message}</p>
+              {timeLeft !== null && (
+                <div className="mt-4 flex items-center justify-center space-x-2">
+                  <Clock className="w-6 h-6 text-blue-500" />
+                  <p className="text-lg text-gray-700">
+                    Thời gian còn lại: {formatTime(timeLeft)}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
           {isLoading && (
             <div className="text-center mt-8">
               <Clock className="animate-spin h-8 w-8 mx-auto text-blue-500" />
@@ -219,9 +273,10 @@ export default function CourseRegistration() {
           {error && (
             <div className="text-center mt-8 text-red-500">
               <AlertCircle className="h-8 w-8 mx-auto" />
-              <p className="mt-2">Lỗi: {error}</p>
+              <p className="mt-2">{error}</p>
             </div>
           )}
+
 
           {!isLoading && !error && (
             <>
@@ -235,19 +290,17 @@ export default function CourseRegistration() {
                       setSelectedShift(null);
                       setClassrooms([]);
                     }}
-                    className={`p-4 rounded-lg transition-all duration-200 relative ${
-                      selectedSubject?.id === subject.id
+                    className={`p-4 rounded-lg transition-all duration-200 relative ${selectedSubject?.id === subject.id
                         ? "bg-blue-500 text-white shadow-lg"
                         : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                    }`}
+                      }`}
                   >
                     <h3 className="font-bold text">{subject.name}</h3>
                     <p
-                      className={`mt-2 ${
-                        selectedSubject?.id === subject.id
+                      className={`mt-2 ${selectedSubject?.id === subject.id
                           ? "text-blue-100"
                           : "text-gray-600"
-                      }`}
+                        }`}
                     >
                       <span className="inline-flex items-center mr-4">
                         <BookOpen size={16} className="mr-1" /> Mã môn:{" "}
@@ -275,11 +328,10 @@ export default function CourseRegistration() {
                           setSelectedShift(shift);
                           setClassrooms([]);
                         }}
-                        className={`p-4 rounded-lg transition-all duration-200 ${
-                          selectedShift?.id === shift.id
+                        className={`p-4 rounded-lg transition-all duration-200 ${selectedShift?.id === shift.id
                             ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
                             : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                        }`}
+                          }`}
                       >
                         <h3 className="font-bold text">{shift.name}</h3>
                         <p className=" text-gray-600 mt-2">
@@ -300,11 +352,10 @@ export default function CourseRegistration() {
                       <button
                         key={classroom.id}
                         onClick={() => setSelectedClassroom(classroom)}
-                        className={`p-4 rounded-lg transition-all duration-200 ${
-                          selectedClassroom?.id === classroom.id
+                        className={`p-4 rounded-lg transition-all duration-200 ${selectedClassroom?.id === classroom.id
                             ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
                             : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                        }`}
+                          }`}
                       >
                         <h3 className="font-bold text">
                           {classroom.classroom}

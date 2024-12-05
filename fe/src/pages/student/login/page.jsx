@@ -9,18 +9,24 @@ export default function SchoolLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     const role = localStorage.getItem("role");
-
+  
     if (token && role) {
+      console.log("Token found in storage:", token);
       redirectToRolePage(role);
     }
+  
+    return () => {
+      window.removeEventListener("beforeunload", clearToken);
+    };
   }, []);
+  
+  
 
   const redirectToRolePage = (role) => {
     if (role === "Sinh viên") {
@@ -43,9 +49,9 @@ export default function SchoolLogin() {
         },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         const errorMessage =
           data.errors
@@ -57,15 +63,18 @@ export default function SchoolLogin() {
         setShowErrorPopup(true);
         return;
       }
-
-      if (rememberMe) {
-        localStorage.setItem("token", data.token);
-      } else {
-        sessionStorage.setItem("token", data.token);
-      }
-
+  
+      console.log("Login successful, received token:", data.token);
+  
+      // Lưu token vào localStorage tạm thời
+      localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
-
+  
+      // Nếu không chọn "Ghi nhớ đăng nhập", thêm sự kiện để xóa token khi rời trang
+      if (!rememberMe) {
+        window.addEventListener("beforeunload", clearToken);
+      }
+  
       redirectToRolePage(data.user.role);
     } catch (err) {
       console.error("Error during login:", err);
@@ -73,6 +82,13 @@ export default function SchoolLogin() {
       setShowErrorPopup(true);
     }
   };
+  
+  const clearToken = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+  };
+  
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -81,24 +97,11 @@ export default function SchoolLogin() {
 
     const rememberMe = document.getElementById("rememberMe").checked;
 
-    if (rememberMe) {
-      setShowConfirmPopup(true);
-    } else {
-      handleLogin(false);
-    }
-  };
-
-  const confirmRememberMe = () => {
-    setShowConfirmPopup(false);
-    handleLogin(true);
+    handleLogin(rememberMe);
   };
 
   const closeErrorPopup = () => {
     setShowErrorPopup(false);
-  };
-
-  const closeConfirmPopup = () => {
-    setShowConfirmPopup(false);
   };
 
   return (
@@ -114,29 +117,6 @@ export default function SchoolLogin() {
             >
               Đóng
             </button>
-          </div>
-        </div>
-      )}
-
-      {showConfirmPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-md shadow-md text-center">
-            <h2 className="text-lg font-bold mb-4">Xác nhận</h2>
-            <p className="mb-4">Bạn có chắc muốn ghi nhớ đăng nhập?</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={confirmRememberMe}
-                className="px-4 py-2 bg-green-600 text-white rounded-md"
-              >
-                Đồng ý
-              </button>
-              <button
-                onClick={closeConfirmPopup}
-                className="px-4 py-2 bg-red-600 text-white rounded-md"
-              >
-                Hủy
-              </button>
-            </div>
           </div>
         </div>
       )}

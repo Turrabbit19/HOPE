@@ -211,7 +211,6 @@ const MajorDetailSubject = () => {
   const handleEditClassroom = async (values) => {
     console.log(values);
     try {
-      // await instance.put(`admin/classrooms/${classId}`, values);
       notification.success({
         message: "Cập nhật lớp học thành công",
       });
@@ -271,32 +270,37 @@ const MajorDetailSubject = () => {
   // Render các thẻ bài giảng
   const renderLectureCards = () =>
     lectureData.length > 0 ? (
-      lectureData.map((lecture) => (
-        <Card
-          key={lecture.id}
-          title={
-            <span className="text-[#1167B4] font-bold text-3xl">
-              {lecture.name}
-            </span>
-          }
-          className="mb-6 shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
-          headStyle={{ backgroundColor: "#f0f8ff", padding: "16px" }}
-          bodyStyle={{ padding: "16px", fontSize: "16px" }}
-        >
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {lectureData.map((lecture) => (
           <Card
+            key={lecture.id}
             title={
-              <span className="font-bold text-black">Mô tả bài giảng</span>
+              <span className="text-[#1167B4] font-bold text-3xl">
+                {lecture.name}
+              </span>
             }
-            bordered={false}
-            className="mb-4"
+            className="shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300"
+            styles={{
+              header: { backgroundColor: "#f0f8ff", padding: "16px" },
+              body: { padding: "16px", fontSize: "16px" },
+            }}
           >
-            <p className="text-gray-700">{lecture.description}</p>
+            <Card
+              title={
+                <span className="font-bold text-black">Mô tả bài giảng</span>
+              }
+              bordered={false}
+              className="mb-4"
+            >
+              <p className="text-gray-700">{lecture.description}</p>
+            </Card>
+            {renderLectureActionButtons(lecture)}
           </Card>
-          {renderLectureActionButtons(lecture)}
-        </Card>
-      ))
+        ))}
+      </div>
     ) : (
-      <div className="col-12 text-center">
+      <div className="text-center">
         <p className="text-red-500 font-bold text-lg">
           Không tìm thấy bài giảng
         </p>
@@ -314,9 +318,9 @@ const MajorDetailSubject = () => {
           <div className="teaching__card-top flex justify-between items-center mb-4">
             <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
               Tên lớp:{" "}
-              <span className="text-red-300 uppercase ml-2">
-                {item.code}
-              </span>
+
+              <span className="text-red-300 uppercase ml-2">{item.code}</span>
+
             </h2>
           </div>
           <div className="teaching__card-body">
@@ -336,9 +340,9 @@ const MajorDetailSubject = () => {
       ))
     ) : (
       <div className="col-12 text-center">
-        <p className="text-red-500 font-bold text-lg">
-          Không tìm thấy lớp học
-        </p>
+
+        <p className="text-red-500 font-bold text-lg">Không tìm thấy lớp học</p>
+
       </div>
     );
 
@@ -480,7 +484,12 @@ const MajorDetailSubject = () => {
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
                     {[...Array(lectureCount)].map((_, index) => (
-                      <TabPane tab={`Bài học ${index + 1}`} key={`lecture-${index}`}>
+
+                      <TabPane
+                        tab={`Bài học ${index + 1}`}
+                        key={`lecture-${index}`}
+                      >
+
                         <Card
                           type="inner"
                           title={`Thông tin Bài học ${index + 1}`}

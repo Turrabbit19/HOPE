@@ -53,43 +53,50 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
 
+
         Route::apiResource('officers', ApiOfficerController::class);
 
         Route::apiResource('students', ApiStudentController::class);
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
 
+        Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
+
         Route::apiResource('teachers', ApiTeacherController::class);
         Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);
         Route::get('export-teacher', [ApiTeacherController::class, 'exportTeacher']);
         Route::post('import-teacher', [ApiTeacherController::class, 'importTeacher']);
-        Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
+
 
         Route::apiResource('courses', ApiCourseController::class);
         Route::get('course/{id}/restore', [ApiCourseController::class, 'restore']);
         Route::get('course/{courseId}/semesters', [ApiCourseController::class, 'getSemestersByCourse']);
         Route::get('course/{courseId}/students', [ApiStudentController::class, 'getStudentsByCourse']);
 
-        Route::apiResource('semesters', ApiSemesterController::class);
-        Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
+        Route::get('course/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourse']);
 
+        Route::apiResource('semesters', ApiSemesterController::class);
+        Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
+        Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
+        Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']);
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
-        Route::get('sub/{id?}/majors', [ApiMajorController::class, 'getSubMajors']);
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
+        Route::get('sub/{majorId}/majors', [ApiMajorController::class, 'getSubMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
-        Route::get('{subjectId}/classrooms/without-schedule', [ApiClassroomController::class, 'getClassroomsWithoutSchedule']);
+
         Route::apiResource('subjects', ApiSubjectController::class);
-        Route::get('filter/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
+        Route::get('all/subjects', [ApiSubjectController::class, 'getAll']);
+        Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
+        Route::get('filter-by-major/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
-        Route::post('subjects/{majorId}/add', [ApiSubjectController::class, 'addSubjects']);
 
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
         Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
 
         Route::get('subject/{id}/classrooms', [ApiSubjectController::class, 'getAllClassrooms']);
-        Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
+
         Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
 
         Route::apiResource('rooms', ApiRoomController::class);
@@ -101,7 +108,10 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::apiResource('notifications', ApiNotificationController::class);
         Route::apiResource('shifts', ApiShiftController::class);
+
+
         Route::apiResource('classrooms', ApiClassroomController::class);
+        Route::get('{subjectId}/classrooms/without-schedule', [ApiClassroomController::class, 'getClassroomsWithoutSchedule']);
 
         Route::apiResource('schedules', ApiScheduleController::class);
         Route::get('calculate-end-date', [ApiScheduleController::class, 'calculateEndDate']);
@@ -114,6 +124,21 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
         Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
+        Route::get('semester/{semesterId}/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourseAndSemester']);
+        Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
+        Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
+        Route::get('schedules/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
+        Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
+
+        Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
+        Route::post('schedule/{id}/update', [ApiScheduleController::class, 'updateByClassroomId']);
+        Route::delete('schedule/{id}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
+
+        Route::get('syllabus/{majorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrder']);
+        Route::get('syllabus/{majorId}/{subMajorId}/all', [ApiSyllabusController::class, 'getSubjectsFromOrderWSubMajor']);
+        Route::get('syllabus/{majorId}/all-subjects', [ApiSyllabusController::class, 'getAllSubjects']);
+        Route::get('major/{majorId}/courses', [ApiSyllabusController::class, 'getCoursesByMajor']);
+        Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
 
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
@@ -154,14 +179,15 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
-        Route::get('sub/{id}/majors', [ApiMajorController::class, 'getSubMajors']);
+
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
-        Route::get('filter/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
+
+        Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
+        Route::get('filter/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
-        Route::post('subjects/{majorId}/add', [ApiSubjectController::class, 'addSubjects']);
 
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
         Route::post('subject/{id}/lessons/add', [ApiSubjectController::class, 'addLessons']);
@@ -202,6 +228,9 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::get('timetable', [StudentController::class, 'getTimetable']);
 
+
+        Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
+        Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);
         Route::get('notifications', [StudentNoticeController::class, 'getStudentNotifications']);
         Route::get('notification/{id}', [StudentNoticeController::class, 'detailNotification']);
 
@@ -216,6 +245,10 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);
+
+        Route::get('timetable', [TeacherController::class, 'getTimetable']);
         Route::get('schedule/{scheduleId}/detail', [TeacherController::class, 'getDetailSchedule']);
-        Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailClassroom']);
+        Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailsClassroom']);
+        Route::get('schedule/{scheduleId}/{lesson_id}/students', [TeacherController::class, 'getDetailClassroom']);
+        Route::post('attendance/{schedule_id}/{lesson_id}/mark', [TeacherController::class, 'markAttendance']);
     });

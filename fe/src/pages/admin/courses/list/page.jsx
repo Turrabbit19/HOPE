@@ -82,7 +82,6 @@ const ListCourse = () => {
       name: values.name,
       start_date: values.start_date.format("YYYY-MM-DD"),
       end_date: values.end_date.format("YYYY-MM-DD"),
-      plan_id: values.plan_id,
     };
     try {
       setLoading(true);
@@ -108,7 +107,6 @@ const ListCourse = () => {
       name: values.name,
       start_date: values.start_date.format("YYYY-MM-DD"),
       end_date: values.end_date.format("YYYY-MM-DD"),
-      plan_id: values.plan_id,
     };
     try {
       setLoading(true);
@@ -263,6 +261,14 @@ const ListCourse = () => {
                         <p className="text-[#9E9E9E]">Ngày kết thúc:</p>
                         <p className="font-bold text-[#000]">
                           {moment(course.end_date).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                      <div className="flex gap-6">
+                        <p className="text-[#9E9E9E]">Kỳ học hiện tại:</p>
+                        <p className="font-bold text-[#000]">
+                          {course.semester_order
+                            ? course.semester_order
+                            : "Chưa có"}
                         </p>
                       </div>
                     </div>

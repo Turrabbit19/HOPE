@@ -25,22 +25,26 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             $course = Course::where('name', $row['khoa'])->first();
             $courseId = $course ? $course->id : null;
 
+
             $major = Major::where('name', $row['nganh'])->first();
             $majorId = $major ? $major->id : null;
 
             if (!$courseId || !$majorId) {
                 Log::warning("Course or Major not found for row: ", $row);
-                return null; 
+                return null;
             }
 
+
             $dob = Carbon::createFromFormat('d/m/Y', $row['ngay_sinh'])->format('Y-m-d');
+
 
             $user = User::create([
                 'name'     => $row['ho_va_ten'],
                 'email'    => $row['email'],
                 'phone'    => $row['sdt'],
                 'dob'      => $dob,
-                'gender'   => $row['gioi_tinh'] == "Nam" ? "1" : ($row['gioi_tinh'] == "Nữ" ? "0" : null),
+
+                'gender'   => $row['gioi_tinh'] == "Nam" ? "1" : "0",
                 'ethnicity'=> $row['dan_toc'],
                 'address'  => $row['dia_chi'],
                 'password' => Hash::make('123456789'),
@@ -56,28 +60,27 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
                     'Đang học'     => "0",
                     'Bảo lưu'      => "1",
                     'Hoàn thành'   => "2",
-                    default        => "Không xác định",  
+                    default        => "Không xác định",
                 },
             ]);
 
             StudentMajor::create([
                 'student_id' => $student->id,
                 'major_id'   => 1,
-                'status'     => 0, 
+                'status'     => 0,
             ]);
-
             StudentMajor::create([
                 'student_id' => $student->id,
-                'major_id'   => $majorId, 
-                'status'     => 1, 
+                'major_id'   => $majorId,
+                'status'     => 1,
             ]);
-
             return $student;
         } catch (\Exception $e) {
             Log::error('Failed to import student data: ' . $e->getMessage());
             return null;
         }
     }
+
 
     public function rules(): array
     {
@@ -89,8 +92,8 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             '*.gioi_tinh' => 'required|in:Nam,Nữ',
             '*.dan_toc' => 'required|string|max:100',
             '*.dia_chi' => 'required|string|max:255',
-            '*.khoa' => 'required|exists:courses,name',  
-            '*.nganh' => 'required|exists:majors,name',   
+            '*.khoa' => 'required|exists:courses,name',
+            '*.nganh' => 'required|exists:majors,name',
             '*.ki_hien_tai' => 'required|integer|min:1',
             '*.msv' => 'required|unique:students,student_code',
             '*.trang_thai' => 'required|in:Đang học,Bảo lưu,Hoàn thành',

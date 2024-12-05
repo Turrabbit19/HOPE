@@ -11,12 +11,14 @@ class Major extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+
         'code',
         'name',
         'description',
         'status',
         'major_id',
         'main'
+
     ];
     protected $casts = [
         'status' => 'boolean',
@@ -31,10 +33,12 @@ class Major extends Model
     {
         return $this->hasMany(Major::class, 'major_id');
     }
+
     public function teachers()
     {
         return $this->hasMany(Teacher::class, 'major_id');
     }
+
 
     public function subjects()
     {
@@ -44,4 +48,6 @@ class Major extends Model
     {
         return $this->belongsToMany(Student::class, 'student_majors');
     }
+
 }
+

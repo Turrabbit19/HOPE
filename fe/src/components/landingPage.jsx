@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Slider from "react-slick";
 import { Button, Card } from "antd";
@@ -206,6 +207,7 @@ const LandingPage = () => {
                 </div>
             </footer>
         </div>
+
     );
 };
 

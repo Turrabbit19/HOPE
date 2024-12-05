@@ -1,9 +1,11 @@
+
 import React, { useEffect, useState } from "react";
 import instance from "../../../../config/axios";
 import { Link, useParams } from "react-router-dom";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
 import { Table } from "antd";
+
 
 const tabs = [
   { id: "curriculum", label: "Curriculum", icon: "📅" },
@@ -139,6 +141,7 @@ const CurriculumDetail = () => {
   ];
   return (
     <div className="bg-gray-100 min-h-screen p-6">
+
       <div className="flex items-center space-x-4 border-b border-gray-300 mb-6">
         {tabs.map((tab) => (
           <button
@@ -173,6 +176,7 @@ const CurriculumDetail = () => {
                     <div className="flex space-x-2">
                       <span className="text-gray-600 text-sm">
                         {semester.total_credit} Credits
+
                       </span>
                     </div>
                   </div>
@@ -217,6 +221,7 @@ const CurriculumDetail = () => {
                             }`}
                           >
                             {subject.form == 1 ? "ON" : "OFF"}
+
                           </td>
                         </tr>
                       ))}

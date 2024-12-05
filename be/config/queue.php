@@ -70,6 +70,7 @@ return [
             'block_for' => null,
             'after_commit' => false,
         ],
+
         'rabbitmq' => [
         'driver' => 'rabbitmq',
         'queue' => env('RABBITMQ_QUEUE', 'default'),
@@ -91,6 +92,7 @@ return [
             ],
         ],
     ],
+
     ],
 
     /*

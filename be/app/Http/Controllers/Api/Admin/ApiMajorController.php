@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+
+use App\Models\Course;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\PlanSubject;
+use Carbon\Carbon;
+
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +21,9 @@ class ApiMajorController extends Controller
         try {
             $majors = Major::get();
 
-            $data = $majors->map(function ($major) {
+
+            $data = $majors->map(function($major) {
+
                 return [
                     'id' => $major->id,
                     'code' => $major->code,
@@ -33,45 +39,66 @@ class ApiMajorController extends Controller
         }
     }
 
-    public function getMainMajors()
-    {
+
+    public function getMainMajors() {
         try {
             $mainMajors = Major::where('main', 1)->get();
 
-            $data = $mainMajors->map(function ($mm) {
+            $currentDate = Carbon::now();
+
+            $data = $mainMajors->map(function ($mm) use ($currentDate) {
+                $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
+                        $query->where('major_id', $mm->id);
+                    })
+                    ->where('start_date', '<=', $currentDate)
+                    ->where('end_date', '>=', $currentDate)
+                    ->withCount('students')
+                    ->get();
+
+                $courseData = $courses->map(function ($course) {
+                    return [
+                        'id' => $course->id,
+                        'name' => $course->name,
+                    ];
+                });
+
                 return [
                     'id' => $mm->id,
                     'code' => $mm->code,
                     'name' => $mm->name,
                     'description' => $mm->description,
                     'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+
+                    'courses' => $courseData->isEmpty() ? null : $courseData,
                 ];
             });
+
             return response()->json(['data' => $data], 200);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
         }
     }
+    // public function getSubMajors(string $id)
+    // {
+    //     try {
+    //         $mainMajors = Major::where('major_id', $id)->get() ;
 
-    public function getSubMajors(string $id)
-    {
-        try {
-            $mainMajors = Major::where('major_id', $id)->get() ;
+    //         $data = $mainMajors->map(function ($mm) {
+    //             return [
+    //                 'id' => $mm->id,
+    //                 'code' => $mm->code,
+    //                 'name' => $mm->name,
+    //                 'description' => $mm->description,
+    //                 'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+    //             ];
+    //         });
+    //         return response()->json(['data' => $data], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+    //     }
+    // }
 
-            $data = $mainMajors->map(function ($mm) {
-                return [
-                    'id' => $mm->id,
-                    'code' => $mm->code,
-                    'name' => $mm->name,
-                    'description' => $mm->description,
-                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
-            return response()->json(['data' => $data], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
-        }
-    }
     public function getAllSubMajors()
     {
         try {
@@ -92,6 +119,30 @@ class ApiMajorController extends Controller
         }
     }
 
+
+    public function getSubMajors(string $majorId)
+    {
+        try {
+            $mainMajors = Major::where('major_id', $majorId)->get() ;
+
+            $data = $mainMajors->map(function ($mm) {
+                return [
+                    'id' => $mm->id,
+                    'code' => $mm->code,
+                    'name' => $mm->name,
+                    'description' => $mm->description,
+                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -99,29 +150,22 @@ class ApiMajorController extends Controller
             'name' => 'required|string|max:50|unique:majors,name',
             'description' => 'required|string',
             'status' => 'boolean',
-            'major_id' => 'max:50',
-            'main' => 'max:50',
+
+            'main' => 'nullable|integer',
+            'major_id' => 'nullable|integer|exists:majors,id'
+
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $data = $validator->validated();
-        $major = Major::create($data);
-        try {
-            $responseData = [
-                'id' => $major->id,
-                'code' => $major->code,
-                'name' => $major->name,
-                'description' => $major->description,
-                'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
-            ];
 
-            return response()->json([
-                'data' => $responseData,
-                'message' => 'Tạo mới thành công',
-            ], 201);
+        try {
+            $data = $validator->validated();
+            $major = Major::create($data);
+
+            return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -133,12 +177,14 @@ class ApiMajorController extends Controller
         try {
             $major = Major::findOrFail($id);
             $data = [
-                'id' => $major->id,
-                'code' => $major->code,
-                'name' => $major->name,
-                'description' => $major->description,
-                'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
-            ];
+
+                    'id' => $major->id,
+                    'code' => $major->code,
+                    'name' => $major->name,
+                    'description' => $major->description,
+                    'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -163,7 +209,6 @@ class ApiMajorController extends Controller
 
         try {
             $major = Major::findOrFail($id);
-
             $data = $validator->validated();
             $major->update($data);
 
@@ -207,32 +252,29 @@ class ApiMajorController extends Controller
         }
     }
 
+
     public function getAllSubjects(string $majorId)
     {
         try {
-            $major = Major::findOrFail($majorId);
+            $major = MajorSubject::where('major_id', $majorId)->get();
 
-            $subjects = $major->subjects;
-
-            $data = $subjects->map(function ($item) {
+            $subjectsByMajor = $major->map(function ($major) {
                 return [
-                    'id' => $item->id,
-                    'code' => $item->code,
-                    'name' => $item->name,
-                    'credits' => $item->credit,
-                    'description' => $item->description,
-                    'status' => $item->status ? "Đang hoạt động" : "Tạm dừng",
+                    'id' => $major->subject->id,
+                    'name' => $major->subject->name,
+                    'description' => $major->subject->description,
+                    'credit' => $major->subject->credit,
+                    'order' => $major->subject->order,
                 ];
             });
-
-            return response()->json([
-                'data' => $data,
-                'message' => 'Subjects retrieved successfully.'
-            ], 200);
+            return response()->json(['data' => $subjectsByMajor], 200);
+>>>>>>> origin/demo
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
         } catch (\Exception $e) {
             return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
         }
     }
+
 }
+

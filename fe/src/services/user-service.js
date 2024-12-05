@@ -24,6 +24,11 @@ const getListMajor = async () => {
   return instance.get("/admin/majors");
 };
 
+
+const getMainMajor = async () => {
+  return instance.get("/admin/main/majors");
+};
+
 const getListCourse = async () => {
   return instance.get("/admin/courses");
 };
@@ -35,7 +40,9 @@ const editAdmin = async (id, data) => {
   return instance.put("/admin/officers/" + id, data);
 };
 const editStudents = async (id, data) => {
-  return axios.put(`http://localhost:8000/api/admin/students/${id}`, data)
+
+  return instance.put("/admin/students/" + id, data);
+
 };
 const editTeachers = async (id, data) => {
   return instance.put("/admin/teachers/" + id, data);
@@ -60,6 +67,7 @@ export {
   createUser,
   getListMajor,
   getListCourse,
+  getMainMajor,
   getListUser,
   getListStudent,
   createStudent,

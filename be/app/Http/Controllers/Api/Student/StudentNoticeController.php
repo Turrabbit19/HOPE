@@ -98,14 +98,14 @@ class StudentNoticeController extends Controller
     {
         try {
             $student = $this->getStudent();
-            
+
             $notification = StudentNotification::where('student_id', $student->id)
                 ->where('notification_id', $id)
                 ->firstOrFail();
 
-            if ($notification->status == 0) { 
+            if ($notification->status == 0) {
                 $notification->status = 1;
-                $notification->save(); 
+                $notification->save();
             }
 
             $data = [
@@ -122,5 +122,4 @@ class StudentNoticeController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Student_Notifications', 'message' => $e->getMessage()], 500);
         }
     }
-
 }

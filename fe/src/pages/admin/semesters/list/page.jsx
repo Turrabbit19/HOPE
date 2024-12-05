@@ -31,9 +31,14 @@ const ListSemester = () => {
   const [additionalVariants, setAdditionalVariants] = useState([]);
   const [id, setId] = useState();
 
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const [coursesResponse, semestersResponse] = await Promise.all([
           instance.get("admin/courses"),
           instance.get("admin/semesters"),
@@ -43,6 +48,9 @@ const ListSemester = () => {
         console.log(semestersResponse.data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
+        notification.error({
+          message: "Lỗi tải dữ liệu",
+        });
       } finally {
         setLoading(false);
       }
@@ -53,7 +61,22 @@ const ListSemester = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
+
+    setCurrentPage(1); // Reset to first page on search
   };
+
+  const filteredSemesters = semesters.filter((semester) =>
+    semester.name.toLowerCase().includes(searchTerm)
+  );
+
+  // Determine which semesters to display based on search and pagination
+  const displaySemesters =
+    searchTerm.trim() === "" ? semesters : filteredSemesters;
+
+  const paginatedSemesters = displaySemesters.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const showEditModal = (semester) => {
     debugger;
@@ -79,7 +102,10 @@ const ListSemester = () => {
     });
     setIsEditModalVisible(true);
   };
+
+
   console.log(additionalVariants);
+
   const showAddModal = () => {
     debugger;
     setEditingSemester(null);
@@ -94,7 +120,6 @@ const ListSemester = () => {
   };
 
   const handleModalOk = async (values) => {
-    console.log(values);
     console.log(values);
     const formattedValues = {
       name: values.name,
@@ -115,10 +140,8 @@ const ListSemester = () => {
       setLoading(true);
       const response = await instance.post("admin/semesters", formattedValues);
       notification.success({ message: "Thêm kỳ học thành công" });
-      setSemesters([
-        ...semesters,
-        { ...formattedValues, status: 1 ? "Đang diễn ra" : "Kết thúc" },
-      ]);
+
+      setSemesters([...semesters, { ...response.data.data }]);
       form.resetFields();
     } catch (error) {
       notification.error("Thêm thất bại");
@@ -151,6 +174,10 @@ const ListSemester = () => {
       });
     } catch (error) {
       console.error("Error deleting semester:", error);
+
+      notification.error({
+        message: "Xóa thất bại",
+      });
     } finally {
       setLoading(false);
     }
@@ -168,7 +195,8 @@ const ListSemester = () => {
       setSemesters((prev) => [...prev, restoredSemester]);
     } catch (error) {
       console.log(error.message);
-      message.error("Khôi phục thất bại thất bại");
+
+      message.error("Khôi phục thất bại");
     } finally {
       setLoading(false);
     }
@@ -286,15 +314,19 @@ const ListSemester = () => {
               </Button>
 
               <span className="font-bold text-[14px] text-[#000]">
-                {semesters.length} items
+
+                {displaySemesters.length} items
+
               </span>
             </div>
           </div>
 
           <div className="row row-cols-2 g-3">
-            {semesters.length > 0 ? (
-              semesters.map((semester, index) => (
-                <div className="col" key={index}>
+
+            {paginatedSemesters.length > 0 ? (
+              paginatedSemesters.map((semester, index) => (
+                <div className="col" key={semester.id}>
+
                   <div className="teaching__card">
                     <div className="teaching__card-top">
                       <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
@@ -351,33 +383,13 @@ const ListSemester = () => {
                         <img src="/assets/svg/eye.svg" alt="detail" />
                         Chi Tiết
                       </button>
-
-                      {(semester.status == "Đang diễn ra" ||
-                      semester.status == "Kết thúc") ? (
-                        ""
-                      ) : (
-                        <>
-                          <Popconfirm
-                            title="Xóa kỳ học"
-                            onConfirm={() => confirmDelete(semester.id)}
-                            okText="Có"
-                            cancelText="Không"
-                          >
-                            <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                              <img src="/assets/svg/remove.svg" alt="remove" />
-                              Xóa khỏi Danh Sách
-                            </button>
-                          </Popconfirm>
-
-                          <button
-                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                            onClick={() => showEditModal(semester)}
-                          >
-                            <EditOutlined />
-                            Sửa Thông Tin
-                          </button>
-                        </>
-                      )}
+                      <button
+                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                        onClick={() => showEditModal(semester)}
+                      >
+                        <EditOutlined />
+                        Sửa Thông Tin
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -391,12 +403,17 @@ const ListSemester = () => {
             )}
           </div>
 
-          <Pagination
-            className="mt-12"
-            align="center"
-            defaultCurrent={1}
-            total={semesters.length}
-          />
+
+          {/* Pagination Component */}
+          {displaySemesters.length > pageSize && (
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={displaySemesters.length}
+              onChange={(page) => setCurrentPage(page)}
+              style={{ marginTop: 16, textAlign: "center" }}
+            />
+          )}
         </div>
 
         <Modal
@@ -405,11 +422,12 @@ const ListSemester = () => {
           onCancel={handleModalCancel}
           footer={null}
           centered
-          width={1000}
+
+          width={600}
         >
           <div className="createScheduleForm pb-6">
             <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
-              Tạo Kỳ Học Mới
+              {editingSemester ? "Sửa Kỳ Học" : "Tạo Kỳ Học Mới"}
             </h3>
 
             <Form
@@ -418,127 +436,53 @@ const ListSemester = () => {
               onFinish={isEditModalVisible ? onHandleUpdate : handleModalOk}
               autoComplete="off"
             >
-              <Row gutter={30}>
-                <Col span={8}>
-                  <Form.Item
-                    label="Tên Kỳ Học"
-                    name="name"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Vui lòng nhập tên kỳ học!",
-                      },
-                    ]}
-                  >
-                    <Input placeholder="Tên kỳ học" />
-                  </Form.Item>
 
-                  <Form.Item
-                    label="Ngày Khởi Tạo"
-                    name="start_date"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Vui lòng chọn ngày khởi tạo!",
-                      },
-                    ]}
-                  >
-                    <DatePicker
-                      style={{ width: "100%" }}
-                      format="DD/MM/YYYY"
-                      placeholder="Ngày bắt đầu"
-                    />
-                  </Form.Item>
+              <Form.Item
+                label="Tên Kỳ Học"
+                name="name"
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập tên kỳ học!",
+                  },
+                ]}
+              >
+                <Input placeholder="Tên kỳ học" />
+              </Form.Item>
 
-                  <Form.Item
-                    label="Ngày Kết Thúc"
-                    name="end_date"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Vui lòng chọn ngày kết thúc!",
-                      },
-                    ]}
-                  >
-                    <DatePicker
-                      style={{ width: "100%" }}
-                      format="DD/MM/YYYY"
-                      placeholder="Ngày kết thúc"
-                    />
-                  </Form.Item>
-                </Col>
+              <Form.Item
+                label="Ngày Khởi Tạo"
+                name="start_date"
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn ngày khởi tạo!",
+                  },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  format="DD/MM/YYYY"
+                  placeholder="Ngày bắt đầu"
+                />
+              </Form.Item>
 
-                {/* <Col span={16}>
-                  {additionalVariants.map((variant, index) => (
-                    <Row key={index} gutter={16}>
-                      <Col span={8}>
-                        <Form.Item
-                          label={`Khóa học ${index + 1}`}
-                          name={`course_${index}`}
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn khóa học!",
-                            },
-                          ]}
-                        >
-                          <Select
-                            value={variant.course}
-                            placeholder="Tên khóa học"
-                            onChange={(value) =>
-                              handleCourseChange(value, index)
-                            }
-                            options={getAvailableCourses(index).map(
-                              (course) => ({
-                                label: course.name,
-                                value: course.id,
-                              })
-                            )}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item
-                          label={`Thứ tự học ${index + 1}`}
-                          name={`order_${index}`}
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn thứ tự học!",
-                            },
-                          ]}
-                        >
-                          <Select
-                            value={variant.order}
-                            placeholder="Kỳ học của khóa học"
-                            onChange={(value) =>
-                              handleOrderChange(value, index)
-                            }
-                            options={[1, 2, 3, 4, 5, 6, 7, 8, 9].map(
-                              (order) => ({
-                                label: `kỳ ${order}`,
-                                value: order,
-                              })
-                            )}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8} style={{ marginTop: 30 }}>
-                        <Button
-                          type="danger"
-                          onClick={() => handleDeleteVariant(index)}
-                          icon={<DeleteOutlined />}
-                        >
-                          Xóa Biến Thể
-                        </Button>
-                      </Col>
-                    </Row>
-                  ))}
-
-                  <Button onClick={handleAddVariant}>Thêm Biến Thể</Button>
-                </Col> */}
-              </Row>
-
+              <Form.Item
+                label="Ngày Kết Thúc"
+                name="end_date"
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn ngày kết thúc!",
+                  },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  format="DD/MM/YYYY"
+                  placeholder="Ngày kết thúc"
+                />
+              </Form.Item>
               <div className="flex justify-center items-center mt-4">
                 <Button type="primary" htmlType="submit">
                   {isEditModalVisible ? "Cập nhật kỳ học" : "Tạo kỳ học"}

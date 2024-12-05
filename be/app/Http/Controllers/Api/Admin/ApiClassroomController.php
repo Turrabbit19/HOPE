@@ -14,7 +14,9 @@ class ApiClassroomController extends Controller
     public function index()
     {
         try {
+
             $classrooms = Classroom::with('subject')->paginate(10);
+
 
             $data = collect($classrooms->items())->map(function($classroom) {
                 return [
@@ -40,10 +42,12 @@ class ApiClassroomController extends Controller
         }
     }
 
+
     public function getAll()
     {
         try {
-            $classrooms = Classroom::with('subject')->get();
+            $classrooms = Classroom::get();
+
 
             $data = $classrooms->map(function ($classroom){
                 return [
@@ -53,9 +57,13 @@ class ApiClassroomController extends Controller
                     'max_students' => $classroom->max_students,
                     'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
+
             });
 
-            return response()->json(['data' =>$data], 200);
+            return response()->json([
+                'data' => $data
+            ], 200);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
@@ -64,7 +72,9 @@ class ApiClassroomController extends Controller
     public function getClassroomsWithoutSchedule($subjectId)
     {
         try {
+
             $today = Carbon::today();
+
 
             $classrooms = Classroom::where('subject_id', $subjectId)
                 ->whereDoesntHave('schedules', function ($query) use ($subjectId) {
@@ -72,6 +82,7 @@ class ApiClassroomController extends Controller
                 })
                 ->orWhereHas('schedules', function ($query) use ($subjectId, $today) {
                     $query->where('subject_id', $subjectId)
+
                           ->where('end_date', '<', $today);
                 })
                 ->get();
@@ -82,9 +93,11 @@ class ApiClassroomController extends Controller
                 ], 404);
             }
 
+
             return response()->json([
                 'classrooms' => $classrooms
             ], 200);
+
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
@@ -108,7 +121,18 @@ class ApiClassroomController extends Controller
             $data = $validator->validated();
             $classroom = Classroom::create($data);
 
-            return response()->json(['data' => $classroom, 'message' => 'Tạo mới thành công'], 201);
+
+            $data = [
+                'id' => $classroom->id,
+                'subject_id' => $classroom->subject->id,
+                'subject_name' => $classroom->subject->name,
+                'code' => $classroom->code,
+                'max_students' => $classroom->max_students,
+                'status' => $classroom->status,
+            ];
+
+            return response()->json(['data' => $data, 'message' => 'Tạo mới thành công'], 201);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }

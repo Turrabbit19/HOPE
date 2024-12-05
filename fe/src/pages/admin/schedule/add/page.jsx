@@ -34,7 +34,8 @@ const ScheduleAdd = () => {
   const { state } = location;
 
   // Trích xuất các ID cần thiết từ state
-  const { courseId, semesterId, majorId, subjectId, subjectName } = state || {};
+
+  const { courseId, semesterId, majorId, subjectId } = state || {};
   console.log("Received in ScheduleAdd - majorId:", majorId);
 
   // Các state để lưu trữ dữ liệu từ API
@@ -51,6 +52,9 @@ const ScheduleAdd = () => {
   const [classDetails, setClassDetails] = useState({}); // Chi tiết cho mỗi lớp
   const [teacherAssignments, setTeacherAssignments] = useState({}); // Phân công giáo viên
 
+
+  const [createdSchedules, setCreatedSchedules] = useState({});
+
   // State để tính toán ngày kết thúc
   const [isCalculatingEndDate, setIsCalculatingEndDate] = useState(false);
 
@@ -59,34 +63,11 @@ const ScheduleAdd = () => {
   const startDate = Form.useWatch("startDate", form);
   const repeatDays = Form.useWatch("repeatDays", form);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isModalVisibleCal, setIsModalVisibleCal] = useState(false);
 
-  const handleModalOk = () => {
-    navigate("/admin/classrooms", {
-      state: {
-        subjectId: subjectId,
-      },
-    });
-  };
-  const handleModalOk1 = () => {
-    navigate(`/admin/list-subject/detail/${subjectId}`, {
-      state: {
-        subjectName: subjectName,
-      }
-    });
-  };
-
-  const handleModalCancel = () => {
-    setIsModalVisible(false);
-  };
-  // Fetch dữ liệu khi component mount
   useEffect(() => {
-    // Kiểm tra nếu thiếu thông tin cần thiết
-    debugger;
     if (!courseId || !semesterId || !majorId || !subjectId) {
       message.error("Thiếu thông tin cần thiết để thêm lịch học!");
-      navigate("/list-schedule");
+      navigate("/schedule-list");
       return;
     }
 
@@ -97,87 +78,85 @@ const ScheduleAdd = () => {
       try {
         const token = localStorage.getItem("token");
 
-        const apiHeaders = { Authorization: `Bearer ${token}` };
+        // Gọi các API song song
+        const [shiftsRes, classroomsRes, teachersRes, roomsRes] =
+          await Promise.all([
+            axios.get("http://localhost:8000/api/admin/shifts", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }),
+            axios.get(
+              `http://localhost:8000/api/admin/${subjectId}/classrooms/without-schedule`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            ),
+            axios.get(
+              `http://localhost:8000/api/admin/major/${majorId}/teachers`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            ),
+            axios.get("http://localhost:8000/api/admin/rooms", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }),
+          ]);
 
-        try {
-          const shiftsRes = await axios.get(
-            "http://localhost:8000/api/admin/shifts",
-            { headers: apiHeaders }
-          );
-          const shiftsData = shiftsRes.data;
-          if (Array.isArray(shiftsData)) {
-            setShifts(shiftsData);
-          } else if (Array.isArray(shiftsData.data)) {
-            setShifts(shiftsData.data);
-          } else {
-            message.error("Dữ liệu shifts không hợp lệ.");
-          }
-        } catch (error) {
-          console.error("Error fetching shifts:", error);
-          message.error("Không thể tải dữ liệu shifts.");
+        // Xử lý dữ liệu shifts
+        console.log("Shifts API response:", shiftsRes.data);
+        let shiftsData = shiftsRes.data;
+        if (Array.isArray(shiftsData)) {
+          setShifts(shiftsData);
+        } else if (Array.isArray(shiftsData.data)) {
+          setShifts(shiftsData.data);
+        } else {
+          throw new Error("Dữ liệu shifts không hợp lệ.");
         }
 
-        // Fetch Classrooms
-        try {
-          const classroomsRes = await axios.get(
-            `http://localhost:8000/api/admin/${subjectId}/classrooms/without-schedule`,
-            { headers: apiHeaders }
-          );
-          const classroomsData = classroomsRes.data;
-          if (Array.isArray(classroomsData)) {
-            setClassrooms(classroomsData);
-          } else if (Array.isArray(classroomsData.classrooms)) {
-            setClassrooms(classroomsData.classrooms);
-          } else {
-            message.error("Dữ liệu classrooms không hợp lệ.");
-          }
-        } catch (error) {
-          console.error("Error fetching classrooms:", error);
-          message.error("Không thể tải dữ liệu classrooms.");
-          setIsModalVisible(true);
+        // Xử lý dữ liệu classrooms
+        console.log("Classrooms API response:", classroomsRes.data);
+        let classroomsData = classroomsRes.data;
+        if (Array.isArray(classroomsData)) {
+          setClassrooms(classroomsData);
+        } else if (Array.isArray(classroomsData.classrooms)) {
+          setClassrooms(classroomsData.classrooms);
+        } else {
+          throw new Error("Dữ liệu classrooms không hợp lệ.");
         }
 
-        // Fetch Teachers
-        try {
-          const teachersRes = await axios.get(
-            `http://localhost:8000/api/admin/major/${majorId}/teachers`,
-            { headers: apiHeaders }
-          );
-          const teachersData = teachersRes.data.listTeachers;
-          if (Array.isArray(teachersData)) {
-            setTeachers(teachersData);
-          } else {
-            message.error("Dữ liệu teachers không hợp lệ.");
-          }
-        } catch (error) {
-          console.error("Error fetching teachers:", error);
-          message.error("Không thể tải dữ liệu teachers.");
+        // Xử lý dữ liệu rooms
+        console.log("Rooms API response:", roomsRes.data.data);
+        let roomsData = roomsRes.data.data;
+        if (Array.isArray(roomsData)) {
+          setRooms(roomsData);
+        } else if (Array.isArray(roomsData.rooms)) {
+          setRooms(roomsData.rooms);
+        } else {
+          throw new Error("Dữ liệu rooms không hợp lệ.");
         }
 
-        // Fetch Rooms
-        try {
-          const roomsRes = await axios.get(
-            "http://localhost:8000/api/admin/rooms",
-            { headers: apiHeaders }
-          );
-          const roomsData = roomsRes.data.data;
-          if (Array.isArray(roomsData)) {
-            setRooms(roomsData);
-          } else if (Array.isArray(roomsData.rooms)) {
-            setRooms(roomsData.rooms);
-          } else {
-            throw new Error("Dữ liệu rooms không hợp lệ.");
-          }
-        } catch (error) {
-          console.error("Error fetching rooms:", error);
-          message.error("Không thể tải dữ liệu rooms.");
+        // Xử lý dữ liệu teachers
+        console.log("Teachers API response:", teachersRes.data);
+        let teachersData = teachersRes.data.listTeachers;
+        if (Array.isArray(teachersData)) {
+          setTeachers(teachersData);
+        } else {
+          throw new Error("Dữ liệu teachers không hợp lệ.");
         }
 
         setLoading(false);
         setLoadingShifts(false);
       } catch (error) {
-        console.error("Unexpected error:", error);
-        message.error(`Đã xảy ra lỗi không mong muốn: ${error.message}`);
+
+        console.error("Error fetching data:", error);
+        message.error(`Không thể tải dữ liệu cần thiết: ${error.message}`);
         setLoading(false);
         setLoadingShifts(false);
       }
@@ -205,12 +184,13 @@ const ScheduleAdd = () => {
       try {
         const token = localStorage.getItem("token");
         const dayMapping = {
-          "Thứ 2": 1,
-          "Thứ 3": 2,
-          "Thứ 4": 3,
-          "Thứ 5": 4,
-          "Thứ 6": 5,
-          "Thứ 7": 6,
+
+          "Thứ 2": 2,
+          "Thứ 3": 3,
+          "Thứ 4": 4,
+          "Thứ 5": 5,
+          "Thứ 6": 6,
+          "Thứ 7": 7,
         };
 
         const daysOfWeek = repeatDays.map((day) => dayMapping[day]);
@@ -237,10 +217,9 @@ const ScheduleAdd = () => {
           message.success("Ngày kết thúc đã được tính toán tự động!");
         } else {
           message.error("Không nhận được ngày kết thúc từ API.");
-          setIsModalVisibleCal(true);
+
         }
       } catch (error) {
-        setIsModalVisibleCal(true);
         console.error("Error calculating end date:", error);
         if (
           error.response &&
@@ -254,7 +233,6 @@ const ScheduleAdd = () => {
             });
           });
         } else {
-          setIsModalVisibleCal(true);
           message.error("Không thể tính toán ngày kết thúc.");
         }
       } finally {
@@ -276,10 +254,8 @@ const ScheduleAdd = () => {
     );
   };
 
-  // Xử lý khi chọn lớp học
   const handleClassChange = (values) => {
     setSelectedClasses(values);
-    // Cập nhật classDetails chỉ giữ lại các lớp đã chọn
     setClassDetails((prevDetails) => {
       const updatedDetails = {};
       values.forEach((classId) => {
@@ -295,28 +271,74 @@ const ScheduleAdd = () => {
       });
       return updatedDetails;
     });
-    // Nếu thay đổi lớp sau khi phân công, reset lại
+
+
+    // Nếu bạn đang thay đổi tab, hãy giữ lại các state cũ
     if (activeTab === "addTeacher") {
       setActiveTab("configure");
       setTeacherAssignments({});
+      setCreatedSchedules({});
     }
   };
 
-  // Xử lý thay đổi giá trị trong form
+  const fetchSubjectById = async (subjectId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/admin/subjects/${subjectId}`
+      );
+      const data = response.data;
+
+      return data;
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu môn học:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (subjectId) {
+      fetchSubjectById(subjectId).then((subject) => {
+        console.log(subject);
+        if (subject && subject.data && subject.data.form !== undefined) {
+          const method =
+            subject.data.form === "Trực tuyến" ? "Online" : "Offline";
+          form.setFieldsValue({ learningMethod: method });
+
+          const updatedDetails = {};
+          selectedClasses.forEach((classId) => {
+            updatedDetails[classId] = {
+              session: classDetails[classId]?.session || null,
+              classLink: method === "Online" ? "" : null,
+              classRoom: method === "Offline" ? "" : null,
+            };
+          });
+
+          if (JSON.stringify(updatedDetails) !== JSON.stringify(classDetails)) {
+            setClassDetails(updatedDetails);
+          }
+        }
+      });
+    }
+  }, [subjectId, selectedClasses]);
+
   const handleValuesChange = (changedValues, allValues) => {
     if (changedValues.learningMethod) {
+      const method = changedValues.learningMethod;
       const updatedDetails = {};
+
       selectedClasses.forEach((classId) => {
         updatedDetails[classId] = {
           session: classDetails[classId]?.session || null,
-          classLink: "",
-          classRoom: null,
+          classLink: method === "Online" ? "" : null,
+          classRoom: method === "Offline" ? "" : null,
         };
       });
-      setClassDetails(updatedDetails);
-      form.setFieldsValue({
-        classDetails: updatedDetails,
-      });
+
+      // Chỉ set lại nếu có sự thay đổi thực sự
+      if (JSON.stringify(updatedDetails) !== JSON.stringify(classDetails)) {
+        setClassDetails(updatedDetails);
+        form.setFieldsValue({ classDetails: updatedDetails });
+      }
     }
   };
 
@@ -325,7 +347,6 @@ const ScheduleAdd = () => {
     setActiveTab(key);
   };
 
-  // Xử lý khi chọn giáo viên cho một lớp
   const handleTeacherSelect = (classId, teacherId) => {
     const shiftId = classDetails[classId]?.session;
     if (!shiftId) {
@@ -348,8 +369,86 @@ const ScheduleAdd = () => {
     message.success("Phân công giáo viên thành công!");
   };
 
+
+  // Hàm gọi API để thêm lịch học
+  const addSchedules = async (payload) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Phản hồi từ Add Schedules:", response.data); // Log phản hồi
+
+      if (response.status === 201 || response.status === 200) {
+        message.success("Thêm lịch học thành công!");
+        // Extract classroom_id và schedule_id từ phản hồi
+        const schedules = response.data.schedules;
+        const scheduleMap = {};
+        schedules.forEach((schedule) => {
+          scheduleMap[String(schedule.data.classroom_id)] =
+            schedule.data.schedule_id;
+        });
+        console.log("Bản đồ Schedule:", scheduleMap); // Log scheduleMap
+        setCreatedSchedules(scheduleMap);
+        return scheduleMap;
+      } else {
+        message.error("Thêm lịch học thất bại!");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error adding schedule:", error);
+      if (error.response && error.response.data && error.response.data.error) {
+        message.error(`Thêm lịch học thất bại: ${error.response.data.error}`);
+      } else {
+        message.error("Thêm lịch học thất bại!");
+      }
+      return null;
+    }
+  };
+
+  // Hàm gọi API để phân công giáo viên
+  const assignTeachers = async (payload) => {
+    console.log("Assign Teachers Payload:", payload); // Log payload
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:8000/api/admin/schedules/assign`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        message.success("Phân công giáo viên thành công!");
+        // Điều hướng đến danh sách lịch học
+        navigate("/admin/list-schedule");
+      } else {
+        message.error("Phân công giáo viên thất bại!");
+      }
+    } catch (error) {
+      console.error("Error assigning teachers:", error);
+      if (error.response && error.response.data && error.response.data.error) {
+        message.error(
+          `Phân công giáo viên thất bại: ${error.response.data.error}`
+        );
+      } else {
+        message.error("Phân công giáo viên thất bại!");
+      }
+    }
+  };
+
   // Xử lý khi submit cấu hình lớp học
-  const handleFinish = (values) => {
+  const handleFinish = async (values) => {
     console.log("Form values: ", values);
     // Lưu các lớp đã chọn
     setSelectedClasses(values.classes);
@@ -363,11 +462,44 @@ const ScheduleAdd = () => {
       };
     });
     setClassDetails(details);
-    // Reset phân công giáo viên
-    setTeacherAssignments({});
-    // Chuyển sang tab phân công giáo viên
-    setActiveTab("addTeacher");
-    message.success("Cấu hình đã được lưu thành công!");
+
+
+    // Chuẩn bị payload cho API addSchedules
+    const payload = {
+      classrooms: values.classes.map((classId) => ({
+        id: classId,
+        shift_id: details[classId].session,
+        room_id: details[classId].classRoom,
+        link:
+          learningMethod === "Trực tuyến" ? details[classId].classLink : null,
+        start_date: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : null,
+        end_date: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+        days_of_week: values.repeatDays.map((day) => {
+          const dayMapping = {
+            "Thứ 2": 2,
+            "Thứ 3": 3,
+            "Thứ 4": 4,
+            "Thứ 5": 5,
+            "Thứ 6": 6,
+            "Thứ 7": 7,
+          };
+          return dayMapping[day];
+        }),
+      })),
+    };
+
+    // Gọi API để thêm lịch học
+    const scheduleMap = await addSchedules(payload);
+
+    if (scheduleMap) {
+      // Reset phân công giáo viên
+      setTeacherAssignments({});
+      // Chuyển sang tab phân công giáo viên
+      setActiveTab("addTeacher");
+      message.success("Cấu hình đã được lưu thành công!");
+    }
   };
 
   // Hàm render các trường session và classRoom/classLink cho mỗi lớp
@@ -412,39 +544,35 @@ const ScheduleAdd = () => {
             </Form.Item>
 
             {/* Hiển thị classRoom hoặc classLink dựa trên learningMethod */}
-            {learningMethod === "online" ? (
+
+            {form.getFieldValue("learningMethod") === "Online" ? (
               <Form.Item
                 label="Link Học Trực Tuyến"
                 name={["classDetails", classId, "classLink"]}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập link học!",
+
+                    message: "Vui lòng nhập link học trực tuyến!",
                   },
                 ]}
               >
                 <Input
                   placeholder="Link học trực tuyến"
                   prefix={<LinkOutlined />}
-                  style={{ width: "100%" }}
+
                 />
               </Form.Item>
-            ) : learningMethod === "offline" ? (
+            ) : (
               <Form.Item
                 label="Phòng Học Trực Tiếp"
                 name={["classDetails", classId, "classRoom"]}
                 rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn phòng học!",
-                  },
+
+                  { required: true, message: "Vui lòng chọn phòng học!" },
                 ]}
               >
-                <Select
-                  showSearch
-                  placeholder="Chọn phòng học"
-                  optionFilterProp="children"
-                >
+                <Select placeholder="Chọn phòng học">
                   {rooms.map((room) => (
                     <Option key={room.id} value={room.id}>
                       {room.name}
@@ -452,14 +580,15 @@ const ScheduleAdd = () => {
                   ))}
                 </Select>
               </Form.Item>
-            ) : null}
+
+            )}
           </Card>
         </TabPane>
       );
     });
   };
 
-  // Hàm render form phân công giáo viên
+
   const renderTeacherAssignment = () => {
     if (selectedClasses.length === 0) {
       return <p>Vui lòng cấu hình lớp học trước khi thêm giáo viên.</p>;
@@ -480,102 +609,16 @@ const ScheduleAdd = () => {
 
           // Chuẩn bị payload
           const payload = {
-            start_date: form.getFieldValue("startDate")
-              ? form.getFieldValue("startDate").format("YYYY-MM-DD") // Định dạng "YYYY-MM-DD"
-              : null,
-            end_date: form.getFieldValue("endDate")
-              ? form.getFieldValue("endDate").format("YYYY-MM-DD") // Định dạng "YYYY-MM-DD"
-              : null,
-            days_of_week: form.getFieldValue("repeatDays").map((day) => {
-              const dayMapping = {
-                "Thứ 2": 1,
-                "Thứ 3": 2,
-                "Thứ 4": 3,
-                "Thứ 5": 4,
-                "Thứ 6": 5,
-                "Thứ 7": 6,
-              };
-              return dayMapping[day];
-            }),
-            learning_method: form.getFieldValue("learningMethod"),
-            classrooms: selectedClasses
-              .map((classId) => {
-                const selectedRoom = rooms.find(
-                  (room) => room.id === classDetails[classId]?.classRoom
-                );
-                if (
-                  form.getFieldValue("learningMethod") === "offline" &&
-                  !selectedRoom
-                ) {
-                  console.error(
-                    `Phòng học không hợp lệ cho lớp: ${classId}, room_id: ${classDetails[classId]?.classRoom}`
-                  );
-                  message.error(
-                    `Phòng học không hợp lệ. Vui lòng chọn lại cho lớp ${classId}.`
-                  );
-                  return null;
-                }
-                return {
-                  id: classId,
-                  shift_id: classDetails[classId]?.session,
-                  room_id:
-                    form.getFieldValue("learningMethod") === "offline"
-                      ? selectedRoom.id
-                      : null, // Lấy room_id nếu offline
-                  link:
-                    form.getFieldValue("learningMethod") === "online"
-                      ? classDetails[classId]?.classLink
-                      : null,
-                };
-              })
-              .filter((item) => item !== null), // Loại bỏ các mục null
-            teachers: selectedClasses.map((classId) => ({
-              class_id: classId,
+
+            schedules: selectedClasses.map((classId) => ({
               teacher_id: teacherAssignments[classId],
+              schedule_id: createdSchedules[String(classId)], // Đảm bảo classId là string và có schedule_id
             })),
           };
 
-          // Kiểm tra xem start_date và end_date đã được đặt chưa
-          if (!payload.start_date || !payload.end_date) {
-            message.error("Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!");
-            return;
-          }
+          console.log("Assign Teachers Payload:", payload); // Log payload
 
-          try {
-            // Lấy token
-            const token = localStorage.getItem("token");
-            // Gọi API để thêm lịch học
-            const response = await axios.post(
-              `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/add`,
-              payload,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-
-            if (response.status === 200 || response.status === 201) {
-              message.success("Thêm lịch học thành công!");
-              // Điều hướng đến danh sách lịch học
-              navigate("/admin/list-schedule");
-            } else {
-              message.error("Thêm lịch học thất bại!");
-            }
-          } catch (error) {
-            console.error("Error adding schedule:", error);
-            if (
-              error.response &&
-              error.response.data &&
-              error.response.data.error
-            ) {
-              message.error(
-                `Thêm lịch học thất bại: ${error.response.data.error}`
-              );
-            } else {
-              message.error("Thêm lịch học thất bại!");
-            }
-          }
+          await assignTeachers(payload);
         }}
       >
         {selectedClasses.map((classId) => {
@@ -594,7 +637,8 @@ const ScheduleAdd = () => {
 
           return (
             <Card
-              key={classId} // Sử dụng classId làm key duy nhất
+
+              key={classId}
               title={`Phân Công Giáo Viên Cho Lớp ${className}`}
               style={{ marginBottom: 16 }}
             >
@@ -607,9 +651,10 @@ const ScheduleAdd = () => {
               </div>
               <div style={{ marginBottom: 8 }}>
                 <Text strong>Hình Thức Học:</Text>{" "}
-                {learningMethod === "online" ? "Trực tuyến" : "Trực tiếp"}
+
+                {learningMethod === "Online" ? "Online" : "Offline"}
               </div>
-              {learningMethod === "online" ? (
+              {learningMethod === "Online" ? (
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Link Học Trực Tuyến:</Text>{" "}
                   {classLink || "Chưa nhập"}
@@ -670,30 +715,6 @@ const ScheduleAdd = () => {
 
   return (
     <div className="p-6">
-      <Modal
-        title="Lỗi khi chưa có lớp"
-        visible={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-        okText="Thêm lớp"
-      >
-        <p>
-          Hiện tại không có lớp cho môn học {subjectName}. Vui lòng thêm lớp trước khi xếp
-          lịch.
-        </p>
-      </Modal>
-      <Modal
-        title="Lỗi khi chưa có tiết học"
-        visible={isModalVisibleCal}
-        onOk={handleModalOk1}
-        onCancel={handleModalCancel}
-        okText="Thêm tiết học"
-      >
-        <p>
-          Hiện tại không có tiết cho môn học {subjectName}. Vui lòng thêm tiết học trước
-          khi xếp lịch.
-        </p>
-      </Modal>
       <h2 className="text-xl font-semibold mb-4">Cấu Hình Thông Tin</h2>
       {loading ? (
         <div className="flex justify-center items-center min-h-screen">
@@ -771,11 +792,17 @@ const ScheduleAdd = () => {
                           if (!value || !getFieldValue("startDate")) {
                             return Promise.resolve();
                           }
-                          if (value.isAfter(getFieldValue("startDate"))) {
+
+                          if (
+                            value.isAfter(getFieldValue("startDate")) ||
+                            value.isSame(getFieldValue("startDate"))
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
-                            new Error("Ngày kết thúc phải sau ngày bắt đầu!")
+                            new Error(
+                              "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!"
+                            )
                           );
                         },
                       }),
@@ -823,27 +850,14 @@ const ScheduleAdd = () => {
                 </Checkbox.Group>
               </Form.Item>
 
-              {/* Chọn hình thức học */}
-              <Form.Item
-                label="Hình Thức Học"
-                name="learningMethod"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn hình thức học!",
-                  },
-                ]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Chọn hình thức học"
-                  optionFilterProp="children"
-                  disabled={activeTab === "addTeacher"}
-                >
-                  <Option value="online">Trực tuyến</Option>
-                  <Option value="offline">Trực tiếp</Option>
-                </Select>
-              </Form.Item>
+
+              {/* Hình thức học */}
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Hình Thức Học: </Text>
+                {form.getFieldValue("learningMethod") === "Online"
+                  ? "Online"
+                  : "Offline"}
+              </div>
 
               {/* Các trường cụ thể cho từng lớp */}
               {selectedClasses.length > 0 && (

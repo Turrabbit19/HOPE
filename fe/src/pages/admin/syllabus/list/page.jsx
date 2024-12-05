@@ -5,11 +5,13 @@ import { Select } from "antd";
 const Curriculum = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [curriculums, setCurriculums] = useState([]);
+
   const [activeChildId, setActiveChildId] = useState(null);
 
   const toggleDropdown = (index) => {
     setActiveDropdown(activeDropdown === index ? null : index);
   };
+
 
   const handleChildSelect = (childId) => {
     setActiveChildId(childId);
@@ -42,6 +44,7 @@ const Curriculum = () => {
             className="bg-white shadow-lg rounded-xl overflow-hidden flex flex-col"
             style={{ minHeight: "300px" }}
           >
+
             <div className="h-64 bg-gray-300 flex items-center justify-center">
               {curriculum.image ? (
                 <img
@@ -55,6 +58,7 @@ const Curriculum = () => {
                 </span>
               )}
             </div>
+
             <div className="p-6 flex-grow">
               <h2 className="text-2xl font-bold text-red-600">
                 {curriculum.name}
@@ -89,14 +93,19 @@ const Curriculum = () => {
                     return (
                       className.courses.length > 0 && (
                         <React.Fragment key={className.id}>
-                          {className.courses.map((item) => (
-                            <a
-                              key={item.id}
-                              href={`list-syllabus/detail/${className.id}`}
-                              className="hover:underline"
-                            >
-                              <div>{item.name}</div>
-                            </a>
+
+                          {className.courses.map((item, courseIndex) => (
+                            <React.Fragment key={item.id}>
+                              <a
+                                href={`list-syllabus/detail/${curriculum.id}`} // Use curriculum.id as Major ID
+                                className="hover:underline"
+                              >
+                                <div>{item.name}</div>
+                              </a>
+                              {courseIndex < className.courses.length - 1 && (
+                                <span className="mx-2">|</span>
+                              )}
+                            </React.Fragment>
                           ))}
                         </React.Fragment>
                       )
@@ -111,7 +120,9 @@ const Curriculum = () => {
               <div className="mt-4 bg-gray-100 p-4 rounded shadow">
                 <p className="text-lg font-semibold">Thông tin chi tiết:</p>
                 <ul className="mt-2 text-base text-gray-700">
-                  <li>- Chuyên ngành: 1</li>
+
+                  <li>- Chuyên ngành: {curriculum.name}</li>
+
                   <li>- Môn chính thức/lựa chọn: 34/0</li>
                   <li>- Tín chỉ chính thức/lựa chọn: 99/0</li>
                   <li>- Thời lượng: 1057H/72H/2400H</li>

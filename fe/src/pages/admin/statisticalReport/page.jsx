@@ -26,6 +26,7 @@ const StatisticalReport = () => {
   const [courseData, setCourseData] = useState([]); // Store the structured course data
   const navigate = useNavigate();  // Initialize useNavigate hook
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,7 +54,6 @@ const StatisticalReport = () => {
             },
           ],
         });
-
       } catch (error) {
         console.log(error.message);
       }

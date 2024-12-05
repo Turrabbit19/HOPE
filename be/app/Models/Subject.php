@@ -16,8 +16,14 @@ class Subject extends Model
         'description',
         'credit',
         'order',
-        'status',
-        'form'
+
+        'form',
+        'status'
+    ];
+
+    protected $casts = [
+        'form' => 'boolean',
+        'status' => 'boolean'
     ];
 
     public function majors()
@@ -34,4 +40,6 @@ class Subject extends Model
     {
         return $this->hasMany(Schedule::class);
     }
+
 }
+

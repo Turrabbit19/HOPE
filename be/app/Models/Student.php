@@ -42,8 +42,10 @@ class Student extends Model
     {
         return $this->belongsToMany(Schedule::class, 'student_schedules');
     }
+
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
     }
 }
+

@@ -23,6 +23,7 @@ class ApiSemesterController extends Controller
 
             $data = collect($semesters->items())->map(function ($semester) use ($now) {
                 if ($now->lt(Carbon::parse($semester->start_date))) {
+
                     $status = "Chờ diễn ra";
                 } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
                     $status = "Đang diễn ra";
@@ -62,7 +63,57 @@ class ApiSemesterController extends Controller
     public function getAll()
     {
         try {
-            $semesters = Semester::get();
+
+            $semesters = Semester::orderByDesc('start_date')->get();
+
+            $now = Carbon::now();
+
+            $data = $semesters->map(function ($semester) use ($now) {
+                if ($now->lt(Carbon::parse($semester->start_date))) {
+
+                    $status = "Chờ diễn ra";
+                } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
+                    $status = "Đang diễn ra";
+                } elseif ($now->gt(Carbon::parse($semester->end_date))) {
+                    $status = "Kết thúc";
+
+                }
+
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'start_date' => Carbon::parse($semester->start_date),
+                    'end_date' => Carbon::parse($semester->end_date),
+                    'status' => $status
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function filterByYear(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'year' => 'required|integer|min:1900|max:' . Carbon::now()->year
+
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        try {
+
+            $year = $request->input('year');
+            $semesters = Semester::whereYear('start_date', $year)
+                ->orWhereYear('end_date', $year)
+                ->orderBy('start_date', 'asc')
+                ->get();
+
             $now = Carbon::now();
 
             $data = $semesters->map(function ($semester) use ($now) {
@@ -79,13 +130,13 @@ class ApiSemesterController extends Controller
                     'name' => $semester->name,
                     'start_date' => Carbon::parse($semester->start_date),
                     'end_date' => Carbon::parse($semester->end_date),
-                    'status' => $status
+                    'status' => $status,
                 ];
             });
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể lọc các kỳ học', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -106,13 +157,16 @@ class ApiSemesterController extends Controller
             $data = $validator->validated();
             $semester = Semester::create($data);
 
+
             $activeCourses = Course::where(function ($query) use ($data) {
                 $query->where('start_date', '<=', $data['end_date'])
                       ->where('end_date', '>=', $data['start_date']);
             })->get();
 
+
             if ($activeCourses->isNotEmpty()) {
                 $maxOrder = 9;
+
 
                 $coursesWithOrder = $activeCourses->mapWithKeys(function ($course) use ($maxOrder) {
                     $currentMaxOrder = CourseSemester::where('course_id', $course->id)
@@ -121,8 +175,10 @@ class ApiSemesterController extends Controller
                     return [$course->id => ['order' => $newOrder]];
                 });
 
+
                 $semester->courses()->syncWithoutDetaching($coursesWithOrder);
             }
+
 
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -137,18 +193,22 @@ class ApiSemesterController extends Controller
             $now = Carbon::now();
 
             if ($now->lt(Carbon::parse($semester->start_date))) {
+
                 $status = "Chờ diễn ra";
             } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
                 $status = "Đang diễn ra";
             } elseif ($now->gt(Carbon::parse($semester->end_date))) {
                 $status = "Kết thúc";
+
             }
 
             $data = [
                     'id' => $semester->id,
                     'name' => $semester->name,
+
                     'start_date' => Carbon::parse($semester->start_date),
                     'end_date' => Carbon::parse($semester->end_date),
+
                     'courses' => $semester->orders->map(function ($order) {
                         return [
                             'id' => $order->course->id,
@@ -171,7 +231,9 @@ class ApiSemesterController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255|unique:semesters,name,' . $id,
             'start_date' => 'sometimes|date',
+
             'end_date' => 'sometimes|date|after_or_equal:start_date',
+
             'status' => 'sometimes|integer|in:0,1,2',
             'courses' => 'sometimes|array',
             'courses.*.id' => 'sometimes|exists:courses,id',
@@ -230,4 +292,6 @@ class ApiSemesterController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
 }
+

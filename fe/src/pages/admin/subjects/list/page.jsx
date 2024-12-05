@@ -42,12 +42,16 @@ const ListSubject = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
 
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
         const [{ data }, majors] = await Promise.all([
-          instance.get("admin/subjects"),
+          instance.get("admin/all/subjects"),
           instance.get("admin/sub/majors"),
         ]);
         setMajors(majors.data.data);
@@ -100,13 +104,18 @@ const ListSubject = () => {
     setSearchValue(value);
 
     if (value.trim() === "") {
-      setFilteredCourses(allCourses);
+
+      setFilteredCourses(subjects);
     } else {
-      const filtered = allCourses.filter((course) =>
+      const filtered = subjects.filter((course) =>
+
         course.name.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredCourses(filtered);
     }
+
+    setCurrentPage(1); // Reset to first page on search
+
   };
 
   const togglePopup = () => {
@@ -120,6 +129,7 @@ const ListSubject = () => {
     ]);
   };
 
+
   const handleFormSubmit = async (values) => {
     setLoading(true);
     try {
@@ -131,7 +141,7 @@ const ListSubject = () => {
         order: values.order,
         code: values.code,
         form: values.form,
-        status: 0
+        status: 0,
       };
       console.log(payload);
       const response = await instance.post("/admin/subjects", payload);
@@ -153,8 +163,10 @@ const ListSubject = () => {
     }
   };
 
+
   const cancel = (e) => {
     console.log(e);
+    // message.error("Click on No");
   };
 
   const getMajorIdBySubjectId = async (subjectId) => {
@@ -166,12 +178,14 @@ const ListSubject = () => {
     return response.data.data;
   };
 
+
+  // Hàm mở modal chỉnh sửa khóa học
   const openEditModal = async (values) => {
     debugger;
-    console.log(values);
     setIsPopupVisible(!isPopupVisible);
     setUpdate(true);
     const majors = await getMajorIdBySubjectId(values.id);
+    console.log(majors);
     form.setFieldsValue({
       code: values.code,
       name: values.name,
@@ -214,10 +228,12 @@ const ListSubject = () => {
     }
   };
 
+
   const closeEditModal = () => {
     setIsEditModalVisible(false);
     form.resetFields();
   };
+
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -230,6 +246,7 @@ const ListSubject = () => {
       .validateFields()
       .then((values) => {
         console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
+
         setIsModalVisible(false); // Đóng modal sau khi xử lý xong
       })
       .catch((info) => {
@@ -237,13 +254,23 @@ const ListSubject = () => {
       });
   };
 
+
   const handleCancel = () => {
     setIsModalVisible(false);
+
   };
 
   if (loading) {
     return <Loading />;
   }
+  const displaySubjects =
+    searchValue.trim() === "" ? subjects : filteredCourses;
+
+  const paginatedSubjects = displaySubjects.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <>
       <div className="listCourse">
@@ -277,19 +304,21 @@ const ListSubject = () => {
                   </button>
                   <div className="flex gap-6 items-center">
                     <span className="font-bold text-[14px] text-[#000]">
-                      {subjects.length} items
+
+                      {displaySubjects.length} items
                     </span>
 
                     <Button type="primary" onClick={handleShowModalFilter}>
-                      Lọc Khóa Học
+                      Lọc môn Học
                     </Button>
                   </div>
                 </div>
               </div>
 
               <div className="row row-cols-2 g-3">
-                {subjects.length > 0 ? (
-                  subjects.map((subject) => (
+
+                {paginatedSubjects.length > 0 ? (
+                  paginatedSubjects.map((subject) => (
                     <div className="col" key={subject.id}>
                       <div className="listCourse__item ">
                         <div className="listCourse__item-top flex justify-between items-center">
@@ -307,7 +336,7 @@ const ListSubject = () => {
                             <div className="listCourse__item-status_group">
                               <div className="flex gap-2 listCourse__item-status">
                                 <span className="ml-3 text-[#9E9E9E]">
-                                  Trạng thái :
+                                  Hình thức:
                                 </span>
 
                                 <div className="flex gap-1 bg-[#44cc151a]">
@@ -317,9 +346,7 @@ const ListSubject = () => {
                                     alt=""
                                   />
                                   <span className="text-[#44CC15] text-[12px]">
-                                    {subject.status
-                                      ? "Đang hoạt động"
-                                      : "Tạm dừng"}
+                                    {subject.form}
                                   </span>
                                 </div>
                               </div>
@@ -328,13 +355,6 @@ const ListSubject = () => {
                                 Code:
                                 <span className="text-black ml-2">
                                   {subject.code}
-                                </span>
-                              </p>
-
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Hình thức:
-                                <span className="text-black ml-2">
-                                  {subject.form ? "ONLINE" : "OFFLINE"}
                                 </span>
                               </p>
 
@@ -361,8 +381,7 @@ const ListSubject = () => {
                             </div>
                           </div>
                         </div>
-
-                        <div className="listCourse__item-bottom teaching__card-bottom ">
+                        <div className="listCourse__item-bottom teaching__card-bottom pb-3 border !mx-[-1px]">
                           <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                             <img src="/assets/svg/eye.svg" alt="" />
                             <Link
@@ -409,6 +428,21 @@ const ListSubject = () => {
                   </div>
                 )}
               </div>
+
+              {/* Pagination Component */}
+              {displaySubjects.length > pageSize && (
+                <Pagination
+                  align="center"
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={displaySubjects.length}
+                  onChange={(page) => setCurrentPage(page)}
+                  style={{
+                    marginTop: 16,
+                    textAlign: "center",
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -509,7 +543,7 @@ const ListSubject = () => {
                             },
                           ]}
                         >
-                          <InputNumber placeholder="kỳ học" min={1} max={9} />
+                          <InputNumber placeholder="Kỳ học" min={1} max={9} />
                         </Form.Item>
                       </Col>
 
@@ -523,6 +557,7 @@ const ListSubject = () => {
                                 label: "OFFLINE",
                               },
                               { value: 1, label: "ONLINE" },
+
                             ]}
                           />
                         </Form.Item>

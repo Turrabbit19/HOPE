@@ -100,6 +100,4 @@ class StatisticsController extends Controller
 
     }
 
-
-
 }

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers\Api\Auth;
 
@@ -26,7 +26,7 @@ class ApiAuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $key = $request->ip(); 
+        $key = $request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
             return response()->json(['error' => 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau.'], 429);
         }
@@ -35,7 +35,7 @@ class ApiAuthController extends Controller
             $user = User::where('email', $request->email)->first();
 
             if (!$user || !Hash::check($request->password, $user->password)) {
-                RateLimiter::hit($key); 
+                RateLimiter::hit($key);
                 throw ValidationException::withMessages([
                     'email' => ['Thông tin đăng nhập không chính xác.'],
                 ]);
@@ -46,7 +46,7 @@ class ApiAuthController extends Controller
             $token = $user->createToken('token-name')->plainTextToken;
 
             return response()->json([
-                'token' => $token, 
+                'token' => $token,
                 'user' => $this->formatUserData($user)
             ]);
         } catch (ValidationException $e) {
@@ -95,7 +95,9 @@ class ApiAuthController extends Controller
             $student = Student::with('course')->where('user_id', $user->id)->first();
             if ($student) {
                 $data['student'] = [
+
                     'course_id' => $student->course->name,
+                    'course_name' => $student->course->name,
                     'current_semester' => $student->current_semester,
                     'student_code' => $student->student_code,
                     'status' => $this->getStudentStatus($student->status),
@@ -107,7 +109,11 @@ class ApiAuthController extends Controller
             $teacher = Teacher::where('user_id', $user->id)->first();
             if ($teacher) {
                 $data['teacher'] = [
+
                     'major_id' => $teacher->major_id,
+
+                    'major_name' => $teacher->major->name,
+
                     'teacher_code' => $teacher->teacher_code,
                     'status' => $this->getTeacherStatus($teacher->status),
                 ];

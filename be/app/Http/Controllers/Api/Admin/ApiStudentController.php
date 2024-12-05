@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
+
 use App\Models\Major;
+
 use App\Models\Student;
 use App\Models\StudentMajor;
 use App\Models\User;
@@ -22,6 +24,7 @@ class ApiStudentController extends Controller
     public function index(Request $request)
     {
         try {
+
             $perPage = $request->input('per_page', 40);
             $students = Student::with(['user', 'course'])->paginate($perPage);
 
@@ -32,6 +35,7 @@ class ApiStudentController extends Controller
 
             $data = collect($students->items())->map(function ($student) use ($majors) {
                 $studentMajor = $majors[$student->id]->first() ?? null;
+
                 return [
                     "id" => $student->id,
                     "avatar" => $student->user->avatar ?? null,
@@ -71,17 +75,18 @@ class ApiStudentController extends Controller
     }
 
 
-    public function exportStudent()
-    {
+
+    public function exportStudent(){
         try {
             return Excel::download(new StudentExport, 'students.xlsx');
+
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    public function importStudent(Request $request)
-    {
+
+    public function importStudent(Request $request){
         try {
             Excel::import(new StudentImport, $request->file('file'));
 
@@ -91,16 +96,17 @@ class ApiStudentController extends Controller
         }
     }
 
-    public function getStudentsByCourse($courseId)
-    {
+
+    public function getStudentsByCourse($courseId){
         try {
             $students = Student::with('user', 'course')->where('course_id', $courseId)->get();
 
             $majors = StudentMajor::with('major')->where('status', 1)
-                ->get()->groupBy('student_id');
+                    ->get()->groupBy('student_id');
 
             $data = $students->map(function ($student) use ($majors) {
                 $studentMajor = $majors[$student->id]->first() ?? null;
+
                 return [
                     'id' => $student->id,
                     'avatar' => $student->user->avatar,
@@ -112,7 +118,9 @@ class ApiStudentController extends Controller
                     'course_name' => $student->course->name,
                     'major_name' => $studentMajor->major->name,
                     'current_semester' => $student->current_semester,
-                    'status' => match ($student->status) {
+
+                    'status' => match($student->status) {
+
                         "0" => "Đang học",
                         "1" => "Bảo lưu",
                         "2" => "Hoàn thành",
@@ -132,7 +140,9 @@ class ApiStudentController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+
             'avatar' => 'nullable|string',
+
             'name' => 'required|string|max:50',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:10|unique:users',
@@ -140,6 +150,7 @@ class ApiStudentController extends Controller
             'gender' => 'required|boolean',
             'ethnicity' => 'required|string|max:50',
             'address' => 'required|string|max:255',
+
 
             'student_course_id' => 'required|exists:courses,id',
             'student_major_id' => 'required|exists:majors,id',
@@ -174,6 +185,7 @@ class ApiStudentController extends Controller
                 'student_code' => $data['student_code'],
             ]);
 
+
             StudentMajor::create([
                 'student_id' => $student->id,
                 'major_id' => 1,
@@ -187,9 +199,9 @@ class ApiStudentController extends Controller
             ]);
 
             $mainMajor = StudentMajor::where('student_id', $student->id)
-                ->where('status', 1)
-                ->with('major')
-                ->first();
+                                      ->where('status', 1)
+                                      ->with('major')
+                                      ->first();
 
             $studentData = [
                 'avatar' => $user->avatar,
@@ -210,17 +222,20 @@ class ApiStudentController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
+
     }
+
 
     public function show(string $id)
     {
         try {
             $student = Student::findOrFail($id);
 
-            $major = StudentMajor::with('major')
-                ->where('student_id', $id)
-                ->where('status', 1)
-                ->firstOr();
+
+            $majorMain = StudentMajor::with('major')
+            ->where('student_id', $id)
+            ->where('status', 1)
+            ->firstOr();
 
             $data = [
                 'id' => $student->id,
@@ -235,9 +250,11 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $major->major->name,
+
+                'major_name' => $majorMain->major->name,
                 'current_semester' => $student->current_semester,
-                'status' => match ($student->status) {
+                'status' => match($student->status) {
+
                     "0" => "Đang học",
                     "1" => "Bảo lưu",
                     "2" => "Hoàn thành",
@@ -256,7 +273,9 @@ class ApiStudentController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
+
             'avatar' => 'nullable|string',
+
             'name' => 'sometimes|string|max:50',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
@@ -289,6 +308,12 @@ class ApiStudentController extends Controller
                 'student_code' => $data['student_code'] ?? $student->student_code,
             ]));
 
+
+            $mainMajor = StudentMajor::where('student_id', $student->id)
+            ->where('status', 1)
+            ->with('major')
+            ->first();
+
             $studentData = [
                 'avatar' => $user->avatar,
                 'name' => $user->name,
@@ -301,7 +326,9 @@ class ApiStudentController extends Controller
 
                 'student_code' => $student->student_code,
                 'course_name' => $student->course->name,
-                'major_name' => $student->major->name,
+
+                'major_name' => $mainMajor->major->name,
+
                 'current_semester' => $student->current_semester,
             ];
 
@@ -330,19 +357,19 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    public function getStudentsByMajorAndCourse(string $majorId, $courseId)
-    {
-        try {
-            $perPage = request()->get('limit', 50);
 
-            $students = Student::with('user', 'course', 'majors')
-                ->where('course_id', $courseId)
-                ->whereHas('majors', function ($q) use ($majorId) {
+
+    public function getStudentsByMajorAndCourse(string $courseId, $majorId){
+        try {
+            $students = Student::with('user', 'majors', 'course')
+            ->where('course_id', $courseId)
+                ->whereHas('majors', function($q) use ($majorId) {
                     $q->where('major_id', $majorId);
                 })
-                ->paginate($perPage);
+                ->get();
 
-            $data = $students->getCollection()->map(function ($student) {
+            $data = $students->map(function ($student) {
+
                 return [
                     'id' => $student->id,
                     'avatar' => $student->user->avatar,
@@ -352,7 +379,9 @@ class ApiStudentController extends Controller
                     'phone' => $student->user->phone,
                     'course_name' => $student->course->name,
                     'current_semester' => $student->current_semester,
-                    'status' => match ($student->status) {
+
+                    'status' => match($student->status) {
+
                         "0" => "Đang học",
                         "1" => "Bảo lưu",
                         "2" => "Hoàn thành",
@@ -361,20 +390,11 @@ class ApiStudentController extends Controller
                 ];
             });
 
-            return response()->json([
-                'data' => $data,
-                'total' => $students->total(),
-                'current_page' => $students->currentPage(),
-                'last_page' => $students->lastPage(),
-                'per_page' => $students->perPage()
-            ], 200);
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy dữ liệu cho course hoặc major'], 404);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Không thể truy vấn tới bảng Students',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
 

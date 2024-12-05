@@ -15,12 +15,12 @@ const localizer = dateFnsLocalizer({
   },
 });
 
-const MyCalendar = () => {
+const ScheduleDetail = () => {
   const [events, setEvents] = useState([]);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const { id } = useParams();
-  const {subjectId, majorId } = useLocation().state || {};
+  const { subjectId, majorId } = useLocation().state || {};
   console.log(subjectId, majorId);
   const generateEvents = (scheduleData) => {
     const events = [];
@@ -111,9 +111,11 @@ const MyCalendar = () => {
           style={{ height: 500 }}
         />
       </div>
-      <Link to={`edit`} state={{subjectId: subjectId, majorId: majorId}}>Chỉnh sửa</Link>
+      <Link to={`edit`} state={{ subjectId: subjectId, majorId: majorId }}>
+        Chỉnh sửa
+      </Link>
     </>
   );
 };
 
-export default MyCalendar;
+export default ScheduleDetail;

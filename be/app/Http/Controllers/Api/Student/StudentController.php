@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseSemester;
+use App\Models\Major;
 use App\Models\Schedule;
 use App\Models\ScheduleLesson;
 use App\Models\Shift;
@@ -332,6 +333,88 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getSubMajors() 
+    {
+        $user = Auth::user();
+    
+        try {
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+    
+            if ($student->current_semester < 5) {
+                return response()->json(['message' => 'Bạn chưa đủ điều kiện để được đăng ký chuyên ngành hẹp.'], 403);
+            }
+    
+            $subMajorRegistered = StudentMajor::where('student_id', $student->id)
+                                ->where('status', 2)
+                                ->exists();
+    
+            if ($subMajorRegistered) {
+                return response()->json(['message' => 'Bạn đã đăng ký chuyên ngành hẹp rồi.'], 403);
+            }
+    
+            $mainMajor = StudentMajor::where('student_id', $student->id)
+                        ->where('status', 1)->firstOrFail();
+    
+            $subMajors = Major::where('major_id', $mainMajor->major_id)->get();
+    
+            $data = $subMajors->map(function ($sm) {
+                return [
+                    "id" => $sm->id,
+                    'code' => $sm->code,
+                    'name' => $sm->name,
+                    'description' => $sm->description
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);     
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        }
+    }
+    public function registerSubMajor(string $subMajorId) 
+    {
+        $user = Auth::user();
+
+        try {
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+
+            if ($student->current_semester < 5) {
+                return response()->json(['message' => 'Sinh viên chưa đủ điều kiện đăng ký chuyên ngành hẹp.'], 403);
+            }
+
+            $subMajorRegistered = StudentMajor::where('student_id', $student->id)
+                                ->where('status', 2)
+                                ->exists();
+
+            if ($subMajorRegistered) {
+                return response()->json(['message' => 'Sinh viên đã đăng ký chuyên ngành hẹp.'], 403);
+            }
+
+            $mainMajor = StudentMajor::where('student_id', $student->id)
+                        ->where('status', 1)->firstOrFail();
+
+            $validSubMajor = Major::where('major_id', $mainMajor->major_id)
+                                ->where('id', $subMajorId)
+                                ->exists();
+
+            if (!$validSubMajor) {
+                return response()->json(['message' => 'Chuyên ngành hẹp không hợp lệ.'], 400);
+            }
+
+            StudentMajor::create([
+                'student_id' => $student->id,
+                'major_id' => $subMajorId,
+                'status' => 2
+            ]);
+
+            return response()->json(['message' => 'Đăng ký chuyên ngành hẹp thành công.'], 201);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin sinh viên hoặc chuyên ngành.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Đã xảy ra lỗi trong quá trình đăng ký.'], 500);
         }
     }
 }

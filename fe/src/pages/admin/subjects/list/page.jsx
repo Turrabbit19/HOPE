@@ -135,7 +135,6 @@ const ListSubject = () => {
         name: values.name,
         description: values.description,
         credit: values.credit,
-        form: values.form,
         majors: values.majors.map((id) => ({ id })),
         order: values.order,
         code: values.code,
@@ -189,7 +188,6 @@ const ListSubject = () => {
       name: values.name,
       description: values.description,
       credit: values.credit,
-      form: values.form,
       order: values.order,
       form: values.form,
       majors: majors.map((m) => m.id),
@@ -309,7 +307,7 @@ const ListSubject = () => {
                     </span>
 
                     <Button type="primary" onClick={handleShowModalFilter}>
-                      Lọc Khóa Học
+                      Lọc môn Học
                     </Button>
                   </div>
                 </div>

@@ -72,31 +72,44 @@ class ApiSubjectController extends Controller
         }
     }
 
-    public function filterSubjectsByMajor(string $majorId) 
+    public function filterSubjectsByMajor(string $majorId, Request $request) 
     {
         try {
-            $major = MajorSubject::where('major_id', $majorId)->get();
+            $perPage = $request->input('per_page', 10);
     
-            $subjectsByMajor = $major->map(function ($major) {
+            $subjectsQuery = Subject::whereHas('majors', function ($query) use ($majorId) {
+                $query->where('majors.id', $majorId);
+            });
+    
+            $subjects = $subjectsQuery->paginate($perPage);
+    
+            $data = $subjects->map(function ($subject) {
                 return [
-                    'id' => $major->subject->id,
-                    'name' => $major->subject->name,
-                    'description' => $major->subject->description,
-                    'credit' => $major->subject->credit,
-                    'order' => $major->subject->order,
+                    'id' => $subject->id,
+                    'code' => $subject->code,
+                    'name' => $subject->name,
+                    'description' => $subject->description,
+                    'credit' => $subject->credit,
+                    'order' => $subject->order,
+                    'form' => $subject->form ? 'Trực tuyến' : 'Trực tiếp',
                 ];
             });
     
-            return response()->json(['data' => $subjectsByMajor], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
-        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Không thể truy cập dữ liệu ngành hoặc môn học',
-                'message' => $e->getMessage(),
-            ], 500);
+                'data' => $data,
+                'pagination' => [
+                    'total' => $subjects->total(),
+                    'per_page' => $subjects->perPage(),
+                    'current_page' => $subjects->currentPage(),
+                    'last_page' => $subjects->lastPage(),
+                ]
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Ngành học không tồn tại với ID: ' . $majorId], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn dữ liệu', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function getMajorsBySubject(string $subjectId) 
     {

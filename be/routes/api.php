@@ -58,7 +58,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::apiResource('semesters', ApiSemesterController::class);
         Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
-
+        Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']); 
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
@@ -69,7 +69,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('all/subjects', [ApiSubjectController::class, 'getAll']);
         Route::get('subject/{subjectId}/majors', [ApiSubjectController::class, 'getMajorsBySubject']);
-        Route::get('filter/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
+        Route::get('filter-by-major/{majorId}/subjects', [ApiSubjectController::class, 'filterSubjectsByMajor']);
         Route::post('subject/{id}/restore', [ApiSubjectController::class, 'restore']);
 
         Route::get('subject/{id}/lessons', [ApiSubjectController::class, 'getAllLessons']);
@@ -181,6 +181,9 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
         Route::get('timetable', [StudentController::class, 'getTimetable']);
+
+        Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
+        Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);
 
         Route::get('notifications', [StudentNoticeController::class, 'getStudentNotifications']);
         Route::get('notification/{id}', [StudentNoticeController::class, 'detailNotification']);

@@ -16,10 +16,16 @@ class ApiCourseController extends Controller
     {
         try {
             $courses = Course::get();
-
             $now = Carbon::now();
-
+    
             $data = $courses->map(function ($course) use ($now) {
+                $currentSemester = $course->semesters()
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
+                    ->first();
+    
+                $semesterOrder = $currentSemester ? $currentSemester->pivot->order : null;
+    
                 if ($now->lt(Carbon::parse($course->start_date))) {
                     $status = "Chờ diễn ra"; 
                 } elseif ($now->between(Carbon::parse($course->start_date), Carbon::parse($course->end_date))) {
@@ -27,19 +33,22 @@ class ApiCourseController extends Controller
                 } elseif ($now->gt(Carbon::parse($course->end_date))) {
                     $status = "Kết thúc"; 
                 }
+    
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
                     'start_date' => Carbon::parse($course->start_date),
                     'end_date' => Carbon::parse($course->end_date),
-                    'status' => $status
+                    'status' => $status,
+                    'semester_order' => $semesterOrder,  
                 ];
             });
+    
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function getSemestersByCourse($courseId)
     {

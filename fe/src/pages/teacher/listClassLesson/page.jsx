@@ -81,30 +81,30 @@ export default function ScheduleTable() {
               {schedules.map((schedule) => (
                 <tr key={schedule.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div className="text-sm text-gray-900">{schedule.classroom}</div>
-                    <div className="text-xs text-gray-500">{schedule.course_name}</div>
+                    <div className="text-lg text-gray-900 font-bold">{schedule.classroom}</div> {/* text-lg */}
+                    <div className="text-md text-gray-500">{schedule.course_name}</div> {/* text-md */}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-gray-900">{schedule.subject_name}</div>
-                    <div className="text-xs text-gray-500">{schedule.major_name}</div>
+                    <div className="text-lg text-gray-900">{schedule.subject_name}</div> {/* text-lg */}
+                    <div className="text-md text-gray-500">{schedule.major_name}</div> {/* text-md */}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-gray-900">{schedule.room_name}</div>
-                    <div className="text-xs text-gray-500">{schedule.shift_name}</div>
+                    <div className="text-lg text-gray-900">{schedule.room_name}</div> {/* text-lg */}
+                    <div className="text-md text-gray-500">{schedule.shift_name}</div> {/* text-md */}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-xs text-gray-500">
+                    <div className="text-md text-gray-500">
                       {schedule.start_date} - {schedule.end_date}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {schedule.days_of_week.map((day, index) => {
                         const [dayName, shift] = Object.entries(day)[0];
                         return (
                           <span
                             key={index}
-                            className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                            className="inline-flex items-center px-3 py-1 text-md font-medium bg-green-100 text-green-800 rounded-full"
                           >
                             {getDayOfWeek(dayName)} ({shift})
                           </span>
@@ -115,7 +115,7 @@ export default function ScheduleTable() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleDetailClick(schedule)}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-lg font-medium rounded-full shadow-sm text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400"
                     >
                       Chi tiết
                     </button>
@@ -123,6 +123,7 @@ export default function ScheduleTable() {
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       </div>

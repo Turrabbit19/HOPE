@@ -148,7 +148,7 @@ const Teach = () => {
         <div className="col-12">
           <div className="justify-between flex">
             <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-              Quản Lý Ngành học
+              Quản lý Ngành học
               <button>
                 <img src="/assets/svg/reload.svg" alt="reload..." />
               </button>
@@ -187,7 +187,7 @@ const Teach = () => {
                   <div className="teaching__card-top">
                     <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                       <img src="/assets/svg/share.svg" alt="" />
-                      Tên ngành:{" "}
+                      Tên ngành học:{" "}
                       <p className="text-red-300 uppercase ml-2 font-bold">
                         {major.name}
                       </p>
@@ -234,7 +234,7 @@ const Teach = () => {
                       className="flex items-center gap-1 text-[#1167B4] font-bold"
                     >
                       <img src="/assets/svg/setting.svg" alt="setting" />
-                      Quản lý ngành
+                      Quản lý Chuyên ngành
                     </Link>
 
                     <Popconfirm

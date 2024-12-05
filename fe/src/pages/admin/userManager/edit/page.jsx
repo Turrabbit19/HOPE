@@ -123,7 +123,7 @@ const UserEdit = () => {
           form.setFieldValue("role", "admin1");
           setRole("admin1");
           break;
-        case "admin":
+        case "Quản trị viên":
           setRoleNumber(1);
           form.setFieldValue("role", "admin");
 
@@ -145,7 +145,6 @@ const UserEdit = () => {
     }
 
     form.setFieldValue("gender", res.data.data["gender"] === "Nam");
-    // console.log(res.data)
   }
 
   const [form] = Form.useForm();

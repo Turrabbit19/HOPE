@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Book, Lightbulb, Users } from 'lucide-react';
+import { Book, Lightbulb, Users } from "lucide-react";
 
 export default function SchoolLogin() {
   const [email, setEmail] = useState("");
@@ -62,15 +62,21 @@ export default function SchoolLogin() {
     <div className="min-h-screen flex bg-gradient-to-br from-blue-600 to-indigo-800">
       {/* Left side - Enhanced Illustration and Text */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 text-white">
-        <h2 className="text-4xl font-bold mb-6">Chào mừng đến với Hệ thống Giáo dục</h2>
-        <p className="text-xl mb-12 text-center">Nơi kiến thức được chia sẻ và phát triển</p>
+        <h2 className="text-4xl font-bold mb-6">
+          Chào mừng đến với Hệ thống Giáo dục
+        </h2>
+        <p className="text-xl mb-12 text-center">
+          Nơi kiến thức được chia sẻ và phát triển
+        </p>
         <div className="grid grid-cols-3 gap-8 w-full max-w-2xl">
           <div className="flex flex-col items-center text-center">
             <div className="bg-white text-blue-600 rounded-full p-4 mb-4">
               <Book size={40} />
             </div>
             <h3 className="text-lg font-semibold mb-2">Học tập</h3>
-            <p className="text-sm">Tiếp cận nguồn tài liệu phong phú và đa dạng</p>
+            <p className="text-sm">
+              Tiếp cận nguồn tài liệu phong phú và đa dạng
+            </p>
           </div>
           <div className="flex flex-col items-center text-center">
             <div className="bg-white text-blue-600 rounded-full p-4 mb-4">
@@ -190,4 +196,3 @@ export default function SchoolLogin() {
     </div>
   );
 }
-

@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react';
 
 export default function TeacherInfo() {
@@ -68,109 +70,88 @@ export default function TeacherInfo() {
     return `${hours}:${minutes}`;
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-  );
-  if (error) return <div className="text-red-600 text-center text-xl mt-10">Lỗi: {error}</div>;
-  if (!teacher) return <div className="text-gray-600 text-center text-xl mt-10">Không có dữ liệu giảng viên</div>;
+  if (loading) return <div className="flex justify-center items-center h-24"><div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div></div>;
+  if (error) return <div className="text-red-600 text-center p-2">Lỗi: {error}</div>;
+  if (!teacher) return <div className="text-gray-600 text-center p-2">Không có dữ liệu giảng viên</div>;
 
   return (
-    <div className="bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-8xl w-full bg-white shadow-2xl rounded-3xl overflow-hidden transform transition hover:scale-105 duration-500 ease-in-out">
-        <div className="flex flex-col md:flex-row">
-          {/* Phần hình ảnh */}
-          <div className="md:w-1/3 bg-gradient-to-b from-indigo-500 p-8 flex items-center justify-center relative">
-            <img
-              className="h-48 w-48 rounded-full border-4 border-white shadow-lg transform hover:scale-110 transition duration-500"
-              src={teacher.avatar}
-              alt={teacher.name}
-            />
-            <div className="absolute top-4 left-4 bg-indigo-700 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
-              {teacher.teacher_code}
-            </div>
-          </div>
-
-          {/* Phần thông tin */}
-          <div className="md:w-2/3 p-8">
-            <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">
-              {teacher.name}
-            </h1>
-            <p className="text-lg text-gray-700 mt-2">
-              {teacher.major_name}
-            </p>
-            <p className="mt-4">
-              <span
-                className={`inline-block px-4 py-2 text-sm font-semibold rounded-full ${
-                  teacher.status === 'Hoạt động'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
+    <div className="max-w-8xl mx-auto p-4">
+      <div className="bg-white shadow rounded-lg p-4 mb-4">
+        <div className="flex items-center mb-4">
+          <img src={teacher.avatar} alt={teacher.name} className="w-12 h-12 rounded-full mr-4" />
+          <div>
+            <h1 className="text-lg font-bold">{teacher.name}</h1>
+            <p className="text-sm text-gray-600">{teacher.major_name}</p>
+            <p className="text-xs mt-1">
+              <span className={`px-2 py-1 rounded ${teacher.status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {teacher.status}
               </span>
             </p>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="border-t border-gray-300">
-          <nav className="flex">
-            {['info', 'timetable'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-4 text-center text-lg font-semibold border-b-4 ${
-                  activeTab === tab
-                    ? 'border-indigo-500 text-indigo-700'
-                    : 'border-transparent text-gray-500 hover:text-indigo-500 hover:border-indigo-300'
-                } transition-all duration-300 ease-in-out`}
-              >
-                {tab === 'info' ? 'Thông tin cá nhân' : 'Lịch dạy hôm nay'}
-              </button>
-            ))}
-          </nav>
+        <div className="flex mb-4 border-b">
+          <button
+            onClick={() => setActiveTab('info')}
+            className={`flex-1 py-2 text-sm ${activeTab === 'info' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          >
+            Thông tin cá nhân
+          </button>
+          <button
+            onClick={() => setActiveTab('timetable')}
+            className={`flex-1 py-2 text-sm ${activeTab === 'timetable' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          >
+            Lịch dạy hôm nay
+          </button>
         </div>
 
-        {/* Nội dung Tabs */}
         {activeTab === 'info' && (
-          <div className="p-8 bg-gradient-to-t from-gray-50 to-white space-y-6">
-            {['Ngành', 'Email', 'Số điện thoại', 'Ngày sinh', 'Giới tính', 'Dân tộc'].map((label, index) => (
-              <div key={index} className="flex justify-between items-center border-b pb-2">
-                <span className="font-semibold text-gray-700">{label}:</span>
-                <span className="text-gray-600">{Object.values(teacher)[index + 3]}</span>
-              </div>
-            ))}
-          </div>
+          <table className="w-full text-sm">
+            <tbody>
+              {[
+                { label: 'Mã giảng viên', value: teacher.teacher_code },
+                { label: 'Ngành', value: teacher.major_name },
+                { label: 'Email', value: teacher.email },
+                { label: 'Số điện thoại', value: teacher.phone },
+                { label: 'Ngày sinh', value: teacher.dob },
+                { label: 'Giới tính', value: teacher.gender },
+                { label: 'Dân tộc', value: teacher.ethnicity }
+              ].map((item, index) => (
+                <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                  <td className="py-2 px-1 font-medium">{item.label}:</td>
+                  <td className="py-2 px-1 text-gray-600">{item.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
 
         {activeTab === 'timetable' && (
-          <div className="p-8 bg-gradient-to-t from-gray-50 to-white">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">
-              Lịch dạy hôm nay
-            </h3>
+          <div>
+            <h3 className="font-bold mb-2 text-sm">Lịch dạy hôm nay</h3>
             {timetable.length > 0 ? (
-              <ul className="space-y-6">
-                {timetable.map((lesson, index) => (
-                  <li
-                    key={index}
-                    className="p-6 bg-indigo-50 rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition duration-300 ease-in-out"
-                  >
-                    <p className="text-lg font-bold text-indigo-900">
-                      {lesson.subject_name}
-                    </p>
-                    <p className="text-gray-700">Lớp: {lesson.class_name}</p>
-                    <p className="text-gray-700 flex items-center mt-2">
-                      <span className="mr-2">🕒</span>
-                      Thời gian: {formatTime(lesson.start_time)} - {formatTime(lesson.end_time)}
-                    </p>
-                    <p className="text-gray-700">Phòng: {lesson.room}</p>
-                  </li>
-                ))}
-              </ul>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-2 px-1 text-left">Môn học</th>
+                    <th className="py-2 px-1 text-left">Lớp</th>
+                    <th className="py-2 px-1 text-left">Thời gian</th>
+                    <th className="py-2 px-1 text-left">Phòng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timetable.map((lesson, index) => (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                      <td className="py-2 px-1">{lesson.subject_name}</td>
+                      <td className="py-2 px-1">{lesson.class_name}</td>
+                      <td className="py-2 px-1">{formatTime(lesson.start_time)} - {formatTime(lesson.end_time)}</td>
+                      <td className="py-2 px-1">{lesson.room}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
-              <p className="text-gray-600 text-lg">Không có lớp dạy hôm nay.</p>
+              <p className="text-gray-600 text-sm">Không có lớp dạy hôm nay.</p>
             )}
           </div>
         )}
@@ -178,3 +159,4 @@ export default function TeacherInfo() {
     </div>
   );
 }
+

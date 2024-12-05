@@ -42,65 +42,80 @@ export default function ScheduleTable() {
     setIsPopupOpen(true);
   };
 
+  const getDayOfWeek = (day) => {
+    const days = {
+      'Monday': 'Thứ 2',
+      'Tuesday': 'Thứ 3',
+      'Wednesday': 'Thứ 4',
+      'Thursday': 'Thứ 5',
+      'Friday': 'Thứ 6',
+      'Saturday': 'Thứ 7',
+      'Sunday': 'Chủ nhật'
+    };
+    return days[day] || day;
+  };
+
   if (loading) return <div className="text-center py-4 animate-pulse text-gray-600">Đang tải...</div>;
   if (error) return <div className="text-center py-4 text-red-500">{`Lỗi: ${error}`}</div>;
   if (!schedules.length) return <div className="text-center py-4 text-gray-500">Không có dữ liệu lịch học</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen py-8">
-      <div className=" mx-auto bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 p-6 text-gray-700 text-center">
-          <h2 className="text-3xl font-semibold">Danh sách lớp học</h2>
+    <div className="p-4">
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 p-4">
+          <h2 className="text-xl font-semibold text-gray-700 text-center">Danh sách lớp học</h2>
         </div>
-        <div className="p-6 overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-300 rounded-lg">
-            <thead className="bg-blue-100 text-gray-700">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
               <tr>
-                {[
-                  'Lớp học',
-                  'Khóa học',
-                  'Học kỳ',
-                  'Ngành',
-                  'Môn học',
-                  'Ca học',
-                  'Phòng học',
-                  'Ngày bắt đầu',
-                  'Ngày kết thúc',
-                  'Các ngày trong tuần',
-                  'Chi tiết',
-                ].map((header) => (
-                  <th key={header} className="py-3 px-4 text-left text-sm font-medium">
-                    {header}
-                  </th>
-                ))}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lớp học</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Môn học</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Các buổi</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {schedules.map((schedule) => (
-                <tr key={schedule.id} className="hover:bg-gray-50 transition duration-200">
-                  <td className="px-6 py-4 text-gray-600">{schedule.classroom}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.course_name}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.semester_name}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.major_name}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.subject_name}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.shift_name}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.room_name}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.start_date}</td>
-                  <td className="px-6 py-4 text-gray-600">{schedule.end_date}</td>
-                  <td className="px-6 py-4">
-                    {schedule.days_of_week.map((day, index) => (
-                      <span
-                        key={index}
-                        className="bg-green-100 text-green-800 px-2 py-1 rounded-full mr-2"
-                      >
-                        {Object.entries(day)[0][0]} {Object.entries(day)[0][1]}
-                      </span>
-                    ))}
+                <tr key={schedule.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-gray-900">{schedule.classroom}</div>
+                    <div className="text-xs text-gray-500">{schedule.course_name}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-gray-900">{schedule.subject_name}</div>
+                    <div className="text-xs text-gray-500">{schedule.major_name}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-gray-900">{schedule.room_name}</div>
+                    <div className="text-xs text-gray-500">{schedule.shift_name}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-xs text-gray-500">
+                      {schedule.start_date} - {schedule.end_date}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {schedule.days_of_week.map((day, index) => {
+                        const [dayName, shift] = Object.entries(day)[0];
+                        return (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                          >
+                            {getDayOfWeek(dayName)} ({shift})
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     <button
                       onClick={() => handleDetailClick(schedule)}
-                      className="bg-teal-400 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition"
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400"
                     >
                       Chi tiết
                     </button>
@@ -110,14 +125,15 @@ export default function ScheduleTable() {
             </tbody>
           </table>
         </div>
-        {isPopupOpen && (
-          <ListClassLessonPopup
-            schedule={selectedSchedule}
-            onClose={() => setIsPopupOpen(false)}
-            token={token}
-          />
-        )}
       </div>
+      {isPopupOpen && (
+        <ListClassLessonPopup
+          schedule={selectedSchedule}
+          onClose={() => setIsPopupOpen(false)}
+          token={token}
+        />
+      )}
     </div>
   );
 }
+

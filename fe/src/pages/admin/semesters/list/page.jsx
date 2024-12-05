@@ -352,8 +352,8 @@ const ListSemester = () => {
                         Chi Tiết
                       </button>
 
-                      {semester.status == "Đang diễn ra" ||
-                      semester.status == "Kết thúc" ? (
+                      {(semester.status == "Đang diễn ra" ||
+                      semester.status == "Kết thúc") ? (
                         ""
                       ) : (
                         <>

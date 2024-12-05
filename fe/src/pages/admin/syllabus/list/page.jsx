@@ -5,13 +5,12 @@ import { Select } from "antd";
 const Curriculum = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [curriculums, setCurriculums] = useState([]);
-  const [activeChildId, setActiveChildId] = useState(null); // Track selected child
+  const [activeChildId, setActiveChildId] = useState(null);
 
   const toggleDropdown = (index) => {
     setActiveDropdown(activeDropdown === index ? null : index);
   };
 
-  // Handle the change of the selected child
   const handleChildSelect = (childId) => {
     setActiveChildId(childId);
   };
@@ -22,7 +21,6 @@ const Curriculum = () => {
         const { data } = await instance.get(`admin/getMajorAndSubMajor`);
         setCurriculums(data);
 
-        // Set the first child as the default selected child if available
         if (data.length > 0 && data[0].children.length > 0) {
           setActiveChildId(data[0].children[0].id);
         }
@@ -44,7 +42,6 @@ const Curriculum = () => {
             className="bg-white shadow-lg rounded-xl overflow-hidden flex flex-col"
             style={{ minHeight: "300px" }}
           >
-            {/* Image Section */}
             <div className="h-64 bg-gray-300 flex items-center justify-center">
               {curriculum.image ? (
                 <img
@@ -58,7 +55,6 @@ const Curriculum = () => {
                 </span>
               )}
             </div>
-            {/* Content Section */}
             <div className="p-6 flex-grow">
               <h2 className="text-2xl font-bold text-red-600">
                 {curriculum.name}
@@ -89,7 +85,6 @@ const Curriculum = () => {
               </button>
               <div className="flex items-center text-lg font-medium text-gray-500">
                 {curriculum.children.map((className) => {
-                  // Check if this child matches the selected child ID
                   if (className.id === parseInt(activeChildId)) {
                     return (
                       className.courses.length > 0 && (

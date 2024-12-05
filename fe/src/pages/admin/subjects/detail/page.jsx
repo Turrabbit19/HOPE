@@ -188,7 +188,7 @@ const DetailSubject = () => {
   const handleAddClassrooms = async (values) => {
     const newClassrooms = values.classrooms.map((item, index) => ({
       code: item.name,
-      max_students: item.students,
+      max_students: item.max_students,
     }));
     try {
       const response = await instance.post(

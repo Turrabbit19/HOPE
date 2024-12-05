@@ -292,36 +292,46 @@ class ApiScheduleController extends Controller
             $data = $validator->validated();
             $scheduleResponses = [];
             $conflictErrors = [];
-            $conflictClassrooms = []; 
-
+            $conflictClassrooms = [];
+            
+            $temporarySchedules = [];
+    
             foreach ($data['classrooms'] as $classroom) {
                 $startDate = $classroom['start_date'];
                 $endDate = $classroom['end_date'];
                 $daysOfWeek = $classroom['days_of_week'];
-            
-                $this->validateLessonDate($startDate, $endDate, $daysOfWeek, $subjectId);
-            
+                $shiftId = $classroom['shift_id'];
+                $roomId = $classroom['room_id'];
+    
                 $classroomDetails = Classroom::find($classroom['id']);
                 $classroomCode = $classroomDetails->code;
-            
-                if ($this->hasConflict($classroom, $startDate, $endDate, $daysOfWeek)) {
-                    $conflictClassrooms[] = $classroomCode; 
+    
+                foreach ($temporarySchedules as $tempSchedule) {
+                    if (
+                        $this->isDateOverlap($tempSchedule['start_date'], $tempSchedule['end_date'], $startDate, $endDate) &&
+                        $this->hasCommonDays($tempSchedule['days_of_week'], $daysOfWeek) &&
+                        $tempSchedule['shift_id'] === $shiftId &&
+                        $tempSchedule['room_id'] === $roomId
+                    ) {
+                        $conflictClassrooms[] = $classroomCode;
+                        break;
+                    }
                 }
+    
+                if ($this->hasConflict($classroom, $startDate, $endDate, $daysOfWeek)) {
+                    $conflictClassrooms[] = $classroomCode;
+                }
+    
+                $temporarySchedules[] = $classroom;
             }
-            
+    
             if (!empty($conflictClassrooms)) {
                 $conflictCodes = implode(', ', $conflictClassrooms);
                 $conflictErrors[] = "Các lớp {$conflictCodes} có trùng ca học hoặc ngày học đã được lên lịch.";
             }
-            
+    
             if (!empty($conflictErrors)) {
                 return response()->json(['error' => $conflictErrors], 409);
-            }         
-    
-            if (count($conflictErrors) > 0) {
-                return response()->json([
-                    'error' => $conflictErrors
-                ], 409);
             }
     
             foreach ($data['classrooms'] as $classroom) {
@@ -371,6 +381,16 @@ class ApiScheduleController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
+    }
+    
+    private function isDateOverlap($start1, $end1, $start2, $end2)
+    {
+        return !(Carbon::parse($end1)->lt(Carbon::parse($start2)) || Carbon::parse($start1)->gt(Carbon::parse($end2)));
+    }
+    
+    private function hasCommonDays(array $days1, array $days2)
+    {
+        return count(array_intersect($days1, $days2)) > 0;
     }
     
     private function hasTeacherConflict($teacherId, $scheduleId)
@@ -572,10 +592,11 @@ class ApiScheduleController extends Controller
         }
     }
 
-    public function getClassrooms(string $subjectid)
+    public function getClassrooms(string $courseId, $subjectId)
     {
         try {
-            $schedules = Schedule::where('subject_id', $subjectid)
+            $schedules = Schedule::where('course_id', $courseId)
+            ->where('subject_id', $subjectId)
             ->where('end_date', '>=', Carbon::now())
             ->get();
 

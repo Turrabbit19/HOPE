@@ -99,17 +99,21 @@ const ScheduleList = () => {
   };
 
   // Lấy danh sách phòng học cho một môn học cụ thể
-  const fetchClassroomsForSubject = async (subjectId) => {
+  // Lấy danh sách phòng học cho một môn học cụ thể
+  const fetchClassroomsForSubject = async (courseId, subjectId) => {
     setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
-        `admin/schedules/${subjectId}/classrooms`
+        `admin/schedules/${courseId}/${subjectId}/classrooms` // Cập nhật URL ở đây
       );
-      console.log(`Classrooms for subject ${subjectId}:`, response.data.data);
+      console.log(
+        `Classrooms for subject ${subjectId} in course ${courseId}:`,
+        response.data.data
+      );
       setClassroomsBySubject((prev) => ({
         ...prev,
-        [subjectId]: response.data.data || [], // Lưu theo `subjectId`
+        [`${courseId}_${subjectId}`]: response.data.data || [], // Lưu theo `courseId_subjectId`
       }));
     } catch (err) {
       setError("Không thể lấy dữ liệu lớp học cho môn học này.");
@@ -169,13 +173,12 @@ const ScheduleList = () => {
     setExpandedSubject(null);
   };
 
-  const toggleSubject = (subjectId) => {
+  const toggleSubject = (courseId, subjectId) => {
     setExpandedSubject((prev) => {
       const newSubject = prev === subjectId ? null : subjectId;
 
-      // Kiểm tra nếu chưa có phòng học cho môn học này, nếu có thì gọi API
-      if (newSubject && !classroomsBySubject[subjectId]) {
-        fetchClassroomsForSubject(newSubject);
+      if (newSubject && !classroomsBySubject[`${courseId}_${subjectId}`]) {
+        fetchClassroomsForSubject(courseId, newSubject);
       }
 
       return newSubject;
@@ -372,7 +375,10 @@ const ScheduleList = () => {
                                               {/* Tiêu đề môn học với khả năng mở rộng */}
                                               <h6
                                                 onClick={() =>
-                                                  toggleSubject(subject.id)
+                                                  toggleSubject(
+                                                    course.id,
+                                                    subject.id
+                                                  )
                                                 }
                                                 className="text-xl font-semibold text-indigo-600 cursor-pointer"
                                               >
@@ -384,13 +390,13 @@ const ScheduleList = () => {
                                                 <div>
                                                   {/* Hiển thị danh sách phòng học */}
                                                   {classroomsBySubject[
-                                                    subject.id
+                                                    `${course.id}_${subject.id}`
                                                   ] &&
                                                   classroomsBySubject[
-                                                    subject.id
+                                                    `${course.id}_${subject.id}`
                                                   ].length > 0 ? (
                                                     classroomsBySubject[
-                                                      subject.id
+                                                      `${course.id}_${subject.id}`
                                                     ].map((classroom) => (
                                                       <div
                                                         key={classroom.id}

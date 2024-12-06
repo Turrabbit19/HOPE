@@ -253,14 +253,14 @@ export default function CourseRegistration() {
           {message && (
             <div className="text-center mb-6">
               <p className="text-xl font-semibold text-blue-600">{message}</p>
-              {timeLeft !== null && (
+              {/* {timeLeft !== null && (
                 <div className="mt-4 flex items-center justify-center space-x-2">
                   <Clock className="w-6 h-6 text-blue-500" />
                   <p className="text-lg text-gray-700">
                     Thời gian còn lại: {formatTime(timeLeft)}
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
           )}
           {isLoading && (

@@ -73,6 +73,7 @@ import LayoutTeacher from "../components/layout/layoutTeacher";
 import TeacherInfo from "../pages/teacher/teacherDashboard/page";
 import ClassLessonTable from "../pages/teacher/listClassLesson/page";
 import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
+import SubMajorsList from "../pages/student/sub-majorRegistration/page";
 
 const Router = createBrowserRouter([
   {
@@ -513,6 +514,10 @@ const Router = createBrowserRouter([
         path: "notification",
         element: <NotificationPage />,
       },
+      {
+        path: "sub-majors",
+        element: <SubMajorsList />,
+      }
     ],
   },
   {

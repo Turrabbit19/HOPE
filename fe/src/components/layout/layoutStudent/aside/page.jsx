@@ -118,7 +118,7 @@ const AsideClient = () => {
             Đăng kí lịch học
           </Link>
 
-          <Link to="#" className="group flex items-center p-3 rounded-lg hover:bg-orange-100 transition duration-300">
+          <Link to="sub-majors" className="group flex items-center p-3 rounded-lg hover:bg-orange-100 transition duration-300">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-6 h-6 mr-3 text-orange-500 transition-transform transform group-hover:translate-x-1"

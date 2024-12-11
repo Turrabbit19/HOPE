@@ -324,6 +324,8 @@ class TeacherController extends Controller
     
                     return [
                         'student_id' => $studentId,
+                        'student_avatar' => $ls->student->user->avatar,
+                        'student_code' => $ls->student->code,
                         'student_name' => $ls->student->user->name,
                         'status' => $status, 
                     ];
@@ -340,7 +342,7 @@ class TeacherController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-    }    
+    }   
     
     public function markAttendance(Request $request, $schedule_id, $lesson_id)
     {
@@ -365,13 +367,13 @@ class TeacherController extends Controller
                 ->where('lesson_id', $lesson_id)
                 ->firstOrFail();
     
-            // $currentDateTime = now();
-            // $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->start_time);
-            // $lessonEndTime = $lessonStartTime->copy()->addMinutes(15);
+            $currentDateTime = now();
+            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->start_time);
+            $lessonEndTime = $lessonStartTime->copy()->addMinutes(15);
     
-            // if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonEndTime) {
-            //     return response()->json(['message' => 'Chỉ có thể điểm danh trong 15 phút đầu buổi học.'], 400);
-            // }
+            if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonEndTime) {
+                return response()->json(['message' => 'Chỉ có thể điểm danh trong 15 phút đầu buổi học.'], 400);
+            }
     
             DB::beginTransaction();
     

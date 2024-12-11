@@ -15,18 +15,18 @@ export default function SchoolLogin() {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     const role = localStorage.getItem("role");
-  
+
     if (token && role) {
       console.log("Token found in storage:", token);
       redirectToRolePage(role);
     }
-  
+
     return () => {
       window.removeEventListener("beforeunload", clearToken);
     };
   }, []);
-  
-  
+
+
 
   const redirectToRolePage = (role) => {
     if (role === "Sinh viên") {
@@ -49,9 +49,9 @@ export default function SchoolLogin() {
         },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         const errorMessage =
           data.errors
@@ -63,18 +63,18 @@ export default function SchoolLogin() {
         setShowErrorPopup(true);
         return;
       }
-  
+
       console.log("Login successful, received token:", data.token);
-  
+
       // Lưu token vào localStorage tạm thời
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
-  
+
       // Nếu không chọn "Ghi nhớ đăng nhập", thêm sự kiện để xóa token khi rời trang
       if (!rememberMe) {
         window.addEventListener("beforeunload", clearToken);
       }
-  
+
       redirectToRolePage(data.user.role);
     } catch (err) {
       console.error("Error during login:", err);
@@ -82,13 +82,13 @@ export default function SchoolLogin() {
       setShowErrorPopup(true);
     }
   };
-  
+
   const clearToken = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
   };
-  
-  
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -192,12 +192,13 @@ export default function SchoolLogin() {
               />
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-sm hidden">
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   id="rememberMe"
                   className="rounded border-gray-300"
+                  defaultChecked
                 />
                 <span className="ml-2 text-gray-600">Ghi nhớ đăng nhập</span>
               </label>

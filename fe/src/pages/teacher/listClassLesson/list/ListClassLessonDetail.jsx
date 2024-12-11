@@ -7,8 +7,9 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [attendanceStatus, setAttendanceStatus] = useState({});
-  const [isModalOpen, setIsModalOpen] = useState(false); // To control modal visibility
-  const [successMessage, setSuccessMessage] = useState(""); // To show success message
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isAttendanceSubmitted, setIsAttendanceSubmitted] = useState(false); // Added state for submitted attendance
 
   const isCurrentDate = (dateString) => {
     const today = new Date();
@@ -16,7 +17,18 @@ const ListClassLessonDetail = ({ scheduleData }) => {
     return today.toDateString() === lessonDate.toDateString();
   };
 
-  const handleAttendance = async (lessonId) => {
+  const isLessonTimeReached = (lessonDate, lessonTime, lessonStatus) => {
+    if (lessonStatus === "Đã hoàn thành") {
+      return true;
+    }
+    const now = new Date();
+    const [day, month, year] = lessonDate.split('/');
+    const [hours, minutes] = lessonTime.split(':');
+    const lessonDateTime = new Date(year, month - 1, day, hours, minutes);
+    return now >= lessonDateTime;
+  };
+
+  const handleAttendance = async (lessonId, lessonDate, lessonTime, lessonStatus) => {
     if (loading) return;
 
     setLoading(true);
@@ -40,15 +52,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
         }
       );
 
-      if (response.status === 400) {
-        // Lỗi chưa đến giờ học
-        setError("Chưa đến giờ học. Vui lòng thử lại sau.");
-        setIsModalOpen(true); // Mở modal để hiển thị lỗi
-        throw new Error("Chưa đến giờ học");
-      }
-
       if (!response.ok) {
-        setError("Không thể tải dữ liệu từ máy chủ.");
         throw new Error("Failed to fetch data from server");
       }
 
@@ -56,16 +60,15 @@ const ListClassLessonDetail = ({ scheduleData }) => {
 
       if (data.ListStudents) {
         setStudents(data.ListStudents);
-        setSelectedLesson((prevSelectedLesson) =>
-          prevSelectedLesson === lessonId ? null : lessonId
-        );
+        setSelectedLesson(lessonId);
         const initialStatus = {};
         data.ListStudents.forEach((student) => {
           initialStatus[student.student_id] =
             student.status === "Có mặt" ? 1 : 0;
         });
         setAttendanceStatus(initialStatus);
-        setIsModalOpen(true); // Open the modal when students data is fetched
+        setIsModalOpen(true);
+        setIsAttendanceSubmitted(lessonStatus === "Đã hoàn thành");
       } else {
         setError("Không có dữ liệu sinh viên.");
       }
@@ -87,7 +90,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   const submitAttendance = async (lessonId) => {
     setLoading(true);
     setError(null);
-    setSuccessMessage(""); // Reset success message
+    setSuccessMessage("");
 
     const token = localStorage.getItem("token");
 
@@ -130,6 +133,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
       const result = await response.json();
       console.log("Attendance submitted successfully:", result);
       setSuccessMessage("Điểm danh thành công!");
+      setIsAttendanceSubmitted(true); // Set to true after successful submission
     } catch (err) {
       console.error("Error submitting attendance:", err);
       setError("Không thể cập nhật điểm danh. Vui lòng thử lại.");
@@ -138,12 +142,12 @@ const ListClassLessonDetail = ({ scheduleData }) => {
     }
   };
 
-  // Function to close modal
   const closeModal = () => {
     setIsModalOpen(false);
     setStudents([]);
     setAttendanceStatus({});
-    setSuccessMessage(""); // Đặt lại thông báo thành công về rỗng
+    setSuccessMessage("");
+    setIsAttendanceSubmitted(false); // Reset submitted status on close
   };
 
   return (
@@ -215,30 +219,31 @@ const ListClassLessonDetail = ({ scheduleData }) => {
               <span className="font-semibold">Ngày:</span> {lesson.date}
             </p>
             <button
-              onClick={() => handleAttendance(lesson.id)}
-              className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${loading && selectedLesson === lesson.id
+              onClick={() => handleAttendance(lesson.id, lesson.date, ScheduleInfor.shift_name, lesson.status)}
+              className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${
+                !isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-                }`}
-              disabled={loading && selectedLesson === lesson.id}
+              }`}
+              disabled={!isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)}
             >
               {loading && selectedLesson === lesson.id
                 ? "Đang tải..."
-                : "Điểm danh"}
+                : isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status)
+                  ? lesson.status === "Đã hoàn thành" ? "Xem điểm danh" : "Điểm danh"
+                  : "Chưa đến giờ"}
             </button>
           </div>
         ))}
       </div>
 
-      {/* Modal to show student list */}
       {isModalOpen && (
         <div
           className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
-          onClick={closeModal} // Đóng modal khi nhấn ra ngoài
+          onClick={(e) => e.stopPropagation()}
         >
           <div
             className="bg-white rounded-lg p-6 max-w-lg w-full shadow-lg relative"
-            onClick={(e) => e.stopPropagation()} // Ngăn không đóng khi nhấn vào bên trong modal
           >
             <button
               onClick={closeModal}
@@ -259,26 +264,37 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                     <span className="text-lg text-gray-700">
                       {student.student_name}
                     </span>
-                    <button
-                      onClick={() => toggleAttendance(student.student_id)}
-                      className={`px-4 py-2 rounded-lg text-lg font-medium transition-colors duration-200 ${attendanceStatus[student.student_id] === 1
-                          ? "bg-green-500 hover:bg-green-600 text-white"
-                          : "bg-red-500 hover:bg-red-600 text-white"
+                    {isAttendanceSubmitted ? (
+                      <span className={`px-4 py-2 rounded-lg text-lg font-medium ${
+                        attendanceStatus[student.student_id] === 1
+                          ? "bg-green-500 text-white"
+                          : "bg-red-500 text-white"
+                      }`}>
+                        {attendanceStatus[student.student_id] === 1 ? "Có mặt" : "Vắng mặt"}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => toggleAttendance(student.student_id)}
+                        className={`px-4 py-2 rounded-lg text-lg font-medium transition-colors duration-200 ${
+                          attendanceStatus[student.student_id] === 1
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : "bg-red-500 hover:bg-red-600 text-white"
                         }`}
-                    >
-                      {attendanceStatus[student.student_id] === 1
-                        ? "Có mặt"
-                        : "Vắng mặt"}
-                    </button>
+                      >
+                        {attendanceStatus[student.student_id] === 1
+                          ? "Có mặt"
+                          : "Vắng mặt"}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="text-lg text-gray-500">
-                Chưa đến giờ học
+                Không có dữ liệu sinh viên
               </p>
             )}
-            {students.length > 0 && (
+            {!isAttendanceSubmitted && students.length > 0 && (
               <button
                 onClick={() => submitAttendance(selectedLesson)}
                 className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out text-lg"
@@ -290,12 +306,18 @@ const ListClassLessonDetail = ({ scheduleData }) => {
             {successMessage && (
               <p className="mt-4 text-green-500 font-semibold">{successMessage}</p>
             )}
+            <button
+              onClick={closeModal}
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
+            >
+              Đóng
+            </button>
           </div>
         </div>
       )}
-
     </div>
   );
 };
 
 export default ListClassLessonDetail;
+

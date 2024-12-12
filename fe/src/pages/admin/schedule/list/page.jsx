@@ -183,6 +183,33 @@ const ScheduleList = () => {
     });
   };
 
+  const handleAutoAssignStudents = async (
+    semesterId,
+    courseId,
+    majorId,
+    subjectId
+  ) => {
+    setLoading(true);
+    try {
+      const response = await instance.post(
+        `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/random`
+      );
+      // Nếu thành công, hiển thị thông báo
+      notification.success({
+        message: "Thành công",
+        description: "Sinh viên đã được phân bổ tự động.",
+      });
+    } catch (err) {
+      // Nếu có lỗi, hiển thị thông báo lỗi
+      notification.error({
+        message: "Lỗi",
+        description: "Có lỗi xảy ra khi phân bổ sinh viên.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Hàm xử lý khi nhấp vào phòng học
   const handleClassroomClick = (classroomId) => {
     console.log("ID của phòng học:", classroomId);
@@ -532,6 +559,26 @@ const ScheduleList = () => {
                                                     >
                                                       Tạo lịch học mới
                                                     </Link>
+                                                  </Button>
+
+                                                  {/* Button phân bổ sinh viên tự động */}
+                                                  <Button
+                                                    type="primary"
+                                                    onClick={() =>
+                                                      handleAutoAssignStudents(
+                                                        semester.id,
+                                                        course.id,
+                                                        major.id,
+                                                        subject.id
+                                                      )
+                                                    } // Truyền đúng các tham số vào hàm
+                                                    loading={loading} // Hiển thị loading khi đang thực hiện gọi API
+                                                    disabled={loading} // Vô hiệu hóa button khi đang thực hiện gọi API
+                                                    style={{
+                                                      marginLeft: "10px",
+                                                    }}
+                                                  >
+                                                    Phân bổ sinh viên tự động
                                                   </Button>
                                                 </div>
                                               )}

@@ -3,24 +3,17 @@
 namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
-use App\Models\CourseSemester;
-use App\Models\Major;
+
 use App\Models\MajorSubject;
 use App\Models\Schedule;
-use App\Models\ScheduleLesson;
 use App\Models\Semester;
-use App\Models\Shift;
 use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentLesson;
-use App\Models\StudentMajor;
-use App\Models\StudentSchedule;
-use App\Models\StudyDay;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class SyllabusController extends Controller
 {

@@ -321,6 +321,7 @@ class   StudentController extends Controller
 
                         return [
                             'name' => $lesson->name,
+                            'description' => $lesson->description,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
                             'status' => $status,
                         ];

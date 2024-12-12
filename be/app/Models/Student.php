@@ -17,7 +17,7 @@ class Student extends Model
         'student_code',
         'status'
     ];
-    
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -30,7 +30,7 @@ class Student extends Model
 
     public function majors()
     {
-        return $this->hasMany(StudentMajor::class, 'student_id');
+        return $this->belongsToMany(Major::class, 'student_majors');
     }
 
     public function classrooms()

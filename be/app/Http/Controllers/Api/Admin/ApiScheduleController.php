@@ -8,6 +8,9 @@ use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Schedule;
+use App\Models\Student;
+use App\Models\StudentClassroom;
+use App\Models\StudentSchedule;
 use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -43,40 +46,49 @@ class ApiScheduleController extends Controller
     public function getMajorsByCourse($courseId)
     {
         try {
-            $majors = Major::whereHas('students.course', fn($query) => $query->where('id', $courseId))
-            ->where('id', '!=', 1)
-            ->withCount('students')
-            ->get();
-
+            $majors = Major::whereHas('students.course', function($query) use ($courseId) {
+                    $query->where('course.id', $courseId);
+                })
+                ->where('id', '!=', 1)
+                ->withCount('students')  
+                ->get();
+    
             $data = $majors->map(function ($major) {
                 return [
                     'id' => $major->id,
                     'name' => $major->name,
                     'credit' => $major->credit,
-                    'student_count' => $major->students_count,
+                    'student_count' => $major->students_count, 
                 ];
             });
-
+    
             return response()->json(['majors' => $data], 200);
-
+    
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function getMajorsByCourseAndSemester($semesterId, $courseId)
     {
         try {
             $order = CourseSemester::where('course_id', $courseId)
-                    ->where('semester_id', $semesterId)->value('order');
-
-            $majors = Major::whereHas('students.course', fn($query) => $query->where('id', $courseId))
-                    ->whereHas('subjects', fn($query) => $query->where('subjects.order', $order))
-                    ->withCount('students')
-                    ->get();        
+                        ->where('semester_id', $semesterId)
+                        ->value('order');
     
+            $majors = Major::whereHas('students.course', function ($query) use ($courseId) {
+                        $query->where('id', $courseId); 
+                    })
+                    ->whereHas('subjects', function ($query) use ($order) {
+                        $query->where('subjects.order', $order); 
+                    })
+                    ->withCount(['students' => function ($query) use ($courseId) {
+                        $query->where('course_id', $courseId);
+                    }])
+                    ->get();        
+            
             $data = $majors->map(function ($major) {
                 return [
                     'id' => $major->id,
@@ -86,13 +98,13 @@ class ApiScheduleController extends Controller
             });
     
             return response()->json(['majors' => $data], 200);
-    
+        
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy khóa học với ID: ' . $courseId], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function getSubjects($semesterId, $courseId, $majorId)
     {
@@ -100,25 +112,53 @@ class ApiScheduleController extends Controller
             $order = CourseSemester::where('course_id', $courseId)
                 ->where('semester_id', $semesterId)
                 ->value('order');
-
+    
+            if (!$order) {
+                return response()->json(['error' => 'Không tìm thấy thông tin về order của khóa học trong học kỳ này'], 404);
+            }
+    
             $subjects = MajorSubject::where('major_id', $majorId)
                 ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
                 ->where('subjects.order', $order)
                 ->get();
             
-            $data = $subjects->map(function($subject) {
-                return [
-                    "id" => $subject->id,
-                    "name" => $subject->name,
-                    "credit" => $subject->credit
-                ];
-            });
-
+                $majors = Major::whereHas('students.course', function ($query) use ($courseId) {
+                    $query->where('id', $courseId);
+                })
+                ->whereHas('subjects', function ($query) use ($order) {
+                    $query->where('subjects.order', $order);
+                })
+                ->withCount(['students' => function ($query) use ($courseId) {
+                    $query->where('course_id', $courseId);
+                }])
+                ->get();
+        
+                $data = $subjects->map(function($subject) use ($courseId, $majors) {
+                    $studentCount = StudentSchedule::whereHas('schedule.subject', function($query) use ($subject) {
+                        $query->where('id', $subject->id);
+                    })
+                    ->whereHas('student', function($query) use ($courseId) {
+                        $query->where('course_id', $courseId);
+                    })
+                    ->count();
+        
+                    $major = $majors->firstWhere('id', $subject->major_id);
+                    $totalStudentCount = $major ? $major->students_count : 0;
+        
+                    return [
+                        "id" => $subject->id,
+                        "name" => $subject->name,
+                        "credit" => $subject->credit,
+                        "student_count" => $studentCount,
+                        "total_student_count" => $totalStudentCount
+                    ];
+                });
+            
             return response()->json(['subjects' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng MajorSubject', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function index(Request $request)
     {
@@ -603,7 +643,7 @@ class ApiScheduleController extends Controller
             $data = $schedules->map(function ($schedule) {
                 return [
                     'id' => $schedule->id,
-                    'classroom' => $schedule->classroom->code,
+                    'code' => $schedule->classroom->code,
                     'room' => $schedule->room->name ? $schedule->room->name : "NULL",
                     'link' => $schedule->link ? $schedule->link : "NULL",
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
@@ -658,4 +698,77 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới lịch học', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function assignStudentsToSubject($semesterId, $courseId, $majorId, $subjectId)
+    {
+        try {
+            $schedules = Schedule::with('days', 'shift', 'students') 
+                ->where('semester_id', $semesterId)
+                ->where('course_id', $courseId)
+                ->where('major_id', $majorId)
+                ->where('subject_id', $subjectId)
+                ->get();
+            
+            if ($schedules->isEmpty()) {
+                return response()->json(['message' => 'Không tìm thấy lịch học cho môn học này'], 404);
+            }
+    
+            $unregisteredStudents = Student::where('course_id', $courseId)
+                ->whereHas('majors', function ($query) use ($majorId) {
+                    $query->where('major_id', $majorId);
+                })
+                ->whereDoesntHave('schedules', function ($query) use ($subjectId) {
+                    $query->whereHas('subject', function ($q) use ($subjectId) {
+                        $q->where('id', $subjectId);
+                    });
+                })
+                ->get();
+    
+            if ($unregisteredStudents->isEmpty()) {
+                return response()->json(['message' => 'Tất cả sinh viên đã đăng ký môn học này'], 200);
+            }
+    
+            $schedules = $schedules->sortBy(function ($schedule) {
+                return $schedule->students->count(); 
+            });
+    
+            $assignedStudents = [];
+            foreach ($unregisteredStudents as $student) {
+                foreach ($schedules as $schedule) {
+                    $maxCapacity = $schedule->classroom->max_students; 
+                    $currentCapacity = $schedule->students->count(); 
+    
+                    if ($currentCapacity < $maxCapacity) {
+                        StudentSchedule::create([
+                            'student_id' => $student->id,
+                            'schedule_id' => $schedule->id
+                        ]);
+    
+                        StudentClassroom::create([
+                            'student_id' => $student->id,
+                            'classroom_id' => $schedule->classroom_id,
+                            'study_start' => $schedule->start_date,
+                            'study_end' => $schedule->end_date,
+                        ]);
+    
+                        $assignedStudents[] = $student->id;
+                        break;
+                    }
+                }
+            }
+    
+            return response()->json([
+                'message' => 'Phân bổ thành công',
+                'assigned_students' => $assignedStudents
+            ], 200);
+    
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học hoặc lịch học.'], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Không thể xử lý yêu cầu',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }    
 }

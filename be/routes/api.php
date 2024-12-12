@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Auth\ApiAuthController;
 
 use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
+use App\Http\Controllers\Api\Student\SyllabusController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,10 +34,10 @@ Route::post('login', [ApiAuthController::class, 'login']);
 Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
-    Route::prefix('admin')
-        ->group(function () {
+Route::prefix('admin')
+    ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
-        
+
         Route::apiResource('officers', ApiOfficerController::class);
 
         Route::apiResource('students', ApiStudentController::class);
@@ -58,7 +59,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::apiResource('semesters', ApiSemesterController::class);
         Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
-        Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']); 
+        Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']);
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
@@ -97,6 +98,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('semester/{semesterId}/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourseAndSemester']);
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
+        Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/random', [ApiScheduleController::class, 'assignStudentsToSubject']);
         Route::get('schedules/{courseId}/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
         Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
 
@@ -115,8 +117,8 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
     });
 
-    Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
-        ->group(function () {
+Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
+    ->group(function () {
         Route::apiResource('students', ApiStudentController::class);
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
@@ -172,7 +174,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
     });
 
-    Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
+Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
         Route::get('/', [StudentController::class, 'getStudentDetail']);
         Route::get('subjects', [StudentController::class, 'getSubjects']);
@@ -180,7 +182,15 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
+        Route::get('statistics/{semesterId}', [SyllabusController::class, 'getStatisticsBySubject']);
+
+        Route::get('syllabus', [SyllabusController::class, 'getSyllabus']);
+        Route::get('syllabus/{subjectId}', [SyllabusController::class, 'getDetailClassroom']);
+
         Route::get('timetable', [StudentController::class, 'getTimetable']);
+
+        Route::get('semesters', [StudentController::class, 'getSemester']);
+        Route::get('{semesterId}/timetable', [StudentController::class, 'getTimetableBySemester']);
 
         Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
         Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);
@@ -195,7 +205,7 @@ Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum
         Route::get('notification/read/{id}', [StudentNoticeController::class, 'detailNotification']);
     });
 
-    Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
+Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);

@@ -98,14 +98,12 @@ const ScheduleList = () => {
     }
   };
 
-  // Lấy danh sách phòng học cho một môn học cụ thể
-  // Lấy danh sách phòng học cho một môn học cụ thể
   const fetchClassroomsForSubject = async (courseId, subjectId) => {
     setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
-        `admin/schedules/${courseId}/${subjectId}/classrooms` // Cập nhật URL ở đây
+        `admin/schedules/${courseId}/${subjectId}/classrooms`
       );
       console.log(
         `Classrooms for subject ${subjectId} in course ${courseId}:`,
@@ -113,7 +111,7 @@ const ScheduleList = () => {
       );
       setClassroomsBySubject((prev) => ({
         ...prev,
-        [`${courseId}_${subjectId}`]: response.data.data || [], // Lưu theo `courseId_subjectId`
+        [`${courseId}_${subjectId}`]: response.data.data || [],
       }));
     } catch (err) {
       setError("Không thể lấy dữ liệu lớp học cho môn học này.");
@@ -299,7 +297,6 @@ const ScheduleList = () => {
                   </div>
                 </div>
 
-                {/* Nếu khóa học đang được mở rộng, hiển thị các kỳ học và ngành học */}
                 {expandedSemester === semester.id && (
                   <div className="mt-6 space-y-6">
                     {/* Kiểm tra nếu có kỳ học */}
@@ -350,9 +347,14 @@ const ScheduleList = () => {
                                           major.id
                                         )
                                       }
-                                      className="text-2xl font-medium text-green-600 cursor-pointer"
+                                      className="flex items-center justify-between text-2xl font-medium text-green-600 cursor-pointer"
                                     >
-                                      {major.name}
+                                      <span>{major.name}</span>
+                                      <span className="ml-4 text-xl text-gray-500">
+                                        Số lượng sinh viên:{" "}
+                                        {major.student_count}{" "}
+                                        {/* Giả sử bạn có số lượng sinh viên là major.studentCount */}
+                                      </span>
                                     </h5>
 
                                     {/* Nếu ngành học đang được mở rộng, hiển thị các môn học */}
@@ -380,54 +382,128 @@ const ScheduleList = () => {
                                                     subject.id
                                                   )
                                                 }
-                                                className="text-xl font-semibold text-indigo-600 cursor-pointer"
+                                                className="text-xl font-semibold text-indigo-600 cursor-pointer transition-colors duration-300 hover:text-indigo-800"
                                               >
-                                                {subject.name}
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-xl">
+                                                    {subject.name}
+                                                  </span>
+                                                  <span
+                                                    className={`text-xl font-medium ${
+                                                      subject.student_count /
+                                                        subject.total_student_count >=
+                                                      0.75
+                                                        ? "text-green-600"
+                                                        : subject.student_count /
+                                                            subject.total_student_count >=
+                                                          0.5
+                                                        ? "text-yellow-600"
+                                                        : "text-red-600"
+                                                    }`}
+                                                  >
+                                                    {subject.student_count}/
+                                                    {
+                                                      subject.total_student_count
+                                                    }
+                                                  </span>
+                                                </div>
                                               </h6>
+
                                               {/* Nếu môn học đang được mở rộng, hiển thị danh sách phòng học */}
                                               {expandedSubject ===
                                                 subject.id && (
                                                 <div>
-                                                  {/* Hiển thị danh sách phòng học */}
+                                                  {/* Hiển thị danh sách phòng học dưới dạng 2 cột */}
                                                   {classroomsBySubject[
                                                     `${course.id}_${subject.id}`
                                                   ] &&
                                                   classroomsBySubject[
                                                     `${course.id}_${subject.id}`
                                                   ].length > 0 ? (
-                                                    classroomsBySubject[
-                                                      `${course.id}_${subject.id}`
-                                                    ].map((classroom) => (
-                                                      <div
-                                                        key={classroom.id}
-                                                        className="bg-gray-50 p-4 rounded-lg mb-4 cursor-pointer hover:bg-gray-200"
-                                                        onClick={() =>
-                                                          handleClassroomClick(
-                                                            classroom.id
-                                                          )
-                                                        }
-                                                      >
-                                                        <p className="text-xl font-bold text-gray-700">
-                                                          Lớp học:{" "}
-                                                          {classroom.classroom}
-                                                        </p>
-                                                        <p>
-                                                          Phòng:{" "}
-                                                          {classroom.room}
-                                                        </p>
-                                                        <p>
-                                                          Ngày bắt đầu:{" "}
-                                                          {classroom.start_date}
-                                                        </p>
-                                                        <p>
-                                                          Link học:{" "}
-                                                          {classroom.link ===
-                                                          "NULL"
-                                                            ? "Không có"
-                                                            : classroom.link}
-                                                        </p>
-                                                      </div>
-                                                    ))
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                      {classroomsBySubject[
+                                                        `${course.id}_${subject.id}`
+                                                      ].map((classroom) => (
+                                                        <div
+                                                          key={classroom.id}
+                                                          className="flex justify-between bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-200"
+                                                          onClick={() =>
+                                                            handleClassroomClick(
+                                                              classroom.id
+                                                            )
+                                                          }
+                                                        >
+                                                          {/* Phần thông tin lớp học */}
+                                                          <div className="flex-1">
+                                                            <p className="text-xl font-bold text-gray-700">
+                                                              Lớp học:{" "}
+                                                              {classroom.code}
+                                                            </p>
+                                                            <p>
+                                                              Phòng:{" "}
+                                                              {classroom.room}
+                                                            </p>
+                                                            <p>
+                                                              Ngày bắt đầu:{" "}
+                                                              {
+                                                                classroom.start_date
+                                                              }
+                                                            </p>
+                                                            <p>
+                                                              Link học:{" "}
+                                                              {classroom.link ===
+                                                              "NULL"
+                                                                ? "Không có"
+                                                                : classroom.link}
+                                                            </p>
+                                                          </div>
+
+                                                          {/* Phần số lượng sinh viên */}
+                                                          <div className="flex items-center justify-center bg-gray-100 p-6 rounded-lg w-1/3 shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl">
+                                                            <div className="flex flex-col items-center justify-center">
+                                                              <div className="flex items-center space-x-2">
+                                                                {/* Số lượng SV */}
+                                                                <p
+                                                                  className={`text-3xl font-bold ${
+                                                                    classroom.students >=
+                                                                    30
+                                                                      ? "text-green-600"
+                                                                      : classroom.students >=
+                                                                        10
+                                                                      ? "text-yellow-500"
+                                                                      : "text-red-600"
+                                                                  }`}
+                                                                >
+                                                                  {
+                                                                    classroom.students
+                                                                  }{" "}
+                                                                  /{" "}
+                                                                  {
+                                                                    classroom.max_students
+                                                                  }
+                                                                </p>
+                                                                {/* Biểu tượng trạng thái */}
+                                                                {classroom.students >=
+                                                                30 ? (
+                                                                  <span className="text-green-600 text-3xl">
+                                                                    &#10003;
+                                                                  </span>
+                                                                ) : classroom.students >=
+                                                                  10 ? (
+                                                                  <span className="text-yellow-500 text-3xl">
+                                                                    &#9888;
+                                                                  </span>
+                                                                ) : (
+                                                                  <span className="text-red-600 text-3xl">
+                                                                    &#10060;
+                                                                  </span>
+                                                                )}
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      ))}
+                                                    </div>
                                                   ) : (
                                                     <p>
                                                       Không có phòng học nào

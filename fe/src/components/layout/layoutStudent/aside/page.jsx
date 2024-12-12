@@ -118,24 +118,30 @@ const AsideClient = () => {
             Đăng kí lịch học
           </Link>
 
-          <Link to="sub-majors" className="group flex items-center p-3 rounded-lg hover:bg-orange-100 transition duration-300">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 mr-3 text-orange-500 transition-transform transform group-hover:translate-x-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"></path>
-                <path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"></path>
-                <path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"></path>
-                <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
-              </svg>
-              <span className="text-gray-800 font-medium group-hover:text-orange-600">
-                Đăng kí chuyên nghành
-              </span>
-            </Link>
-            <Link
+          <Link
+            to="sub-majors"
+            className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#FF9500"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5 mr-2"
+            >
+              <path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"></path>
+              <path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"></path>
+              <path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"></path>
+              <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
+            </svg>
+            Đăng kí chuyên nghành hẹp
+          </Link>
+          <Link
             to="syllabus"
             className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
           >

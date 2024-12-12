@@ -74,6 +74,7 @@ import TeacherInfo from "../pages/teacher/teacherDashboard/page";
 import ClassLessonTable from "../pages/teacher/listClassLesson/page";
 import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
 import SubMajorsList from "../pages/student/sub-majorRegistration/page";
+import Syllabus from "../pages/student/syllabus/page";
 
 const Router = createBrowserRouter([
   {
@@ -517,6 +518,10 @@ const Router = createBrowserRouter([
       {
         path: "sub-majors",
         element: <SubMajorsList />,
+      },
+      {
+        path: "syllabus",
+        element: <Syllabus />,
       }
     ],
   },

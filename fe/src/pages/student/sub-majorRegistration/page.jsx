@@ -13,6 +13,7 @@ export default function SubMajorsList() {
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
     const [registrationStatus, setRegistrationStatus] = useState(null)
     const [registeredSubMajors, setRegisteredSubMajors] = useState([])
+    const [isEligible, setIsEligible] = useState(true)
 
     const fetchSubMajors = async () => {
         setIsLoading(true)
@@ -31,8 +32,10 @@ export default function SubMajorsList() {
 
             if (!response.ok) {
                 if (response.status === 403) {
-                    setError('Bạn đã đăng kí chuyên nghành hẹp rồi')
+                    const data = await response.json()
+                    setError(data.message || 'Không thể truy cập danh sách chuyên ngành hẹp')
                     setSubMajors([])
+                    setIsEligible(false)
                     setIsLoading(false)
                     return
                 }
@@ -41,6 +44,7 @@ export default function SubMajorsList() {
 
             const data = await response.json()
             setSubMajors(data.data)
+            setIsEligible(true)
         } catch (err) {
             setError(err.message)
             console.error('Error fetching sub-majors:', err)
@@ -106,7 +110,7 @@ export default function SubMajorsList() {
 
             setTimeout(() => {
                 window.location.reload()
-            }, 2000)
+            }, 1000)
         } catch (err) {
             setRegistrationStatus('error')
             console.error('Registration error:', err)
@@ -129,18 +133,18 @@ export default function SubMajorsList() {
 
     if (error && error !== 'Bạn đã đăng kí chuyên nghành hẹp rồi') {
         return (
-            <div className="flex items-center justify-center h-screen bg-gradient-to-br from-red-100 to-pink-100">
+            <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-100 to-pink-100">
                 <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full text-center">
-                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-3xl font-bold mb-4 text-red-600">Lỗi</h2>
+                    <AlertCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                    <h2 className="text-3xl font-bold mb-4 text-green-600">Thông báo</h2>
                     <p className="text-xl mb-6 text-gray-700">{error}</p>
-                    <button
+                    {/* <button
                         onClick={fetchSubMajors}
-                        className="bg-red-500 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-red-600 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center justify-center"
+                        className="bg-green-500 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-red-600 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center justify-center"
                     >
                         <RefreshCw className="mr-2" size={20} />
                         Thử lại
-                    </button>
+                    </button> */}
                 </div>
             </div>
         )
@@ -166,30 +170,57 @@ export default function SubMajorsList() {
                     </div>
                 </div>
 
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {filteredSubMajors.map((subMajor) => (
-                        <div
-                            key={subMajor.id}
-                            className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2"
-                            onClick={() => handleSubMajorClick(subMajor)}
-                        >
-                            <div className={`${getRandomColor()} w-16 h-16 rounded-full flex items-center justify-center mb-4`}>
-                                <GraduationCap size={32} className="text-white" />
-                            </div>
-                            <h2 className="text-2xl font-bold mb-3 text-gray-800">{subMajor.name}</h2>
-                            <p className="text-sm font-medium text-purple-600 mb-3">Mã: {subMajor.code}</p>
-                            <p className="text-gray-600 line-clamp-3 mb-4">{subMajor.description}</p>
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                                <span className="flex items-center">
-                                    <Book size={16} className="mr-1 text-blue-500" />
-                                    {subMajor.courses ? subMajor.courses.length : 'N/A'} môn học
-                                </span>
-                                <ChevronRight size={20} className="text-purple-500" />
+                {!isEligible && (
+                    <div className="flex justify-center items-center">
+                        <div className="w-full max-w-5xl mt-8 text-center bg-gradient-to-r from-yellow-200 via-yellow-100 to-yellow-200 border-l-4 border-yellow-500 p-8 rounded-lg shadow-lg animate-fade-in">
+                            <div className="flex items-center justify-center space-x-4">
+                                <AlertCircle className="w-10 h-10 text-yellow-600" />
+                                <p className="text-yellow-700 font-semibold text-lg">
+                                    {error || 'Chưa đến kỳ đăng ký chuyên ngành hẹp'}
+                                </p>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="flex justify-center items-center">
+                        <div className="w-full max-w-5xl mt-8 text-center bg-gradient-to-r from-yellow-200 via-yellow-100 to-yellow-200 border-l-4 border-yellow-500 p-8 rounded-lg shadow-lg animate-fade-in">
+                            <div className="flex items-center justify-center space-x-4">
+                                <AlertCircle className="w-10 h-10 text-yellow-600" />
+                                <p className="text-yellow-700 font-semibold text-lg">
+                                    {error}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!error && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {filteredSubMajors.map((subMajor) => (
+                            <div
+                                key={subMajor.id}
+                                className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2"
+                                onClick={() => handleSubMajorClick(subMajor)}
+                            >
+                                <div className={`${getRandomColor()} w-16 h-16 rounded-full flex items-center justify-center mb-4`}>
+                                    <GraduationCap size={32} className="text-white" />
+                                </div>
+                                <h2 className="text-2xl font-bold mb-3 text-gray-800">{subMajor.name}</h2>
+                                <p className="text-sm font-medium text-purple-600 mb-3">Mã: {subMajor.code}</p>
+                                <p className="text-gray-600 line-clamp-3 mb-4">{subMajor.description}</p>
+                                <div className="flex items-center justify-between text-sm text-gray-500">
+                                    <span className="flex items-center">
+                                        <Book size={16} className="mr-1 text-blue-500" />
+                                        {subMajor.courses ? subMajor.courses.length : 'N/A'} môn học
+                                    </span>
+                                    <ChevronRight size={20} className="text-purple-500" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {filteredSubMajors.length === 0 && !error && (
                     <div className="text-center mt-16 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Calendar, Clock, Phone, Mail, MapPin, User, Briefcase, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Code } from 'lucide-react';
+import { Calendar, Clock, Phone, Mail, MapPin, User, Briefcase, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Code, AlignEndHorizontal } from 'lucide-react';
 
 export default function Component() {
   const [student, setStudent] = useState(null);
@@ -151,7 +151,7 @@ export default function Component() {
           </div>
           <div className="mt-4 bg-indigo-800 p-4 rounded-lg">
             {[
-              { icon: Code, label: "Kì", value: student.current_semester },
+              { icon: AlignEndHorizontal, label: "Kì", value: student.current_semester },
               { icon: Code, label: "MSV", value: student.student_code },
               { icon: Calendar, label: "Ngày sinh", value: student.dob },
               { icon: User, label: "Giới tính", value: student.gender },

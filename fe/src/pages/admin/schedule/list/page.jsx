@@ -221,7 +221,7 @@ const ScheduleList = () => {
 
       setClassroomsBySubject((prev) => ({
         ...prev,
-        [`${courseId}_${subjectId}`]: updatedClassrooms.data || [],
+        [`${courseId}_${subjectId}`]: updatedClassrooms.data.data || [],
       }));
 
       notification.success({

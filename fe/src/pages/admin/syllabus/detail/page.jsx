@@ -3,8 +3,8 @@ import axios from "axios";
 import { Link, useParams } from "react-router-dom";
 
 const tabs = [
-  { id: "curriculum", label: "Curriculum", icon: "📅" },
-  { id: "overview", label: "Overview", icon: "ℹ️" },
+  { id: "curriculum", label: "Kế hoạch", icon: "📅" },
+  { id: "overview", label: "Tổng quan", icon: "ℹ️" },
   { id: "plos", label: "PLOs", icon: "🎓" },
   { id: "ploMappings", label: "PLO Mappings", icon: "🔗" },
   { id: "subjects", label: "Subjects", icon: "📋" },

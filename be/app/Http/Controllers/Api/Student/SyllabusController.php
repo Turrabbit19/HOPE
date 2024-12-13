@@ -10,10 +10,11 @@ use App\Models\Semester;
 use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentLesson;
-
+use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class SyllabusController extends Controller
 {
@@ -86,89 +87,106 @@ class SyllabusController extends Controller
 
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
+            $detailSubject = Subject::findOrFail($subjectId);
 
             $detailClassroom = StudentClassroom::where('student_id', $student->id)
                 ->whereHas('classroom', function ($query) use ($subjectId) {
                     $query->where('subject_id', $subjectId);
                 })
                 ->with('classroom.subject')
-                ->firstOrFail();
-
-            $schedules = Schedule::where('classroom_id', $detailClassroom->classroom->id)
-                ->with([
-                    'teacher.user',
-                    'shift',
-                    'room',
-                    'lessons' => function ($query) {
-                        $query->withPivot('study_date');
-                    }
-                ])
-                ->get();
-
-            if ($schedules->isEmpty()) {
-                return response()->json(['error' => 'Không tìm thấy lịch học cho lớp này.'], 404);
-            }
+                ->first();
 
             $attendedLessons = 0;
             $totalLessons = 0;
 
-            $schedulesData = $schedules->map(function ($schedule) use ($student, &$attendedLessons, &$totalLessons) {
-                $lessons = $schedule->lessons->map(function ($lesson) use ($student, $schedule, &$attendedLessons) {
-                    $status = $this->getLessonAttendanceStatus($student->id, $lesson, $schedule);
+            if ($detailClassroom) {
+                $schedules = Schedule::where('classroom_id', $detailClassroom->classroom->id)
+                    ->with([
+                        'teacher.user',
+                        'shift',
+                        'room',
+                        'lessons' => function ($query) {
+                            $query->withPivot('study_date');
+                        }
+                    ])
+                    ->get();
 
-                    if ($status === "Có mặt") {
-                        $attendedLessons++;
-                    }
+                if (!$schedules->isEmpty()) {
+                    $schedulesData = $schedules->map(function ($schedule) use ($student, &$attendedLessons, &$totalLessons) {
+                        $lessons = $schedule->lessons->map(function ($lesson) use ($student, $schedule, &$attendedLessons) {
+                            $status = $this->getLessonAttendanceStatus($student->id, $lesson, $schedule);
+                            if ($status === "Có mặt") {
+                                $attendedLessons++;
+                            }
 
-                    return [
-                        'name' => $lesson->name,
-                        'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
-                        'status' => $status,
-                    ];
-                });
+                            return [
+                                'name' => $lesson->name,
+                                'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
+                                'status' => $status,
+                            ];
+                        });
 
-                $totalLessons += $schedule->lessons->count();
+                        $totalLessons += $schedule->lessons->count();
 
-                return [
-                    'schedule_id' => $schedule->id,
-                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
-                    'shift' => $schedule->shift->name,
-                    'days_of_week' => $schedule->days->map(function ($day) {
                         return [
-                            "Thứ" => $day->id,
+                            'schedule_id' => $schedule->id,
+                            'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                            'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                            'shift' => $schedule->shift->name,
+                            'days_of_week' => $schedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
+                            'teacher_name' => $schedule->teacher->user->name,
+                            'room' => $schedule->room->name ?? "Null",
+                            'link' => $schedule->link ?? "Null",
+                            'shift_name' => $schedule->shift->name,
+                            'lessons' => $lessons,
                         ];
-                    }),
-                    'teacher_name' => $schedule->teacher->user->name,
-                    'room' => $schedule->room->name ?? "Null",
-                    'link' => $schedule->link ?? "Null",
-                    'shift_name' => $schedule->shift->name,
-                    'lessons' => $lessons,
-                ];
-            });
+                    });
 
-            $data = [
-                'classroom' => [
-                    'code' => $detailClassroom->classroom->code,
-                ],
-                'subject' => [
-                    'name' => $detailClassroom->classroom->subject->name,
-                    'credit' => $detailClassroom->classroom->subject->credit,
-                    'description' => $detailClassroom->classroom->subject->description,
-                    'form' => $detailClassroom->classroom->subject->form ? "Trực tuyến" : "Trực tiếp"
-                ],
-                'schedule' => $schedulesData,
-                'statistics' => [
-                    'total_lessons' => $totalLessons,
-                    'attended_lessons' => $attendedLessons,
-                    'attendance_rate' => $totalLessons > 0 ? round(($attendedLessons / $totalLessons) * 100, 2) . "%" : "0%",
-                ],
-            ];
+                    $data = [
+                        'classroom' => [
+                            'code' => $detailClassroom->classroom->code,
+                        ],
+                        'subject' => [
+                            'name' => $detailSubject->name,
+                            'credit' => $detailSubject->credit,
+                            'description' => $detailSubject->description,
+                            'form' => $detailSubject->form ? "Trực tuyến" : "Trực tiếp",
+                        ],
+                        'schedule' => $schedulesData,
+                        'statistics' => [
+                            'total_lessons' => $totalLessons,
+                            'attended_lessons' => $attendedLessons,
+                            'attendance_rate' => $totalLessons > 0 ? round(($attendedLessons / $totalLessons) * 100, 2) . "%" : "0%",
+                        ],
+                    ];
+                } else {
+                    $data = [
+                        'subject' => [
+                            'name' => $detailSubject->name,
+                            'credit' => $detailSubject->credit,
+                            'description' => $detailSubject->description,
+                            'form' => $detailSubject->form ? "Trực tuyến" : "Trực tiếp",
+                        ],
+                        'message' => 'Không tìm thấy lịch học cho lớp này.',
+                    ];
+                }
+            } else {
+                $data = [
+                    'subject' => [
+                        'name' => $detailSubject->name,
+                        'credit' => $detailSubject->credit,
+                        'description' => $detailSubject->description,
+                        'form' => $detailSubject->form ? "Trực tuyến" : "Trực tiếp",
+                    ],
+                    'message' => 'Sinh viên chưa tham gia lớp học nào cho môn này.',
+                ];
+            }
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên hoặc lớp học.'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông tin. Vui lòng kiểm tra lại dữ liệu.'], 404);
         } catch (\Exception $e) {
+            Log::error("Lỗi khi lấy chi tiết lớp học: " . $e->getMessage());
             return response()->json(['error' => 'Không thể truy vấn dữ liệu.', 'message' => $e->getMessage()], 500);
         }
     }

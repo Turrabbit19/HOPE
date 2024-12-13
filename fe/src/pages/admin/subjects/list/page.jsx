@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Col,
   message,
+  Radio,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
@@ -21,17 +22,24 @@ const ListSubject = () => {
   const [searchValue, setSearchValue] = useState("");
   const [filteredCourses, setFilteredCourses] = useState([]);
 
+  const { Option } = Select;
+
+  const [loading, setLoading] = useState(false);
+  const [majors, setMajors] = useState([]);
+  const [subMajors, setSubMajors] = useState([]);
+  const [selectedType, setSelectedType] = useState(null);
+  const [selectedSpecialization, setSelectedSpecialization] = useState([]);
+  const [majorId, setMajorId] = useState(null);
+
   // State cho popup tạo khóa học mới
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [form] = Form.useForm();
 
   // State cho lựa chọn kỳ học và ngành học
-  const [majors, setMajors] = useState([]);
   const [selectedMajor, setSelectedMajor] = useState(majors[0]);
   const [subjects, setSubjects] = useState([]);
   const [initialValues, setInitialValues] = useState();
   const [update, setUpdate] = useState(false);
-  const [loading, setLoading] = useState(false);
   // State cho các biến thể được thêm vào
   const [additionalVariants, setAdditionalVariants] = useState([
     {
@@ -50,19 +58,34 @@ const ListSubject = () => {
     (async () => {
       try {
         setLoading(true);
-        const [{ data }, majors] = await Promise.all([
+        const [subjectsResponse, majorsResponse] = await Promise.all([
           instance.get("admin/all/subjects"),
-          instance.get("admin/sub/majors"),
+          instance.get("admin/main/majors"),
         ]);
-        setMajors(majors.data.data);
-        setSubjects(data.data);
+        setMajors(majorsResponse.data.data);
+        setSubjects(subjectsResponse.data.data);
       } catch (error) {
-        console.log(error.message);
+        console.log("Error loading data:", error.message);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (majorId && selectedType === "majors") {
+      (async () => {
+        try {
+          const subMajorsResponse = await instance.get(`sub/${majorId}/majors`);
+          setSubMajors(subMajorsResponse.data.data);
+        } catch (error) {
+          console.log(error.message);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [majorId, selectedType]);
 
   const onHandleDelete = async (id) => {
     try {
@@ -130,27 +153,29 @@ const ListSubject = () => {
   const handleFormSubmit = async (values) => {
     setLoading(true);
     try {
+      const majors = values.majors ? values.majors.map((m) => ({ id: m })) : [];
       const payload = {
         name: values.name,
         description: values.description,
         credit: values.credit,
-        majors: values.majors.map((id) => ({ id })),
+        majors,
         order: values.order,
         code: values.code,
-        form: values.form ? "Trực tiếp" : "Trực tuyến",
+        max_students: values.max_students,
+        form: values.form,
         status: 0,
       };
+
       const response = await instance.post("/admin/subjects", payload);
-      const newSubject = response.data.data;
+      setSubjects((prevSubjects) => [...prevSubjects, response.data.data]);
       message.success("Thêm môn học mới thành công!");
-      togglePopup();
-      setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
       form.resetFields();
+      setIsPopupVisible(false);
     } catch (error) {
-      console.error("Form submission error:", error.message);
-      const errMsg =
-        error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!";
-      message.error(errMsg);
+      console.error("Form submission error:", error);
+      message.error(
+        error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!"
+      );
     } finally {
       setLoading(false);
     }
@@ -175,17 +200,23 @@ const ListSubject = () => {
   const openEditModal = async (values) => {
     setIsPopupVisible(!isPopupVisible);
     setUpdate(true);
+
     const majors = await getMajorIdBySubjectId(values.id);
-    console.log(majors);
+
     form.setFieldsValue({
       code: values.code,
       name: values.name,
       description: values.description,
       credit: values.credit,
       order: values.order,
-      abc: values.form ? "Trực tiếp" : "Trực tuyến",
-      majors: majors.map((m) => m.id),
+      form: values.form === "0" ? "Trực tiếp" : "Trực tuyến",
+      max_students: values.max_students,
+      majors: majors.map((m) => ({
+        key: m.id,
+        label: m.name,
+      })),
     });
+
     console.log(values.form);
     setInitialValues(values.id);
   };
@@ -193,10 +224,18 @@ const ListSubject = () => {
   const onHandleUpdate = async (values) => {
     try {
       setLoading(true);
-      const response = await instance.put(`/admin/subjects/${initialValues}`, {
+
+      // Chuyển đổi "form" thành "0" hoặc "1" nếu cần
+      const updatedValues = {
         ...values,
+        form: values.form === "Trực tiếp" ? "0" : "1",
         majors: values.majors.map((id) => ({ id })),
-      });
+      };
+
+      const response = await instance.put(
+        `/admin/subjects/${initialValues}`,
+        updatedValues
+      );
       const updatedSubject = response.data.data;
       setSubjects((prevSubjects) =>
         prevSubjects.map((subject) =>
@@ -255,6 +294,19 @@ const ListSubject = () => {
   if (loading) {
     return <Loading />;
   }
+
+  const handleRadioChange = (e) => {
+    const value = e.target.value;
+    setSelectedType(value);
+    setSelectedSpecialization([]);
+    setSubMajors([]);
+    setMajorId(null);
+  };
+
+  const handleSpecializationChange = (value) => {
+    setSelectedSpecialization(value);
+    setMajorId(value);
+  };
 
   const displaySubjects =
     searchValue.trim() === "" ? subjects : filteredCourses;
@@ -463,6 +515,11 @@ const ListSubject = () => {
                 layout="vertical"
                 onFinish={update ? onHandleUpdate : handleFormSubmit}
                 autoComplete="off"
+                initialValues={{
+                  majors: [],
+                  specialization: null,
+                  narrow_specialization: null,
+                }}
               >
                 <Row gutter={24}>
                   <Col span={16}>
@@ -505,52 +562,95 @@ const ListSubject = () => {
 
                     {/* Tín chỉ */}
                     <Row gutter={24}>
-                      <Col span={6}>
+                      {/* Cột cho các trường tín chỉ và kỳ học */}
+                      <Col span={12}>
+                        <Row gutter={16}>
+                          <Col span={12}>
+                            <Form.Item
+                              label="Tín chỉ"
+                              name="credit"
+                              rules={[
+                                {
+                                  required: true,
+                                  message: "Vui lòng nhập tín chỉ!",
+                                },
+                                {
+                                  type: "number",
+                                  min: 1,
+                                  max: 5,
+                                  message: "Tín chỉ phải từ 1 đến 5.",
+                                },
+                              ]}
+                            >
+                              <InputNumber
+                                placeholder="Tín chỉ"
+                                min={1}
+                                max={5}
+                                style={{ width: "100%" }} // Đảm bảo input vừa vặn với cột
+                              />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={12}>
+                            <Form.Item
+                              label="Kỳ học"
+                              name="order"
+                              rules={[
+                                {
+                                  required: true,
+                                  message: "Vui lòng nhập kỳ học!",
+                                },
+                                {
+                                  type: "number",
+                                  min: 1,
+                                  max: 9,
+                                  message: "Kỳ học phải từ 1 đến 9.",
+                                },
+                              ]}
+                            >
+                              <InputNumber
+                                placeholder="Kỳ học"
+                                min={1}
+                                max={9}
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                      </Col>
+
+                      {/* Cột cho trường Số lượng sinh viên */}
+                      <Col span={12}>
                         <Form.Item
-                          label="Tín chỉ"
-                          name="credit"
+                          label="Số lượng sinh viên"
+                          name="max_students"
                           rules={[
                             {
                               required: true,
-                              message: "Vui lòng nhập tín chỉ!",
+                              message: "Vui lòng nhập số lượng sinh viên!",
                             },
                             {
                               type: "number",
-                              min: 1,
-                              max: 5,
-                              message: "Tín chỉ phải từ 1 đến 5.",
+                              min: 30,
+                              message:
+                                "Số lượng tối thiểu phải từ 30 sinh viên",
                             },
                           ]}
                         >
-                          <InputNumber placeholder="Tín chỉ" min={1} max={5} />
+                          <InputNumber
+                            placeholder="Số lượng sinh viên tối đa"
+                            min={30}
+                            style={{ width: "100%" }}
+                          />
                         </Form.Item>
                       </Col>
+                    </Row>
 
-                      <Col span={6}>
-                        <Form.Item
-                          label="Kỳ học"
-                          name="order"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng nhập kỳ học!",
-                            },
-                            {
-                              type: "number",
-                              min: 1,
-                              max: 9,
-                              message: "Kỳ học phải từ 1 đến 9.",
-                            },
-                          ]}
-                        >
-                          <InputNumber placeholder="Kỳ học" min={1} max={9} />
-                        </Form.Item>
-                      </Col>
-
+                    <Row gutter={24}>
                       <Col span={12}>
                         <Form.Item
                           label="Hình thức"
-                          name="abc"
+                          name="form"
                           rules={[
                             {
                               required: true,
@@ -576,25 +676,84 @@ const ListSubject = () => {
                   </Col>
 
                   <Col span={8}>
-                    <Form.Item
-                      label="Ngành Học"
-                      name="majors"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Vui lòng chọn ngành học!",
-                        },
-                      ]}
-                    >
-                      <Select
-                        mode="multiple"
-                        placeholder="Chọn ngành học"
-                        options={majors.map((major) => ({
-                          label: major.name,
-                          value: major.id,
-                        }))}
-                      />
+                    {/* Loại môn học (Radio) */}
+                    <Form.Item label="Môn này thuộc về:">
+                      <Radio.Group
+                        value={selectedType}
+                        onChange={handleRadioChange}
+                      >
+                        <Radio value="1">Cơ bản</Radio>{" "}
+                        <Radio value="majors">Chuyên ngành</Radio>
+                        <Radio value="sub_majors">Chuyên ngành hẹp</Radio>
+                      </Radio.Group>
                     </Form.Item>
+
+                    {/* Chuyên ngành (hiện khi chọn Chuyên ngành) */}
+                    {selectedType === "majors" && (
+                      <Form.Item
+                        label="Chuyên ngành"
+                        name="majors"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng chọn chuyên ngành!",
+                          },
+                        ]}
+                      >
+                        <Select
+                          mode="multiple"
+                          placeholder="Chọn chuyên ngành"
+                          onChange={handleSpecializationChange}
+                          disabled={selectedType !== "majors"}
+                        >
+                          {Array.isArray(majors) && majors.length > 0 ? (
+                            majors.map((major) => (
+                              <Option key={major.id} value={major.id}>
+                                {major.name}
+                              </Option>
+                            ))
+                          ) : (
+                            <Option value={null}>Không có chuyên ngành</Option>
+                          )}
+                        </Select>
+                      </Form.Item>
+                    )}
+
+                    {/* Chuyên ngành hẹp (hiện khi chọn Chuyên ngành hẹp) */}
+                    {selectedType === "sub_majors" &&
+                      selectedSpecialization.length > 0 && (
+                        <Form.Item
+                          label="Chuyên ngành hẹp"
+                          name="sub_majors"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng chọn chuyên ngành hẹp!",
+                            },
+                          ]}
+                        >
+                          <Select placeholder="Chọn chuyên ngành hẹp">
+                            {Array.isArray(subMajors) &&
+                            subMajors.length > 0 ? (
+                              subMajors
+                                .filter((subMajor) =>
+                                  selectedSpecialization.includes(
+                                    subMajor.specializationId
+                                  )
+                                )
+                                .map((field) => (
+                                  <Option key={field.id} value={field.id}>
+                                    {field.name}
+                                  </Option>
+                                ))
+                            ) : (
+                              <Option value={null}>
+                                Không có chuyên ngành hẹp
+                              </Option>
+                            )}
+                          </Select>
+                        </Form.Item>
+                      )}
                   </Col>
                 </Row>
 

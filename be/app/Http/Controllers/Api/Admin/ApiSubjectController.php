@@ -60,6 +60,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
+                    'max_students' => $subject->max_students,
                     'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
             });
@@ -138,6 +139,7 @@ class ApiSubjectController extends Controller
             'description' => 'nullable|string|max:255',
             'credit' => 'required|integer|min:1|max:19',
             'order' => 'required|integer|min:1|max:9',
+            'max_students' => 'required|integer|min:30',
             'form' => 'required|boolean|in:0,1',
             'majors' => 'required|array',
             'majors.*.id' => 'required|exists:majors,id',
@@ -199,6 +201,7 @@ class ApiSubjectController extends Controller
             'description' => 'nullable|string|max:255',
             'credit' => 'sometimes|integer|min:1|max:19',
             'order' => 'sometimes|integer|min:1|max:9',
+            'max_students' => 'required|integer|min:30',
             'form' => 'sometimes|in:0,1',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',

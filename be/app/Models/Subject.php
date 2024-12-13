@@ -16,6 +16,7 @@ class Subject extends Model
         'description',
         'credit',
         'order',
+        'max_students',
         'form',
         'status'
     ];
@@ -24,7 +25,7 @@ class Subject extends Model
         'form' => 'boolean',
         'status' => 'boolean'
     ];
-    
+
     public function majors()
     {
         return $this->belongsToMany(Major::class, 'major_subjects');

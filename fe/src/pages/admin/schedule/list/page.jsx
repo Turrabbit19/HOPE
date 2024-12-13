@@ -187,6 +187,24 @@ const ScheduleList = () => {
       const response = await instance.post(
         `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/random`
       );
+
+      const updatedSubject = await instance.get(
+        `admin/semester/${semesterId}/course/${courseId}/major/${majorId}/subjects`
+      );
+      setSubjectsByMajor((prev) => ({
+        ...prev,
+        [`${courseId}_${semesterId}_${majorId}`]:
+          updatedSubject.data.subjects || [],
+      }));
+
+      const updatedClassrooms = await instance.get(
+        `admin/schedules/${courseId}/${subjectId}/classrooms`
+      );
+      setClassroomsBySubject((prev) => ({
+        ...prev,
+        [`${courseId}_${subjectId}`]: updatedClassrooms.data.data || [],
+      }));
+
       // Nếu thành công, hiển thị thông báo
       notification.success({
         message: "Thành công",
@@ -498,9 +516,15 @@ const ScheduleList = () => {
                                                         >
                                                           {/* Phần thông tin lớp học */}
                                                           <div className="flex-1">
-                                                            <p className="text-xl font-bold text-gray-700">
+                                                            <p className="text-2xl font-bold text-gray-700">
                                                               Lớp học:{" "}
                                                               {classroom.code}
+                                                            </p>
+                                                            <p>
+                                                              Giảng viên:{" "}
+                                                              {
+                                                                classroom.teacher
+                                                              }
                                                             </p>
                                                             <p>
                                                               Phòng:{" "}

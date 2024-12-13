@@ -180,11 +180,7 @@ class   StudentController extends Controller
                     'room' => $schedule->room->name ? $schedule->room->name : "NULL",
                     'link' => $schedule->link ? $schedule->link : "NULL",
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
-                    'days_of_week' => $schedule->days->map(function ($day) {
-                        return [
-                            "Thứ" => $day->id,
-                        ];
-                    }),
+                    'days_of_week' => $schedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
                     'students' => $studentsCount,
                     'max_students' => $maxStudents,
                     'status' => $status,
@@ -265,7 +261,7 @@ class   StudentController extends Controller
                 'link' => $newSchedule->link ?? 'NULL',
                 'start_date' => Carbon::parse($newSchedule->start_date)->format('d/m/Y'),
                 'end_date' => Carbon::parse($newSchedule->end_date)->format('d/m/Y'),
-                'days_of_week' => $newSchedule->days->map(fn($day) => ["Thứ" => $day->id]),
+                'days_of_week' => $newSchedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
             ];
 
             return response()->json(['message' => 'Đăng ký thành công', 'data' => $data], 200);

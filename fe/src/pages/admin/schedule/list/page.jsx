@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import moment from "moment";
@@ -20,10 +20,8 @@ const ScheduleList = () => {
   const [classroomsCache, setClassroomsCache] = useState([]);
   const navigate = useNavigate();
 
-  // Lấy danh sách các khóa học khi component được mount
   useEffect(() => {
     const fetchSemesters = async () => {
-      setLoading(true);
       setError(null);
       try {
         const response = await instance.get("admin/all/semesters");
@@ -38,9 +36,7 @@ const ScheduleList = () => {
     fetchSemesters();
   }, []);
 
-  // Lấy danh sách kỳ học cho một khóa học cụ thể
   const fetchCoursesForSemester = async (semesterId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -60,7 +56,6 @@ const ScheduleList = () => {
 
   // Lấy danh sách ngành học cho một khóa học cụ thể
   const fetchMajorsForSemester = async (semesterId, courseId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -80,7 +75,6 @@ const ScheduleList = () => {
 
   // Lấy danh sách môn học cho một ngành học cụ thể
   const fetchSubjectsForMajor = async (courseId, semesterId, majorId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -99,7 +93,6 @@ const ScheduleList = () => {
   };
 
   const fetchClassroomsForSubject = async (courseId, subjectId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -210,6 +203,41 @@ const ScheduleList = () => {
     }
   };
 
+  const deleteEmptySchedules = async (
+    semesterId,
+    courseId,
+    majorId,
+    subjectId
+  ) => {
+    setLoading(true);
+    try {
+      const response = await instance.delete(
+        `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/delete`
+      );
+
+      const updatedClassrooms = await instance.get(
+        `admin/schedules/${courseId}/${subjectId}/classrooms`
+      );
+
+      setClassroomsBySubject((prev) => ({
+        ...prev,
+        [`${courseId}_${subjectId}`]: updatedClassrooms.data || [],
+      }));
+
+      notification.success({
+        message: "Thành công",
+        description: "Đã xóa các lớp học không có sinh viên.",
+      });
+    } catch (err) {
+      notification.error({
+        message: "Lỗi",
+        description: "Có lỗi xảy ra khi loại bỏ các lớp học.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Hàm xử lý khi nhấp vào phòng học
   const handleClassroomClick = (classroomId) => {
     console.log("ID của phòng học:", classroomId);
@@ -257,6 +285,14 @@ const ScheduleList = () => {
   //         console.error("Không thể xóa lớp học:", err.message);
   //     }
   // };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "20%" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-10 bg-blue-50 min-h-screen">
@@ -538,48 +574,91 @@ const ScheduleList = () => {
                                                     </p>
                                                   )}
 
-                                                  {/* Nút Tạo lịch học mới */}
-                                                  <Button
-                                                    type="primary"
-                                                    onClick={() => {
-                                                      console.log(
-                                                        "Passing majorId::",
-                                                        major.id
-                                                      );
+                                                  <div
+                                                    style={{
+                                                      paddingTop: "20px",
                                                     }}
                                                   >
-                                                    <Link
-                                                      to={`add`}
-                                                      state={{
-                                                        courseId: course.id,
-                                                        semesterId: semester.id,
-                                                        majorId: major.id,
-                                                        subjectId: subject.id,
+                                                    {/* Button Container */}
+                                                    <div
+                                                      style={{
+                                                        display: "flex",
+                                                        justifyContent:
+                                                          "space-between",
+                                                        alignItems: "center",
                                                       }}
                                                     >
-                                                      Tạo lịch học mới
-                                                    </Link>
-                                                  </Button>
+                                                      {/* Group button - "Tạo lịch học mới" và "Phân bổ sinh viên tự động" ở bên trái */}
+                                                      <div
+                                                        style={{
+                                                          display: "flex",
+                                                          gap: "10px",
+                                                        }}
+                                                      >
+                                                        {/* Button Tạo lịch học mới (màu xanh dương) */}
+                                                        <Button
+                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
+                                                          onClick={() => {
+                                                            console.log(
+                                                              "Passing majorId::",
+                                                              major.id
+                                                            );
+                                                          }}
+                                                        >
+                                                          <Link
+                                                            to={`add`}
+                                                            state={{
+                                                              courseId:
+                                                                course.id,
+                                                              semesterId:
+                                                                semester.id,
+                                                              majorId: major.id,
+                                                              subjectId:
+                                                                subject.id,
+                                                            }}
+                                                          >
+                                                            Tạo lịch học mới
+                                                          </Link>
+                                                        </Button>
 
-                                                  {/* Button phân bổ sinh viên tự động */}
-                                                  <Button
-                                                    type="primary"
-                                                    onClick={() =>
-                                                      handleAutoAssignStudents(
-                                                        semester.id,
-                                                        course.id,
-                                                        major.id,
-                                                        subject.id
-                                                      )
-                                                    } // Truyền đúng các tham số vào hàm
-                                                    loading={loading} // Hiển thị loading khi đang thực hiện gọi API
-                                                    disabled={loading} // Vô hiệu hóa button khi đang thực hiện gọi API
-                                                    style={{
-                                                      marginLeft: "10px",
-                                                    }}
-                                                  >
-                                                    Phân bổ sinh viên tự động
-                                                  </Button>
+                                                        {/* Button Phân bổ sinh viên tự động (màu xanh lá) */}
+                                                        <Button
+                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-green-500 border-green-500 hover:bg-green-500 hover:text-white transition duration-300"
+                                                          onClick={() =>
+                                                            handleAutoAssignStudents(
+                                                              semester.id,
+                                                              course.id,
+                                                              major.id,
+                                                              subject.id
+                                                            )
+                                                          }
+                                                          loading={loading}
+                                                          disabled={loading}
+                                                        >
+                                                          Phân bổ sinh viên tự
+                                                          động
+                                                        </Button>
+                                                      </div>
+
+                                                      {/* Button Loại bỏ lớp không có sinh viên (màu đỏ) ở góc phải */}
+                                                      <Button
+                                                        className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-red-500 border-red-500 hover:bg-red-500 hover:text-white transition duration-300"
+                                                        onClick={() =>
+                                                          deleteEmptySchedules(
+                                                            semester.id,
+                                                            course.id,
+                                                            major.id,
+                                                            subject.id
+                                                          )
+                                                        }
+                                                        loading={loading}
+                                                        disabled={loading}
+                                                      >
+                                                        Loại bỏ các lớp không có
+                                                        sinh viên
+                                                      </Button>
+                                                    </div>
+                                                  </div>
                                                 </div>
                                               )}
                                             </div>

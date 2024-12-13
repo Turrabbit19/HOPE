@@ -100,20 +100,19 @@ const ListSubject = () => {
   };
 
   const handleSearch = (event) => {
-    const value = event.target.value; // Lấy giá trị từ input
+    const value = event.target.value.trim();
     setSearchValue(value);
 
-    if (value.trim() === "") {
-      // Nếu input trống, hiển thị tất cả các khóa học
+    if (value === "") {
       setFilteredCourses(subjects);
     } else {
-      // Lọc khóa học theo tên
-      const filtered = subjects.filter((course) =>
-        course.name.toLowerCase().includes(value.toLowerCase())
+      setFilteredCourses(
+        subjects.filter((course) =>
+          course.name.toLowerCase().includes(value.toLowerCase())
+        )
       );
-      setFilteredCourses(filtered);
     }
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   const togglePopup = () => {
@@ -138,24 +137,20 @@ const ListSubject = () => {
         majors: values.majors.map((id) => ({ id })),
         order: values.order,
         code: values.code,
-        form: values.form,
+        form: values.form ? "Trực tiếp" : "Trực tuyến",
         status: 0,
       };
-      console.log(payload);
       const response = await instance.post("/admin/subjects", payload);
       const newSubject = response.data.data;
-      message.success("Thêm môn học mới thành công !!!");
+      message.success("Thêm môn học mới thành công!");
       togglePopup();
-      form.resetFields();
       setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
+      form.resetFields();
     } catch (error) {
-      if (error.response && error.response.data) {
-        message.error(
-          error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!"
-        );
-      } else {
-        message.error("Lỗi kết nối, vui lòng kiểm tra lại!");
-      }
+      console.error("Form submission error:", error.message);
+      const errMsg =
+        error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!";
+      message.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -178,7 +173,6 @@ const ListSubject = () => {
 
   // Hàm mở modal chỉnh sửa khóa học
   const openEditModal = async (values) => {
-    debugger;
     setIsPopupVisible(!isPopupVisible);
     setUpdate(true);
     const majors = await getMajorIdBySubjectId(values.id);
@@ -189,9 +183,10 @@ const ListSubject = () => {
       description: values.description,
       credit: values.credit,
       order: values.order,
-      form: values.form,
+      abc: values.form ? "Trực tiếp" : "Trực tuyến",
       majors: majors.map((m) => m.id),
     });
+    console.log(values.form);
     setInitialValues(values.id);
   };
 
@@ -261,13 +256,20 @@ const ListSubject = () => {
     return <Loading />;
   }
 
-  // Determine which subjects to display based on search and pagination
   const displaySubjects =
     searchValue.trim() === "" ? subjects : filteredCourses;
 
   const paginatedSubjects = displaySubjects.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
+  );
+
+  const renderSubjects = paginatedSubjects.length ? (
+    paginatedSubjects.map((subject) => (
+      <div key={subject.id}>{/* Subject display code here */}</div>
+    ))
+  ) : (
+    <div>Không tìm thấy môn học nào.</div>
   );
 
   return (
@@ -546,18 +548,26 @@ const ListSubject = () => {
                       </Col>
 
                       <Col span={12}>
-                        <Form.Item label="Hình thức" name="form" rules={[]}>
+                        <Form.Item
+                          label="Hình thức"
+                          name="abc"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng chọn hình thức",
+                            },
+                            {
+                              type: "string",
+                              enum: ["0", "1"],
+                              message: "Hình thức không hợp lệ",
+                            },
+                          ]}
+                        >
                           <Select
                             placeholder="Chọn hình thức"
                             options={[
-                              {
-                                value: "0",
-                                label: "Trực tiếp",
-                              },
-                              {
-                                value: "1",
-                                label: "Trực tuyến",
-                              },
+                              { value: "0", label: "Trực tiếp" },
+                              { value: "1", label: "Trực tuyến" },
                             ]}
                           />
                         </Form.Item>

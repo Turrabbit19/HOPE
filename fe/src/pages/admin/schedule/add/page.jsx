@@ -61,6 +61,9 @@ const ScheduleAdd = () => {
   const startDate = Form.useWatch("startDate", form);
   const repeatDays = Form.useWatch("repeatDays", form);
 
+  const [semesterInfo, setSemesterInfo] = useState(null);
+  const [error, setError] = useState(null);
+
   // Fetch dữ liệu khi component mount
   useEffect(() => {
     // Kiểm tra nếu thiếu thông tin cần thiết
@@ -163,7 +166,34 @@ const ScheduleAdd = () => {
     fetchData();
   }, [courseId, semesterId, majorId, subjectId, navigate]);
 
-  // useEffect để tính toán ngày kết thúc khi startDate hoặc repeatDays thay đổi
+  useEffect(() => {
+    if (semesterId) {
+      setLoading(true);
+      console.log("Semester ID from list page:", semesterId);
+
+      axios
+        .get(`http://localhost:8000/api/admin/semesters/${semesterId}`)
+        .then((response) => {
+          console.log("Semester data:", response.data);
+          setSemesterInfo(response.data.data || {});
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching semester:", error);
+          setError("Có lỗi xảy ra khi tải thông tin kỳ học");
+          setLoading(false);
+        });
+    }
+  }, [semesterId]);
+
+  useEffect(() => {
+    if (semesterInfo && semesterInfo.start_date && semesterInfo.end_date) {
+      form.setFieldsValue({
+        startDate: moment.utc(semesterInfo.start_date).local(),
+      });
+    }
+  }, [semesterInfo, form]);
+
   useEffect(() => {
     // Hàm để tính toán ngày kết thúc
     const calculateEndDate = async () => {
@@ -756,14 +786,20 @@ const ScheduleAdd = () => {
                         message: "Vui lòng chọn ngày bắt đầu!",
                       },
                     ]}
+                    initialValue={
+                      semesterInfo?.start_date
+                        ? moment.utc(semesterInfo.start_date).local()
+                        : null
+                    }
                   >
                     <DatePicker
-                      format="DD-MM-YYYY" // Định dạng hiển thị "DD-MM-YYYY"
+                      format="DD-MM-YYYY"
                       style={{ width: "100%" }}
-                      disabled={activeTab === "addTeacher"}
+                      disabled={activeTab === "addTeacher"} // Disable khi ở tab "addTeacher"
                     />
                   </Form.Item>
                 </Col>
+
                 <Col span={12}>
                   <Form.Item
                     label="Ngày Kết Thúc"

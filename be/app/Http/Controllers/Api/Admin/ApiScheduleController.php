@@ -46,8 +46,8 @@ class ApiScheduleController extends Controller
     public function getMajorsByCourse($courseId)
     {
         try {
-            $majors = Major::whereHas('students.course', function ($query) use ($courseId) {
-                $query->where('course.id', $courseId);
+            $majors = Major::whereHas('students', function ($query) use ($courseId) {
+                $query->where('course_id', $courseId);
             })
                 ->where('id', '!=', 1)
                 ->withCount('students')
@@ -218,7 +218,7 @@ class ApiScheduleController extends Controller
     public function calculateEndDate(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date|after_or_equal:today',
+            'start_date' => 'required|date',
             'subject_id' => 'required|exists:subjects,id',
             'days_of_week' => 'required|array',
             'days_of_week.*' => 'integer'
@@ -316,7 +316,7 @@ class ApiScheduleController extends Controller
             'classrooms.*.shift_id' => 'required|exists:shifts,id',
             'classrooms.*.room_id' => 'nullable|exists:rooms,id',
             'classrooms.*.link' => 'nullable|sometimes|url',
-            'classrooms.*.start_date' => 'required|date|after_or_equal:today',
+            'classrooms.*.start_date' => 'required|date',
             'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
             'classrooms.*.days_of_week' => 'required|array',
             'classrooms.*.days_of_week.*' => 'integer'
@@ -769,6 +769,31 @@ class ApiScheduleController extends Controller
             ], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học hoặc lịch học.'], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Không thể xử lý yêu cầu',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteEmptySchedules($semesterId, $courseId, $majorId, $subjectId)
+    {
+        try {
+            $schedules = Schedule::with('students')
+                ->where('semester_id', $semesterId)
+                ->where('course_id', $courseId)
+                ->where('major_id', $majorId)
+                ->where('subject_id', $subjectId)
+                ->get();
+
+            foreach ($schedules as $schedule) {
+                if ($schedule->students->count() == 0) {
+                    $schedule->delete();
+                }
+            }
+
+            return response()->json(['message' => 'Đã xóa các lớp học không có sinh viên'], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể xử lý yêu cầu',

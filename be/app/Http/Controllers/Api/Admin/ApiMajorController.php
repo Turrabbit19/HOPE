@@ -19,7 +19,7 @@ class ApiMajorController extends Controller
         try {
             $majors = Major::get();
 
-            $data = $majors->map(function($major) {
+            $data = $majors->map(function ($major) {
                 return [
                     'id' => $major->id,
                     'code' => $major->code,
@@ -35,28 +35,29 @@ class ApiMajorController extends Controller
         }
     }
 
-    public function getMainMajors() {
+    public function getMainMajors()
+    {
         try {
             $mainMajors = Major::where('main', 1)->get();
-    
+
             $currentDate = Carbon::now();
-    
+
             $data = $mainMajors->map(function ($mm) use ($currentDate) {
                 $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
-                        $query->where('major_id', $mm->id);
-                    })
+                    $query->where('majors.major_id', $mm->id);
+                })
                     ->where('start_date', '<=', $currentDate)
                     ->where('end_date', '>=', $currentDate)
                     ->withCount('students')
                     ->get();
-    
+
                 $courseData = $courses->map(function ($course) {
                     return [
                         'id' => $course->id,
                         'name' => $course->name,
                     ];
                 });
-    
+
                 return [
                     'id' => $mm->id,
                     'code' => $mm->code,
@@ -66,9 +67,8 @@ class ApiMajorController extends Controller
                     'courses' => $courseData->isEmpty() ? null : $courseData,
                 ];
             });
-    
+
             return response()->json(['data' => $data], 200);
-    
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
         }
@@ -93,11 +93,11 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
     }
-    
+
     public function getSubMajors(string $majorId)
     {
         try {
-            $mainMajors = Major::where('major_id', $majorId)->get() ;
+            $mainMajors = Major::where('major_id', $majorId)->get();
 
             $data = $mainMajors->map(function ($mm) {
                 return [
@@ -146,12 +146,12 @@ class ApiMajorController extends Controller
         try {
             $major = Major::findOrFail($id);
             $data = [
-                    'id' => $major->id,
-                    'code' => $major->code,
-                    'name' => $major->name,
-                    'description' => $major->description,
-                    'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
+                'id' => $major->id,
+                'code' => $major->code,
+                'name' => $major->name,
+                'description' => $major->description,
+                'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -176,7 +176,7 @@ class ApiMajorController extends Controller
 
         try {
             $major = Major::findOrFail($id);
-            
+
             $data = $validator->validated();
             $major->update($data);
 
@@ -219,12 +219,12 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    
-    public function getAllSubjects(string $majorId) 
-    {   
+
+    public function getAllSubjects(string $majorId)
+    {
         try {
             $major = MajorSubject::where('major_id', $majorId)->get();
-    
+
             $subjectsByMajor = $major->map(function ($major) {
                 return [
                     'id' => $major->subject->id,

@@ -17,11 +17,11 @@ class ApiSubjectController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10); 
+            $perPage = $request->input('per_page', 10);
 
             $subjects = Subject::paginate($perPage);
 
-            $data = collect($subjects->items())->map(function ($subject){
+            $data = collect($subjects->items())->map(function ($subject) {
                 return [
                     'id' => $subject->id,
                     'code' => $subject->code,
@@ -31,7 +31,7 @@ class ApiSubjectController extends Controller
                     'order' => $subject->order,
                     'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
-            }); 
+            });
 
             return response()->json([
                 'data' => $data,
@@ -46,13 +46,13 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
-    
-    public function getAll() 
+
+    public function getAll()
     {
         try {
             $subjects = Subject::get();
 
-            $data = $subjects->map(function ($subject){
+            $data = $subjects->map(function ($subject) {
                 return [
                     'id' => $subject->id,
                     'code' => $subject->code,
@@ -62,7 +62,7 @@ class ApiSubjectController extends Controller
                     'order' => $subject->order,
                     'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
-            }); 
+            });
 
             return response()->json([
                 'data' => $data
@@ -72,17 +72,17 @@ class ApiSubjectController extends Controller
         }
     }
 
-    public function filterSubjectsByMajor(string $majorId, Request $request) 
+    public function filterSubjectsByMajor(string $majorId, Request $request)
     {
         try {
             $perPage = $request->input('per_page', 10);
-    
+
             $subjectsQuery = Subject::whereHas('majors', function ($query) use ($majorId) {
                 $query->where('majors.id', $majorId);
             });
-    
+
             $subjects = $subjectsQuery->paginate($perPage);
-    
+
             $data = $subjects->map(function ($subject) {
                 return [
                     'id' => $subject->id,
@@ -94,7 +94,7 @@ class ApiSubjectController extends Controller
                     'form' => $subject->form ? 'Trực tuyến' : 'Trực tiếp',
                 ];
             });
-    
+
             return response()->json([
                 'data' => $data,
                 'pagination' => [
@@ -109,18 +109,18 @@ class ApiSubjectController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn dữ liệu', 'message' => $e->getMessage()], 500);
         }
-    }    
+    }
 
-    public function getMajorsBySubject(string $subjectId) 
+    public function getMajorsBySubject(string $subjectId)
     {
         try {
             $subject = Subject::with('majors')->findOrFail($subjectId);
             $majors = $subject->majors->map(function ($major) {
-                    return [
-                        'id' => $major->id,
-                        'name' => $major->name,
-                    ];
-                });
+                return [
+                    'id' => $major->id,
+                    'name' => $major->name,
+                ];
+            });
 
             return response()->json(['data' => $majors], 200);
         } catch (ModelNotFoundException $e) {
@@ -129,13 +129,13 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
-     
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:subjects', 
-            'name' => 'required|string|max:100|unique:subjects', 
-            'description' => 'nullable|string|max:255', 
+            'code' => 'required|string|max:50|unique:subjects',
+            'name' => 'required|string|max:100|unique:subjects',
+            'description' => 'nullable|string|max:255',
             'credit' => 'required|integer|min:1|max:19',
             'order' => 'required|integer|min:1|max:9',
             'form' => 'required|boolean|in:0,1',
@@ -154,9 +154,9 @@ class ApiSubjectController extends Controller
             $majors = collect($data['majors'])->mapWithKeys(function ($major) {
                 return [$major['id'] => []];
             });
-            
+
             $subject->majors()->sync($majors);
-            
+
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -174,7 +174,7 @@ class ApiSubjectController extends Controller
                 'description' => $subject->description,
                 'credit' => $subject->credit,
                 'order' => $subject->order,
-                'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
+                'form' => $subject->form,
                 'majors' => $subject->majors->map(function ($major) {
                     return [
                         'id' => $major->id,
@@ -194,12 +194,12 @@ class ApiSubjectController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id, 
-            'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id, 
-            'description' => 'nullable|string|max:255', 
+            'code' => 'sometimes|string|max:50|unique:subjects,code,' . $id,
+            'name' => 'sometimes|string|max:100|unique:subjects,name,' . $id,
+            'description' => 'nullable|string|max:255',
             'credit' => 'sometimes|integer|min:1|max:19',
             'order' => 'sometimes|integer|min:1|max:9',
-            'form' => 'sometimes|boolean|in:0,1',
+            'form' => 'sometimes|in:0,1',
             'majors' => 'sometimes|array',
             'majors.*.id' => 'sometimes|exists:majors,id',
         ]);
@@ -210,7 +210,7 @@ class ApiSubjectController extends Controller
 
         try {
             $subject = Subject::with('majors')->findOrFail($id);
-            
+
             $data = $validator->validated();
             $subject->update($data);
 
@@ -255,15 +255,16 @@ class ApiSubjectController extends Controller
         }
     }
 
-    public function getAllLessons(string $id) {
+    public function getAllLessons(string $id)
+    {
         try {
             $lessons = Lesson::where('subject_id', $id)->get();
 
-            $data = $lessons->map(function ($lesson){
+            $data = $lessons->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'name' => $lesson->name,
-                    'description' =>$lesson->description,
+                    'description' => $lesson->description,
                 ];
             });
 
@@ -274,37 +275,39 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
-    public function addLessons(Request $request, string $id) {
+    public function addLessons(Request $request, string $id)
+    {
         $validator = Validator::make($request->all(), [
             '*.name' => 'required|string|max:50',
             '*.description' => 'required|string',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-    
+
         try {
             $validatedData = $validator->validated();
             $lessons = [];
-    
+
             foreach ($validatedData as $lessonData) {
-                $lessonData['subject_id'] = $id; 
+                $lessonData['subject_id'] = $id;
                 $lesson = Lesson::create($lessonData);
                 $lessons[] = $lesson;
             }
-    
+
             return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function getAllClassrooms(string $id) {
+    public function getAllClassrooms(string $id)
+    {
         try {
             $classrooms = Classroom::where('subject_id', $id)->get();
 
-            $data = $classrooms->map(function($classroom) {
+            $data = $classrooms->map(function ($classroom) {
                 return [
                     'id' => $classroom->id,
                     'code' => $classroom->code,
@@ -313,37 +316,38 @@ class ApiSubjectController extends Controller
                 ];
             });
 
-            return response()->json(['data' =>$data], 200);
+            return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
-    public function addClassrooms(Request $request, string $id) {
+    public function addClassrooms(Request $request, string $id)
+    {
         $validator = Validator::make($request->all(), [
-            '*.code' => 'required|string|max:10|unique:classrooms,code', 
+            '*.code' => 'required|string|max:10|unique:classrooms,code',
             '*.max_students' => 'required|integer|min:1',
             '*.status' => 'boolean',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-    
+
         try {
             $validatedData = $validator->validated();
             $classrooms = [];
-    
+
             foreach ($validatedData as $classroomData) {
-                $classroomData['subject_id'] = $id; 
+                $classroomData['subject_id'] = $id;
                 $classroom = Classroom::create($classroomData);
                 $classrooms[] = $classroom;
             }
-    
+
             return response()->json(['data' => $classrooms, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-    }    
+    }
 }

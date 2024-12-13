@@ -306,6 +306,135 @@ class ApiScheduleController extends Controller
         }
     }
 
+       // private function hasConflict($classroom)
+    // {
+    //     return Schedule::where('classroom_id', $classroom['id'])
+    //         ->where('shift_id', $classroom['shift_id'])
+    //         ->where(function ($query) use ($classroom) {
+    //             $query->whereBetween('start_date', [$classroom['start_date'], $classroom['end_date']])
+    //                 ->orWhereBetween('end_date', [$classroom['start_date'], $classroom['end_date']]);
+    //         })
+    //         ->whereHas('days', function ($query) use ($classroom) {
+    //             $query->whereIn('days.id', $classroom['days_of_week']);
+    //         })
+    //         ->exists();
+    // }
+    
+    protected function hasConflict(array $classroom): bool
+{
+    $start_date = Carbon::parse($classroom['start_date']);
+    $end_date = Carbon::parse($classroom['end_date']);
+    $days_of_week = $classroom['days_of_week'];
+    $shift_id = $classroom['shift_id'];
+
+    // Lấy tất cả các lịch trong khoảng ngày của lớp học hiện tại
+    $conflictingSchedules = Schedule::where(function ($query) use ($start_date, $end_date) {
+            $query->whereBetween('start_date', [$start_date, $end_date])
+                  ->orWhereBetween('end_date', [$start_date, $end_date])
+                  ->orWhere(function ($subQuery) use ($start_date, $end_date) {
+                      $subQuery->where('start_date', '<=', $start_date)
+                               ->where('end_date', '>=', $end_date);
+                  });
+        })
+        ->whereHas('days', function ($query) use ($days_of_week) {
+            // Kiểm tra ngày trùng trong tuần
+            $query->whereIn('days.id', $days_of_week);
+        })
+        ->where('shift_id', $shift_id) // Trùng ca học
+        ->exists(); // Kiểm tra nếu có bất kỳ lịch nào thỏa mãn
+
+    return $conflictingSchedules;
+}
+
+
+    public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
+    {
+        $validator = Validator::make($request->all(), [
+            'classrooms' => 'required|array',
+            'classrooms.*.id' => 'required|exists:classrooms,id',
+            'classrooms.*.shift_id' => 'required|exists:shifts,id',
+            'classrooms.*.room_id' => 'nullable|exists:rooms,id',
+            'classrooms.*.link' => 'nullable|sometimes|url',
+            'classrooms.*.start_date' => 'required|date|after_or_equal:today',
+            'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
+            'classrooms.*.days_of_week' => 'required|array',
+            'classrooms.*.days_of_week.*' => 'integer'
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+    
+        try {
+            $data = $validator->validated();
+    
+            $scheduleResponses = [];
+    
+            foreach ($data['classrooms'] as $classroom) {
+                if (Carbon::parse($classroom['end_date'])->lt(Carbon::parse($classroom['start_date']))) {
+                    return response()->json([
+                        'error' => "Ngày kết thúc của lớp học {$classroom['id']} không được trước ngày bắt đầu."
+                    ], 400);
+                }
+    
+                $this->validateLessonDate($classroom['start_date'], $classroom['end_date'], $classroom['days_of_week'], $subjectId);
+    
+                // if ($this->hasConflict($classroom)) {
+                //     return response()->json([
+                //         'error' => "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch."
+                //     ], 409);
+                // }
+    
+                if ($this->hasConflict($classroom)) {
+                    return response()->json([
+                        'error' => "Lớp học {$classroom['id']} có trùng ca học hoặc ngày học đã được lên lịch trong hệ thống."
+                    ], 409);
+                }
+
+                $scheduleData = [
+                    'course_id' => $courseId,
+                    'semester_id' => $semesterId,
+                    'major_id' => $majorId,
+                    'subject_id' => $subjectId,  
+
+                    'classroom_id' => $classroom['id'],
+                    'shift_id' => $classroom['shift_id'],
+                    'room_id' => $classroom['room_id'],
+                    'link' => $classroom['link'],
+                    'start_date' => $classroom['start_date'],
+                    'end_date' => $classroom['end_date'],
+                ];
+    
+                $schedule = Schedule::create($scheduleData);
+    
+                $days = collect($classroom['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
+                $schedule->days()->sync($days);
+    
+                $scheduleDates = $this->createLessonDate($schedule);
+    
+                $scheduleResponses[] = [
+                    'data' => [
+                        'subject_name' => $schedule->subject->name,
+                        'classroom_id' => $schedule->classroom_id,
+                        'shift_name' => $schedule->shift->name,
+                        'room_name' => $schedule->room ? $schedule->room->name : 'NULL',
+                        'link' => $schedule->link ? $schedule->link : "NULL",
+                        'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                        'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                    ],
+                    'scheduled_dates' => $scheduleDates
+                ];
+            }
+    
+            return response()->json([
+                'message' => 'Tạo mới thành công và lịch học đã được tạo cho các lớp.',
+                'schedules' => $scheduleResponses
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [

@@ -250,25 +250,23 @@ export default function DashboardActions() {
               return (
                 <div
                   key={shift}
-                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
-                    lesson ? getStatusColor(lesson.status) : "bg-white"
-                  }`}
+                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${lesson ? getStatusColor(lesson.status) : "bg-white"
+                    }`}
                 >
                   <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
                     {shift}
                   </div>
                   {schedule && lesson ? (
-                    <div>
+                    <div
+                      onClick={() => openPopup(schedule, lesson)}
+                      className="border border-gray-300 rounded-lg p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-200"
+                    >
                       <p>{schedule.room_name}</p>
                       <p>{schedule.subject_name}</p>
                       <p>{schedule.classroom_code}</p>
-                      <button
-                        onClick={() => openPopup(schedule, lesson)}
-                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
-                      >
-                        Chi tiết
-                      </button>
                     </div>
+
+
                   ) : (
                     <div className="text-gray-400 text-center">
                       Không có lớp
@@ -324,24 +322,20 @@ export default function DashboardActions() {
                       return (
                         <td
                           key={day}
-                          className={`p-3 text-center border border-gray-200 ${
-                            lesson ? getStatusColor(lesson.status) : ""
-                          }`}
+                          className={`p-3 text-center border border-gray-200 ${lesson ? getStatusColor(lesson.status) : ""
+                            }`}
                         >
                           {schedule && lesson ? (
-                            <div>
-                              <p className="font-semibold">
-                                {schedule.subject_name}
-                              </p>
+                            <div
+                              onClick={() => openPopup(schedule, lesson)}
+                              className="border border-gray-300 rounded-lg p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-200"
+                            >
                               <p>{schedule.room_name}</p>
+                              <p>{schedule.subject_name}</p>
                               <p>{schedule.classroom_code}</p>
-                              <button
-                                onClick={() => openPopup(schedule, lesson)}
-                                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
-                              >
-                                Chi tiết
-                              </button>
                             </div>
+
+
                           ) : (
                             <div className="text-gray-400">Trống</div>
                           )}
@@ -352,7 +346,9 @@ export default function DashboardActions() {
                 ))}
               </tbody>
             </table>
+
           </div>
+          
         )}
       </div>
 

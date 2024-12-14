@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function TeacherInfo() {
   const [teacher, setTeacher] = useState(null);
@@ -33,6 +33,7 @@ export default function TeacherInfo() {
         setTeacher(data.data);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching teacher data:', err);
         setError(err.message);
         setLoading(false);
       }
@@ -50,13 +51,9 @@ export default function TeacherInfo() {
           throw new Error('Không thể lấy lịch dạy');
         }
         const data = await response.json();
-        const todayClasses = data.data.filter((lesson) => {
-          const lessonDate = new Date(lesson.date);
-          const today = new Date();
-          return lessonDate.toDateString() === today.toDateString();
-        });
-        setTimetable(todayClasses);
+        setTimetable(data.data);
       } catch (err) {
+        console.error('Error fetching timetable:', err);
         setError(err.message);
       }
     };
@@ -66,8 +63,10 @@ export default function TeacherInfo() {
   }, [token]);
 
   const formatTime = (time) => {
+    if (!time) return 'N/A';
     const [hours, minutes] = time.split(':');
-    return `${hours}:${minutes}`;
+    if (!hours || !minutes) return 'Invalid Time';
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
   };
 
   if (loading)
@@ -141,7 +140,7 @@ export default function TeacherInfo() {
         {activeTab === 'info' && (
           <table className="w-full text-lg">
             <tbody>
-              {[
+              {[ // Thông tin giảng viên
                 { label: 'Mã giảng viên', value: teacher.teacher_code },
                 { label: 'Ngành', value: teacher.major_name },
                 { label: 'Email', value: teacher.email },
@@ -164,15 +163,16 @@ export default function TeacherInfo() {
 
         {activeTab === 'timetable' && (
           <div>
-            <h3 className="font-bold mb-4 text-xl">Lịch dạy hôm nay</h3>
+            <h3 className="font-bold mb-4 text-xl">Lịch dạy</h3>
             {timetable.length > 0 ? (
               <table className="w-full text-lg">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="py-3 px-2 text-left">Môn học</th>
                     <th className="py-3 px-2 text-left">Lớp</th>
-                    <th className="py-3 px-2 text-left">Thời gian</th>
+                    {/* <th className="py-3 px-2 text-left">Thời gian</th> */}
                     <th className="py-3 px-2 text-left">Phòng</th>
+                    <th className="py-3 px-2 text-left">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -182,18 +182,28 @@ export default function TeacherInfo() {
                       className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
                     >
                       <td className="py-3 px-2">{lesson.subject_name}</td>
-                      <td className="py-3 px-2">{lesson.class_name}</td>
+                      <td className="py-3 px-2">{lesson.classroom_code}</td>
+                      {/* <td className="py-3 px-2">
+                        {formatTime(lesson.date)} - {formatTime(lesson.date)}
+                      </td> */}
+                      <td className="py-3 px-2">{lesson.room_name}</td>
                       <td className="py-3 px-2">
-                        {formatTime(lesson.start_time)} -{' '}
-                        {formatTime(lesson.end_time)}
+                        <span className={`px-2 py-1 rounded ${
+                          lesson.status === 'Đã hoàn thành'
+                            ? 'bg-green-100 text-green-800'
+                            : lesson.status === 'Đang dạy'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {lesson.status}
+                        </span>
                       </td>
-                      <td className="py-3 px-2">{lesson.room}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p className="text-gray-600 text-lg">Không có lớp dạy hôm nay.</p>
+              <p className="text-gray-600 text-lg">Không có lịch dạy.</p>
             )}
           </div>
         )}
@@ -201,3 +211,4 @@ export default function TeacherInfo() {
     </div>
   );
 }
+

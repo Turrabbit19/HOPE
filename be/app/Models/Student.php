@@ -30,7 +30,7 @@ class Student extends Model
 
     public function majors()
     {
-        return $this->hasMany(StudentMajor::class, 'student_id');
+        return $this->belongsToMany(Major::class, 'student_majors');
     }
 
     public function classrooms()
@@ -48,4 +48,5 @@ class Student extends Model
         return $this->hasMany(Transaction::class);
     }
 }
+
 

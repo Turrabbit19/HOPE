@@ -76,6 +76,8 @@ import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
 import TuitionFee from "../pages/admin/tuition-fee/page";
 import RegisterClass from "../pages/admin/queue/page";
 import COnfirmChangeSchedule from "../pages/student/confirmChangeSchedule/page";
+import SubMajorsList from "../pages/student/sub-majorRegistration/page";
+import Syllabus from "../pages/student/syllabus/page";
 
 const Router = createBrowserRouter([
   {
@@ -514,6 +516,14 @@ const Router = createBrowserRouter([
         path: "notification",
         element: <NotificationPage />,
       },
+      {
+        path: "sub-majors",
+        element: <SubMajorsList />,
+      },
+      {
+        path: "syllabus",
+        element: <Syllabus />,
+      }
     ],
   },
   {

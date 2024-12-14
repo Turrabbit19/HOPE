@@ -27,6 +27,7 @@ use App\Http\Controllers\Auth\GoogleController;
 
 use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
+use App\Http\Controllers\Api\Student\SyllabusController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\PayPalController;
@@ -129,7 +130,9 @@ Route::
         Route::get('semester/{semesterId}/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourseAndSemester']);
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
-        Route::get('schedules/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
+        Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/random', [ApiScheduleController::class, 'assignStudentsToSubject']);
+        Route::delete('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/delete', [ApiScheduleController::class, 'deleteEmptySchedules']);
+        Route::get('schedules/{courseId}/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
         Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
 
         Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
@@ -220,8 +223,8 @@ Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
         Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
     });
 
-Route::middleware(['auth:sanctum', 'role:Sinh viên'])
-    ->prefix('student')
+
+Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
         Route::get('/', [StudentController::class, 'getStudentDetail']);
         Route::get('subjects', [StudentController::class, 'getSubjects']);
@@ -229,8 +232,15 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])
         Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
+        Route::get('statistics/{semesterId}', [SyllabusController::class, 'getStatisticsBySubject']);
+
+        Route::get('syllabus', [SyllabusController::class, 'getSyllabus']);
+        Route::get('syllabus/{subjectId}', [SyllabusController::class, 'getDetailClassroom']);
+
         Route::get('timetable', [StudentController::class, 'getTimetable']);
 
+        Route::get('semesters', [StudentController::class, 'getSemester']);
+        Route::get('{semesterId}/timetable', [StudentController::class, 'getTimetableBySemester']);
 
         Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
         Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);

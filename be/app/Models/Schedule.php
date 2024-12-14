@@ -78,8 +78,8 @@ class Schedule extends Model
         return $this->belongsTo(Room::class);
     }
 
-    public function studentSchedules()
+    public function students()
     {
-        return $this->hasMany(StudentSchedule::class);
+        return $this->belongsToMany(Student::class, 'student_schedules');
     }
 }

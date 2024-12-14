@@ -11,9 +11,6 @@ use Carbon\Carbon;
 
 class ApiShiftController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {

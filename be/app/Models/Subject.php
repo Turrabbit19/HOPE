@@ -16,6 +16,7 @@ class Subject extends Model
         'description',
         'credit',
         'order',
+        'max_students',
         'form',
         'status'
     ];
@@ -41,4 +42,3 @@ class Subject extends Model
     }
 
 }
-

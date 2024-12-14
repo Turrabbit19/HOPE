@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import moment from "moment";
@@ -21,10 +21,8 @@ const ScheduleList = () => {
   const [classroomsCache, setClassroomsCache] = useState([]);
   const navigate = useNavigate();
 
-  // Lấy danh sách các khóa học khi component được mount
   useEffect(() => {
     const fetchSemesters = async () => {
-      setLoading(true);
       setError(null);
       try {
         const response = await instance.get("admin/all/semesters");
@@ -39,9 +37,7 @@ const ScheduleList = () => {
     fetchSemesters();
   }, []);
 
-  // Lấy danh sách kỳ học cho một khóa học cụ thể
   const fetchCoursesForSemester = async (semesterId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -61,7 +57,6 @@ const ScheduleList = () => {
 
   // Lấy danh sách ngành học cho một khóa học cụ thể
   const fetchMajorsForSemester = async (semesterId, courseId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -81,7 +76,6 @@ const ScheduleList = () => {
 
   // Lấy danh sách môn học cho một ngành học cụ thể
   const fetchSubjectsForMajor = async (courseId, semesterId, majorId) => {
-    setLoading(true);
     setError(null);
     try {
       const response = await instance.get(
@@ -99,18 +93,19 @@ const ScheduleList = () => {
     }
   };
 
-  // Lấy danh sách phòng học cho một môn học cụ thể
-  const fetchClassroomsForSubject = async (subjectId) => {
-    setLoading(true);
+  const fetchClassroomsForSubject = async (courseId, subjectId) => {
     setError(null);
     try {
       const response = await instance.get(
-        `admin/schedules/${subjectId}/classrooms`
+        `admin/schedules/${courseId}/${subjectId}/classrooms`
       );
-      console.log(`Classrooms for subject ${subjectId}:`, response.data.data);
+      console.log(
+        `Classrooms for subject ${subjectId} in course ${courseId}:`,
+        response.data.data
+      );
       setClassroomsBySubject((prev) => ({
         ...prev,
-        [subjectId]: response.data.data || [], // Lưu theo `subjectId`
+        [`${courseId}_${subjectId}`]: response.data.data || [],
       }));
     } catch (err) {
       setError("Không thể lấy dữ liệu lớp học cho môn học này.");
@@ -170,17 +165,96 @@ const ScheduleList = () => {
     setExpandedSubject(null);
   };
 
-  const toggleSubject = (subjectId) => {
+  const toggleSubject = (courseId, subjectId) => {
     setExpandedSubject((prev) => {
       const newSubject = prev === subjectId ? null : subjectId;
 
-      // Kiểm tra nếu chưa có phòng học cho môn học này, nếu có thì gọi API
-      if (newSubject && !classroomsBySubject[subjectId]) {
-        fetchClassroomsForSubject(newSubject);
+      if (newSubject && !classroomsBySubject[`${courseId}_${subjectId}`]) {
+        fetchClassroomsForSubject(courseId, newSubject);
       }
 
       return newSubject;
     });
+  };
+
+  const handleAutoAssignStudents = async (
+    semesterId,
+    courseId,
+    majorId,
+    subjectId
+  ) => {
+    setLoading(true);
+    try {
+      const response = await instance.post(
+        `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/random`
+      );
+
+      const updatedSubject = await instance.get(
+        `admin/semester/${semesterId}/course/${courseId}/major/${majorId}/subjects`
+      );
+      setSubjectsByMajor((prev) => ({
+        ...prev,
+        [`${courseId}_${semesterId}_${majorId}`]:
+          updatedSubject.data.subjects || [],
+      }));
+
+      const updatedClassrooms = await instance.get(
+        `admin/schedules/${courseId}/${subjectId}/classrooms`
+      );
+      setClassroomsBySubject((prev) => ({
+        ...prev,
+        [`${courseId}_${subjectId}`]: updatedClassrooms.data.data || [],
+      }));
+
+      // Nếu thành công, hiển thị thông báo
+      notification.success({
+        message: "Thành công",
+        description: "Sinh viên đã được phân bổ tự động.",
+      });
+    } catch (err) {
+      // Nếu có lỗi, hiển thị thông báo lỗi
+      notification.error({
+        message: "Lỗi",
+        description: "Có lỗi xảy ra khi phân bổ sinh viên.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteEmptySchedules = async (
+    semesterId,
+    courseId,
+    majorId,
+    subjectId
+  ) => {
+    setLoading(true);
+    try {
+      const response = await instance.delete(
+        `http://localhost:8000/api/admin/schedules/${semesterId}/${courseId}/${majorId}/${subjectId}/delete`
+      );
+
+      const updatedClassrooms = await instance.get(
+        `admin/schedules/${courseId}/${subjectId}/classrooms`
+      );
+
+      setClassroomsBySubject((prev) => ({
+        ...prev,
+        [`${courseId}_${subjectId}`]: updatedClassrooms.data.data || [],
+      }));
+
+      notification.success({
+        message: "Thành công",
+        description: "Đã xóa các lớp học không có sinh viên.",
+      });
+    } catch (err) {
+      notification.error({
+        message: "Lỗi",
+        description: "Có lỗi xảy ra khi loại bỏ các lớp học.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Hàm xử lý khi nhấp vào phòng học
@@ -230,6 +304,14 @@ const ScheduleList = () => {
   //         console.error("Không thể xóa lớp học:", err.message);
   //     }
   // };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "20%" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-10 bg-blue-50 min-h-screen">
@@ -297,7 +379,6 @@ const ScheduleList = () => {
                   </div>
                 </div>
 
-                {/* Nếu khóa học đang được mở rộng, hiển thị các kỳ học và ngành học */}
                 {expandedSemester === semester.id && (
                   <div className="mt-6 space-y-6">
                     {/* Kiểm tra nếu có kỳ học */}
@@ -348,9 +429,14 @@ const ScheduleList = () => {
                                           major.id
                                         )
                                       }
-                                      className="text-2xl font-medium text-green-600 cursor-pointer"
+                                      className="flex items-center justify-between text-2xl font-medium text-green-600 cursor-pointer"
                                     >
-                                      {major.name}
+                                      <span>{major.name}</span>
+                                      <span className="ml-4 text-xl text-gray-500">
+                                        Số lượng sinh viên:{" "}
+                                        {major.student_count}{" "}
+                                        {/* Giả sử bạn có số lượng sinh viên là major.studentCount */}
+                                      </span>
                                     </h5>
 
                                     {/* Nếu ngành học đang được mở rộng, hiển thị các môn học */}
@@ -373,56 +459,139 @@ const ScheduleList = () => {
                                               {/* Tiêu đề môn học với khả năng mở rộng */}
                                               <h6
                                                 onClick={() =>
-                                                  toggleSubject(subject.id)
+                                                  toggleSubject(
+                                                    course.id,
+                                                    subject.id
+                                                  )
                                                 }
-                                                className="text-xl font-semibold text-indigo-600 cursor-pointer"
+                                                className="text-xl font-semibold text-indigo-600 cursor-pointer transition-colors duration-300 hover:text-indigo-800"
                                               >
-                                                {subject.name}
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-xl">
+                                                    {subject.name}
+                                                  </span>
+                                                  <span
+                                                    className={`text-xl font-medium ${
+                                                      subject.student_count /
+                                                        subject.total_student_count >=
+                                                      0.75
+                                                        ? "text-green-600"
+                                                        : subject.student_count /
+                                                            subject.total_student_count >=
+                                                          0.5
+                                                        ? "text-yellow-600"
+                                                        : "text-red-600"
+                                                    }`}
+                                                  >
+                                                    {subject.student_count}/
+                                                    {
+                                                      subject.total_student_count
+                                                    }
+                                                  </span>
+                                                </div>
                                               </h6>
+
                                               {/* Nếu môn học đang được mở rộng, hiển thị danh sách phòng học */}
                                               {expandedSubject ===
                                                 subject.id && (
                                                 <div>
-                                                  {/* Hiển thị danh sách phòng học */}
+                                                  {/* Hiển thị danh sách phòng học dưới dạng 2 cột */}
                                                   {classroomsBySubject[
-                                                    subject.id
+                                                    `${course.id}_${subject.id}`
                                                   ] &&
                                                   classroomsBySubject[
-                                                    subject.id
+                                                    `${course.id}_${subject.id}`
                                                   ].length > 0 ? (
-                                                    classroomsBySubject[
-                                                      subject.id
-                                                    ].map((classroom) => (
-                                                      <div
-                                                        key={classroom.id}
-                                                        className="bg-gray-50 p-4 rounded-lg mb-4 cursor-pointer hover:bg-gray-200"
-                                                        onClick={() =>
-                                                          handleClassroomClick(
-                                                            classroom.id
-                                                          )
-                                                        }
-                                                      >
-                                                        <p className="text-xl font-bold text-gray-700">
-                                                          Lớp học:{" "}
-                                                          {classroom.classroom}
-                                                        </p>
-                                                        <p>
-                                                          Phòng:{" "}
-                                                          {classroom.room}
-                                                        </p>
-                                                        <p>
-                                                          Ngày bắt đầu:{" "}
-                                                          {classroom.start_date}
-                                                        </p>
-                                                        <p>
-                                                          Link học:{" "}
-                                                          {classroom.link ===
-                                                          "NULL"
-                                                            ? "Không có"
-                                                            : classroom.link}
-                                                        </p>
-                                                      </div>
-                                                    ))
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                      {classroomsBySubject[
+                                                        `${course.id}_${subject.id}`
+                                                      ].map((classroom) => (
+                                                        <div
+                                                          key={classroom.id}
+                                                          className="flex justify-between bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-200"
+                                                          onClick={() =>
+                                                            handleClassroomClick(
+                                                              classroom.id
+                                                            )
+                                                          }
+                                                        >
+                                                          {/* Phần thông tin lớp học */}
+                                                          <div className="flex-1">
+                                                            <p className="text-2xl font-bold text-gray-700">
+                                                              Lớp học:{" "}
+                                                              {classroom.code}
+                                                            </p>
+                                                            <p>
+                                                              Giảng viên:{" "}
+                                                              {
+                                                                classroom.teacher
+                                                              }
+                                                            </p>
+                                                            <p>
+                                                              Phòng:{" "}
+                                                              {classroom.room}
+                                                            </p>
+                                                            <p>
+                                                              Ngày bắt đầu:{" "}
+                                                              {
+                                                                classroom.start_date
+                                                              }
+                                                            </p>
+                                                            <p>
+                                                              Link học:{" "}
+                                                              {classroom.link ===
+                                                              "NULL"
+                                                                ? "Không có"
+                                                                : classroom.link}
+                                                            </p>
+                                                          </div>
+
+                                                          {/* Phần số lượng sinh viên */}
+                                                          <div className="flex items-center justify-center bg-gray-100 p-6 rounded-lg w-1/3 shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl">
+                                                            <div className="flex flex-col items-center justify-center">
+                                                              <div className="flex items-center space-x-2">
+                                                                {/* Số lượng SV */}
+                                                                <p
+                                                                  className={`text-3xl font-bold ${
+                                                                    classroom.students >=
+                                                                    30
+                                                                      ? "text-green-600"
+                                                                      : classroom.students >=
+                                                                        10
+                                                                      ? "text-yellow-500"
+                                                                      : "text-red-600"
+                                                                  }`}
+                                                                >
+                                                                  {
+                                                                    classroom.students
+                                                                  }{" "}
+                                                                  /{" "}
+                                                                  {
+                                                                    classroom.max_students
+                                                                  }
+                                                                </p>
+                                                                {/* Biểu tượng trạng thái */}
+                                                                {classroom.students >=
+                                                                30 ? (
+                                                                  <span className="text-green-600 text-3xl">
+                                                                    &#10003;
+                                                                  </span>
+                                                                ) : classroom.students >=
+                                                                  10 ? (
+                                                                  <span className="text-yellow-500 text-3xl">
+                                                                    &#9888;
+                                                                  </span>
+                                                                ) : (
+                                                                  <span className="text-red-600 text-3xl">
+                                                                    &#10060;
+                                                                  </span>
+                                                                )}
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      ))}
+                                                    </div>
                                                   ) : (
                                                     <p>
                                                       Không có phòng học nào
@@ -430,28 +599,91 @@ const ScheduleList = () => {
                                                     </p>
                                                   )}
 
-                                                  {/* Nút Tạo lịch học mới */}
-                                                  <Button
-                                                    type="primary"
-                                                    onClick={() => {
-                                                      console.log(
-                                                        "Passing majorId::",
-                                                        major.id
-                                                      );
+                                                  <div
+                                                    style={{
+                                                      paddingTop: "20px",
                                                     }}
                                                   >
-                                                    <Link
-                                                      to={`add`}
-                                                      state={{
-                                                        courseId: course.id,
-                                                        semesterId: semester.id,
-                                                        majorId: major.id,
-                                                        subjectId: subject.id,
+                                                    {/* Button Container */}
+                                                    <div
+                                                      style={{
+                                                        display: "flex",
+                                                        justifyContent:
+                                                          "space-between",
+                                                        alignItems: "center",
                                                       }}
                                                     >
-                                                      Tạo lịch học mới
-                                                    </Link>
-                                                  </Button>
+                                                      {/* Group button - "Tạo lịch học mới" và "Phân bổ sinh viên tự động" ở bên trái */}
+                                                      <div
+                                                        style={{
+                                                          display: "flex",
+                                                          gap: "10px",
+                                                        }}
+                                                      >
+                                                        {/* Button Tạo lịch học mới (màu xanh dương) */}
+                                                        <Button
+                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
+                                                          onClick={() => {
+                                                            console.log(
+                                                              "Passing majorId::",
+                                                              major.id
+                                                            );
+                                                          }}
+                                                        >
+                                                          <Link
+                                                            to={`add`}
+                                                            state={{
+                                                              courseId:
+                                                                course.id,
+                                                              semesterId:
+                                                                semester.id,
+                                                              majorId: major.id,
+                                                              subjectId:
+                                                                subject.id,
+                                                            }}
+                                                          >
+                                                            Tạo lịch học mới
+                                                          </Link>
+                                                        </Button>
+
+                                                        {/* Button Phân bổ sinh viên tự động (màu xanh lá) */}
+                                                        <Button
+                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-green-500 border-green-500 hover:bg-green-500 hover:text-white transition duration-300"
+                                                          onClick={() =>
+                                                            handleAutoAssignStudents(
+                                                              semester.id,
+                                                              course.id,
+                                                              major.id,
+                                                              subject.id
+                                                            )
+                                                          }
+                                                          loading={loading}
+                                                          disabled={loading}
+                                                        >
+                                                          Phân bổ sinh viên tự
+                                                          động
+                                                        </Button>
+                                                      </div>
+
+                                                      {/* Button Loại bỏ lớp không có sinh viên (màu đỏ) ở góc phải */}
+                                                      <Button
+                                                        className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-red-500 border-red-500 hover:bg-red-500 hover:text-white transition duration-300"
+                                                        onClick={() =>
+                                                          deleteEmptySchedules(
+                                                            semester.id,
+                                                            course.id,
+                                                            major.id,
+                                                            subject.id
+                                                          )
+                                                        }
+                                                        loading={loading}
+                                                        disabled={loading}
+                                                      >
+                                                        Loại bỏ các lớp không có
+                                                        sinh viên
+                                                      </Button>
+                                                    </div>
+                                                  </div>
                                                 </div>
                                               )}
                                             </div>

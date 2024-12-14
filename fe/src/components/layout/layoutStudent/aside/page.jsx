@@ -1,5 +1,9 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Button } from "antd";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import instance from "../../../../config/axios";
+import echo from "../../../../config/echo";
 
 const AsideClient = () => {
   return (
@@ -95,7 +99,7 @@ const AsideClient = () => {
             Lịch học
           </Link>
           <Link
-            to="class-registration"
+            to="confirm-change-schedule"
             className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
           >
             <svg
@@ -117,134 +121,10 @@ const AsideClient = () => {
             </svg>
             Đăng kí lịch học
           </Link>
-
-          {/* <a
-                        href="#"
-                        className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#007AFF"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5 h-5 mr-2"
-                        >
-                            <rect width="20" height="8" x="2" y="14" rx="2"></rect>
-                            <path d="M6.01 18H6"></path>
-                            <path d="M10.01 18H10"></path>
-                            <path d="M15 10v4"></path>
-                            <path d="M17.84 7.17a4 4 0 0 0-5.66 0"></path>
-                            <path d="M20.66 4.34a8 8 0 0 0-11.31 0"></path>
-                        </svg>
-                        RTL
-                    </a>
-                    <a
-                        href="#"
-                        className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#5856D6"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5 h-5 mr-2"
-                        >
-                            <path
-                                d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
-                            ></path>
-                            <path d="m3.3 7 8.7 5 8.7-5"></path>
-                            <path d="M12 22V12"></path>
-                        </svg>
-                        Box
-                    </a>
-                    <a
-                        href="#"
-                        className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#00B5CC"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5 h-5 mr-2"
-                        >
-                            <circle cx="12" cy="12" r="4"></circle>
-                            <path d="M12 4h.01"></path>
-                            <path d="M20 12h.01"></path>
-                            <path d="M12 20h.01"></path>
-                            <path d="M4 12h.01"></path>
-                            <path d="M17.657 6.343h.01"></path>
-                            <path d="M17.657 17.657h.01"></path>
-                            <path d="M6.343 17.657h.01"></path>
-                            <path d="M6.343 6.343h.01"></path>
-                        </svg>
-                        Float
-                    </a> */}
         </nav>
       </div>
       <div>
-        {/* <h2 className="mb-2 text font-semibold">PEOPLES</h2> */}
-        <nav className="space-y-2">
-          {/* <a
-            href="#"
-            className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#FF2D55"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5 mr-2"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M14 14c-3 0-4 1-4 1v2"></path>
-              <path d="M10 10a4 4 0 0 0 2-4"></path>
-            </svg>
-            User
-          </a> */}
-          {/* <a
-                        href="#"
-                        className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#FF3B30"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5 h-5 mr-2"
-                        >
-                            <path d="M21 4H7l-3 6v2l3 6h14l3-6V10l-3-6Z"></path>
-                            <path d="M16 8v4"></path>
-                            <path d="M8 8v4"></path>
-                        </svg>
-                        Users
-                    </a> */}
-        </nav>
+        
       </div>
     </aside>
   );

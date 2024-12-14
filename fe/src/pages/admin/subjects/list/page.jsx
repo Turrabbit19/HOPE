@@ -63,7 +63,6 @@ const ListSubject = () => {
       }
     })();
   }, []);
-  
 
   const onHandleDelete = async (id) => {
     try {
@@ -128,7 +127,12 @@ const ListSubject = () => {
   };
 
   const handleFormSubmit = async (values) => {
+    debugger;
     setLoading(true);
+    const translationMap = {
+      "The code has already been taken.": "Mã môn học đã tồn tại.",
+      "The name has already been taken.": "Tên môn học đã tồn tại.",
+    };
     try {
       const payload = {
         name: values.name,
@@ -148,13 +152,14 @@ const ListSubject = () => {
       form.resetFields();
       setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
     } catch (error) {
-      if (error.response && error.response.data) {
-        message.error(
-          error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!"
-        );
-      } else {
-        message.error("Lỗi kết nối, vui lòng kiểm tra lại!");
-      }
+      const serverErrors = error.response.data.errors || {};
+      console.log(serverErrors);
+      Object.keys(serverErrors).forEach((field) => {
+        serverErrors[field].forEach((errorMsg) => {
+          const translatedMsg = translationMap[errorMsg] || errorMsg;
+          message.error(translatedMsg);
+        });
+      });
     } finally {
       setLoading(false);
     }
@@ -494,6 +499,8 @@ const ListSubject = () => {
                               message: "Vui lòng nhập mã môn học!",
                             },
                           ]}
+                          // help={error}
+                          // validateStatus="error"
                         >
                           <Input placeholder="Mã môn học" />
                         </Form.Item>

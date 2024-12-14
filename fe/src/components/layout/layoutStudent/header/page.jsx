@@ -8,7 +8,10 @@ import {
   Maximize,
   Minimize,
   X,
+  CircleDollarSign,
 } from "lucide-react";
+import { Modal } from "antd";
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 
 export default function HeaderClient() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -16,6 +19,7 @@ export default function HeaderClient() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isTuitionModalVisible, setIsTuitionModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const notificationRef = useRef(null);
   const buttonRef = useRef(null);
@@ -87,6 +91,48 @@ export default function HeaderClient() {
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const toggleTuition = () => {
+    setIsTuitionModalVisible(!isTuitionModalVisible);
+  };
+
+  const style = { layout: "vertical" };
+  const [amount, setAmount] = useState(10.00)
+  const createOrder = async (data, actions) => {
+    try {
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: {
+              value: amount,
+            },
+          },
+        ],
+      });
+    } catch (err) {
+      console.log("Error creating order:", err.message);
+      throw new Error("Error creating PayPal order");
+    }
+  };
+  const student_id = localStorage.getItem("user_id");
+  let infor = {
+    student_id: student_id,
+    payment_id: '',
+    amount: amount,
+  }
+
+  const onApprove = async (data, actions) => {
+    try {
+      const details = await actions.order.capture();
+      infor.payment_id = details.id;
+      const response = await instance.post(`admin/paypal`, infor)
+      notification.success({
+        message: "Thanh toán học phí thành công"
+      })
+    } catch (err) {
+      console.error("Error in onApprove:", err.message);
     }
   };
 
@@ -197,6 +243,14 @@ export default function HeaderClient() {
               </span>
             )}
           </button>
+          <button
+            ref={buttonRef}
+            className="p-2 hover:bg-gray-100 rounded-full border relative"
+            // onClick={toggleNotifications}
+            onClick={toggleTuition}
+          >
+            <CircleDollarSign className="h-5 w-5 text-gray-600" />
+          </button>
           {showNotifications && (
             <div
               ref={notificationRef}
@@ -301,6 +355,29 @@ export default function HeaderClient() {
         >
           <span className="mr-2 text-gray-600">Đăng xuất</span>
         </button>
+        <Modal
+          title="Thanh toán học phí"
+          visible={isTuitionModalVisible}
+          onOk={() => setIsTuitionModalVisible(false)}
+          onCancel={() => setIsTuitionModalVisible(false)}
+          footer={null}
+        >
+          <PayPalScriptProvider
+            options={{
+              clientId:
+                "AUxabASNDpkW7wNFNpvbTD7k2FfqUID-BWIEk9qq9FVGpNImUq74PH3oPMQyjMMwqHIauqWB0shiW4Ex",
+            }}
+          >
+            <PayPalButtons
+              style={style}
+              disabled={false}
+              forceReRender={[style]}
+              fundingSource={undefined}
+              createOrder={createOrder}
+              onApprove={onApprove}
+            />
+          </PayPalScriptProvider>
+        </Modal>
       </div>
     </header>
   );

@@ -73,11 +73,14 @@ import LayoutTeacher from "../components/layout/layoutTeacher";
 import TeacherInfo from "../pages/teacher/teacherDashboard/page";
 import ClassLessonTable from "../pages/teacher/listClassLesson/page";
 import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
+import TuitionFee from "../pages/admin/tuition-fee/page";
+import RegisterClass from "../pages/admin/queue/page";
+import COnfirmChangeSchedule from "../pages/student/confirmChangeSchedule/page";
 
 const Router = createBrowserRouter([
   {
     path: "/",
-    element: <SchoolLogin />,
+    element: <LandingPage />,
   },
   {
     path: "login",
@@ -92,15 +95,15 @@ const Router = createBrowserRouter([
       </Suspense>
     ),
     children: [
-      {
-        path: "",
-        element: (
-          <>
-            <BreadCrumb />
-            <NotificationManage />
-          </>
-        ),
-      },
+      // {
+      //   path: "",
+      //   element: (
+      //     <>
+      //       <BreadCrumb />
+      //       <NotificationManage />
+      //     </>
+      //   ),
+      // },
       {
         path: "test",
         element: <Testing />,
@@ -442,7 +445,6 @@ const Router = createBrowserRouter([
         ),
       },
 
-      // Curriculum
       {
         path: "list-curriculum",
         element: (
@@ -451,6 +453,23 @@ const Router = createBrowserRouter([
           </>
         ),
       },
+      {
+        path: "tuition-fee",
+        element: (
+          <>
+            <TuitionFee />
+          </>
+        ),
+      },
+      {
+        path: "queue",
+        element: (
+          <>
+            <RegisterClass />
+          </>
+        ),
+      },
+      // Curriculum
     ],
   },
   {
@@ -482,6 +501,10 @@ const Router = createBrowserRouter([
       {
         path: "class-registration",
         element: <ScheduleRegistration />,
+      },
+      {
+        path: "confirm-change-schedule",
+        element: <COnfirmChangeSchedule />,
       },
       {
         path: "home",

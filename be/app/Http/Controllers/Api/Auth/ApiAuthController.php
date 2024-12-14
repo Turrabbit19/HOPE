@@ -76,7 +76,7 @@ class ApiAuthController extends Controller
         }
     }
 
-    private function formatUserData(User $user)
+    public function formatUserData(User $user)
     {
         $data = [
             'id' => $user->id,

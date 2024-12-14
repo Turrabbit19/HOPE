@@ -56,6 +56,7 @@ class MailController extends Controller
         }
 
         foreach ($emails as $email) {
+            // return response()->json([$email => false, 'message' => 'abc']);
             dispatch(new SendEmailJob($email, $subject, $message));
         }
 

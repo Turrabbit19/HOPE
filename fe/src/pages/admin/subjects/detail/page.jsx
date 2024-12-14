@@ -101,6 +101,7 @@ const DetailSubject = () => {
   };
 
   const showLectureModal = (lecture = null) => {
+    debugger
     if (lecture) {
       setlectureId(lecture.id);
     }
@@ -110,6 +111,10 @@ const DetailSubject = () => {
     setIsLectureModalVisible(true);
     if (lecture) {
       setLectureCount(1);
+      form.setFieldsValue({
+        name: lecture.name,
+        description: lecture.description
+      })
     }
   };
 
@@ -153,6 +158,7 @@ const DetailSubject = () => {
         `admin/subject/${subjectId}/lessons/add`,
         newLectures
       );
+      console.log(response.data.data);
       setLectureData((prev) => [...prev, ...response.data.data]);
       message.success("Thêm bài giảng thành công!");
       handleLectureModalCancel();
@@ -378,7 +384,7 @@ const DetailSubject = () => {
       {activeTab === "lecture" ? (
         <>
           <div className="flex justify-end mb-4">
-            {lectureData.length !== credit * 6 ? (
+            {lectureData.length !== credit * 4 ? (
               <Button
                 type="primary"
                 icon={<PlusOutlined />}

@@ -116,10 +116,32 @@ class ApiSubjectController extends Controller
     {
         try {
             $subject = Subject::with('majors')->findOrFail($subjectId);
+
             $majors = $subject->majors->map(function ($major) {
+                $status = '';
+                $mainMajorName = null;
+
+                if ($major->id == 1) {
+                    $status = 'Cơ bản';
+                } elseif ($major->main == 1) {
+                    $status = 'Ngành chính';
+                } else {
+                    $status = 'Chuyên ngành hẹp';
+
+                    if ($major->major_id) {
+                        $mainMajor = Major::find($major->major_id);
+
+                        if ($mainMajor) {
+                            $mainMajorName = $mainMajor->name;
+                        }
+                    }
+                }
+
                 return [
                     'id' => $major->id,
                     'name' => $major->name,
+                    'status' => $status,
+                    'main_major' => $mainMajorName,
                 ];
             });
 
@@ -141,8 +163,9 @@ class ApiSubjectController extends Controller
             'order' => 'required|integer|min:1|max:9',
             'max_students' => 'required|integer|min:30',
             'form' => 'required|boolean|in:0,1',
-            'majors' => 'required|array',
-            'majors.*.id' => 'required|exists:majors,id',
+            'majors' => 'nullable|array',
+            'majors.*' => 'required_with:majors|exists:majors,id',
+            'sub_major' => 'nullable|integer|exists:majors,id',
         ]);
 
         if ($validator->fails()) {
@@ -151,13 +174,20 @@ class ApiSubjectController extends Controller
 
         try {
             $data = $validator->validated();
+
             $subject = Subject::create($data);
 
-            $majors = collect($data['majors'])->mapWithKeys(function ($major) {
-                return [$major['id'] => []];
-            });
+            if (isset($data['majors']) && $data['majors'] === [1]) {
+                $subject->majors()->sync([1]);
+            } elseif (isset($data['majors']) && count($data['majors']) > 0) {
+                $subject->majors()->sync($data['majors']);
+            } else {
+                $subject->majors()->sync([]);
+            }
 
-            $subject->majors()->sync($majors);
+            if (isset($data['sub_major'])) {
+                $subject->majors()->sync([$data['sub_major']]);
+            }
 
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -169,6 +199,32 @@ class ApiSubjectController extends Controller
     {
         try {
             $subject = Subject::with('majors')->findOrFail($id);
+            $majors = $subject->majors->map(function ($major) {
+                $status = '';
+                $mainMajorName = null;
+
+                if ($major->id == 1) {
+                    $status = 'Cơ bản';
+                } elseif ($major->main == 1) {
+                    $status = 'Ngành chính';
+                } else {
+                    $status = 'Chuyên ngành hẹp';
+                    if ($major->major_id) {
+                        $mainMajor = Major::find($major->major_id);
+                        if ($mainMajor) {
+                            $mainMajorName = $mainMajor->name;
+                        }
+                    }
+                }
+
+                return [
+                    'id' => $major->id,
+                    'name' => $major->name,
+                    'status' => $status,
+                    'main_major' => $mainMajorName,
+                ];
+            });
+
             $data = [
                 'id' => $subject->id,
                 'code' => $subject->code,
@@ -177,12 +233,7 @@ class ApiSubjectController extends Controller
                 'credit' => $subject->credit,
                 'order' => $subject->order,
                 'form' => $subject->form,
-                'majors' => $subject->majors->map(function ($major) {
-                    return [
-                        'id' => $major->id,
-                        'name' => $major->name,
-                    ];
-                }),
+                'majors' => $majors,
             ];
 
             return response()->json(['data' => $data], 200);
@@ -201,10 +252,11 @@ class ApiSubjectController extends Controller
             'description' => 'nullable|string|max:255',
             'credit' => 'sometimes|integer|min:1|max:19',
             'order' => 'sometimes|integer|min:1|max:9',
-            'max_students' => 'required|integer|min:30',
-            'form' => 'sometimes|in:0,1',
-            'majors' => 'sometimes|array',
-            'majors.*.id' => 'sometimes|exists:majors,id',
+            'max_students' => 'sometimes|integer|min:30',
+            'form' => 'sometimes|boolean|in:0,1',
+            'majors' => 'nullable|array',
+            'majors.*' => 'required_with:majors|exists:majors,id',
+            'sub_major' => 'nullable|integer|exists:majors,id',
         ]);
 
         if ($validator->fails()) {
@@ -212,19 +264,24 @@ class ApiSubjectController extends Controller
         }
 
         try {
-            $subject = Subject::with('majors')->findOrFail($id);
-
+            $subject = Subject::findOrFail($id);
             $data = $validator->validated();
+
             $subject->update($data);
 
-            if (isset($data['majors'])) {
-                $majors = collect($data['majors'])->mapWithKeys(function ($major) {
-                    return [$major['id'] => []];
-                });
-                $subject->majors()->sync($majors);
+            if (isset($data['majors']) && $data['majors'] === [1]) {
+                $subject->majors()->sync([1]);
+            } elseif (isset($data['majors']) && count($data['majors']) > 0) {
+                $subject->majors()->sync($data['majors']);
+            } else {
+                $subject->majors()->sync([]);
             }
 
-            return response()->json(['data' => $data, 'message' => 'Cập nhật thành công'], 200);
+            if (isset($data['sub_major'])) {
+                $subject->majors()->sync([$data['sub_major']]);
+            }
+
+            return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {

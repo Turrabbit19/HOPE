@@ -10,23 +10,23 @@ export default function Footer() {
               alt="Logo"
               className="w-24 sm:w-32 mx-auto sm:mx-0"
             />
-            <p className="text-gray-700 text-sm mt-2">
+            <p className="text-gray-700 text-sm mt-2 text-xl">
               Providing quality education since 2000
             </p>
           </div>
 
           {/* Navigation */}
           <nav className="flex flex-wrap justify-center gap-4 text-sm text-gray-700">
-            <a href="#" className="hover:text-teal-600 transition duration-300">
+            <a href="#" className="hover:text-teal-600 transition duration-300 text-xl">
               Home
             </a>
-            <a href="#" className="hover:text-teal-600 transition duration-300">
+            <a href="#" className="hover:text-teal-600 transition duration-300 text-xl">
               About Us
             </a>
-            <a href="#" className="hover:text-teal-600 transition duration-300">
+            <a href="#" className="hover:text-teal-600 transition duration-300 text-xl">
               Services
             </a>
-            <a href="#" className="hover:text-teal-600 transition duration-300">
+            <a href="#" className="hover:text-teal-600 transition duration-300 text-xl">
               Contact
             </a>
           </nav>
@@ -35,7 +35,7 @@ export default function Footer() {
         {/* Copyright section */}
         <div className="mt-6 pt-4 border-t border-gray-200 text-center">
           <p className="text-gray-600 text-xs">
-            © {new Date().getFullYear()} <span className="font-semibold">HOPE</span>. All rights reserved.
+            © {new Date().getFullYear()} <span className="font-semibold text-xl">HOPE</span>. All rights reserved.
           </p>
         </div>
       </div>

@@ -181,11 +181,6 @@ export default function Syllabus() {
 
   const tabs = [
     { id: "Curriculum", label: "Curriculum", icon: "📚" },
-    { id: "Overview", label: "Overview", icon: "ℹ️" },
-    { id: "PLOs", label: "PLOs", icon: "🎯" },
-    { id: "PLOMappings", label: "PLO Mappings", icon: "🔗" },
-    { id: "Subjects", label: "Subjects", icon: "📑" },
-    { id: "Statistics", label: "Statistics", icon: "📊" },
   ];
 
   useEffect(() => {

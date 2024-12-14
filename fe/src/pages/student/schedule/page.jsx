@@ -19,7 +19,11 @@ export default function DashboardActions() {
   const [error, setError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [semesterStartDate, setSemesterStartDate] = useState(null);
+  const [semesterEndDate, setSemesterEndDate] = useState(null);
+  const [notification, setNotification] = useState(null); // Added notification state
 
   const daysOfWeek = [
     "Thứ 2",
@@ -34,16 +38,42 @@ export default function DashboardActions() {
 
   useEffect(() => {
     setSelectedDay(getCurrentDay());
-    fetchSchedules();
-  }, [refreshTrigger]);
+    fetchSemesters();
+  }, []);
 
   useEffect(() => {
-    const pollInterval = setInterval(() => {
-      refreshData();
-    }, 30000); // Poll every 30 seconds
+    if (selectedSemester) {
+      fetchSchedules();
+    }
+  }, [selectedSemester]);
 
-    return () => clearInterval(pollInterval);
-  }, []);
+  const fetchSemesters = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch("http://localhost:8000/api/student/semesters", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách kỳ học");
+      }
+
+      const data = await response.json();
+      setSemesters(data.data || []);
+      if (data.data && data.data.length > 0) {
+        setSelectedSemester(data.data[0].id.toString());
+      }
+    } catch (err) {
+      setError(err.message || "Đã xảy ra lỗi khi tải danh sách kỳ học");
+    }
+  };
 
   const fetchSchedules = async () => {
     setIsLoading(true);
@@ -54,8 +84,13 @@ export default function DashboardActions() {
         throw new Error("Không tìm thấy token xác thực");
       }
 
+      if (!selectedSemester) {
+        setSchedules([]);
+        return;
+      }
+
       const response = await fetch(
-        "http://127.0.0.1:8000/api/student/timetable",
+        `http://localhost:8000/api/student/${selectedSemester}/timetable`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -73,20 +108,21 @@ export default function DashboardActions() {
 
       const data = await response.json();
       console.log("Dữ liệu trả về từ API:", data);
-      setSchedules(data.data || []);
+      if (data.data && Array.isArray(data.data)) {
+        setSchedules(data.data);
+      } else {
+        setSchedules([]);
+      }
     } catch (err) {
       if (err.message.includes('Attempt to read property "user" on null')) {
         setError("Lỗi xác thực người dùng. Vui lòng đăng nhập lại.");
       } else {
         setError(err.message || "Đã xảy ra lỗi khi tải lịch học");
       }
+      setSchedules([]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const refreshData = () => {
-    setRefreshTrigger(prev => prev + 1);
   };
 
   const getCurrentDay = () => {
@@ -99,16 +135,57 @@ export default function DashboardActions() {
   };
 
   const handleNextWeek = () => {
-    setCurrentWeek((prevWeek) => addWeeks(prevWeek, 1));
+    setCurrentWeek((prevWeek) => {
+      const nextWeek = addWeeks(prevWeek, 1);
+      const endOfNextWeek = endOfWeek(nextWeek, { weekStartsOn: 1 });
+      if (endOfNextWeek > semesterEndDate) {
+        setNotification("Đã đến cuối kỳ học");
+        setTimeout(() => setNotification(null), 3000);
+        return semesterEndDate;
+      }
+      return nextWeek;
+    });
   };
 
   const handlePreviousWeek = () => {
-    setCurrentWeek((prevWeek) => subWeeks(prevWeek, 1));
+    setCurrentWeek((prevWeek) => {
+      const prevWeekDate = subWeeks(prevWeek, 1);
+      const startOfPrevWeek = startOfWeek(prevWeekDate, { weekStartsOn: 1 });
+      if (startOfPrevWeek < semesterStartDate) {
+        setNotification("Đã đến đầu kỳ học");
+        setTimeout(() => setNotification(null), 3000);
+        return semesterStartDate;
+      }
+      return prevWeekDate;
+    });
   };
 
   const handleGoToCurrentWeek = () => {
-    setCurrentWeek(new Date());
+    const today = new Date();
+    if (today >= semesterStartDate && today <= semesterEndDate) {
+      setCurrentWeek(today);
+    } else if (today < semesterStartDate) {
+      setCurrentWeek(semesterStartDate);
+    } else {
+      setCurrentWeek(semesterEndDate);
+    }
     setSelectedDay(getCurrentDay());
+  };
+
+  const handleSemesterChange = (event) => {
+    const selectedSemesterId = event.target.value;
+    setSelectedSemester(selectedSemesterId);
+    setSchedules([]);
+    
+    const selectedSemesterData = semesters.find(sem => sem.id.toString() === selectedSemesterId);
+    if (selectedSemesterData) {
+      setSemesterStartDate(new Date(selectedSemesterData.start_date.split('/').reverse().join('-')));
+      setSemesterEndDate(new Date(selectedSemesterData.end_date.split('/').reverse().join('-')));
+      setCurrentWeek(new Date(selectedSemesterData.start_date.split('/').reverse().join('-')));
+    } else {
+      setSemesterStartDate(null);
+      setSemesterEndDate(null);
+    }
   };
 
   const startOfCurrentWeek = startOfWeek(currentWeek, { weekStartsOn: 1 });
@@ -138,7 +215,6 @@ export default function DashboardActions() {
   const closePopup = () => {
     setShowPopup(false);
     setSelectedSchedule(null);
-    refreshData();
   };
 
   const getStatusColor = (status) => {
@@ -162,6 +238,11 @@ export default function DashboardActions() {
 
   return (
     <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50 w-full">
+      {notification && ( // Added notification component
+        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg">
+          {notification}
+        </div>
+      )}
       <div className="bg-white shadow-md rounded-lg p-6">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2">
@@ -172,6 +253,19 @@ export default function DashboardActions() {
               Tuần hiện tại
             </button>
           </div>
+
+          <select
+            onChange={handleSemesterChange}
+            value={selectedSemester}
+            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
+          >
+            <option value=""></option>
+            {semesters.map((semester) => (
+              <option key={semester.id} value={semester.id}>
+                {semester.name}
+              </option>
+            ))}
+          </select>
 
           <select
             onChange={handleDayChange}
@@ -209,10 +303,15 @@ export default function DashboardActions() {
             </svg>
           </button>
           <div className="flex flex-col items-center">
-            <span className="text-gray-500 mb-1">Tuần hiện tại</span>
+            <span className="text-gray-500 mb-1">
+              {selectedSemester
+                ? "Thời gian học kỳ"
+                : "Tuần hiện tại"}
+            </span>
             <div className="text-center font-bold text-gray-700">
-              {format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} -{" "}
-              {format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}
+              {selectedSemester && semesterStartDate && semesterEndDate
+                ? `${format(startOfCurrentWeek > semesterStartDate ? startOfCurrentWeek : semesterStartDate, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek < semesterEndDate ? endOfCurrentWeek : semesterEndDate, "dd/MM/yyyy", { locale: vi })}`
+                : `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`}
             </div>
           </div>
           <button
@@ -265,11 +364,11 @@ export default function DashboardActions() {
                       <p>{schedule.subject_name}</p>
                       <p>{schedule.classroom_code}</p>
                     </div>
-
-
                   ) : (
                     <div className="text-gray-400 text-center">
-                      Không có lớp
+                      {schedules.length === 0
+                        ? "Chưa có lịch học cho kỳ này"
+                        : "Không có lớp"}
                     </div>
                   )}
                 </div>
@@ -278,77 +377,79 @@ export default function DashboardActions() {
           </div>
         ) : (
           <div className="overflow-x-auto mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
-            <table className="w-full text-center">
-              <thead>
-                <tr className="bg-blue-200">
-                  <th className="p-3 font-semibold text-gray-700 border border-gray-200 text-center sticky left-0 bg-blue-200 z-10">
-                    Ca học
-                  </th>
-                  {daysOfWeek.map((day, index) => (
-                    <th
-                      key={index}
-                      className="p-3 text-center font-semibold text-gray-700 border border-gray-200"
-                    >
-                      <div className="flex flex-col">
-                        <span>{day}</span>
-                        <span className="text-gray-500 font-normal">
-                          {format(addDays(startOfCurrentWeek, index), "dd/MM", {
-                            locale: vi,
-                          })}
-                        </span>
-                      </div>
+            {schedules.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Chưa có lịch học cho kỳ này
+              </div>
+            ) : (
+              <table className="w-full text-center">
+                <thead>
+                  <tr className="bg-blue-200">
+                    <th className="p-3 font-semibold text-gray-700 border border-gray-200 text-center sticky left-0 bg-blue-200 z-10">
+                      Ca học
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {shifts.map((shift) => (
-                  <tr
-                    key={shift}
-                    className="hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <td className="p-3 text-gray-700 font-medium border border-gray-200">
-                      {shift}
-                    </td>
-                    {daysOfWeek.map((day, dayIndex) => {
-                      const dayDate = format(
-                        addDays(startOfCurrentWeek, dayIndex),
-                        "dd/MM/yyyy"
-                      );
-                      const schedule = getScheduleForDayAndShift(day, shift);
-                      const lesson = schedule
-                        ? getLessonForDate(schedule, dayDate)
-                        : null;
-                      return (
-                        <td
-                          key={day}
-                          className={`p-3 text-center border border-gray-200 ${lesson ? getStatusColor(lesson.status) : ""
-                            }`}
-                        >
-                          {schedule && lesson ? (
-                            <div
-                              onClick={() => openPopup(schedule, lesson)}
-                              className="border border-gray-300 rounded-lg p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-200"
-                            >
-                              <p>{schedule.room_name}</p>
-                              <p>{schedule.subject_name}</p>
-                              <p>{schedule.classroom_code}</p>
-                            </div>
-
-
-                          ) : (
-                            <div className="text-gray-400">Trống</div>
-                          )}
-                        </td>
-                      );
-                    })}
+                    {daysOfWeek.map((day, index) => (
+                      <th
+                        key={index}
+                        className="p-3 text-center font-semibold text-gray-700 border border-gray-200"
+                      >
+                        <div className="flex flex-col">
+                          <span>{day}</span>
+                          <span className="text-gray-500 font-normal">
+                            {format(addDays(startOfCurrentWeek, index), "dd/MM", {
+                              locale: vi,
+                            })}
+                          </span>
+                        </div>
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-
+                </thead>
+                <tbody>
+                  {shifts.map((shift) => (
+                    <tr
+                      key={shift}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="p-3 text-gray-700 font-medium border border-gray-200">
+                        {shift}
+                      </td>
+                      {daysOfWeek.map((day, dayIndex) => {
+                        const dayDate = format(
+                          addDays(startOfCurrentWeek, dayIndex),
+                          "dd/MM/yyyy"
+                        );
+                        const schedule = getScheduleForDayAndShift(day, shift);
+                        const lesson = schedule
+                          ? getLessonForDate(schedule, dayDate)
+                          : null;
+                        return (
+                          <td
+                            key={day}
+                            className={`p-3 text-center border border-gray-200 ${lesson ? getStatusColor(lesson.status) : ""
+                              }`}
+                          >
+                            {schedule && lesson ? (
+                              <div
+                                onClick={() => openPopup(schedule, lesson)}
+                                className="border border-gray-300 rounded-lg p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-200"
+                              >
+                                <p>{schedule.room_name}</p>
+                                <p>{schedule.subject_name}</p>
+                                <p>{schedule.classroom_code}</p>
+                              </div>
+                            ) : (
+                              <div className="text-gray-400">Trống</div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
-          
         )}
       </div>
 

@@ -346,7 +346,9 @@ class   StudentController extends Controller
                     return [
                         'id' => $sm->semester->id,
                         'name' => $sm->semester->name,
-                        'order' => $sm->order
+                        'order' => $sm->order,
+                        'start_date' => Carbon::parse($sm->semester->start_date)->format('d/m/Y'),
+                        'end_date' => Carbon::parse($sm->semester->end_date)->format('d/m/Y'),
                     ];
                 });
 

@@ -83,6 +83,8 @@ const LandingPage = () => {
             const { data } = await instance.post("google-login", {
                 credential: credentialResponse.credential,
             });
+            localStorage.setItem("role", data.user.role);
+            localStorage.setItem("token", data.token);
             console.log("Server Response:", data);
             setShowGoogleLogin(false);
             const userRole = data.user.role;

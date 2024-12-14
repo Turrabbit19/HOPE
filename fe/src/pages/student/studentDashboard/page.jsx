@@ -41,7 +41,7 @@ export default function Component() {
   const handleRetry = () => {
     setLoading(true);
     setError(null);
-    fetchData();
+    // fetchData();
   };
 
   const daysInMonth = new Date(

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Spin } from "antd";
+import { Button, Spin, notification } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import moment from "moment";
@@ -218,6 +218,48 @@ const ScheduleList = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteSchedule = async (
+    event,
+    scheduleId,
+    semesterId,
+    courseId,
+    majorId,
+    subjectId
+  ) => {
+    event.stopPropagation();
+
+    if (window.confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
+      try {
+        const response = await instance.delete(
+          `/admin/schedule/${scheduleId}/delete`
+        );
+
+        alert("Lớp học đã được xóa thành công.");
+
+        const updatedSubject = await instance.get(
+          `admin/semester/${semesterId}/course/${courseId}/major/${majorId}/subjects`
+        );
+        setSubjectsByMajor((prev) => ({
+          ...prev,
+          [`${courseId}_${semesterId}_${majorId}`]:
+            updatedSubject.data.subjects || [],
+        }));
+
+        const updatedClassrooms = await instance.get(
+          `admin/schedules/${courseId}/${subjectId}/classrooms`
+        );
+
+        setClassroomsBySubject((prev) => ({
+          ...prev,
+          [`${courseId}_${subjectId}`]: updatedClassrooms.data.data || [],
+        }));
+      } catch (error) {
+        console.error("Xóa lớp học thất bại", error);
+        alert("Đã có lỗi xảy ra. Không thể xóa lớp học.");
+      }
     }
   };
 
@@ -546,12 +588,14 @@ const ScheduleList = () => {
                                                           </div>
 
                                                           {/* Phần số lượng sinh viên */}
-                                                          <div className="flex items-center justify-center bg-gray-100 p-6 rounded-lg w-1/3 shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl">
-                                                            <div className="flex flex-col items-center justify-center">
+                                                          <div className="flex items-center justify-center bg-white p-4 rounded-lg w-full max-w-sm mx-auto shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl flex-col">
+                                                            <div className="flex flex-col items-center justify-center mb-4">
+                                                              {" "}
+                                                              {/* Giảm khoảng cách dưới số lượng sinh viên */}
                                                               <div className="flex items-center space-x-2">
-                                                                {/* Số lượng SV */}
+                                                                {/* Số lượng sinh viên */}
                                                                 <p
-                                                                  className={`text-3xl font-bold ${
+                                                                  className={`text-3xl font-semibold ${
                                                                     classroom.students >=
                                                                     30
                                                                       ? "text-green-600"
@@ -569,24 +613,58 @@ const ScheduleList = () => {
                                                                     classroom.max_students
                                                                   }
                                                                 </p>
+
                                                                 {/* Biểu tượng trạng thái */}
                                                                 {classroom.students >=
                                                                 30 ? (
-                                                                  <span className="text-green-600 text-3xl">
+                                                                  <span
+                                                                    className="text-green-600 text-3xl"
+                                                                    title="Đủ số lượng"
+                                                                  >
                                                                     &#10003;
                                                                   </span>
                                                                 ) : classroom.students >=
                                                                   10 ? (
-                                                                  <span className="text-yellow-500 text-3xl">
+                                                                  <span
+                                                                    className="text-yellow-500 text-3xl"
+                                                                    title="Cần thêm sinh viên"
+                                                                  >
                                                                     &#9888;
                                                                   </span>
                                                                 ) : (
-                                                                  <span className="text-red-600 text-3xl">
+                                                                  <span
+                                                                    className="text-red-600 text-3xl"
+                                                                    title="Ít sinh viên"
+                                                                  >
                                                                     &#10060;
                                                                   </span>
                                                                 )}
                                                               </div>
                                                             </div>
+
+                                                            {/* Nút Xóa nằm dưới số lượng sinh viên */}
+                                                            <button
+                                                              onClick={(e) => {
+                                                                e.stopPropagation(); // Ngăn ngừa sự kiện click lan truyền
+                                                                handleDeleteSchedule(
+                                                                  e,
+                                                                  classroom.id,
+                                                                  semester.id,
+                                                                  course.id,
+                                                                  major.id,
+                                                                  subject.id
+                                                                );
+                                                              }}
+                                                              className="w-48 mt-2 py-2 bg-red-500 text-white rounded-lg text-lg font-semibold transform transition-all duration-300 hover:bg-red-600 hover:scale-105 focus:outline-none"
+                                                            >
+                                                              <span className="flex justify-center items-center">
+                                                                <span className="mr-2">
+                                                                  🗑️
+                                                                </span>{" "}
+                                                                Loại bỏ sinh
+                                                                viên
+                                                              </span>
+                                                            </button>
                                                           </div>
                                                         </div>
                                                       ))}

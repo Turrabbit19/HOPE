@@ -61,15 +61,12 @@ const StudentManager = () => {
       try {
         setLoading(true);
         const { data } = await instance.get("admin/students");
-        let pa = data.pagination;
-        // console.log(data.data.data);
-        setStudents(data.data);
+
+        setStudents(data?.data || 0);
         setPanigation((pre) => ({
           ...pre,
-          total: pa.total,
+          total: data?.data?.length || 10,
         }));
-
-        // setLoading();
       } catch (error) {
         console.log(error.message);
       } finally {
@@ -183,7 +180,7 @@ const StudentManager = () => {
       title: "Ngành học",
       dataIndex: "major_name",
       key: "8",
-      width: 1000,
+      width: 300,
     },
     // {
     //   title: "Môn học",
@@ -194,7 +191,7 @@ const StudentManager = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "8",
-      width: 400,
+      width: 200,
     },
     {
       title: "Action",
@@ -225,7 +222,7 @@ const StudentManager = () => {
           </Button>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa tài khoản này?"
-            onConfirm={() => handleDelete(record)} // Xóa tài khoản
+            onConfirm={() => handleDelete(record)}
             okText="Có"
             cancelText="Không"
           >

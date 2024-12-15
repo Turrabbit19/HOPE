@@ -481,6 +481,8 @@ const ListSubject = () => {
                               to={`detail/${subject.id}`}
                               state={{
                                 subjectName: subject.name,
+                                max_students: subject.max_students,
+                                code: subject.code,
                                 credit: subject.credit,
                               }}
                             >

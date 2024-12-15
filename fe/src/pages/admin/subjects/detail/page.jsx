@@ -22,7 +22,7 @@ const { TabPane } = Tabs;
 const DetailSubject = () => {
   // Lấy majorId và subjectId từ URL
   const { subjectId } = useParams();
-  const { credit } = useLocation().state || {};
+  const { max_students, code, credit } = useLocation().state || {};
   console.log(credit);
   // Trạng thái dữ liệu môn học
   const [loading, setLoading] = useState(true);
@@ -101,6 +101,7 @@ const DetailSubject = () => {
   };
 
   const showLectureModal = (lecture = null) => {
+    debugger;
     if (lecture) {
       setlectureId(lecture.id);
     }
@@ -110,17 +111,32 @@ const DetailSubject = () => {
     setIsLectureModalVisible(true);
     if (lecture) {
       setLectureCount(1);
+      form.setFieldsValue({
+        name: lecture.name,
+        description: lecture.description,
+      });
     }
   };
 
   const showClassroomModal = (classroom = null) => {
-    setIsEditing(classroom !== null);
-    setCurrentClassroom(classroom);
-    setIsClassroomModalVisible(true);
-    if (classroom) {
+    if (!classroom) {
+      setClassId(null);
       setClassroomCount(1);
+      setIsEditing(false);
+      setCurrentClassroom(null);
+      form.resetFields();
+    } else {
       setClassId(classroom.id);
+      setClassroomCount(1);
+      setIsEditing(true);
+      setCurrentClassroom(classroom);
+      form.setFieldsValue({
+        code: classroom.code,
+        max_students: classroom.max_students,
+      });
     }
+
+    setIsClassroomModalVisible(true);
   };
 
   const handleLectureModalCancel = () => {
@@ -449,10 +465,6 @@ const DetailSubject = () => {
               <Form
                 layout="vertical"
                 onFinish={handleAddLectures}
-                // initialValues={{
-                //   lectureCount: lectureCount,
-                //   lectures: [],
-                // }}
                 initialValues={{
                   lectureCount: lectureCount,
                   lectures: Array(lectureCount).fill({
@@ -479,14 +491,14 @@ const DetailSubject = () => {
 
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
-                    {[...Array(lectureCount)].map((_, index) => (
+                    {[...Array(classroomCount)].map((_, index) => (
                       <TabPane
-                        tab={`Tiết ${index + 1}`}
-                        key={`lecture-${index}`}
+                        tab={`Lớp học ${index + 1}`}
+                        key={`class-${index}`}
                       >
                         <Card
                           type="inner"
-                          title={`Thông tin chi tiết ${index + 1}`}
+                          title={`Thông tin Lớp học ${index + 1}`}
                           className="mb-4"
                         >
                           <Form.Item
@@ -499,7 +511,10 @@ const DetailSubject = () => {
                               },
                             ]}
                           >
-                            <Input placeholder="Nhập tên bài giảng" />
+                            <Input
+                              placeholder="Nhập tên bài giảng"
+                              defaultValue={`Tiết ${index + 1}`}
+                            />
                           </Form.Item>
                           <Form.Item
                             name={["lectures", index, "description"]}
@@ -610,20 +625,44 @@ const DetailSubject = () => {
                 </Form.Item>
               </Form>
             ) : (
-              // Form Thêm Nhiều Lớp Học
               <Form
                 layout="vertical"
+                form={form}
                 onFinish={handleAddClassrooms}
                 initialValues={{
                   classroomCount: classroomCount,
-                  classrooms: [],
+                  classrooms: Array.from(
+                    { length: classroomCount },
+                    (_, index) => ({
+                      name: `${code}-R${(index + 1)
+                        .toString()
+                        .padStart(2, "0")}`,
+                      max_students: max_students,
+                    })
+                  ),
+                }}
+                onValuesChange={(changedValues, allValues) => {
+                  if (changedValues.classroomCount !== undefined) {
+                    const newClassrooms = Array.from(
+                      { length: changedValues.classroomCount },
+                      (_, index) => ({
+                        name:
+                          allValues.classrooms?.[index]?.name ||
+                          `${code}-R${(index + 1).toString().padStart(2, "0")}`,
+                        max_students:
+                          allValues.classrooms?.[index]?.max_students ||
+                          max_students,
+                      })
+                    );
+                    form.setFieldsValue({ classrooms: newClassrooms });
+                    setClassroomCount(changedValues.classroomCount);
+                  }
                 }}
               >
                 {/* Trường nhập số lượng lớp học */}
                 <Form.Item
                   name="classroomCount"
                   label="Số lượng lớp học"
-                  initialValue={classroomCount}
                   rules={[
                     {
                       required: true,
@@ -636,18 +675,12 @@ const DetailSubject = () => {
                     },
                   ]}
                 >
-                  <InputNumber
-                    min={1}
-                    onChange={(value) => {
-                      setClassroomCount(value || 1);
-                    }}
-                    className="w-full"
-                  />
+                  <InputNumber min={1} className="w-full" />
                 </Form.Item>
 
                 {classroomCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
-                    {[...Array(classroomCount)].map((_, index) => (
+                    {Array.from({ length: classroomCount }).map((_, index) => (
                       <TabPane tab={`Lớp học ${index + 1}`} key={index + 1}>
                         <Card
                           type="inner"
@@ -675,17 +708,11 @@ const DetailSubject = () => {
                                 required: true,
                                 message: "Vui lòng nhập số học sinh!",
                               },
-                              {
-                                type: "number",
-                                min: 1,
-                                max: 50,
-                                message: "Số học sinh phải từ 1 đến 50",
-                              },
                             ]}
                           >
                             <InputNumber
-                              min={1}
-                              max={50}
+                              min={max_students * 0.6}
+                              max={max_students}
                               placeholder="Nhập số học sinh (tối đa 50)"
                               className="w-full"
                             />

@@ -72,12 +72,15 @@ export default function DashboardActions() {
         throw new Error("Không tìm thấy token xác thực");
       }
 
-      const response = await fetch("http://localhost:8000/api/student/semesters", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/student/semesters",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Không thể tải danh sách kỳ học");
@@ -212,8 +215,10 @@ export default function DashboardActions() {
     const selectedSemesterId = event.target.value;
     setSelectedSemester(selectedSemesterId);
     setSchedules([]);
-    
-    const selectedSemesterData = semesters.find(sem => sem.id.toString() === selectedSemesterId);
+
+    const selectedSemesterData = semesters.find(
+      (sem) => sem.id.toString() === selectedSemesterId
+    );
     if (selectedSemesterData) {
       const startDate = new Date(selectedSemesterData.start_date.split('/').reverse().join('-'));
       const endDate = new Date(selectedSemesterData.end_date.split('/').reverse().join('-'));
@@ -360,9 +365,7 @@ export default function DashboardActions() {
           </button>
           <div className="flex flex-col items-center">
             <span className="text-gray-500 mb-1">
-              {selectedSemester
-                ? "Thời gian học kỳ"
-                : "Tuần hiện tại"}
+              {selectedSemester ? "Thời gian học kỳ" : "Tuần hiện tại"}
             </span>
             <div className="text-center font-bold text-gray-700">
               {semesterStartDate && semesterEndDate
@@ -405,8 +408,9 @@ export default function DashboardActions() {
               return (
                 <div
                   key={shift}
-                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${lesson ? getStatusColor(lesson.status) : "bg-white"
-                    }`}
+                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
+                    lesson ? getStatusColor(lesson.status) : "bg-white"
+                  }`}
                 >
                   <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
                     {shift}
@@ -452,9 +456,13 @@ export default function DashboardActions() {
                         <div className="flex flex-col">
                           <span>{day}</span>
                           <span className="text-gray-500 font-normal">
-                            {format(addDays(startOfCurrentWeek, index), "dd/MM", {
-                              locale: vi,
-                            })}
+                            {format(
+                              addDays(startOfCurrentWeek, index),
+                              "dd/MM",
+                              {
+                                locale: vi,
+                              }
+                            )}
                           </span>
                         </div>
                       </th>
@@ -482,8 +490,9 @@ export default function DashboardActions() {
                         return (
                           <td
                             key={day}
-                            className={`p-3 text-center border border-gray-200 ${lesson ? getStatusColor(lesson.status) : ""
-                              }`}
+                            className={`p-3 text-center border border-gray-200 ${
+                              lesson ? getStatusColor(lesson.status) : ""
+                            }`}
                           >
                             {schedule && lesson ? (
                               <div
@@ -640,7 +649,11 @@ export default function DashboardActions() {
                   <span className="font-semibold mr-2">Ngày:</span>{" "}
                   {selectedSchedule.lesson.date}
                 </p>
-                <p className={`flex items-center text-gray-700 ${getStatusColor(selectedSchedule.lesson.status)}`}>
+                <p
+                  className={`flex items-center text-gray-700 ${getStatusColor(
+                    selectedSchedule.lesson.status
+                  )}`}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 mr-2 text-gray-500"
@@ -702,4 +715,3 @@ export default function DashboardActions() {
     </div>
   );
 }
-

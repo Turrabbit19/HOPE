@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
+use App\Models\Course;
 use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Schedule;
+use App\Models\Semester;
 use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentSchedule;
@@ -15,6 +17,7 @@ use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
@@ -699,7 +702,7 @@ class ApiScheduleController extends Controller
     public function assignStudentsToSubject($semesterId, $courseId, $majorId, $subjectId)
     {
         try {
-            $schedules = Schedule::with('days', 'shift', 'students')
+            $schedules = Schedule::with('days', 'shift', 'students', 'classroom')
                 ->where('semester_id', $semesterId)
                 ->where('course_id', $courseId)
                 ->where('major_id', $majorId)
@@ -725,58 +728,37 @@ class ApiScheduleController extends Controller
                 return response()->json(['message' => 'Tất cả sinh viên đã đăng ký môn học này'], 200);
             }
 
-            $totalCapacity = $schedules->sum(function ($schedule) {
-                return $schedule->classroom->max_students - $schedule->students->count();
-            });
+            $remainingStudents = $unregisteredStudents->count(); 
 
-            if ($totalCapacity < $unregisteredStudents->count()) {
-                return response()->json([
-                    'error' => 'Không đủ chỗ để phân bổ tất cả sinh viên vào lớp học.',
-                    'available_slots' => $totalCapacity,
-                    'students_remaining' => $unregisteredStudents->count()
-                ], 400);
-            }
+            foreach ($schedules as $schedule) {
+                $maxCapacity = $schedule->classroom->max_students; 
+                $minCapacity = ceil($maxCapacity * 0.8); 
+                $currentCapacity = $schedule->students->count(); 
 
-            $schedules = $schedules->sortBy(function ($schedule) {
-                return $schedule->students->count();
-            });
+                if ($currentCapacity >= $minCapacity) {
+                    continue;
+                }
 
-            $assignedStudents = [];
-            foreach ($unregisteredStudents as $student) {
-                $assigned = false;
+                $studentsToAssign = min($minCapacity - $currentCapacity, $remainingStudents, $maxCapacity - $currentCapacity);
 
-                $registeredSchedules = $student->schedules()->with(['days', 'shift'])->get();
+                for ($i = 0; $i < $studentsToAssign; $i++) {
+                    if ($unregisteredStudents->isEmpty()) {
+                        break; 
+                    }
 
-                foreach ($schedules as $schedule) {
-                    $maxCapacity = $schedule->classroom->max_students;
-                    $currentCapacity = $schedule->students->count();
+                    $student = $unregisteredStudents->pop();
 
-                    if ($currentCapacity >= $maxCapacity) {
+                    $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                        return $existingSchedule->shift_id === $schedule->shift_id &&
+                            $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                    });
+
+                    if ($hasConflict) {
+                        $unregisteredStudents->push($student);
                         continue;
                     }
 
-                    $newScheduleDays = $schedule->days->pluck('id')->toArray();
-                    $newScheduleShift = $schedule->shift_id;
-                    $conflict = false;
-
-                    foreach ($registeredSchedules as $rSchedule) {
-                        $existingDays = $rSchedule->days->pluck('id')->toArray();
-                        $existingShift = $rSchedule->shift_id;
-
-                        if (
-                            !empty(array_intersect($newScheduleDays, $existingDays)) &&
-                            $newScheduleShift === $existingShift
-                        ) {
-                            $conflict = true;
-                            break;
-                        }
-                    }
-
-                    if ($conflict) {
-                        continue;
-                    }
-
-                    if ($currentCapacity + 1 <= $maxCapacity) {
+                    DB::transaction(function () use ($student, $schedule) {
                         StudentSchedule::create([
                             'student_id' => $student->id,
                             'schedule_id' => $schedule->id
@@ -788,25 +770,69 @@ class ApiScheduleController extends Controller
                             'study_start' => $schedule->start_date,
                             'study_end' => $schedule->end_date,
                         ]);
+                    });
 
-                        $schedule->students->push($student);
-                        $assignedStudents[] = $student->id;
-                        $assigned = true;
-                        break;
-                    }
+                    $schedule->students->push($student);
+                    $assignedStudents[] = $student->id;
                 }
 
-                if (!$assigned) {
-                    continue;
+                $remainingStudents -= $studentsToAssign;
+
+                if ($remainingStudents <= 0) {
+                    break; 
+                }
+            }
+
+            foreach ($schedules as $schedule) {
+                $maxCapacity = $schedule->classroom->max_students;
+                $currentCapacity = $schedule->students->count();
+
+                while ($remainingStudents > 0 && $currentCapacity < $maxCapacity) {
+                    $student = $unregisteredStudents->pop();
+
+                    $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                        return $existingSchedule->shift_id === $schedule->shift_id &&
+                            $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                    });
+
+                    if ($hasConflict) {
+                        continue; 
+                    }
+
+                    DB::transaction(function () use ($student, $schedule) {
+                        StudentSchedule::create([
+                            'student_id' => $student->id,
+                            'schedule_id' => $schedule->id
+                        ]);
+
+                        StudentClassroom::create([
+                            'student_id' => $student->id,
+                            'classroom_id' => $schedule->classroom_id,
+                            'study_start' => $schedule->start_date,
+                            'study_end' => $schedule->end_date,
+                        ]);
+                    });
+
+                    $schedule->students->push($student);
+                    $assignedStudents[] = $student->id;
+
+                    $currentCapacity++;
+                    $remainingStudents--;
+                }
+
+                if ($remainingStudents <= 0) {
+                    break;
                 }
             }
 
             return response()->json([
                 'message' => 'Phân bổ thành công',
-                'assigned_students' => $assignedStudents
+                'assigned_students_count' => count($assignedStudents),
+                'remaining_students_count' => $remainingStudents,
+                'details' => $assignedStudents
             ], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy môn học hoặc lịch học.'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông tin yêu cầu.'], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể xử lý yêu cầu',
@@ -826,7 +852,7 @@ class ApiScheduleController extends Controller
                 ->get();
 
             foreach ($schedules as $schedule) {
-                if ($schedule->students->count() == 1) {
+                if ($schedule->students->count() == 0) {
                     $schedule->delete();
                 }
             }

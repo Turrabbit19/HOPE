@@ -85,8 +85,9 @@ class   StudentController extends Controller
             $registrationEnd = $registrationStart->copy()->addDays(3);
             $now = Carbon::now();
 
-            if ($now->lt($registrationStart)) {
-                return response()->json(['error' => 'Thời gian đăng ký chưa bắt đầu.'], 403);
+            if ($now->gt($startDate)) {
+                return response()->json(['error' => 'Thời gian đăng ký chưa bắt đầu.
+                Khoảng thời gian đăng kí mới sẽ từ ' . Carbon::parse($currentCourseSemester->end_date)->format('d/m/Y')], 403);
             }
 
             if ($now->gt($registrationEnd)) {
@@ -126,7 +127,7 @@ class   StudentController extends Controller
             });
 
             return response()->json([
-                'message' => 'Bạn còn thời gian để đăng ký.',
+                'message' => 'Bạn còn khoảng ' . $timeLeft->d . ' ngày để đăng ký.',
                 'time_left' => $formattedTimeLeft,
                 'subjects' => $listSubjects
             ], 200);

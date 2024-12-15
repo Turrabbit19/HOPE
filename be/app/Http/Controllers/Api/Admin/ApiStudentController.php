@@ -18,18 +18,17 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ApiStudentController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         try {
-            $perPage = $request->input('per_page', 40);
-            $students = Student::with(['user', 'course'])->paginate($perPage);
+            $students = Student::with(['user', 'course'])->get();
 
             $majors = StudentMajor::with('major')
                 ->where('status', 1)
                 ->get()
                 ->groupBy('student_id');
 
-            $data = collect($students->items())->map(function ($student) use ($majors) {
+            $data = $students->map(function ($student) use ($majors) {
                 $studentMajor = $majors[$student->id]->first() ?? null;
                 return [
                     "id" => $student->id,
@@ -53,12 +52,6 @@ class ApiStudentController extends Controller
 
             return response()->json([
                 'data' => $data,
-                'pagination' => [
-                    'total' => $students->total(),
-                    'per_page' => $students->perPage(),
-                    'current_page' => $students->currentPage(),
-                    'last_page' => $students->lastPage(),
-                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -67,7 +60,6 @@ class ApiStudentController extends Controller
             ], 500);
         }
     }
-
 
     public function exportStudent()
     {

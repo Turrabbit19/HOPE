@@ -238,6 +238,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::get('syllabus/{subjectId}', [SyllabusController::class, 'getDetailClassroom']);
 
         Route::get('timetable', [StudentController::class, 'getTimetable']);
+        Route::get('getFeeBySemester', [PayPalController::class, 'getFeeBySemester']);
 
         Route::get('semesters', [StudentController::class, 'getSemester']);
         Route::get('{semesterId}/timetable', [StudentController::class, 'getTimetableBySemester']);
@@ -258,6 +259,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::post('queue/process', [AccessController::class, 'processQueue']);
         Route::post('queue/finish', [AccessController::class, 'finishProcessing']);
 
+        Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
     });
 
 Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')

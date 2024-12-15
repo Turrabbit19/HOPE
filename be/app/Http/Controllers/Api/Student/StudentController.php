@@ -20,51 +20,65 @@ use App\Models\StudyDay;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 
-class   StudentController extends Controller
+class StudentController extends Controller
 {
+
+
     public function getStudentDetail()
     {
         $user = Auth::user();
 
         try {
-            $student = Student::with(['user', 'course'])->where('user_id', $user->id)->firstOrFail();
+            $cacheKey = 'student_detail_' . $user->id;
 
-            $major = StudentMajor::where('status', 1)->firstOrFail();
+            $data = Redis::get($cacheKey);
 
-            $data = [
-                'avatar' => $student->user->avatar,
-                'name' => $student->user->name,
-                'student_code' => $student->student_code,
-                'course_name' => $student->course->name,
-                'major_name' => $major->major->name,
-                'current_semester' => $student->current_semester,
+            if (!$data) {
+                $student = Student::with(['user', 'course'])->where('user_id', $user->id)->firstOrFail();
 
-                'email' => $student->user->email,
-                'phone' => $student->user->phone,
-                'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
-                'gender' => $student->user->gender ? "Nam" : "Nữ",
-                'ethnicity' => $student->user->ethnicity,
-                'address' => $student->user->address,
+                $major = StudentMajor::where('status', 1)->firstOrFail();
 
+                $data = [
+                    'avatar' => $student->user->avatar,
+                    'name' => $student->user->name,
+                    'student_code' => $student->student_code,
+                    'course_name' => $student->course->name,
+                    'major_name' => $major->major->name,
+                    'current_semester' => $student->current_semester,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
+                    'gender' => $student->user->gender ? "Nam" : "Nữ",
+                    'ethnicity' => $student->user->ethnicity,
+                    'address' => $student->user->address,
+                    'status' => match ($student->status) {
+                        "0" => "Đang học",
+                        "1" => "Bảo lưu",
+                        "2" => "Hoàn thành",
+                        default => "Không xác định"
+                    },
+                ];
 
-                'status' => match ($student->status) {
-                    "0" => "Đang học",
-                    "1" => "Bảo lưu",
-                    "2" => "Hoàn thành",
-                    default => "Không xác định"
-                },
-            ];
+                Redis::setex($cacheKey, now()->addMonths(4)->diffInSeconds(), json_encode($data));
+            } else {
+                $data = json_decode($data, true);
+            }
 
             return response()->json(['data' => $data], 200);
+
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
+
+
 
     public function getSubjects()
     {

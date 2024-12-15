@@ -10,8 +10,9 @@ import {
   X,
   CircleDollarSign,
 } from "lucide-react";
-import { Modal } from "antd";
+import { Modal, notification } from "antd";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
+import instance from "../../../../config/axios";
 
 export default function HeaderClient() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -19,12 +20,15 @@ export default function HeaderClient() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isTuitionModalVisible, setIsTuitionModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const notificationRef = useRef(null);
   const buttonRef = useRef(null);
   const navigate = useNavigate();
-
+  const exchangeRate = 23000;
+  const [feeData, setFeeData] = useState({ total_credit: 0, price: 0 });
+  // const [error, setError] = useState(null);
   const unreadNotificationsCount = notifications.filter(
     (n) => n.status !== "Đã xem"
   ).length;
@@ -93,20 +97,44 @@ export default function HeaderClient() {
       setIsLoading(false);
     }
   };
-
   const toggleTuition = () => {
     setIsTuitionModalVisible(!isTuitionModalVisible);
   };
 
+  useEffect(() => {
+    if (isTuitionModalVisible) {
+      const fetchFeeData = async () => {
+        try {
+          const { data } = await instance.get(
+            "http://127.0.0.1:8000/api/student/getFeeBySemester"
+          );
+          console.log(data);
+          setFeeData(data);
+        } catch (error) {
+          if (error.response && error.response.status === 403) {
+            setErrorMessage("Đã kết thúc ngày nộp học phí. Nếu chưa nộp vui lòng liên hệ phòng hỗ trợ Sinh Viên");
+          }else if (error.response && error.response.status === 405){
+            setErrorMessage("Thời gian nộp học phí chưa bắt đầu.")
+          }
+           else {
+            setErrorMessage("Có lỗi xảy ra. Vui lòng thử lại sau.");
+          }
+          console.log(error.message);
+        }
+      };
+      fetchFeeData();
+    }
+  }, [isTuitionModalVisible]);
   const style = { layout: "vertical" };
-  const [amount, setAmount] = useState(10.00)
+
   const createOrder = async (data, actions) => {
+    const amountInUSD = feeData.price / exchangeRate;
     try {
       return actions.order.create({
         purchase_units: [
           {
             amount: {
-              value: amount,
+              value: amountInUSD.toFixed(2),
             },
           },
         ],
@@ -119,18 +147,20 @@ export default function HeaderClient() {
   const student_id = localStorage.getItem("user_id");
   let infor = {
     student_id: student_id,
-    payment_id: '',
-    amount: amount,
-  }
+    payment_id: "",
+    amount: feeData.price,
+    currency: "VND",
+  };
 
   const onApprove = async (data, actions) => {
     try {
       const details = await actions.order.capture();
       infor.payment_id = details.id;
-      const response = await instance.post(`admin/paypal`, infor)
+      const response = await instance.post(`admin/paypal`, infor);
       notification.success({
-        message: "Thanh toán học phí thành công"
-      })
+        message: "Thanh toán học phí thành công",
+      });
+      toggleTuition();
     } catch (err) {
       console.error("Error in onApprove:", err.message);
     }
@@ -362,21 +392,39 @@ export default function HeaderClient() {
           onCancel={() => setIsTuitionModalVisible(false)}
           footer={null}
         >
-          <PayPalScriptProvider
-            options={{
-              clientId:
-                "AUxabASNDpkW7wNFNpvbTD7k2FfqUID-BWIEk9qq9FVGpNImUq74PH3oPMQyjMMwqHIauqWB0shiW4Ex",
-            }}
-          >
-            <PayPalButtons
-              style={style}
-              disabled={false}
-              forceReRender={[style]}
-              fundingSource={undefined}
-              createOrder={createOrder}
-              onApprove={onApprove}
-            />
-          </PayPalScriptProvider>
+          {errorMessage ? (
+            errorMessage
+          ) : (
+            <>
+              <div>
+                <p>
+                  <strong>Tổng tín chỉ: </strong> {feeData.total_credit}
+                </p>
+                <p>
+                  <strong>Tổng học phí: </strong>
+                  {feeData.price.toLocaleString("vi-VN")} VND
+                </p>
+                <p>
+                  <strong>Hình thức thanh toán: </strong>
+                </p>
+              </div>
+              <PayPalScriptProvider
+                options={{
+                  clientId:
+                    "AUxabASNDpkW7wNFNpvbTD7k2FfqUID-BWIEk9qq9FVGpNImUq74PH3oPMQyjMMwqHIauqWB0shiW4Ex",
+                }}
+              >
+                <PayPalButtons
+                  style={style}
+                  disabled={false}
+                  forceReRender={[style]}
+                  fundingSource={undefined}
+                  createOrder={createOrder}
+                  onApprove={onApprove}
+                />
+              </PayPalScriptProvider>
+            </>
+          )}
         </Modal>
       </div>
     </header>

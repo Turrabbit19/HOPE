@@ -164,6 +164,28 @@ const AsideClient = () => {
             </svg>
             Giáo trình
           </Link>
+          <Link
+            to="statistics-semester"
+            className="flex items-center p-2 text text-gray-700 hover:bg-gray-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#F59E0B"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5 mr-2"
+            >
+              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+              <path d="M9 4v16"></path>
+              <path d="M15 4v16"></path>
+            </svg>
+            Thống kê điểm danh
+          </Link>
         </nav>
 
       </div>

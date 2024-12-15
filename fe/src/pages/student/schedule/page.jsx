@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   addWeeks,
   subWeeks,
@@ -8,6 +8,10 @@ import {
   startOfWeek,
   endOfWeek,
   addDays,
+  isBefore,
+  isAfter,
+  eachWeekOfInterval,
+  getWeek,
 } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -23,7 +27,9 @@ export default function DashboardActions() {
   const [selectedSemester, setSelectedSemester] = useState("");
   const [semesterStartDate, setSemesterStartDate] = useState(null);
   const [semesterEndDate, setSemesterEndDate] = useState(null);
-  const [notification, setNotification] = useState(null); // Added notification state
+  const [notification, setNotification] = useState(null);
+  const [weeks, setWeeks] = useState([]);
+  const [selectedWeek, setSelectedWeek] = useState(null);
 
   const daysOfWeek = [
     "Thứ 2",
@@ -47,6 +53,18 @@ export default function DashboardActions() {
     }
   }, [selectedSemester]);
 
+  useEffect(() => {
+    if (semesterStartDate && semesterEndDate) {
+      const weeksList = eachWeekOfInterval(
+        { start: semesterStartDate, end: semesterEndDate },
+        { weekStartsOn: 1 }
+      );
+      setWeeks(weeksList);
+      setSelectedWeek(weeksList[0]);
+      setCurrentWeek(weeksList[0]);
+    }
+  }, [semesterStartDate, semesterEndDate]);
+
   const fetchSemesters = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -68,7 +86,24 @@ export default function DashboardActions() {
       const data = await response.json();
       setSemesters(data.data || []);
       if (data.data && data.data.length > 0) {
-        setSelectedSemester(data.data[0].id.toString());
+        const currentSemester = data.data.find(sem => {
+          const startDate = new Date(sem.start_date.split('/').reverse().join('-'));
+          const endDate = new Date(sem.end_date.split('/').reverse().join('-'));
+          const today = new Date();
+          return isBefore(today, endDate) && isAfter(today, startDate);
+        });
+        
+        if (currentSemester) {
+          setSelectedSemester(currentSemester.id.toString());
+          setSemesterStartDate(new Date(currentSemester.start_date.split('/').reverse().join('-')));
+          setSemesterEndDate(new Date(currentSemester.end_date.split('/').reverse().join('-')));
+          setCurrentWeek(new Date());
+        } else {
+          setSelectedSemester(data.data[0].id.toString());
+          setSemesterStartDate(new Date(data.data[0].start_date.split('/').reverse().join('-')));
+          setSemesterEndDate(new Date(data.data[0].end_date.split('/').reverse().join('-')));
+          setCurrentWeek(new Date(data.data[0].start_date.split('/').reverse().join('-')));
+        }
       }
     } catch (err) {
       setError(err.message || "Đã xảy ra lỗi khi tải danh sách kỳ học");
@@ -135,39 +170,40 @@ export default function DashboardActions() {
   };
 
   const handleNextWeek = () => {
-    setCurrentWeek((prevWeek) => {
-      const nextWeek = addWeeks(prevWeek, 1);
-      const endOfNextWeek = endOfWeek(nextWeek, { weekStartsOn: 1 });
-      if (endOfNextWeek > semesterEndDate) {
-        setNotification("Đã đến cuối kỳ học");
-        setTimeout(() => setNotification(null), 3000);
-        return semesterEndDate;
+    setSelectedWeek((prevWeek) => {
+      const nextWeekIndex = weeks.findIndex(week => week === prevWeek) + 1;
+      if (nextWeekIndex < weeks.length) {
+        return weeks[nextWeekIndex];
       }
-      return nextWeek;
+      setNotification("Đã đến cuối kỳ học");
+      setTimeout(() => setNotification(null), 3000);
+      return prevWeek;
     });
   };
 
   const handlePreviousWeek = () => {
-    setCurrentWeek((prevWeek) => {
-      const prevWeekDate = subWeeks(prevWeek, 1);
-      const startOfPrevWeek = startOfWeek(prevWeekDate, { weekStartsOn: 1 });
-      if (startOfPrevWeek < semesterStartDate) {
-        setNotification("Đã đến đầu kỳ học");
-        setTimeout(() => setNotification(null), 3000);
-        return semesterStartDate;
+    setSelectedWeek((prevWeek) => {
+      const prevWeekIndex = weeks.findIndex(week => week === prevWeek) - 1;
+      if (prevWeekIndex >= 0) {
+        return weeks[prevWeekIndex];
       }
-      return prevWeekDate;
+      setNotification("Đã đến đầu kỳ học");
+      setTimeout(() => setNotification(null), 3000);
+      return prevWeek;
     });
   };
 
   const handleGoToCurrentWeek = () => {
     const today = new Date();
-    if (today >= semesterStartDate && today <= semesterEndDate) {
-      setCurrentWeek(today);
-    } else if (today < semesterStartDate) {
-      setCurrentWeek(semesterStartDate);
-    } else {
-      setCurrentWeek(semesterEndDate);
+    if (semesterStartDate && semesterEndDate) {
+      if (isAfter(today, semesterStartDate) && isBefore(today, semesterEndDate)) {
+        const currentWeekIndex = weeks.findIndex(week => isBefore(today, addWeeks(week, 1)));
+        setSelectedWeek(weeks[currentWeekIndex]);
+      } else if (isBefore(today, semesterStartDate)) {
+        setSelectedWeek(weeks[0]);
+      } else {
+        setSelectedWeek(weeks[weeks.length - 1]);
+      }
     }
     setSelectedDay(getCurrentDay());
   };
@@ -179,17 +215,28 @@ export default function DashboardActions() {
     
     const selectedSemesterData = semesters.find(sem => sem.id.toString() === selectedSemesterId);
     if (selectedSemesterData) {
-      setSemesterStartDate(new Date(selectedSemesterData.start_date.split('/').reverse().join('-')));
-      setSemesterEndDate(new Date(selectedSemesterData.end_date.split('/').reverse().join('-')));
-      setCurrentWeek(new Date(selectedSemesterData.start_date.split('/').reverse().join('-')));
+      const startDate = new Date(selectedSemesterData.start_date.split('/').reverse().join('-'));
+      const endDate = new Date(selectedSemesterData.end_date.split('/').reverse().join('-'));
+      setSemesterStartDate(startDate);
+      setSemesterEndDate(endDate);
+      const weeksList = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 1 });
+      setWeeks(weeksList);
+      setSelectedWeek(weeksList[0]);
     } else {
       setSemesterStartDate(null);
       setSemesterEndDate(null);
+      setWeeks([]);
+      setSelectedWeek(null);
     }
   };
 
-  const startOfCurrentWeek = startOfWeek(currentWeek, { weekStartsOn: 1 });
-  const endOfCurrentWeek = endOfWeek(currentWeek, { weekStartsOn: 1 });
+  const handleWeekChange = (event) => {
+    const selectedWeekIndex = parseInt(event.target.value, 10);
+    setSelectedWeek(weeks[selectedWeekIndex]);
+  };
+
+  const startOfCurrentWeek = useMemo(() => startOfWeek(selectedWeek || currentWeek, { weekStartsOn: 1 }), [selectedWeek, currentWeek]);
+  const endOfCurrentWeek = useMemo(() => endOfWeek(selectedWeek || currentWeek, { weekStartsOn: 1 }), [selectedWeek, currentWeek]);
 
   const getScheduleForDayAndShift = (day, shift) => {
     const dayDate = format(
@@ -229,40 +276,49 @@ export default function DashboardActions() {
   };
 
   if (isLoading) {
-    return <p>Đang tải lịch học...</p>;
+    return <p className="text-center py-4">Đang tải lịch học...</p>;
   }
 
   if (error) {
-    return <p>Lỗi: {error}</p>;
+    return <p className="text-center py-4 text-red-500">Lỗi: {error}</p>;
   }
 
   return (
     <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50 w-full">
-      {notification && ( // Added notification component
+      {notification && (
         <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg">
           {notification}
         </div>
       )}
       <div className="bg-white shadow-md rounded-lg p-6">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleGoToCurrentWeek}
-              className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-800 transition duration-200"
-            >
-              Tuần hiện tại
-            </button>
-          </div>
+          <button
+            onClick={handleGoToCurrentWeek}
+            className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-800 transition duration-200"
+          >
+            Tuần hiện tại
+          </button>
 
           <select
             onChange={handleSemesterChange}
             value={selectedSemester}
             className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
           >
-            <option value=""></option>
             {semesters.map((semester) => (
               <option key={semester.id} value={semester.id}>
                 {semester.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            onChange={handleWeekChange}
+            value={weeks.findIndex(week => week === selectedWeek)}
+            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
+          >
+            {weeks.map((week, index) => (
+              <option key={index} value={index}>
+                Tuần {index + 1}: {format(week, "dd/MM/yyyy")} - {format(addDays(week, 6), "dd/MM/yyyy")}
               </option>
             ))}
           </select>
@@ -309,8 +365,8 @@ export default function DashboardActions() {
                 : "Tuần hiện tại"}
             </span>
             <div className="text-center font-bold text-gray-700">
-              {selectedSemester && semesterStartDate && semesterEndDate
-                ? `${format(startOfCurrentWeek > semesterStartDate ? startOfCurrentWeek : semesterStartDate, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek < semesterEndDate ? endOfCurrentWeek : semesterEndDate, "dd/MM/yyyy", { locale: vi })}`
+              {semesterStartDate && semesterEndDate
+                ? `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`
                 : `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`}
             </div>
           </div>

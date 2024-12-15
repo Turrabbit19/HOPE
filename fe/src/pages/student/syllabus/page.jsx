@@ -1,18 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  X,
-  Book,
-  Calendar,
-  User,
-  MapPin,
-  Clock,
-  CheckCircle,
-  XCircle,
-  HelpCircle,
-  AppWindowMac,
-} from "lucide-react";
+import { X, Book, Calendar, User, MapPin, Clock, CheckCircle, XCircle, HelpCircle, AppWindowMac } from 'lucide-react';
 
 function SubjectDetailsModal({ subject, isOpen, onClose }) {
   if (!isOpen || !subject) return null;
@@ -178,7 +167,7 @@ export default function Syllabus() {
   const [activeTab, setActiveTab] = useState("Curriculum");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  
   const tabs = [
     { id: "Curriculum", label: "Curriculum", icon: "📚" },
   ];
@@ -256,11 +245,10 @@ export default function Syllabus() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 ${
-              activeTab === tab.id
+            className={`flex items-center gap-2 px-4 py-2 ${activeTab === tab.id
                 ? "text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-600"
-            }`}
+              }`}
           >
             <span>{tab.icon}</span>
             <span>{tab.label}</span>
@@ -306,9 +294,12 @@ export default function Syllabus() {
                       <td className="border py-3 px-4">
                         <button
                           onClick={() => fetchSubjectDetails(subject.id)}
-                          className="text-blue-600 hover:underline text-xl text-left"
+                          className="text-blue-600 hover:underline text-xl text-left flex items-center"
                         >
                           {subject.name}
+                          {subject.hasClassData && (
+                            <AppWindowMac className="ml-2 w-5 h-5 text-green-500" title="Có dữ liệu lớp học" />
+                          )}
                         </button>
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
@@ -316,11 +307,10 @@ export default function Syllabus() {
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
                         <span
-                          className={`${
-                            subject.form === "ONL"
+                          className={`${subject.form === "ONL"
                               ? "text-green-600"
                               : "text-red-600"
-                          } font-medium`}
+                            } font-medium`}
                         >
                           {subject.form}
                         </span>
@@ -342,3 +332,4 @@ export default function Syllabus() {
     </div>
   );
 }
+

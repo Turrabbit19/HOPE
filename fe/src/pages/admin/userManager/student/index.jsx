@@ -61,12 +61,12 @@ const StudentManager = () => {
       try {
         setLoading(true);
         const { data } = await instance.get("admin/students");
-        let pa = data.pagination;
-        // console.log(data.data.data);
-        setStudents(data.data);
+        // let pa = data.pagination;
+        // // console.log(data.data.data);
+        setStudents(data?.data || 0);
         setPanigation((pre) => ({
           ...pre,
-          total: pa.total,
+          total: data?.data?.length || 10,
         }));
 
         // setLoading();

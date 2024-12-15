@@ -99,7 +99,8 @@ Route::prefix('admin')
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/random', [ApiScheduleController::class, 'assignStudentsToSubject']);
-        Route::delete('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/delete', [ApiScheduleController::class, 'deleteEmptySchedules']);
+        Route::delete('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/delete', [ApiScheduleController::class, 'deleteEmptyClassrooms']);
+        Route::delete('schedule/{scheduleId}/delete', [ApiScheduleController::class, 'removeStudentsFromClass']);
         Route::get('schedules/{courseId}/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
         Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
 

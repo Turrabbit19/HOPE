@@ -212,7 +212,12 @@ Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);
+
         Route::get('timetable', [TeacherController::class, 'getTimetable']);
+
+        Route::get('semesters', [TeacherController::class, 'getSemesterForTeacher']);
+        Route::get('{semesterId}/timetable', [TeacherController::class, 'getTimetableBySemesterForTeacher']);
+
         Route::get('schedule/{scheduleId}/detail', [TeacherController::class, 'getDetailSchedule']);
         Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailsClassroom']);
         Route::get('schedule/{scheduleId}/{lesson_id}/students', [TeacherController::class, 'getDetailClassroom']);

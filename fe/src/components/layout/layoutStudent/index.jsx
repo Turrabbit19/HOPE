@@ -22,7 +22,6 @@ const LayoutClient = () => {
 
         <Footer />
       </div>
-      
     </div>
   );
 };

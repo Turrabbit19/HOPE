@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Models\ScheduleLesson;
+use App\Models\Semester;
 use App\Models\StudentClassroom;
 use App\Models\StudentLesson;
 use App\Models\Teacher;
@@ -117,7 +118,6 @@ class TeacherController extends Controller
         }
     }
 
-
     public function getTimetable()
     {
         $user = Auth::user();
@@ -139,11 +139,25 @@ class TeacherController extends Controller
                     'link' => $tt->link ?? "Null",
                     'start_date' => Carbon::parse($tt->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($tt->end_date)->format('d/m/Y'),
-                    'schedule_lessons' => $tt->lessons->map(function ($lesson) {
+                    'schedule_lessons' => $tt->lessons->map(function ($lesson) use ($tt) {
+                        $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
+                            ->setTimeFrom(Carbon::parse($tt->shift->start_time));
+
+                        $currentDateTime = now();
+
+                        if ($currentDateTime < $lessonDateTime) {
+                            $status = "Chưa tới";
+                        } elseif ($currentDateTime >= $lessonDateTime && $currentDateTime <= $lessonDateTime->copy()->addMinutes($tt->shift->duration)) {
+                            $status = "Đang giảng dạy";
+                        } else {
+                            $status = "Đã kết thúc";
+                        }
+
                         return [
                             'name' => $lesson->name,
+                            'description' => $lesson->description,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
-                            'status' => Carbon::parse($lesson->pivot->study_date)->lt(Carbon::now()) ? "Hoàn thành" : "Chưa hoàn thành",
+                            'status' => $status,
                         ];
                     }),
                 ];
@@ -156,6 +170,88 @@ class TeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedules', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getSemesterForTeacher()
+    {
+        $user = Auth::user();
+
+        try {
+            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
+
+            $semesters = Semester::all();
+
+            $data = $semesters->map(function ($sm) {
+                return [
+                    'id' => $sm->id,
+                    'name' => $sm->name,
+                    'start_date' => Carbon::parse($sm->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($sm->end_date)->format('d/m/Y'),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
+        }
+    }
+    public function getTimetableBySemesterForTeacher(string $semesterId)
+    {
+        $user = Auth::user();
+
+        try {
+            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
+
+            $semester = Semester::findOrFail($semesterId);
+            $semesterStartDate = Carbon::parse($semester->start_date);
+            $semesterEndDate = Carbon::parse($semester->end_date);
+
+            $timetable = Schedule::where('teacher_id', $teacher->id)
+                ->whereBetween('start_date', [$semesterStartDate, $semesterEndDate])
+                ->whereBetween('end_date', [$semesterStartDate, $semesterEndDate])
+                ->get();
+
+            $data = $timetable->map(function ($tt) {
+                return [
+                    'id' => $tt->id,
+                    'subject_name' => $tt->subject->name,
+                    'classroom_code' => $tt->classroom->code,
+                    'shift_name' => $tt->shift->name,
+                    'room_name' => $tt->room->name ?? "Null",
+                    'link' => $tt->link ?? "Null",
+                    'start_date' => Carbon::parse($tt->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($tt->end_date)->format('d/m/Y'),
+                    'schedule_lessons' => $tt->lessons->map(function ($lesson) use ($tt) {
+                        $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
+                            ->setTimeFrom(Carbon::parse($tt->shift->start_time));
+
+                        $currentDateTime = now();
+
+                        if ($currentDateTime < $lessonDateTime) {
+                            $status = "Chưa tới";
+                        } elseif ($currentDateTime >= $lessonDateTime && $currentDateTime <= $lessonDateTime->copy()->addMinutes($tt->shift->duration)) {
+                            $status = "Đang giảng dạy";
+                        } else {
+                            $status = "Đã kết thúc";
+                        }
+
+                        return [
+                            'name' => $lesson->name,
+                            'description' => $lesson->description,
+                            'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
+                            'status' => $status,
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập hoặc kỳ học không tồn tại.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
+        }
+    }
+
 
     public function getDetailSchedule(string $scheduleId)
     {

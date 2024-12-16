@@ -148,6 +148,7 @@ Route::
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
+        Route::get('statistics/statisticSubMajors/{majorId}', [StatisticsController::class, "statisticSubMajors"]);
         Route::post('send-email', [MailController::class, 'sendEmail']);
         Route::post('send-email/teacher', [MailController::class, 'sendEmailToTeacher']);
 

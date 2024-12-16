@@ -145,11 +145,6 @@ const AsideAdmin = () => {
             key: "sub4",
             icon: <AreaChartOutlined />,
             label: <Link to="/admin/statistical-report">Thống kê</Link>,
-            children: statistical_report.map((item, index) => ({
-                key: `sub2-${index + 1}`,
-                icon: item.icon,
-                label: <Link to={item.link}>{item.name}</Link>,
-            })),
         },
         {
             key: "sub5",

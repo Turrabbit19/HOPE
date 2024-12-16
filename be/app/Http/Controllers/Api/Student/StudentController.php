@@ -328,6 +328,7 @@ class   StudentController extends Controller
 
                 return [
                     'id' => $schedule->id,
+                    'subject_id' => $schedule->schedule->subject->id,
                     'classroom' => $schedule->schedule->classroom->code,
                     'subject_name' => $schedule->schedule->subject->name,
                     'shift_name' => $schedule->schedule->shift->name,

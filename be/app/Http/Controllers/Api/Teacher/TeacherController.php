@@ -63,7 +63,7 @@ class TeacherController extends Controller
 
             $schedules = Schedule::where('teacher_id', $teacher->id)
                 ->where('end_date', '>=', Carbon::now())
-                ->with('days', 'shift', 'room', 'classroom', 'course', 'semester', 'major', 'subject') // Load các quan hệ liên quan
+                ->with('days', 'shift', 'room', 'classroom', 'course', 'semester', 'major', 'subject')
                 ->get();
 
             $currentDateTime = Carbon::now();
@@ -386,6 +386,8 @@ class TeacherController extends Controller
                 return [
                     'student_id' => $ls->student->id,
                     'student_name' => $ls->student->user->name,
+                    'student_avatar' => $ls->student->user->avatar,
+                    'student_code' => $ls->student->student_code,
                     'total_lessons' => $lessons->count(),
                     'attended_lessons' => $attendedCount,
                     'absent_lessons' => $absentCount,
@@ -460,7 +462,7 @@ class TeacherController extends Controller
                     return [
                         'student_id' => $studentId,
                         'student_avatar' => $ls->student->user->avatar,
-                        'student_code' => $ls->student->code,
+                        'student_code' => $ls->student->student_code,
                         'student_name' => $ls->student->user->name,
                         'status' => $status,
                     ];

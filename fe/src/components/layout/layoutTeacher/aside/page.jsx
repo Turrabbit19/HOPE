@@ -36,7 +36,7 @@ const AsideTeacher = () => {
         </div>
 
         <div className="mb-6">
-          <h2 className="mb-3 text-xl font-bold text-gray-700">Danh sách lớp học</h2>
+          <h2 className="mb-3 text-xl font-bold text-gray-700">Danh sách lớp học & điểm danh</h2>
           <nav className="space-y-3">
             <Link to="listclasslesson" className="group flex items-center p-3 rounded-lg hover:bg-red-100 transition duration-300">
               <svg

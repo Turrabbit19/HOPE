@@ -10,10 +10,10 @@ const LayoutClient = () => {
       <AsideClient />
 
       {/* Phần nội dung chính của ứng dụng */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <HeaderClient />
 
-        <main className="flex-1 p-8 bg-white overflow-y-auto">
+        <main className="flex-1 p-8 bg-white overflow-y-auto min-h-0">
           <div className="max-w-[1470px] mx-auto">
             {/* Nội dung từ route con sẽ được hiển thị tại đây */}
             <Outlet />

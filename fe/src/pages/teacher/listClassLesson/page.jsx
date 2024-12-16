@@ -69,12 +69,13 @@ export default function ScheduleTable() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lớp học</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Môn học</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Các buổi</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
+                <th className="text-xl px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Lớp học</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Môn học</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Phòng</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Các buổi</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -113,6 +114,18 @@ export default function ScheduleTable() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
+                    <div
+                      className={`text-md font-bold ${schedule.schedule_status === 'Active'
+                          ? 'text-green-600'
+                          : schedule.schedule_status === 'Pending'
+                            ? 'text-yellow-600'
+                            : 'text-red-600'
+                        }`}
+                    >
+                      {schedule.schedule_status}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     <button
                       onClick={() => handleDetailClick(schedule)}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-lg font-medium rounded-full shadow-sm text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400"
@@ -123,8 +136,8 @@ export default function ScheduleTable() {
                 </tr>
               ))}
             </tbody>
-
           </table>
+
         </div>
       </div>
       {isPopupOpen && (

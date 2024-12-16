@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon, BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react';
 
 const ListClassLessonDetail = ({ scheduleData }) => {
   const { ScheduleInfor } = scheduleData;
@@ -9,7 +10,9 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   const [attendanceStatus, setAttendanceStatus] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [isAttendanceSubmitted, setIsAttendanceSubmitted] = useState(false); // Added state for submitted attendance
+  const [isAttendanceSubmitted, setIsAttendanceSubmitted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const studentsPerPage = 10;
 
   const isCurrentDate = (dateString) => {
     const today = new Date();
@@ -58,7 +61,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
 
       const data = await response.json();
 
-      if (data.ListStudents) {
+      if (data.ListStudents && Array.isArray(data.ListStudents)) {
         setStudents(data.ListStudents);
         setSelectedLesson(lessonId);
         const initialStatus = {};
@@ -67,11 +70,13 @@ const ListClassLessonDetail = ({ scheduleData }) => {
             student.status === "Có mặt" ? 1 : 0;
         });
         setAttendanceStatus(initialStatus);
-        setIsModalOpen(true);
         setIsAttendanceSubmitted(lessonStatus === "Đã hoàn thành");
+        setCurrentPage(1);
       } else {
-        setError("Không có dữ liệu sinh viên.");
+        setStudents([]);
+        setError("Lớp học này hiện chưa có sinh viên nào.");
       }
+      setIsModalOpen(true);
     } catch (err) {
       console.error("Error fetching student data:", err);
       setError("Không thể lấy danh sách sinh viên. Vui lòng thử lại.");
@@ -133,7 +138,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
       const result = await response.json();
       console.log("Attendance submitted successfully:", result);
       setSuccessMessage("Điểm danh thành công!");
-      setIsAttendanceSubmitted(true); // Set to true after successful submission
+      setIsAttendanceSubmitted(true);
     } catch (err) {
       console.error("Error submitting attendance:", err);
       setError("Không thể cập nhật điểm danh. Vui lòng thử lại.");
@@ -147,171 +152,255 @@ const ListClassLessonDetail = ({ scheduleData }) => {
     setStudents([]);
     setAttendanceStatus({});
     setSuccessMessage("");
-    setIsAttendanceSubmitted(false); // Reset submitted status on close
+    setIsAttendanceSubmitted(false);
+    setCurrentPage(1);
+    setError(null); 
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-6 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">
-        {ScheduleInfor.subject_name}
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="space-y-4">
-          <p className="text-xl text-gray-700">
-            <span className="font-semibold">Lớp học:</span>{" "}
-            {ScheduleInfor.classroom}
-          </p>
-          <p className="text-xl text-gray-700">
-            <span className="font-semibold">Ca học:</span>{" "}
-            {ScheduleInfor.shift_name}
-          </p>
-        </div>
-        <div className="space-y-4">
-          <p className="text-xl text-gray-700">
-            <span className="font-semibold">Phòng:</span>{" "}
-            {ScheduleInfor.room_name}
-          </p>
-          <p className="text-xl text-gray-700">
-            <span className="font-semibold">Liên kết:</span>{" "}
-            <a href={ScheduleInfor.link} className="text-blue-600 hover:underline">
-              {ScheduleInfor.link}
-            </a>
-          </p>
-        </div>
-      </div>
-      <p className="text-xl text-gray-700 mb-8">
-        <span className="font-semibold">Thời gian:</span>{" "}
-        {ScheduleInfor.start_date} - {ScheduleInfor.end_date}
-      </p>
-
-      <h3 className="text-2xl font-bold mb-6 text-gray-800">
-        Danh sách buổi học:
-      </h3>
-      <div className="space-y-6">
-        {ScheduleInfor.schedule_lessons.map((lesson) => (
-          <div
-            key={lesson.id}
-            className={`bg-white rounded-lg shadow-md p-6 ${isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
-              }`}
-          >
-            <div className="flex flex-wrap justify-between items-center mb-4">
-              <h4 className="text-xl font-semibold text-gray-800">
-                {lesson.name}
-                {isCurrentDate(lesson.date) && (
-                  <span className="ml-2 px-2 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
-                    Hôm nay
-                  </span>
-                )}
-              </h4>
-              <span
-                className={`px-3 py-1 text-sm font-semibold rounded-full ${lesson.status === "Đã hoàn thành"
-                    ? "bg-green-100 text-green-800"
-                    : lesson.status === "Đang dạy"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-              >
-                {lesson.status}
-              </span>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-8">
+      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
+        <div className="p-8">
+          <h2 className="text-4xl font-bold mb-6 text-gray-800 border-b pb-4">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">
+              {ScheduleInfor.subject_name}
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="space-y-4">
+              <p className="text-xl text-gray-700 flex items-center">
+                <Users className="w-6 h-6 mr-2 text-blue-500" />
+                <span className="font-semibold">Lớp học:</span>{" "}
+                <span className="ml-2">{ScheduleInfor.classroom}</span>
+              </p>
+              <p className="text-xl text-gray-700 flex items-center">
+                <Clock className="w-6 h-6 mr-2 text-blue-500" />
+                <span className="font-semibold">Ca học:</span>{" "}
+                <span className="ml-2">{ScheduleInfor.shift_name}</span>
+              </p>
             </div>
-            <p className="text-lg text-gray-600 mb-4">{lesson.description}</p>
-            <p className="text-lg text-gray-600 mb-4">
-              <span className="font-semibold">Ngày:</span> {lesson.date}
-            </p>
-            <button
-              onClick={() => handleAttendance(lesson.id, lesson.date, ScheduleInfor.shift_name, lesson.status)}
-              className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${
-                !isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
-              disabled={!isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)}
-            >
-              {loading && selectedLesson === lesson.id
-                ? "Đang tải..."
-                : isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status)
-                  ? lesson.status === "Đã hoàn thành" ? "Xem điểm danh" : "Điểm danh"
-                  : "Chưa đến giờ"}
-            </button>
+            <div className="space-y-4">
+              <p className="text-xl text-gray-700 flex items-center">
+                <BookOpen className="w-6 h-6 mr-2 text-blue-500" />
+                <span className="font-semibold">Phòng:</span>{" "}
+                <span className="ml-2">{ScheduleInfor.room_name}</span>
+              </p>
+              <p className="text-xl text-gray-700 flex items-center">
+                <LinkIcon className="w-6 h-6 mr-2 text-blue-500" />
+                <span className="font-semibold">Liên kết:</span>{" "}
+                <a href={ScheduleInfor.link} className="ml-2 text-blue-600 hover:underline">
+                  {ScheduleInfor.link}
+                </a>
+              </p>
+            </div>
           </div>
-        ))}
+          <p className="text-xl text-gray-700 mb-8 flex items-center">
+            <Clock className="w-6 h-6 mr-2 text-blue-500" />
+            <span className="font-semibold">Thời gian:</span>{" "}
+            <span className="ml-2">{ScheduleInfor.start_date} - {ScheduleInfor.end_date}</span>
+          </p>
+
+          <h3 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">
+            Danh sách buổi học
+          </h3>
+          <div className="space-y-6">
+            {ScheduleInfor.schedule_lessons.map((lesson) => (
+              <div
+                key={lesson.id}
+                className={`bg-white rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg ${
+                  isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
+                }`}
+              >
+                <div className="flex flex-wrap justify-between items-center mb-4">
+                  <h4 className="text-xl font-semibold text-gray-800 flex items-center">
+                    <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
+                    {lesson.name}
+                    {isCurrentDate(lesson.date) && (
+                      <span className="ml-2 px-2 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                        Hôm nay
+                      </span>
+                    )}
+                  </h4>
+                  <span
+                    className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                      lesson.status === "Đã hoàn thành"
+                        ? "bg-green-100 text-green-800"
+                        : lesson.status === "Đang dạy"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {lesson.status}
+                  </span>
+                </div>
+                <p className="text-lg text-gray-600 mb-4">{lesson.description}</p>
+                <p className="text-lg text-gray-600 mb-4 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-blue-500" />
+                  <span className="font-semibold">Ngày:</span>{" "}
+                  <span className="ml-2">{lesson.date}</span>
+                </p>
+                <button
+                  onClick={() => handleAttendance(lesson.id, lesson.date, ScheduleInfor.shift_name, lesson.status)}
+                  className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out ${
+                    !isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={!isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)}
+                >
+                  {loading && selectedLesson === lesson.id
+                    ? "Đang tải..."
+                    : isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status)
+                    ? lesson.status === "Đã hoàn thành" ? "Xem điểm danh" : "Điểm danh"
+                    : "Chưa đến giờ"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
-          onClick={(e) => e.stopPropagation()}
+          className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+          onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-lg w-full shadow-lg relative"
+            className="bg-white rounded-lg p-8 max-w-6xl w-full shadow-2xl transform transition-all duration-300 ease-in-out"
           >
-            <button
-              onClick={closeModal}
-              className="absolute top-0 right-0 p-4 text-lg font-bold text-gray-500"
-            >
-              &times;
-            </button>
-            <h5 className="text-xl font-semibold mb-4 text-gray-700">
-              Danh sách sinh viên:
-            </h5>
-            {Array.isArray(students) && students.length > 0 ? (
-              <ul className="space-y-4">
-                {students.map((student) => (
-                  <li
-                    key={student.student_id}
-                    className="flex items-center justify-between bg-white p-4 rounded-md shadow-sm"
-                  >
-                    <span className="text-lg text-gray-700">
-                      {student.student_name}
-                    </span>
-                    {isAttendanceSubmitted ? (
-                      <span className={`px-4 py-2 rounded-lg text-lg font-medium ${
-                        attendanceStatus[student.student_id] === 1
-                          ? "bg-green-500 text-white"
-                          : "bg-red-500 text-white"
-                      }`}>
-                        {attendanceStatus[student.student_id] === 1 ? "Có mặt" : "Vắng mặt"}
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => toggleAttendance(student.student_id)}
-                        className={`px-4 py-2 rounded-lg text-lg font-medium transition-colors duration-200 ${
-                          attendanceStatus[student.student_id] === 1
-                            ? "bg-green-500 hover:bg-green-600 text-white"
-                            : "bg-red-500 hover:bg-red-600 text-white"
-                        }`}
-                      >
-                        {attendanceStatus[student.student_id] === 1
-                          ? "Có mặt"
-                          : "Vắng mặt"}
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
+            <div className="flex justify-between items-center mb-6">
+              <h5 className="text-2xl font-bold text-gray-800">
+                Danh sách sinh viên
+              </h5>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang tải dữ liệu</h3>
+                <p className="text-gray-500">Vui lòng đợi trong giây lát...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 text-yellow-500 mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Chưa có sinh viên</h3>
+                <p className="text-gray-500">{error}</p>
+              </div>
+            ) : students.length > 0 ? (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">Mã SV</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">Ảnh</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-2/6">Tên</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-2/6">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {students
+                        .slice((currentPage - 1) * studentsPerPage, currentPage * studentsPerPage)
+                        .map((student) => (
+                          <tr key={student.student_id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
+                            <td className="py-4 px-6 whitespace-nowrap  text-gray-900 text-xl">{student.student_code || 'N/A'}</td>
+                            <td className="py-4 px-6 whitespace-nowrap">
+                              {student.student_avatar ? (
+                                <img src={student.student_avatar} alt={student.student_name} className="w-12 h-12 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                  <span className="text-blue-500 font-semibold text-lg">{student.student_name.charAt(0)}</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-4 px-6 whitespace-nowrap  text-gray-900">{student.student_name}</td>
+                            <td className="py-4 px-6 whitespace-nowrap">
+                              {isAttendanceSubmitted ? (
+                                <span className={`px-4 py-2 inline-flex  leading-5 font-semibold rounded-full ${
+                                  attendanceStatus[student.student_id] === 1
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}>
+                                  {attendanceStatus[student.student_id] === 1 ? "Có mặt" : "Vắng mặt"}
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => toggleAttendance(student.student_id)}
+                                  className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full transition-colors duration-200 ${
+                                    attendanceStatus[student.student_id] === 1
+                                      ? "bg-green-100 hover:bg-green-200 text-green-800"
+                                      : "bg-red-100 hover:bg-red-200 text-red-800"
+                                  }`}
+                                >
+                                  {attendanceStatus[student.student_id] === 1 ? "Có mặt" : "Vắng mặt"}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-6 flex items-center justify-between bg-gray-50 px-4 py-3 sm:px-6 rounded-b-lg">
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                      Trước
+                    </button>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Hiển thị <span className="font-medium">{((currentPage - 1) * studentsPerPage) + 1}</span> đến <span className="font-medium">{Math.min(currentPage * studentsPerPage, students.length)}</span> trong tổng số <span className="font-medium">{students.length}</span> sinh viên
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(students.length / studentsPerPage)))}
+                      disabled={currentPage === Math.ceil(students.length / studentsPerPage)}
+                      className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Tiếp
+                      <ChevronRightIcon className="w-5 h-5 ml-2" />
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
-              <p className="text-lg text-gray-500">
-                Không có dữ liệu sinh viên
-              </p>
+              <div className="text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 text-yellow-500 mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Chưa có sinh viên</h3>
+                <p className="text-gray-500">Lớp học này hiện chưa có sinh viên nào được thêm vào.</p>
+              </div>
             )}
             {!isAttendanceSubmitted && students.length > 0 && (
               <button
                 onClick={() => submitAttendance(selectedLesson)}
-                className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out text-lg"
+                className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out text-lg w-full"
                 disabled={loading}
               >
                 {loading ? "Đang cập nhật..." : "Cập nhật điểm danh"}
               </button>
             )}
             {successMessage && (
-              <p className="mt-4 text-green-500 font-semibold">{successMessage}</p>
+              <p className="mt-4 text-green-500 font-semibold text-center">{successMessage}</p>
             )}
-            <button
-              onClick={closeModal}
-              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
-            >
-              Đóng
-            </button>
           </div>
         </div>
       )}

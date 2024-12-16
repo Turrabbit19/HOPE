@@ -97,6 +97,7 @@ class SyllabusController extends Controller
                 ->first();
 
             $attendedLessons = 0;
+            $missedLessons = 0;
             $totalLessons = 0;
 
             if ($detailClassroom) {
@@ -112,11 +113,14 @@ class SyllabusController extends Controller
                     ->get();
 
                 if (!$schedules->isEmpty()) {
-                    $schedulesData = $schedules->map(function ($schedule) use ($student, &$attendedLessons, &$totalLessons) {
-                        $lessons = $schedule->lessons->map(function ($lesson) use ($student, $schedule, &$attendedLessons) {
+                    $schedulesData = $schedules->map(function ($schedule) use ($student, &$attendedLessons, &$missedLessons, &$totalLessons) {
+                        $lessons = $schedule->lessons->map(function ($lesson) use ($student, $schedule, &$attendedLessons, &$missedLessons) {
                             $status = $this->getLessonAttendanceStatus($student->id, $lesson, $schedule);
+
                             if ($status === "Có mặt") {
                                 $attendedLessons++;
+                            } elseif ($status === "Vắng") {
+                                $missedLessons++;
                             }
 
                             return [
@@ -156,7 +160,9 @@ class SyllabusController extends Controller
                         'statistics' => [
                             'total_lessons' => $totalLessons,
                             'attended_lessons' => $attendedLessons,
+                            'missed_lessons' => $missedLessons,
                             'attendance_rate' => $totalLessons > 0 ? round(($attendedLessons / $totalLessons) * 100, 2) . "%" : "0%",
+                            'missed_rate' => $totalLessons > 0 ? round(($missedLessons / $totalLessons) * 100, 2) . "%" : "0%",
                         ],
                     ];
                 } else {

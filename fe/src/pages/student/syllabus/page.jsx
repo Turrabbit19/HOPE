@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Book, Calendar, User, MapPin, Clock, CheckCircle, XCircle, HelpCircle, AppWindowMac } from 'lucide-react';
+import {
+  X,
+  Book,
+  Calendar,
+  User,
+  MapPin,
+  Clock,
+  CheckCircle,
+  XCircle,
+  HelpCircle,
+  AppWindowMac,
+} from "lucide-react";
 
 function SubjectDetailsModal({ subject, isOpen, onClose }) {
   if (!isOpen || !subject) return null;
@@ -96,7 +107,6 @@ function SubjectDetailsModal({ subject, isOpen, onClose }) {
                 ))}
               </div>
 
-              {/* Thống kê điểm danh */}
               <div className="bg-green-50 p-6 rounded-lg">
                 <h3 className="text-3xl font-semibold mb-4 text-green-800">
                   Thống kê điểm danh
@@ -111,14 +121,42 @@ function SubjectDetailsModal({ subject, isOpen, onClose }) {
                     {subject.statistics.attended_lessons}
                   </p>
                   <p>
-                    <strong>Tỷ lệ tham gia:</strong>{" "}
-                    {subject.statistics.attendance_rate}
+                    <strong>Số buổi vắng:</strong>{" "}
+                    {subject.statistics.missed_lessons}
+                  </p>
+                  <p>
+                    <strong>Tỷ lệ tham gia:</strong>
+                    <span className="text-green-600">
+                      {subject.statistics.attendance_rate}
+                    </span>
+                  </p>
+                  <p>
+                    <strong>Tỷ lệ vắng mặt:</strong>
+                    <span className="text-red-600">
+                      {subject.statistics.missed_rate}
+                    </span>
                   </p>
                 </div>
+
+                {/* Gộp thanh tiến độ tổng hợp */}
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
-                    className="bg-green-600 h-2.5 rounded-full"
-                    style={{ width: subject.statistics.attendance_rate }}
+                    className="h-2.5"
+                    style={{
+                      width: `${parseFloat(
+                        subject.statistics.attendance_rate
+                      )}%`,
+                      backgroundColor: "#4CAF50",
+                      float: "left",
+                    }}
+                  ></div>
+                  <div
+                    className="h-2.5"
+                    style={{
+                      width: `${parseFloat(subject.statistics.missed_rate)}%`,
+                      backgroundColor: "#F44336",
+                      float: "left",
+                    }}
                   ></div>
                 </div>
               </div>
@@ -167,10 +205,8 @@ export default function Syllabus() {
   const [activeTab, setActiveTab] = useState("Curriculum");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  const tabs = [
-    { id: "Curriculum", label: "Curriculum", icon: "📚" },
-  ];
+
+  const tabs = [{ id: "Curriculum", label: "Curriculum", icon: "📚" }];
 
   useEffect(() => {
     const fetchCurriculum = async () => {
@@ -218,6 +254,8 @@ export default function Syllabus() {
       }
 
       const data = await response.json();
+
+      console.log(data);
       setSelectedSubject(data.data);
       setIsModalOpen(true);
     } catch (err) {
@@ -245,10 +283,11 @@ export default function Syllabus() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 ${activeTab === tab.id
+            className={`flex items-center gap-2 px-4 py-2 ${
+              activeTab === tab.id
                 ? "text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-600"
-              }`}
+            }`}
           >
             <span>{tab.icon}</span>
             <span>{tab.label}</span>
@@ -298,7 +337,10 @@ export default function Syllabus() {
                         >
                           {subject.name}
                           {subject.hasClassData && (
-                            <AppWindowMac className="ml-2 w-5 h-5 text-green-500" title="Có dữ liệu lớp học" />
+                            <AppWindowMac
+                              className="ml-2 w-5 h-5 text-green-500"
+                              title="Có dữ liệu lớp học"
+                            />
                           )}
                         </button>
                       </td>
@@ -307,10 +349,11 @@ export default function Syllabus() {
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
                         <span
-                          className={`${subject.form === "ONL"
+                          className={`${
+                            subject.form === "ONL"
                               ? "text-green-600"
                               : "text-red-600"
-                            } font-medium`}
+                          } font-medium`}
                         >
                           {subject.form}
                         </span>
@@ -332,4 +375,3 @@ export default function Syllabus() {
     </div>
   );
 }
-

@@ -184,6 +184,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
+        Route::get('classrooms', [StudentController::class, 'getStudentClassrooms']);
         Route::get('statistics/{semesterId}', [SyllabusController::class, 'getStatisticsBySubject']);
 
         Route::get('syllabus', [SyllabusController::class, 'getSyllabus']);

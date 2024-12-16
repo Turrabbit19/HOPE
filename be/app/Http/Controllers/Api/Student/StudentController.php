@@ -328,6 +328,7 @@ class   StudentController extends Controller
 
                 return [
                     'id' => $schedule->id,
+                    'subject_id' => $schedule->schedule->subject->id,
                     'classroom' => $schedule->schedule->classroom->code,
                     'subject_name' => $schedule->schedule->subject->name,
                     'shift_name' => $schedule->schedule->shift->name,
@@ -481,6 +482,7 @@ class   StudentController extends Controller
 
                         return [
                             'name' => $lesson->name,
+                            'description' => $lesson->description,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
                             'status' => $status,
                         ];
@@ -495,7 +497,6 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function getSubMajors()
     {
         $user = Auth::user();

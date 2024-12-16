@@ -154,7 +154,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
     setSuccessMessage("");
     setIsAttendanceSubmitted(false);
     setCurrentPage(1);
-    setError(null); 
+    setError(null);
   };
 
   return (
@@ -207,9 +207,8 @@ const ListClassLessonDetail = ({ scheduleData }) => {
             {ScheduleInfor.schedule_lessons.map((lesson) => (
               <div
                 key={lesson.id}
-                className={`bg-white rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg ${
-                  isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
-                }`}
+                className={`bg-white rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg ${isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
+                  }`}
               >
                 <div className="flex flex-wrap justify-between items-center mb-4">
                   <h4 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -222,13 +221,12 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                     )}
                   </h4>
                   <span
-                    className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                      lesson.status === "Đã hoàn thành"
+                    className={`px-3 py-1 text-sm font-semibold rounded-full ${lesson.status === "Đã hoàn thành"
                         ? "bg-green-100 text-green-800"
                         : lesson.status === "Đang dạy"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
                   >
                     {lesson.status}
                   </span>
@@ -241,18 +239,17 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                 </p>
                 <button
                   onClick={() => handleAttendance(lesson.id, lesson.date, ScheduleInfor.shift_name, lesson.status)}
-                  className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out ${
-                    !isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)
+                  className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out ${!isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)
                       ? "opacity-50 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                   disabled={!isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status) || (loading && selectedLesson === lesson.id)}
                 >
                   {loading && selectedLesson === lesson.id
                     ? "Đang tải..."
                     : isLessonTimeReached(lesson.date, ScheduleInfor.shift_name, lesson.status)
-                    ? lesson.status === "Đã hoàn thành" ? "Xem điểm danh" : "Điểm danh"
-                    : "Chưa đến giờ"}
+                      ? lesson.status === "Đã hoàn thành" ? "Xem điểm danh" : "Điểm danh"
+                      : "Chưa đến giờ"}
                 </button>
               </div>
             ))}
@@ -300,9 +297,37 @@ const ListClassLessonDetail = ({ scheduleData }) => {
             ) : students.length > 0 ? (
               <>
                 <div className="overflow-x-auto">
+                  <div className="mt-6 flex items-center justify-between px-4 py-3 sm:px-6 rounded-b-lg">
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center px-4 py-2  font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                        Trước
+                      </button>
+                    </div>
+                    <div>
+                      <p className=" text-gray-700">
+                        Hiển thị <span className="font-medium">{((currentPage - 1) * studentsPerPage) + 1}</span> đến <span className="font-medium">{Math.min(currentPage * studentsPerPage, students.length)}</span> trong tổng số <span className="font-medium">{students.length}</span> sinh viên
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(students.length / studentsPerPage)))}
+                        disabled={currentPage === Math.ceil(students.length / studentsPerPage)}
+                        className="relative inline-flex items-center px-4 py-2 ml-3  font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Tiếp
+                        <ChevronRightIcon className="w-5 h-5 ml-2" />
+                      </button>
+                    </div>
+                  </div>
                   <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <thead className="bg-gray-100">
                       <tr>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">STT</th>
                         <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">Mã SV</th>
                         <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">Ảnh</th>
                         <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-2/6">Tên</th>
@@ -312,9 +337,12 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                     <tbody className="divide-y divide-gray-200">
                       {students
                         .slice((currentPage - 1) * studentsPerPage, currentPage * studentsPerPage)
-                        .map((student) => (
-                          <tr key={student.student_id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
-                            <td className="py-4 px-6 whitespace-nowrap  text-gray-900 text-xl">{student.student_code || 'N/A'}</td>
+                        .map((student, index) => (
+                          <tr key={student.student_id} className="hover:bg-gray-50 transition duration-150 ease-in-out ">
+                            <td className="py-4 px-6 whitespace-nowrap text-gray-900 text-xl">
+                              {(currentPage - 1) * studentsPerPage + index + 1}
+                            </td>
+                            <td className="py-4 px-6 whitespace-nowrap">{student.student_code || 'N/A'}</td>
                             <td className="py-4 px-6 whitespace-nowrap">
                               {student.student_avatar ? (
                                 <img src={student.student_avatar} alt={student.student_name} className="w-12 h-12 rounded-full object-cover" />
@@ -324,24 +352,22 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                                 </div>
                               )}
                             </td>
-                            <td className="py-4 px-6 whitespace-nowrap  text-gray-900">{student.student_name}</td>
+                            <td className="py-4 px-6 whitespace-nowrap text-gray-900">{student.student_name}</td>
                             <td className="py-4 px-6 whitespace-nowrap">
                               {isAttendanceSubmitted ? (
-                                <span className={`px-4 py-2 inline-flex  leading-5 font-semibold rounded-full ${
-                                  attendanceStatus[student.student_id] === 1
+                                <span className={`px-4 py-2 inline-flex leading-5 font-semibold rounded-full ${attendanceStatus[student.student_id] === 1
                                     ? "bg-green-100 text-green-800"
                                     : "bg-red-100 text-red-800"
-                                }`}>
+                                  }`}>
                                   {attendanceStatus[student.student_id] === 1 ? "Có mặt" : "Vắng mặt"}
                                 </span>
                               ) : (
                                 <button
                                   onClick={() => toggleAttendance(student.student_id)}
-                                  className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full transition-colors duration-200 ${
-                                    attendanceStatus[student.student_id] === 1
+                                  className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full transition-colors duration-200 ${attendanceStatus[student.student_id] === 1
                                       ? "bg-green-100 hover:bg-green-200 text-green-800"
                                       : "bg-red-100 hover:bg-red-200 text-red-800"
-                                  }`}
+                                    }`}
                                 >
                                   {attendanceStatus[student.student_id] === 1 ? "Có mặt" : "Vắng mặt"}
                                 </button>
@@ -352,33 +378,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-6 flex items-center justify-between bg-gray-50 px-4 py-3 sm:px-6 rounded-b-lg">
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeftIcon className="w-5 h-5 mr-2" />
-                      Trước
-                    </button>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Hiển thị <span className="font-medium">{((currentPage - 1) * studentsPerPage) + 1}</span> đến <span className="font-medium">{Math.min(currentPage * studentsPerPage, students.length)}</span> trong tổng số <span className="font-medium">{students.length}</span> sinh viên
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(students.length / studentsPerPage)))}
-                      disabled={currentPage === Math.ceil(students.length / studentsPerPage)}
-                      className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Tiếp
-                      <ChevronRightIcon className="w-5 h-5 ml-2" />
-                    </button>
-                  </div>
-                </div>
+
               </>
             ) : (
               <div className="text-center py-8">

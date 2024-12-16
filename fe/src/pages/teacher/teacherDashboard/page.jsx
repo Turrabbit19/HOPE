@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { AlertCircle, Clock, Users, BookOpen, MapPin } from 'lucide-react';
 
 export default function TeacherInfo() {
   const [teacher, setTeacher] = useState(null);
-  const [timetable, setTimetable] = useState([]);
+  const [todayLessons, setTodayLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState('');
@@ -33,34 +34,48 @@ export default function TeacherInfo() {
         setTeacher(data.data);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching teacher data:', err);
-        setError(err.message);
+        console.error('Error fetching data:', err);
+        setError(err.response ? `Lỗi: ${err.response.status} - ${err.response.statusText}` : err.message);
         setLoading(false);
       }
     };
 
-    const fetchTimetable = async () => {
-      if (!token) return;
+    const fetchTodayLessons = async () => {
+      if (!token) {
+        console.log('Token không có sẵn cho fetchTodayLessons');
+        return;
+      }
       try {
+        console.log('Đang gửi yêu cầu lấy lịch học');
         const response = await fetch('http://127.0.0.1:8000/api/teacher/timetable', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log('Đã nhận phản hồi:', response.status, response.statusText);
         if (!response.ok) {
-          throw new Error('Không thể lấy lịch dạy');
+          throw new Error(`Không thể lấy lịch dạy: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        setTimetable(data.data);
+        console.log('Dữ liệu lịch học nhận được:', data);
+
+        // Lọc lịch học cho ngày hôm nay
+        const today = new Date().toISOString().split('T')[0];
+        const todayLessons = data.data.filter(lesson => lesson.date === today);
+        setTodayLessons(todayLessons);
       } catch (err) {
-        console.error('Error fetching timetable:', err);
+        console.error('Lỗi khi lấy lịch học:', err);
         setError(err.message);
       }
     };
 
     fetchTeacherData();
-    fetchTimetable();
+    fetchTodayLessons();
   }, [token]);
+
+  useEffect(() => {
+    console.log('todayLessons đã được cập nhật:', todayLessons);
+  }, [todayLessons]);
 
   const formatTime = (time) => {
     if (!time) return 'N/A';
@@ -163,47 +178,43 @@ export default function TeacherInfo() {
 
         {activeTab === 'timetable' && (
           <div>
-            <h3 className="font-bold mb-4 text-xl">Lịch dạy</h3>
-            {timetable.length > 0 ? (
-              <table className="w-full text-lg">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-2 text-left">Môn học</th>
-                    <th className="py-3 px-2 text-left">Lớp</th>
-                    {/* <th className="py-3 px-2 text-left">Thời gian</th> */}
-                    <th className="py-3 px-2 text-left">Phòng</th>
-                    <th className="py-3 px-2 text-left">Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {timetable.map((lesson, index) => (
-                    <tr
-                      key={index}
-                      className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
-                    >
-                      <td className="py-3 px-2">{lesson.subject_name}</td>
-                      <td className="py-3 px-2">{lesson.classroom_code}</td>
-                      {/* <td className="py-3 px-2">
-                        {formatTime(lesson.date)} - {formatTime(lesson.date)}
-                      </td> */}
-                      <td className="py-3 px-2">{lesson.room_name}</td>
-                      <td className="py-3 px-2">
-                        <span className={`px-2 py-1 rounded ${
-                          lesson.status === 'Đã hoàn thành'
-                            ? 'bg-green-100 text-green-800'
-                            : lesson.status === 'Đang dạy'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {lesson.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <h3 className="font-bold mb-4 text-xl">
+              Lịch dạy hôm nay ({new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })})
+            </h3>
+            {console.log('Đang render lịch học, số lượng bài học:', todayLessons.length)}
+            {todayLessons.length > 0 ? (
+              <div className="space-y-4">
+                {todayLessons.map((lesson, index) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-4 shadow">
+                    <h4 className="text-lg font-semibold mb-2 flex items-center">
+                      <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
+                      {lesson.subject_name}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <p className="flex items-center">
+                        <Users className="w-4 h-4 mr-2 text-gray-500" />
+                        Lớp: {lesson.class_name}
+                      </p>
+                      <p className="flex items-center">
+                        <Clock className="w-4 h-4 mr-2 text-gray-500" />
+                        Thời gian: {formatTime(lesson.start_time)} - {formatTime(lesson.end_time)}
+                      </p>
+                      <p className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                        Phòng: {lesson.room_name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p className="text-gray-600 text-lg">Không có lịch dạy.</p>
+              <div className="text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 text-yellow-500 mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có lịch dạy hôm nay</h3>
+                <p className="text-gray-500">Bạn không có buổi dạy nào được lên lịch cho ngày hôm nay.</p>
+              </div>
             )}
           </div>
         )}

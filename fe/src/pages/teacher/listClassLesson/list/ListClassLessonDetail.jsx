@@ -303,10 +303,10 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                   <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Mã SV</th>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Ảnh</th>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/6">Tên</th>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/6">Trạng thái</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">Mã SV</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-1/6">Ảnh</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-2/6">Tên</th>
+                        <th className="py-3 px-6 text-left text-xl font-medium text-gray-500 uppercase tracking-wider w-2/6">Trạng thái</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -314,7 +314,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                         .slice((currentPage - 1) * studentsPerPage, currentPage * studentsPerPage)
                         .map((student) => (
                           <tr key={student.student_id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
-                            <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-900">{student.student_code || 'N/A'}</td>
+                            <td className="py-4 px-6 whitespace-nowrap  text-gray-900 text-xl">{student.student_code || 'N/A'}</td>
                             <td className="py-4 px-6 whitespace-nowrap">
                               {student.student_avatar ? (
                                 <img src={student.student_avatar} alt={student.student_name} className="w-12 h-12 rounded-full object-cover" />
@@ -324,10 +324,10 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                                 </div>
                               )}
                             </td>
-                            <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-900">{student.student_name}</td>
+                            <td className="py-4 px-6 whitespace-nowrap  text-gray-900">{student.student_name}</td>
                             <td className="py-4 px-6 whitespace-nowrap">
                               {isAttendanceSubmitted ? (
-                                <span className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full ${
+                                <span className={`px-4 py-2 inline-flex  leading-5 font-semibold rounded-full ${
                                   attendanceStatus[student.student_id] === 1
                                     ? "bg-green-100 text-green-800"
                                     : "bg-red-100 text-red-800"

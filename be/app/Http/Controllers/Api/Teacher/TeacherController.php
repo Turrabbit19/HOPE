@@ -275,6 +275,7 @@ class TeacherController extends Controller
                 'classroom' => $scheduleInfor->classroom->code,
                 'subject_name' => $scheduleInfor->subject->name,
                 'shift_name' => $scheduleInfor->shift->name,
+                'shift_start_time' => $scheduleInfor->shift->start_time,
                 'room_name' => $scheduleInfor->room->name ?? "Null",
                 'link' => $scheduleInfor->link ?? "Null",
                 'start_date' => Carbon::parse($scheduleInfor->start_date)->format('d/m/Y'),

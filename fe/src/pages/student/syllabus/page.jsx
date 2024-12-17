@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { X, Book, Calendar, User, MapPin, Clock, CheckCircle, XCircle, HelpCircle, AppWindowMac, Check } from 'lucide-react';
+import { X, Book, Calendar, User, MapPin, Clock, CheckCircle, XCircle, HelpCircle, Check, Info } from 'lucide-react';
 
 function SubjectDetailsModal({ subject, isOpen, onClose }) {
   if (!isOpen || !subject) return null;
@@ -266,16 +266,6 @@ export default function Syllabus() {
     localStorage.setItem('subjectsWithSchedule', JSON.stringify(subjectsWithSchedule));
   }, [subjectsWithSchedule]);
 
-  // useEffect(() => {
-  //   if (curriculumData) {
-  //     Object.entries(subjectsWithSchedule).forEach(([subjectId, hasSchedule]) => {
-  //       if (hasSchedule) {
-  //         fetchSubjectDetails(subjectId);
-  //       }
-  //     });
-  //   }
-  // }, [curriculumData, fetchSubjectDetails]);
-
 
   if (loading) {
     return (
@@ -307,6 +297,33 @@ export default function Syllabus() {
             <span>{tab.label}</span>
           </button>
         ))}
+      </div>
+
+      <div className="flex justify-between items-start mb-4">
+        <div className="mb-4 p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
+          <Info className="w-5 h-5 text-blue-500" />
+          <span className="text-lg">Chú thích:</span>
+          <div className="flex items-center">
+            <Check className="w-5 h-5 text-green-500 mr-1" />
+            <span className="text-lg">Có dữ liệu lịch học</span>
+          </div>
+          <div className="flex items-center ml-4">
+            <X className="w-5 h-5 text-red-500 mr-1" />
+            <span className="text-lg">Không có dữ liệu lịch học</span>
+          </div>
+        </div>
+        <div className="p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
+          <Info className="w-5 h-5 text-blue-500" />
+          <span className="text-lg">Trạng thái lớp học:</span>
+          <div className="flex items-center">
+            <div className="w-5 h-5 bg-yellow-400 rounded-full mr-1"></div>
+            <span className="text-lg">Đang có lớp hoạt động</span>
+          </div>
+          <div className="flex items-center ml-4">
+            <div className="w-5 h-5 bg-gray-300 rounded-full mr-1"></div>
+            <span className="text-lg">Không có lớp hoạt động</span>
+          </div>
+        </div>
       </div>
 
       {/* Curriculum Content */}
@@ -346,18 +363,25 @@ export default function Syllabus() {
                         {index + 1}
                       </td>
                       <td className="border py-3 px-4">
-                        <button
-                          onClick={() => fetchSubjectDetails(subject.id)}
-                          className="text-blue-600 hover:underline text-xl text-left flex items-center"
-                        >
-                          {subject.name}
-                          {subjectsWithSchedule[subject.id] && (
-                            <AppWindowMac
-                              className="ml-2 w-5 h-5 text-green-500"
-                              title="Có dữ liệu lịch học"
-                            />
-                          )}
-                        </button>
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => fetchSubjectDetails(subject.id)}
+                            className="text-blue-600 hover:underline text-xl text-left flex items-center"
+                          >
+                            {subject.name}
+                          </button>
+                          <div className="flex items-center ml-2">
+                            {subjectsWithSchedule[subject.id] && (
+                              <Check className="w-5 h-5 text-green-500" title="Có dữ liệu lịch học" />
+                            )}
+                            {subject.hasOngoingClass && (
+                              <div 
+                                className="w-3 h-3 bg-blue-500 rounded-full ml-1" 
+                                title="Đang có lớp học"
+                              ></div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
                         {subject.credit}
@@ -374,10 +398,16 @@ export default function Syllabus() {
                         </span>
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
-                        {subjectsWithSchedule[subject.id] ? (
-                          <Check className="w-5 h-5 text-green-500 mx-auto" title="Có dữ liệu lịch học" />
+                        {subject.hasActiveClass ? (
+                          <div 
+                            className="w-5 h-5 bg-yellow-400 rounded-full mx-auto" 
+                            title="Đang có lớp hoạt động"
+                          ></div>
                         ) : (
-                          <X className="w-5 h-5 text-red-500 mx-auto" title="Không có dữ liệu lịch học" />
+                          <div 
+                            className="w-5 h-5 bg-gray-300 rounded-full mx-auto" 
+                            title="Không có lớp hoạt động"
+                          ></div>
                         )}
                       </td>
                     </tr>

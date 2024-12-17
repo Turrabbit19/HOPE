@@ -1,18 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  X,
-  Book,
-  Calendar,
-  User,
-  MapPin,
-  Clock,
-  CheckCircle,
-  XCircle,
-  HelpCircle,
-  AppWindowMac,
-} from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { X, Book, Calendar, User, MapPin, Clock, CheckCircle, XCircle, HelpCircle, AppWindowMac, Check } from 'lucide-react';
 
 function SubjectDetailsModal({ subject, isOpen, onClose }) {
   if (!isOpen || !subject) return null;
@@ -205,6 +194,10 @@ export default function Syllabus() {
   const [activeTab, setActiveTab] = useState("Curriculum");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subjectsWithSchedule, setSubjectsWithSchedule] = useState(() => {
+    const saved = localStorage.getItem('subjectsWithSchedule');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const tabs = [{ id: "Curriculum", label: "Curriculum", icon: "📚" }];
 
@@ -237,7 +230,7 @@ export default function Syllabus() {
     fetchCurriculum();
   }, []);
 
-  const fetchSubjectDetails = async (subjectId) => {
+  const fetchSubjectDetails = useCallback(async (subjectId) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -258,10 +251,31 @@ export default function Syllabus() {
       console.log(data);
       setSelectedSubject(data.data);
       setIsModalOpen(true);
+
+      // Lưu trữ thông tin về lịch học
+      setSubjectsWithSchedule((prev) => ({
+        ...prev,
+        [subjectId]: data.data.schedule && data.data.schedule.length > 0,
+      }));
     } catch (err) {
       console.error("Error fetching subject details:", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('subjectsWithSchedule', JSON.stringify(subjectsWithSchedule));
+  }, [subjectsWithSchedule]);
+
+  // useEffect(() => {
+  //   if (curriculumData) {
+  //     Object.entries(subjectsWithSchedule).forEach(([subjectId, hasSchedule]) => {
+  //       if (hasSchedule) {
+  //         fetchSubjectDetails(subjectId);
+  //       }
+  //     });
+  //   }
+  // }, [curriculumData, fetchSubjectDetails]);
+
 
   if (loading) {
     return (
@@ -322,6 +336,7 @@ export default function Syllabus() {
                     <th className="border py-1 px-2 text-center text-xl">
                       Hình thức
                     </th>
+                    <th className="border py-1 px-2 text-center text-xl">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -336,10 +351,10 @@ export default function Syllabus() {
                           className="text-blue-600 hover:underline text-xl text-left flex items-center"
                         >
                           {subject.name}
-                          {subject.hasClassData && (
+                          {subjectsWithSchedule[subject.id] && (
                             <AppWindowMac
                               className="ml-2 w-5 h-5 text-green-500"
-                              title="Có dữ liệu lớp học"
+                              title="Có dữ liệu lịch học"
                             />
                           )}
                         </button>
@@ -358,6 +373,13 @@ export default function Syllabus() {
                           {subject.form}
                         </span>
                       </td>
+                      <td className="border py-1 px-2 text-center text-xl">
+                        {subjectsWithSchedule[subject.id] ? (
+                          <Check className="w-5 h-5 text-green-500 mx-auto" title="Có dữ liệu lịch học" />
+                        ) : (
+                          <X className="w-5 h-5 text-red-500 mx-auto" title="Không có dữ liệu lịch học" />
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -375,3 +397,4 @@ export default function Syllabus() {
     </div>
   );
 }
+

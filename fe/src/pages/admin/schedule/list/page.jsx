@@ -20,6 +20,9 @@ const ScheduleList = () => {
   const [classroomsCache, setClassroomsCache] = useState([]);
   const navigate = useNavigate();
 
+  const now = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
+  );
   useEffect(() => {
     const fetchSemesters = async () => {
       setError(null);
@@ -211,7 +214,6 @@ const ScheduleList = () => {
         description: "Sinh viên đã được phân bổ tự động.",
       });
     } catch (err) {
-      // Nếu có lỗi, hiển thị thông báo lỗi
       notification.error({
         message: "Lỗi",
         description: "Có lỗi xảy ra khi phân bổ sinh viên.",
@@ -303,48 +305,6 @@ const ScheduleList = () => {
     console.log("ID của phòng học:", classroomId);
     navigate(`details/${classroomId}`);
   };
-
-  // // Lấy danh sách phòng học
-  // useEffect(() => {
-  //     const fetchClassrooms = async () => {
-  //         try {
-  //             const response = await instance.get(`/admin/classrooms`);
-  //             setClassroomsCache(response.data?.data || []);
-  //         } catch (err) {
-  //             console.error("Không thể lấy danh sách lớp học:", err.message);
-  //         }
-  //     };
-
-  //     fetchClassrooms();
-  // }, []);
-  // // Lấy id phòng học
-  // const getClassroom = (classroomCode) => {
-  //     const classroom = classroomsCache.find(
-  //         (cls) => cls.code.toLowerCase() === classroomCode.toLowerCase()
-  //     );
-
-  //     if (!classroom) {
-  //         console.error(`Không tìm thấy lớp học với mã: ${classroomCode}`);
-  //         throw new Error(`Không tìm thấy lớp học với mã: ${classroomCode}`);
-  //     }
-
-  //     return classroom.id;
-  // };
-  // // Xóa phòng học
-  // const deleteClassroom = async (classroomCode) => {
-  //     try {
-  //         const classroomId = getClassroom(classroomCode); // Lấy ID từ cache
-  //         console.log("Đang xóa lớp học với ID:", classroomId);
-
-  //         await instance.delete(`/admin/schedule/${classroomId}/destroy`);
-
-  //         console.log(
-  //             `Đã xóa lớp học với mã ${classroomCode} và ID ${classroomId}`
-  //         );
-  //     } catch (err) {
-  //         console.error("Không thể xóa lớp học:", err.message);
-  //     }
-  // };
 
   if (loading) {
     return (
@@ -579,11 +539,23 @@ const ScheduleList = () => {
                                                               }
                                                             </p>
                                                             <p>
-                                                              Link học:{" "}
                                                               {classroom.link ===
-                                                              "NULL"
-                                                                ? "Không có"
-                                                                : classroom.link}
+                                                              "" ? (
+                                                                <a
+                                                                  href={
+                                                                    classroom.link
+                                                                  }
+                                                                  target="_blank"
+                                                                  rel="noopener noreferrer"
+                                                                  className="text-blue-500 hover:underline"
+                                                                >
+                                                                  {
+                                                                    classroom.link
+                                                                  }
+                                                                </a>
+                                                              ) : (
+                                                                ""
+                                                              )}
                                                             </p>
                                                           </div>
 
@@ -591,7 +563,6 @@ const ScheduleList = () => {
                                                           <div className="flex items-center justify-center bg-white p-4 rounded-lg w-full max-w-sm mx-auto shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl flex-col">
                                                             <div className="flex flex-col items-center justify-center mb-4">
                                                               {" "}
-                                                              {/* Giảm khoảng cách dưới số lượng sinh viên */}
                                                               <div className="flex items-center space-x-2">
                                                                 {/* Số lượng sinh viên */}
                                                                 <p
@@ -643,28 +614,34 @@ const ScheduleList = () => {
                                                             </div>
 
                                                             {/* Nút Xóa nằm dưới số lượng sinh viên */}
-                                                            <button
-                                                              onClick={(e) => {
-                                                                e.stopPropagation(); // Ngăn ngừa sự kiện click lan truyền
-                                                                handleDeleteSchedule(
-                                                                  e,
-                                                                  classroom.id,
-                                                                  semester.id,
-                                                                  course.id,
-                                                                  major.id,
-                                                                  subject.id
-                                                                );
-                                                              }}
-                                                              className="w-48 mt-2 py-2 bg-red-500 text-white rounded-lg text-lg font-semibold transform transition-all duration-300 hover:bg-red-600 hover:scale-105 focus:outline-none"
-                                                            >
-                                                              <span className="flex justify-center items-center">
-                                                                <span className="mr-2">
-                                                                  🗑️
-                                                                </span>{" "}
-                                                                Loại bỏ sinh
-                                                                viên
-                                                              </span>
-                                                            </button>
+                                                            {new Date(
+                                                              semester.start_date
+                                                            ) > now && (
+                                                              <button
+                                                                onClick={(
+                                                                  e
+                                                                ) => {
+                                                                  e.stopPropagation();
+                                                                  handleDeleteSchedule(
+                                                                    e,
+                                                                    classroom.id,
+                                                                    semester.id,
+                                                                    course.id,
+                                                                    major.id,
+                                                                    subject.id
+                                                                  );
+                                                                }}
+                                                                className="w-48 mt-2 py-2 bg-red-500 text-white rounded-lg text-lg font-semibold transform transition-all duration-300 hover:bg-red-600 hover:scale-105 focus:outline-none"
+                                                              >
+                                                                <span className="flex justify-center items-center">
+                                                                  <span className="mr-2">
+                                                                    🗑️
+                                                                  </span>{" "}
+                                                                  Loại bỏ sinh
+                                                                  viên
+                                                                </span>
+                                                              </button>
+                                                            )}
                                                           </div>
                                                         </div>
                                                       ))}
@@ -690,44 +667,69 @@ const ScheduleList = () => {
                                                         alignItems: "center",
                                                       }}
                                                     >
-                                                      {/* Group button - "Tạo lịch học mới" và "Phân bổ sinh viên tự động" ở bên trái */}
-                                                      <div
-                                                        style={{
-                                                          display: "flex",
-                                                          gap: "10px",
-                                                        }}
-                                                      >
-                                                        {/* Button Tạo lịch học mới (màu xanh dương) */}
-                                                        <Button
-                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
-                                                          onClick={() => {
-                                                            console.log(
-                                                              "Passing majorId::",
-                                                              major.id
-                                                            );
+                                                      {new Date(
+                                                        semester.start_date
+                                                      ) > now && (
+                                                        <div
+                                                          style={{
+                                                            display: "flex",
+                                                            gap: "10px",
                                                           }}
                                                         >
-                                                          <Link
-                                                            to={`add`}
-                                                            state={{
-                                                              courseId:
-                                                                course.id,
-                                                              semesterId:
-                                                                semester.id,
-                                                              majorId: major.id,
-                                                              subjectId:
-                                                                subject.id,
+                                                          {/* Button Tạo lịch học mới (màu xanh dương) */}
+                                                          <Button
+                                                            className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
+                                                            onClick={() => {
+                                                              console.log(
+                                                                "Passing majorId::",
+                                                                major.id
+                                                              );
                                                             }}
                                                           >
-                                                            Tạo lịch học mới
-                                                          </Link>
-                                                        </Button>
+                                                            <Link
+                                                              to={`add`}
+                                                              state={{
+                                                                courseId:
+                                                                  course.id,
+                                                                semesterId:
+                                                                  semester.id,
+                                                                majorId:
+                                                                  major.id,
+                                                                subjectId:
+                                                                  subject.id,
+                                                              }}
+                                                            >
+                                                              Tạo lịch học mới
+                                                            </Link>
+                                                          </Button>
 
-                                                        {/* Button Phân bổ sinh viên tự động (màu xanh lá) */}
+                                                          {/* Button Phân bổ sinh viên tự động (màu xanh lá) */}
+                                                          <Button
+                                                            className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-green-500 border-green-500 hover:bg-green-500 hover:text-white transition duration-300"
+                                                            onClick={() =>
+                                                              handleAutoAssignStudents(
+                                                                semester.id,
+                                                                course.id,
+                                                                major.id,
+                                                                subject.id
+                                                              )
+                                                            }
+                                                            loading={loading}
+                                                            disabled={loading}
+                                                          >
+                                                            Phân bổ sinh viên tự
+                                                            động
+                                                          </Button>
+                                                        </div>
+                                                      )}
+
+                                                      {new Date(
+                                                        semester.start_date
+                                                      ) > now && (
                                                         <Button
-                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-green-500 border-green-500 hover:bg-green-500 hover:text-white transition duration-300"
+                                                          className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-red-500 border-red-500 hover:bg-red-500 hover:text-white transition duration-300"
                                                           onClick={() =>
-                                                            handleAutoAssignStudents(
+                                                            deleteEmptySchedules(
                                                               semester.id,
                                                               course.id,
                                                               major.id,
@@ -737,28 +739,10 @@ const ScheduleList = () => {
                                                           loading={loading}
                                                           disabled={loading}
                                                         >
-                                                          Phân bổ sinh viên tự
-                                                          động
+                                                          Loại bỏ các lớp không
+                                                          có sinh viên
                                                         </Button>
-                                                      </div>
-
-                                                      {/* Button Loại bỏ lớp không có sinh viên (màu đỏ) ở góc phải */}
-                                                      <Button
-                                                        className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-red-500 border-red-500 hover:bg-red-500 hover:text-white transition duration-300"
-                                                        onClick={() =>
-                                                          deleteEmptySchedules(
-                                                            semester.id,
-                                                            course.id,
-                                                            major.id,
-                                                            subject.id
-                                                          )
-                                                        }
-                                                        loading={loading}
-                                                        disabled={loading}
-                                                      >
-                                                        Loại bỏ các lớp không có
-                                                        sinh viên
-                                                      </Button>
+                                                      )}
                                                     </div>
                                                   </div>
                                                 </div>

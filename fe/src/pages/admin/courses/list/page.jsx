@@ -225,7 +225,7 @@ const ListCourse = () => {
                   <div className="teaching__card-top">
                     <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                       <img src="/assets/svg/share.svg" alt="" />
-                      Chuyên ngành:{" "}
+                      Khóa sinh viên:{" "}
                       <p className="text-red-300 uppercase ml-2 font-bold">
                         {course.name}
                       </p>
@@ -279,7 +279,7 @@ const ListCourse = () => {
                       className="flex items-center gap-3 text-[#1167B4] font-bold"
                     >
                       <img src="/assets/svg/setting.svg" alt="setting" />
-                      Quản Lý Khóa Học
+                      Quản Lý Khóa sinh viên
                     </Link>
                     {course.status === "Đang diễn ra" ||
                     course.status === "Kết thúc" ? (

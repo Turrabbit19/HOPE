@@ -1,7 +1,19 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { X, Book, Calendar, User, MapPin, Clock, CheckCircle, XCircle, HelpCircle, Check, Info } from 'lucide-react';
+import {
+  X,
+  Book,
+  Calendar,
+  User,
+  MapPin,
+  Clock,
+  CheckCircle,
+  XCircle,
+  HelpCircle,
+  Check,
+  Info,
+} from "lucide-react";
 
 function SubjectDetailsModal({ subject, isOpen, onClose }) {
   if (!isOpen || !subject) return null;
@@ -195,7 +207,7 @@ export default function Syllabus() {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subjectsWithSchedule, setSubjectsWithSchedule] = useState(() => {
-    const saved = localStorage.getItem('subjectsWithSchedule');
+    const saved = localStorage.getItem("subjectsWithSchedule");
     return saved ? JSON.parse(saved) : {};
   });
 
@@ -252,7 +264,6 @@ export default function Syllabus() {
       setSelectedSubject(data.data);
       setIsModalOpen(true);
 
-      // Lưu trữ thông tin về lịch học
       setSubjectsWithSchedule((prev) => ({
         ...prev,
         [subjectId]: data.data.schedule && data.data.schedule.length > 0,
@@ -263,9 +274,11 @@ export default function Syllabus() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('subjectsWithSchedule', JSON.stringify(subjectsWithSchedule));
+    localStorage.setItem(
+      "subjectsWithSchedule",
+      JSON.stringify(subjectsWithSchedule)
+    );
   }, [subjectsWithSchedule]);
-
 
   if (loading) {
     return (
@@ -353,7 +366,9 @@ export default function Syllabus() {
                     <th className="border py-1 px-2 text-center text-xl">
                       Hình thức
                     </th>
-                    <th className="border py-1 px-2 text-center text-xl">Trạng thái</th>
+                    <th className="border py-1 px-2 text-center text-xl">
+                      Trạng thái
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -372,11 +387,14 @@ export default function Syllabus() {
                           </button>
                           <div className="flex items-center ml-2">
                             {subjectsWithSchedule[subject.id] && (
-                              <Check className="w-5 h-5 text-green-500" title="Có dữ liệu lịch học" />
+                              <Check
+                                className="w-5 h-5 text-green-500"
+                                title="Có dữ liệu lịch học"
+                              />
                             )}
                             {subject.hasOngoingClass && (
-                              <div 
-                                className="w-3 h-3 bg-blue-500 rounded-full ml-1" 
+                              <div
+                                className="w-3 h-3 bg-blue-500 rounded-full ml-1"
                                 title="Đang có lớp học"
                               ></div>
                             )}
@@ -399,13 +417,13 @@ export default function Syllabus() {
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
                         {subject.hasActiveClass ? (
-                          <div 
-                            className="w-5 h-5 bg-yellow-400 rounded-full mx-auto" 
+                          <div
+                            className="w-5 h-5 bg-yellow-400 rounded-full mx-auto"
                             title="Đang có lớp hoạt động"
                           ></div>
                         ) : (
-                          <div 
-                            className="w-5 h-5 bg-gray-300 rounded-full mx-auto" 
+                          <div
+                            className="w-5 h-5 bg-gray-300 rounded-full mx-auto"
                             title="Không có lớp hoạt động"
                           ></div>
                         )}
@@ -427,4 +445,3 @@ export default function Syllabus() {
     </div>
   );
 }
-

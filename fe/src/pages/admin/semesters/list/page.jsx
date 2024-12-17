@@ -31,6 +31,10 @@ const ListSemester = () => {
   const [additionalVariants, setAdditionalVariants] = useState([]);
   const [id, setId] = useState();
 
+  const now = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
+  );
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -322,7 +326,7 @@ const ListSemester = () => {
                     <div className="teaching__card-top">
                       <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                         <img src="/assets/svg/share.svg" alt="" />
-                        Chuyên ngành:{" "}
+                        Tên kỳ học:{" "}
                         <p className="text-red-300 uppercase ml-2 font-bold">
                           {semester.name}
                         </p>
@@ -370,18 +374,15 @@ const ListSemester = () => {
                         <img src="/assets/svg/setting.svg" alt="setting" />
                         Quản Lý Kỳ Học
                       </Link>
-                      <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
-                        <img src="/assets/svg/eye.svg" alt="detail" />
-                        Chi Tiết
-                      </button>
-
-                      <button
-                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                        onClick={() => showEditModal(semester)}
-                      >
-                        <EditOutlined />
-                        Sửa Thông Tin
-                      </button>
+                      {moment(semester.start_date) > now && (
+                        <button
+                          className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                          onClick={() => showEditModal(semester)}
+                        >
+                          <EditOutlined />
+                          Sửa Thông Tin
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

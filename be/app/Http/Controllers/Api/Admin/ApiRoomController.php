@@ -75,7 +75,13 @@ class ApiRoomController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:19|unique:rooms,name,' . $id,
             'status' => 'sometimes|boolean',
-        ]);
+        ], [
+            'name.string' => 'Tên phòng học phải là chuỗi ký tự.',
+            'name.max' => 'Tên phòng học không được vượt quá 19 ký tự.',
+            'name.unique' => 'Tên phòng học đã tồn tại.',
+            
+            'status.boolean' => 'Trạng thái phải là giá trị boolean (true/false hoặc 0/1).',
+        ]);        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

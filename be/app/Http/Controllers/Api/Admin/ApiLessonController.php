@@ -62,11 +62,21 @@ class ApiLessonController extends Controller
 
     public function store(Request $request)
     {
-        $validator = validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'subject_id' => 'required|exists:subjects,id',
             'name' => 'required|string|max:50',
-            'description' => 'required'
+            'description' => 'required',
+        ], [
+            'subject_id.required' => 'Mã môn học là bắt buộc.',
+            'subject_id.exists' => 'Mã môn học không tồn tại.',
+            
+            'name.required' => 'Tên là bắt buộc.',
+            'name.string' => 'Tên phải là chuỗi ký tự.',
+            'name.max' => 'Tên không được vượt quá 50 ký tự.',
+            
+            'description.required' => 'Mô tả là bắt buộc.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -107,8 +117,16 @@ class ApiLessonController extends Controller
         $validator = Validator::make($request->all(), [
             'subject_id' => 'sometimes|exists:subjects,id',
             'name' => 'sometimes|string|max:50',
-            'description' => 'sometimes'
+            'description' => 'sometimes',
+        ], [
+            'subject_id.exists' => 'Mã môn học không tồn tại.',
+            
+            'name.string' => 'Tên phải là chuỗi ký tự.',
+            'name.max' => 'Tên không được vượt quá 50 ký tự.',
+            
+            'description.sometimes' => 'Mô tả không được để trống nếu có.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

@@ -125,7 +125,28 @@ class ApiMajorController extends Controller
             'status' => 'boolean',
             'main' => 'nullable|integer',
             'major_id' => 'nullable|integer|exists:majors,id'
+        ], [
+            'code.required' => 'Mã ngành là bắt buộc.',
+            'code.string' => 'Mã ngành phải là chuỗi ký tự.',
+            'code.max' => 'Mã ngành không được vượt quá 19 ký tự.',
+            'code.unique' => 'Mã ngành đã tồn tại.',
+            
+            'name.required' => 'Tên ngành là bắt buộc.',
+            'name.string' => 'Tên ngành phải là chuỗi ký tự.',
+            'name.max' => 'Tên ngành không được vượt quá 50 ký tự.',
+            'name.unique' => 'Tên ngành đã tồn tại.',
+            
+            'description.required' => 'Mô tả là bắt buộc.',
+            'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            
+            'status.boolean' => 'Trạng thái phải là giá trị boolean (true/false hoặc 0/1).',
+            
+            'main.integer' => 'Chính ngành phải là số nguyên.',
+            
+            'major_id.integer' => 'Mã ngành phải là số nguyên.',
+            'major_id.exists' => 'Mã ngành không tồn tại.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -168,7 +189,20 @@ class ApiMajorController extends Controller
             'name' => 'sometimes|string|max:50|unique:majors,name,' . $id,
             'description' => 'nullable|string',
             'status' => 'sometimes|boolean',
+        ], [
+            'code.string' => 'Mã ngành phải là chuỗi ký tự.',
+            'code.max' => 'Mã ngành không được vượt quá 19 ký tự.',
+            'code.unique' => 'Mã ngành đã tồn tại.',
+            
+            'name.string' => 'Tên ngành phải là chuỗi ký tự.',
+            'name.max' => 'Tên ngành không được vượt quá 50 ký tự.',
+            'name.unique' => 'Tên ngành đã tồn tại.',
+            
+            'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            
+            'status.boolean' => 'Trạng thái phải là giá trị boolean (true/false hoặc 0/1).',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

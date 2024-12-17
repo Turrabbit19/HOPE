@@ -96,10 +96,20 @@ class ApiClassroomController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:19|unique:rooms',
             'subject_id' => 'required|exists:subjects,id',
             'code' => 'required|string|max:10|unique:classrooms',
             'max_students' => 'required|integer|min:1',
             'status' => 'boolean',
+        ], [
+            'name.unique' => 'Tên phòng học đã tồn tại.',
+            'subject_id.required' => 'Mã môn học là bắt buộc.',
+            'subject_id.exists' => 'Mã môn học không tồn tại.',
+            'code.required' => 'Mã lớp học là bắt buộc.',
+            'code.unique' => 'Mã lớp học đã tồn tại.',
+            'max_students.required' => 'Số lượng học viên tối đa là bắt buộc.',
+            'max_students.integer' => 'Số lượng học viên tối đa phải là số nguyên.',
+            'max_students.min' => 'Số lượng học viên tối đa phải lớn hơn hoặc bằng 1.',
         ]);
 
         if ($validator->fails()) {
@@ -152,7 +162,18 @@ class ApiClassroomController extends Controller
             'code' => 'sometimes|required|string|max:10|unique:classrooms,code,' . $id,
             'max_students' => 'sometimes|required|integer|min:1',
             'status' => 'boolean',
+        ], [
+            'subject_id.required' => 'Mã môn học là bắt buộc.',
+            'subject_id.exists' => 'Mã môn học không tồn tại.',
+            'code.required' => 'Mã lớp học là bắt buộc.',
+            'code.unique' => 'Mã lớp học đã tồn tại.',
+            'code.max' => 'Mã lớp học không được vượt quá 10 ký tự.',
+            'max_students.required' => 'Số lượng học viên tối đa là bắt buộc.',
+            'max_students.integer' => 'Số lượng học viên tối đa phải là số nguyên.',
+            'max_students.min' => 'Số lượng học viên tối đa phải lớn hơn hoặc bằng 1.',
+            'status.boolean' => 'Trạng thái phải là giá trị true hoặc false.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

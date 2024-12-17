@@ -149,7 +149,7 @@ export default function HeaderClient() {
   };
   const student_id = localStorage.getItem("user_id");
   let infor = {
-    student_id: student_id,
+    user_id: student_id,
     payment_id: "",
     amount: feeData.price,
     currency: "VND",

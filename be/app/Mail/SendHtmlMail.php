@@ -38,9 +38,6 @@ class SendHtmlMail extends Mailable
     {
         return new Content(
             view: 'emails.html_mail',
-            with: [
-                'message' => $this->message,
-            ]
         );
     }
 

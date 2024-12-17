@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendEmailJob;
+use App\Mail\SendHtmlMail;
 use App\Models\CourseSemester;
 use App\Models\Student;
 use App\Models\StudentMajor;
@@ -11,6 +12,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Mail;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\Payment;
@@ -29,7 +31,7 @@ class PayPalController extends Controller
         ]);
 
         $transaction = new Transaction();
-        $transaction->student_id = $validated['user_id'];
+        $transaction->user_id = $validated['user_id'];
         $transaction->payment_id = $validated['payment_id'];
         $transaction->amount = $validated['amount'];
         $transaction->currency = $validated['currency'];
@@ -42,6 +44,7 @@ class PayPalController extends Controller
         }
 
         $userEmail = $user->email;
+        // Mail::to($userEmail)->send(new SendHtmlMail("Thanh toán tiền học", "Cảm ơn"));
         SendEmailJob::dispatch($userEmail, 'Đây là email đăng ký thành công', "Không có gì để nói cả");
         return response()->json($userEmail, 200);
     }
@@ -117,8 +120,8 @@ class PayPalController extends Controller
 
         $student = Student::where('user_id', $user->id)->firstOrFail();
 
-        $fee = Transaction::where('user_id', $user->id)->firstOrFail();
-        $feeDate = Carbon::parse($fee->created_at);
+        $fee = Transaction::where('user_id', $user->id)->first();
+
         $currentCourseSemester = CourseSemester::where('course_id', $student->course_id)
             ->where('order', $student->current_semester + 1)
             ->join('semesters', 'semesters.id', '=', 'course_semesters.semester_id')
@@ -132,8 +135,11 @@ class PayPalController extends Controller
         $registrationEnd = $registrationStart->copy()->addDays(3);
         $now = Carbon::now();
 
-        if ($feeDate->between($startDate->copy()->subDays(10), $startDate->copy()->subDays(3))) {
-            return response()->json("Bạn đã nộp học phí trong kỳ " . $fee->semester . " rồi !!!", 200);
+        if ($fee) {
+            $feeDate = Carbon::parse($fee->created_at);
+            if ($feeDate->between($startDate->copy()->subDays(10), $startDate->copy()->subDays(3))) {
+                return response()->json("Bạn đã nộp học phí trong kỳ " . $fee->semester . " rồi !!!", 200);
+            }
         }
 
         if ($now->lt($registrationStart)) {

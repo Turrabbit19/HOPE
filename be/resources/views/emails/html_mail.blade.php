@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $subject }}</title>
+    <title>Thanh toán học phí thành công</title>
 </head>
 <body>
-    <!-- <h2>ABC XYZ</h2> -->
-    <span>Đây là liên hệ: {{$message}}</span>
+    <h2>Thanh toán học phí thành công</h2>
 </body>
 </html>

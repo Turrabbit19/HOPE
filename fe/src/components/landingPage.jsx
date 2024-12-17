@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Slider from "react-slick";
 import { Button, Card } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
@@ -12,7 +12,7 @@ import instance from "../config/axios";
 const LandingPage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showGoogleLogin, setShowGoogleLogin] = useState(false);
-
+    const navigate = useNavigate();
     const sliderSettings = {
         dots: true,
         infinite: true,
@@ -74,7 +74,7 @@ const LandingPage = () => {
     };
 
     const handleCardClick = () => {
-        setShowGoogleLogin(true); // Show Google Login when a card is clicked
+        setShowGoogleLogin(true); 
     };
 
     const onFinish = async (credentialResponse) => {
@@ -83,8 +83,15 @@ const LandingPage = () => {
             const { data } = await instance.post("google-login", {
                 credential: credentialResponse.credential,
             });
+            localStorage.setItem("role", data.user.role);
+            localStorage.setItem("user_id", data.user.id);
+            localStorage.setItem("token", data.token);
             console.log("Server Response:", data);
-            setShowGoogleLogin(false); // Close Google login after successful login
+            setShowGoogleLogin(false);
+            const userRole = data.user.role;
+            if (userRole === "Sinh viên") {
+                navigate("/student/home");
+              }
         } catch (error) {
             console.error("Error:", error.response?.data || error.message);
         }

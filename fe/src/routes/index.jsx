@@ -73,11 +73,18 @@ import LayoutTeacher from "../components/layout/layoutTeacher";
 import TeacherInfo from "../pages/teacher/teacherDashboard/page";
 import ClassLessonTable from "../pages/teacher/listClassLesson/page";
 import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
+import TuitionFee from "../pages/admin/tuition-fee/page";
+import RegisterClass from "../pages/admin/queue/page";
+import COnfirmChangeSchedule from "../pages/student/confirmChangeSchedule/page";
+import SubMajorsList from "../pages/student/sub-majorRegistration/page";
+import Syllabus from "../pages/student/syllabus/page";
+import StatisticSemester from "../pages/student/statistics-semester/page";
+import ProtectedRoute from "./ProtectedRoute";
 
 const Router = createBrowserRouter([
   {
     path: "/",
-    element: <SchoolLogin />,
+    element: <LandingPage />,
   },
   {
     path: "login",
@@ -92,15 +99,15 @@ const Router = createBrowserRouter([
       </Suspense>
     ),
     children: [
-      {
-        path: "",
-        element: (
-          <>
-            <BreadCrumb />
-            <NotificationManage />
-          </>
-        ),
-      },
+      // {
+      //   path: "",
+      //   element: (
+      //     <>
+      //       <BreadCrumb />
+      //       <NotificationManage />
+      //     </>
+      //   ),
+      // },
       {
         path: "test",
         element: <Testing />,
@@ -442,7 +449,6 @@ const Router = createBrowserRouter([
         ),
       },
 
-      // Curriculum
       {
         path: "list-curriculum",
         element: (
@@ -451,6 +457,23 @@ const Router = createBrowserRouter([
           </>
         ),
       },
+      {
+        path: "tuition-fee",
+        element: (
+          <>
+            <TuitionFee />
+          </>
+        ),
+      },
+      {
+        path: "queue",
+        element: (
+          <>
+            <RegisterClass />
+          </>
+        ),
+      },
+      // Curriculum
     ],
   },
   {
@@ -479,9 +502,14 @@ const Router = createBrowserRouter([
         path: "schedule",
         element: <DashboardActions />,
       },
+
       {
         path: "class-registration",
-        element: <ScheduleRegistration />,
+        element: <ProtectedRoute component={ScheduleRegistration}/>,
+      },
+      {
+        path: "confirm-change-schedule",
+        element: <COnfirmChangeSchedule />,
       },
       {
         path: "home",
@@ -491,6 +519,18 @@ const Router = createBrowserRouter([
         path: "notification",
         element: <NotificationPage />,
       },
+      {
+        path: "sub-majors",
+        element: <SubMajorsList />,
+      },
+      {
+        path: "syllabus",
+        element: <Syllabus />,
+      },
+      {
+        path: "statistics-semester",
+        element: <StatisticSemester />,
+      }
     ],
   },
   {

@@ -38,7 +38,8 @@ class TeacherController extends Controller
                 'ethnicity' => $teacher->user->ethnicity,
                 'address' => $teacher->user->address,
 
-                'status' => match($teacher->status) {
+
+                'status' => match ($teacher->status) {
                     "0" => "Đang dạy",
                     "1" => "Tạm dừng",
                     "2" => "Kết thúc",
@@ -62,8 +63,8 @@ class TeacherController extends Controller
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
 
             $schedules = Schedule::where('teacher_id', $teacher->id)
-            ->where('end_date', '>=', Carbon::now())
-            ->get();
+                ->where('end_date', '>=', Carbon::now())
+                ->get();
 
             $data = $schedules->map(function ($schedule) {
                 return [
@@ -78,11 +79,7 @@ class TeacherController extends Controller
                     'link' => $schedule->link ? $schedule->link : "NULL",
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
-                    'days_of_week' => $schedule->days->map(function($day) {
-                        return [
-                            "Thứ" => $day->id,
-                        ];
-                    }),
+                    'days_of_week' => $schedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
                 ];
             });
 
@@ -104,10 +101,10 @@ class TeacherController extends Controller
 
 
             $timetable = Schedule::where('teacher_id', $teacher->id)
-            ->where('end_date', '>=', Carbon::now())
-            ->get();
+                ->where('end_date', '>=', Carbon::now())
+                ->get();
 
-            $data = $timetable->map(function($tt) {
+            $data = $timetable->map(function ($tt) {
                 return [
                     'id' => $tt->id,
                     'classroom_code' => $tt->classroom->code,
@@ -135,7 +132,9 @@ class TeacherController extends Controller
         }
     }
 
-    public function getDetailSchedule(string $scheduleId) {
+
+    public function getDetailSchedule(string $scheduleId)
+    {
         $user = Auth::user();
 
         try {
@@ -195,7 +194,9 @@ class TeacherController extends Controller
         }
     }
 
-    public function getDetailsClassroom(string $scheduleId) {
+
+    public function getDetailsClassroom(string $scheduleId)
+    {
         $user = Auth::user();
 
         try {
@@ -278,7 +279,8 @@ class TeacherController extends Controller
         }
     }
 
-    public function getDetailClassroom(string $scheduleId, $lessonId) {
+    public function getDetailClassroom(string $scheduleId, $lessonId)
+    {
         $user = Auth::user();
 
         try {
@@ -304,7 +306,11 @@ class TeacherController extends Controller
             }
 
             $classroomId = $scheduleInfor->classroom->id;
-            $listStudents = StudentClassroom::where('classroom_id', $classroomId)->get();
+
+            $listStudents = StudentClassroom::where('classroom_id', $classroomId)
+                ->where('study_start', '<=', now())
+                ->where('study_end', '>=', now())
+                ->get();
 
             if ($listStudents->isEmpty()) {
                 return response()->json(['message' => 'Hiện chưa có học sinh nào trong lớp này'], 200);
@@ -328,6 +334,8 @@ class TeacherController extends Controller
 
                     return [
                         'student_id' => $studentId,
+                        'student_avatar' => $ls->student->user->avatar,
+                        'student_code' => $ls->student->code,
                         'student_name' => $ls->student->user->name,
                         'status' => $status,
                     ];

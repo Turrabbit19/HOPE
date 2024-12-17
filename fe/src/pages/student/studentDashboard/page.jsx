@@ -1,30 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Calendar,
-  Clock,
-  Phone,
-  Mail,
-  MapPin,
-  User,
-  Briefcase,
-  ChevronDown,
-  ChevronUp,
-  AlertCircle,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight,
-  Code,
-} from "lucide-react";
+import { Calendar, Clock, Phone, Mail, MapPin, User, Briefcase, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Code, AlignEndHorizontal } from 'lucide-react';
 
 export default function Component() {
   const [student, setStudent] = useState(null);
   const [timetable, setTimetable] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showPersonalInfo, setShowPersonalInfo] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
@@ -59,7 +41,7 @@ export default function Component() {
   const handleRetry = () => {
     setLoading(true);
     setError(null);
-    fetchData();
+    // fetchData();
   };
 
   const daysInMonth = new Date(
@@ -151,7 +133,7 @@ export default function Component() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 min-h-screen w-full">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 w-full">
       {/* Left Column */}
       <div className="w-full lg:w-1/2 space-y-8">
         {/* User Profile Card */}
@@ -167,40 +149,28 @@ export default function Component() {
               <p className="text-indigo-300">Email: {student.email}</p>
             </div>
           </div>
-          <button
-            className="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 px-4 rounded flex justify-between items-center"
-            onClick={() => setShowPersonalInfo(!showPersonalInfo)}
-          >
-            <span>Thông tin cá nhân</span>
-            {showPersonalInfo ? (
-              <ChevronUp className="w-5 h-5" />
-            ) : (
-              <ChevronDown className="w-5 h-5" />
-            )}
-          </button>
-          {showPersonalInfo && (
-            <div className="mt-4 bg-indigo-800 p-4 rounded-lg">
-              {[
-                { icon: Code, label: "MSV", value: student.student_code },
-                { icon: Calendar, label: "Ngày sinh", value: student.dob },
-                { icon: User, label: "Giới tính", value: student.gender },
-                { icon: Phone, label: "Số điện thoại", value: student.phone },
-                { icon: MapPin, label: "Địa chỉ", value: student.address },
-                { icon: User, label: "Dân tộc", value: student.ethnicity },
-                { icon: Briefcase, label: "Trạng thái", value: student.status },
-              ].map((item, index) => (
-                <div key={index} className="flex items-start mt-2 space-x-3">
-                  <item.icon className="w-5 h-5 text-indigo-300 flex-shrink-0 mt-1" />
-                  <div className="flex-grow grid grid-cols-2 gap-x-2">
-                    <span className="text-indigo-200 font-medium">
-                      {item.label}:
-                    </span>
-                    <span className="text-white break-all">{item.value}</span>
-                  </div>
+          <div className="mt-4 bg-indigo-800 p-4 rounded-lg">
+            {[
+              { icon: AlignEndHorizontal, label: "Kì", value: student.current_semester },
+              { icon: Code, label: "MSV", value: student.student_code },
+              { icon: Calendar, label: "Ngày sinh", value: student.dob },
+              { icon: User, label: "Giới tính", value: student.gender },
+              { icon: Phone, label: "Số điện thoại", value: student.phone },
+              { icon: MapPin, label: "Địa chỉ", value: student.address },
+              { icon: User, label: "Dân tộc", value: student.ethnicity },
+              { icon: Briefcase, label: "Trạng thái", value: student.status },
+            ].map((item, index) => (
+              <div key={index} className="flex items-start mt-2 space-x-3">
+                <item.icon className="w-5 h-5 text-indigo-300 flex-shrink-0 mt-1" />
+                <div className="flex-grow grid grid-cols-2 gap-x-2">
+                  <span className="text-indigo-200 font-medium">
+                    {item.label}:
+                  </span>
+                  <span className="text-white break-all">{item.value}</span>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Today's Classes */}
@@ -419,52 +389,8 @@ export default function Component() {
             </div>
           </div>
         </div>
-
-        {/* Assignments */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Bài tập</h3>
-          <ul className="space-y-4">
-            {[
-              {
-                name: "1st Quarterly",
-                subject: "Mathematics",
-                date: "06 May 2024",
-                time: "01:30 - 02:15 PM",
-                room: "15",
-                daysLeft: 19,
-              },
-              { name: "2nd Quarterly", daysLeft: 20 },
-            ].map((assignment, index) => (
-              <li key={index} className="border-b pb-4 last:border-b-0">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{assignment.name}</p>
-                    {assignment.subject && (
-                      <p className="text-sm text-gray-500">
-                        {assignment.subject}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-xs text-red-500 font-medium">
-                    {assignment.daysLeft} Days More
-                  </span>
-                </div>
-                {assignment.date && (
-                  <div className="mt-2 text-sm text-gray-500 flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {assignment.date}
-                    <span className="mx-2">•</span>
-                    <Clock className="w-4 h-4 mr-1" />
-                    {assignment.time}
-                    <span className="mx-2">•</span>
-                    Room No : {assignment.room}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>
   );
 }
+

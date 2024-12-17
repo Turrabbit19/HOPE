@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Major;
 use App\Models\Student;
+use App\Models\StudentMajor;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -70,18 +71,20 @@ class StatisticsController extends Controller
 
             $majorsWithCounts = Major::whereHas('students', function ($query) use ($currentDate) {
                 $query->join('courses', 'courses.id', '=', 'students.course_id')
-                      ->whereDate('courses.start_date', '<=', $currentDate)
-                      ->whereDate('courses.end_date', '>=', $currentDate);
+                    ->whereDate('courses.start_date', '<=', $currentDate)
+                    ->whereDate('courses.end_date', '>=', $currentDate);
             })
-            ->withCount([
-                'students' => function ($query) use ($currentDate) {
-                    $query->join('courses', 'courses.id', '=', 'students.course_id')
-                          ->whereDate('courses.start_date', '<=', $currentDate)
-                          ->whereDate('courses.end_date', '>=', $currentDate);
-                },
-                'teachers'
-            ])
-            ->get();
+                ->where('main', 1)
+                ->orWhere('id', 1)
+                ->withCount([
+                    'students' => function ($query) use ($currentDate) {
+                        $query->join('courses', 'courses.id', '=', 'students.course_id')
+                            ->whereDate('courses.start_date', '<=', $currentDate)
+                            ->whereDate('courses.end_date', '>=', $currentDate);
+                    },
+                    'teachers'
+                ])
+                ->get();
 
             $result = $majorsWithCounts->map(function ($major) {
                 return [
@@ -97,7 +100,40 @@ class StatisticsController extends Controller
         } catch (Exception $e) {
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
-
     }
+    public function statisticSubMajors($majorId)
+    {
+        try {
+            $currentDate = now();
 
+            $majorsWithCounts = Major::whereHas('students', function ($query) use ($currentDate) {
+                $query->join('courses', 'courses.id', '=', 'students.course_id')
+                    ->whereDate('courses.start_date', '<=', $currentDate)
+                    ->whereDate('courses.end_date', '>=', $currentDate);
+            })
+                ->where('major_id', $majorId)
+                ->withCount([
+                    'students' => function ($query) use ($currentDate) {
+                        $query->join('courses', 'courses.id', '=', 'students.course_id')
+                            ->whereDate('courses.start_date', '<=', $currentDate)
+                            ->whereDate('courses.end_date', '>=', $currentDate);
+                    },
+                    'teachers'
+                ])
+                ->get();
+
+            $result = $majorsWithCounts->map(function ($major) {
+                return [
+                    'major_id' => $major->id,
+                    'major_name' => $major->name,
+                    'student_count' => $major->students_count,
+                ];
+            });
+
+            return response()->json($result);
+
+        } catch (Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
 }

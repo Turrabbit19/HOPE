@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  BookOpen,
-  Users,
-  Clock,
-  AlertCircle,
-  LinkIcon,
-  CheckCircle,
-} from "lucide-react";
+import { BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react';
 
 export default function CourseRegistration() {
   const [subjects, setSubjects] = useState([]);
@@ -20,11 +13,29 @@ export default function CourseRegistration() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetchSubjects();
     fetchShifts();
   }, []);
+
+  useEffect(() => {
+    let timer;
+    if (timeLeft) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 1000) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prevTime - 1000;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   useEffect(() => {
     if (selectedSubject?.id && selectedShift?.id) {
@@ -55,6 +66,11 @@ export default function CourseRegistration() {
         }
       );
 
+      if (response.status === 403) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Thời gian đăng ký không hợp lệ.");
+      }
+
       if (!response.ok) {
         throw new Error("Không thể tải danh sách môn học");
       }
@@ -63,6 +79,15 @@ export default function CourseRegistration() {
       console.log("Subjects data received:", data);
       if (data && data.subjects && Array.isArray(data.subjects)) {
         setSubjects(data.subjects);
+        setMessage(data.message);
+        if (data.time_left) {
+          const [days, hours, minutes, seconds] = data.time_left
+            .split(", ")
+            .map((part) => parseInt(part));
+          const totalMilliseconds =
+            ((days * 24 + hours) * 60 + minutes) * 60 + seconds * 1000;
+          setTimeLeft(totalMilliseconds);
+        }
       } else {
         console.error("Unexpected subjects data structure:", data);
         setSubjects([]);
@@ -73,6 +98,15 @@ export default function CourseRegistration() {
     } finally {
       setIsLoading(false);
     }
+  };
+  const formatTime = (milliseconds) => {
+    if (milliseconds === null) return "";
+    const seconds = Math.floor((milliseconds / 1000) % 60);
+    const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
+    const hours = Math.floor((milliseconds / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
+
+    return `${days} ngày, ${hours} giờ, ${minutes} phút, ${seconds} giây`;
   };
 
   const fetchShifts = async () => {
@@ -201,14 +235,26 @@ export default function CourseRegistration() {
 
   return (
     <div className="flex flex-col bg-gradient-to-br from-blue-100 to-white min-h-screen w-full">
-      <div className="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col flex-grow py-12 px-4 sm:px-6 lg:px-8">
         <div className=" mx-auto">
           <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
-              Đăng ký khóa học
+              Đăng ký lớp học
             </span>
           </h1>
-
+          {message && (
+            <div className="text-center mb-6">
+              <p className="text-xl font-semibold text-blue-600">{message}</p>
+              {/* {timeLeft !== null && (
+                <div className="mt-4 flex items-center justify-center space-x-2">
+                  <Clock className="w-6 h-6 text-blue-500" />
+                  <p className="text-lg text-gray-700">
+                    Thời gian còn lại: {formatTime(timeLeft)}
+                  </p>
+                </div>
+              )} */}
+            </div>
+          )}
           {isLoading && (
             <div className="text-center mt-8">
               <Clock className="animate-spin h-8 w-8 mx-auto text-blue-500" />
@@ -219,11 +265,17 @@ export default function CourseRegistration() {
           {error && (
             <div className="text-center mt-8 text-red-500">
               <AlertCircle className="h-8 w-8 mx-auto" />
-              <p className="mt-2">Lỗi: {error}</p>
+              <p className="mt-2">{error}</p>
             </div>
           )}
 
-          {!isLoading && !error && (
+          {!isLoading && !error && subjects.length === 0 && shifts.length === 0 && classrooms.length === 0 && (
+            <div className="flex-grow flex items-center justify-center">
+              <p className="text-xl text-gray-600">Không có dữ liệu để hiển thị.</p>
+            </div>
+          )}
+
+          {!isLoading && !error && (subjects.length > 0 || shifts.length > 0 || classrooms.length > 0) && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {subjects.map((subject) => (

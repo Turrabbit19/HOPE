@@ -22,8 +22,7 @@ class ApiMajorController extends Controller
             $majors = Major::get();
 
 
-            $data = $majors->map(function($major) {
-
+            $data = $majors->map(function ($major) {
                 return [
                     'id' => $major->id,
                     'code' => $major->code,
@@ -40,7 +39,8 @@ class ApiMajorController extends Controller
     }
 
 
-    public function getMainMajors() {
+    public function getMainMajors()
+    {
         try {
             $mainMajors = Major::where('main', 1)->get();
 
@@ -48,8 +48,8 @@ class ApiMajorController extends Controller
 
             $data = $mainMajors->map(function ($mm) use ($currentDate) {
                 $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
-                        $query->where('major_id', $mm->id);
-                    })
+                    $query->where('majors.major_id', $mm->id);
+                })
                     ->where('start_date', '<=', $currentDate)
                     ->where('end_date', '>=', $currentDate)
                     ->withCount('students')
@@ -123,7 +123,7 @@ class ApiMajorController extends Controller
     public function getSubMajors(string $majorId)
     {
         try {
-            $mainMajors = Major::where('major_id', $majorId)->get() ;
+            $mainMajors = Major::where('major_id', $majorId)->get();
 
             $data = $mainMajors->map(function ($mm) {
                 return [
@@ -178,12 +178,12 @@ class ApiMajorController extends Controller
             $major = Major::findOrFail($id);
             $data = [
 
-                    'id' => $major->id,
-                    'code' => $major->code,
-                    'name' => $major->name,
-                    'description' => $major->description,
-                    'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
+                'id' => $major->id,
+                'code' => $major->code,
+                'name' => $major->name,
+                'description' => $major->description,
+                'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
+            ];
 
 
             return response()->json(['data' => $data], 200);
@@ -259,6 +259,7 @@ class ApiMajorController extends Controller
             $major = MajorSubject::where('major_id', $majorId)->get();
 
             $subjectsByMajor = $major->map(function ($mm) {
+
                 return [
                     'code' => $mm->subject->code,
                     'id' => $mm->subject->id,
@@ -277,4 +278,5 @@ class ApiMajorController extends Controller
     }
 
 }
+
 

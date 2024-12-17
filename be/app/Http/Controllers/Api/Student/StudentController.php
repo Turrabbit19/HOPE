@@ -9,6 +9,7 @@ use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\Schedule;
 use App\Models\ScheduleLesson;
+use App\Models\Semester;
 use App\Models\Shift;
 use App\Models\Student;
 use App\Models\StudentClassroom;
@@ -19,50 +20,65 @@ use App\Models\StudyDay;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 
-class   StudentController extends Controller
+class StudentController extends Controller
 {
+
+
     public function getStudentDetail()
     {
         $user = Auth::user();
 
         try {
-            $student = Student::with(['user', 'course'])->where('user_id', $user->id)->firstOrFail();
+            $cacheKey = 'student_detail_' . $user->id;
 
-            $major = StudentMajor::where('status', 1)->firstOrFail();
+            $data = Redis::get($cacheKey);
 
-            $data = [
-                'avatar' => $student->user->avatar,
-                'name' => $student->user->name,
-                'student_code' => $student->student_code,
-                'course_name' => $student->course->name,
-                'major_name' => $major->major->name,
-                'current_semester' => $student->current_semester,
+            if (!$data) {
+                $student = Student::with(['user', 'course'])->where('user_id', $user->id)->firstOrFail();
 
-                'email' => $student->user->email,
-                'phone' => $student->user->phone,
-                'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
-                'gender' => $student->user->gender ? "Nam" : "Nữ",
-                'ethnicity' => $student->user->ethnicity,
-                'address' => $student->user->address,
+                $major = StudentMajor::where('status', 1)->firstOrFail();
 
-                'status' => match($student->status) {
-                    "0" => "Đang học",
-                    "1" => "Bảo lưu",
-                    "2" => "Hoàn thành",
-                    default => "Không xác định"
-                },
-            ];
+                $data = [
+                    'avatar' => $student->user->avatar,
+                    'name' => $student->user->name,
+                    'student_code' => $student->student_code,
+                    'course_name' => $student->course->name,
+                    'major_name' => $major->major->name,
+                    'current_semester' => $student->current_semester,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'dob' => Carbon::parse($student->user->dob)->format('d/m/Y'),
+                    'gender' => $student->user->gender ? "Nam" : "Nữ",
+                    'ethnicity' => $student->user->ethnicity,
+                    'address' => $student->user->address,
+                    'status' => match ($student->status) {
+                        "0" => "Đang học",
+                        "1" => "Bảo lưu",
+                        "2" => "Hoàn thành",
+                        default => "Không xác định"
+                    },
+                ];
+
+                Redis::setex($cacheKey, now()->addMonths(4)->diffInSeconds(), json_encode($data));
+            } else {
+                $data = json_decode($data, true);
+            }
 
             return response()->json(['data' => $data], 200);
+
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
         }
     }
+
+
 
     public function getSubjects()
     {
@@ -73,10 +89,10 @@ class   StudentController extends Controller
 
 
             $currentCourseSemester = CourseSemester::where('course_id', $student->course_id)
-            ->where('order', $student->current_semester)
-            ->join('semesters', 'semesters.id', '=', 'course_semesters.semester_id')
-            ->select('semesters.start_date', 'semesters.end_date')
-            ->first();
+                ->where('order', $student->current_semester)
+                ->join('semesters', 'semesters.id', '=', 'course_semesters.semester_id')
+                ->select('semesters.start_date', 'semesters.end_date')
+                ->first();
 
             if (!$currentCourseSemester) {
                 return response()->json(['error' => 'Không tìm thấy thông tin kỳ học.'], 404);
@@ -134,7 +150,6 @@ class   StudentController extends Controller
                 'subjects' => $listSubjects
             ], 200);
 
-
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
@@ -169,9 +184,9 @@ class   StudentController extends Controller
     {
         try {
             $schedules = Schedule::where('subject_id', $subjectid)
-            ->where('shift_id', $shiftId)
-            ->where('end_date', '>=', Carbon::now())
-            ->get();
+                ->where('shift_id', $shiftId)
+                ->where('end_date', '>=', Carbon::now())
+                ->get();
 
             $data = $schedules->map(function ($schedule) {
                 $studentsCount = $schedule->classroom->students->count();
@@ -185,11 +200,7 @@ class   StudentController extends Controller
                     'room' => $schedule->room->name ? $schedule->room->name : "NULL",
                     'link' => $schedule->link ? $schedule->link : "NULL",
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
-                    'days_of_week' => $schedule->days->map(function($day) {
-                        return [
-                            "Thứ" => $day->id,
-                        ];
-                    }),
+                    'days_of_week' => $schedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
                     'students' => $studentsCount,
                     'max_students' => $maxStudents,
                     'status' => $status,
@@ -271,7 +282,7 @@ class   StudentController extends Controller
                 'link' => $newSchedule->link ?? 'NULL',
                 'start_date' => Carbon::parse($newSchedule->start_date)->format('d/m/Y'),
                 'end_date' => Carbon::parse($newSchedule->end_date)->format('d/m/Y'),
-                'days_of_week' => $newSchedule->days->map(fn($day) => ["Thứ" => $day->id]),
+                'days_of_week' => $newSchedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
             ];
 
             return response()->json(['message' => 'Đăng ký thành công', 'data' => $data], 200);
@@ -294,7 +305,100 @@ class   StudentController extends Controller
 
             $timetable = StudentSchedule::where('student_id', $student->id)->get();
 
-            $data = $timetable->map(function($tt) use ($student) {
+
+            $data = $timetable->map(function ($tt) use ($student) {
+                return [
+                    'id' => $tt->schedule->id,
+                    'subject_name' => $tt->schedule->subject->name,
+                    'classroom_code' => $tt->schedule->classroom->code,
+                    'teacher_name' => $tt->schedule->teacher->user->name,
+                    'shift_name' => $tt->schedule->shift->name,
+                    'room_name' => $tt->schedule->room->name ?? "Null",
+                    'link' => $tt->schedule->link ?? "Null",
+                    'start_date' => Carbon::parse($tt->schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
+                    'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) use ($student, $tt) {
+                        $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
+                            ->setTimeFrom(Carbon::parse($tt->schedule->shift->start_time));
+
+                        $currentDateTime = now();
+
+                        if ($currentDateTime < $lessonDateTime) {
+                            $status = "Chưa rõ";
+                        } else {
+                            $studentLesson = StudentLesson::where('student_id', $student->id)
+                                ->where('lesson_id', $lesson->pivot->lesson_id)
+                                ->first();
+
+                            if (!$studentLesson) {
+                                $status = "Vắng";
+                            } else {
+                                $status = $studentLesson->status == 1 ? "Có mặt" : "Vắng";
+                            }
+                        }
+
+                        return [
+                            'name' => $lesson->name,
+                            'description' => $lesson->description,
+                            'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
+                            'status' => $status,
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getSemester()
+    { {
+            $user = Auth::user();
+
+            try {
+                $student = Student::where('user_id', $user->id)->firstOrFail();
+
+                $semesters = CourseSemester::where('course_id', $student->course_id)->get();
+
+                $data = $semesters->map(function ($sm) {
+                    return [
+                        'id' => $sm->semester->id,
+                        'name' => $sm->semester->name,
+                        'order' => $sm->order
+                    ];
+                });
+
+                return response()->json(['data' => $data], 200);
+            } catch (ModelNotFoundException $e) {
+                return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+            }
+        }
+    }
+    public function getTimetableBySemester(string $semesterId)
+    {
+        $user = Auth::user();
+
+        try {
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+
+
+            $semester = Semester::findOrFail($semesterId);
+            $semesterStartDate = Carbon::parse($semester->start_date);
+            $semesterEndDate = Carbon::parse($semester->end_date);
+
+            $timetable = StudentSchedule::where('student_id', $student->id)
+                ->whereHas('schedule', function ($query) use ($semesterStartDate, $semesterEndDate) {
+                    $query->whereBetween('start_date', [$semesterStartDate, $semesterEndDate])
+                        ->whereBetween('end_date', [$semesterStartDate, $semesterEndDate]);
+                })
+                ->get();
+
+            $data = $timetable->map(function ($tt) use ($student) {
                 return [
                     'id' => $tt->schedule->id,
                     'subject_name' => $tt->schedule->subject->name,
@@ -333,9 +437,10 @@ class   StudentController extends Controller
                     }),
                 ];
             });
+
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập hoặc kỳ học không tồn tại.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
@@ -353,15 +458,16 @@ class   StudentController extends Controller
             }
 
             $subMajorRegistered = StudentMajor::where('student_id', $student->id)
-                                ->where('status', 2)
-                                ->exists();
+
+                ->where('status', 2)
+                ->exists();
 
             if ($subMajorRegistered) {
                 return response()->json(['message' => 'Bạn đã đăng ký chuyên ngành hẹp rồi.'], 403);
             }
 
             $mainMajor = StudentMajor::where('student_id', $student->id)
-                        ->where('status', 1)->firstOrFail();
+                ->where('status', 1)->firstOrFail();
 
             $subMajors = Major::where('major_id', $mainMajor->major_id)->get();
 
@@ -391,19 +497,19 @@ class   StudentController extends Controller
             }
 
             $subMajorRegistered = StudentMajor::where('student_id', $student->id)
-                                ->where('status', 2)
-                                ->exists();
+                ->where('status', 2)
+                ->exists();
 
             if ($subMajorRegistered) {
                 return response()->json(['message' => 'Sinh viên đã đăng ký chuyên ngành hẹp.'], 403);
             }
 
             $mainMajor = StudentMajor::where('student_id', $student->id)
-                        ->where('status', 1)->firstOrFail();
+                ->where('status', 1)->firstOrFail();
 
             $validSubMajor = Major::where('major_id', $mainMajor->major_id)
-                                ->where('id', $subMajorId)
-                                ->exists();
+                ->where('id', $subMajorId)
+                ->exists();
 
             if (!$validSubMajor) {
                 return response()->json(['message' => 'Chuyên ngành hẹp không hợp lệ.'], 400);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessController;
 use App\Http\Controllers\Api\Admin\ApiClassroomController;
 use App\Http\Controllers\Api\Admin\ApiCourseController;
 use App\Http\Controllers\Api\Admin\ApiLessonController;
@@ -26,32 +27,34 @@ use App\Http\Controllers\Auth\GoogleController;
 
 use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
+use App\Http\Controllers\Api\Student\SyllabusController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\PayPalController;
+use App\Http\Controllers\RegisterClassController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
-// Route::post('login', [ApiAuthController::class, 'login']);
-// Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
-// Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+Route::post('login', [ApiAuthController::class, 'login']);
+Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
 Route::post('google-login', [GoogleController::class, 'googleLogin']);
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle']);
 
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
-    Route::
+Route::
     // middleware(['auth:sanctum', 'role:Quản trị viên'])->
     prefix('admin')
 
-        ->group(function () {
+    ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
+        Route::post('register-class', [RegisterClassController::class, 'registerClass']);
 
 
         Route::apiResource('officers', ApiOfficerController::class);
@@ -127,7 +130,9 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('semester/{semesterId}/{courseId}/majors', [ApiScheduleController::class, 'getMajorsByCourseAndSemester']);
         Route::get('semester/{semesterId}/course/{courseId}/major/{majorId}/subjects', [ApiScheduleController::class, 'getSubjects']);
         Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/add', [ApiScheduleController::class, 'addSchedules']);
-        Route::get('schedules/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
+        Route::post('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/random', [ApiScheduleController::class, 'assignStudentsToSubject']);
+        Route::delete('schedules/{semesterId}/{courseId}/{majorId}/{subjectId}/delete', [ApiScheduleController::class, 'deleteEmptySchedules']);
+        Route::get('schedules/{courseId}/{subjectId}/classrooms', [ApiScheduleController::class, 'getClassrooms']);
         Route::post('schedules/assign', [ApiScheduleController::class, 'assignTeacherSchedules']);
 
         Route::get('schedule/{id}/detail', [ApiScheduleController::class, 'getDetailSchedule']);
@@ -143,6 +148,7 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
+        Route::get('statistics/statisticSubMajors/{majorId}', [StatisticsController::class, "statisticSubMajors"]);
         Route::post('send-email', [MailController::class, 'sendEmail']);
         Route::post('send-email/teacher', [MailController::class, 'sendEmailToTeacher']);
 
@@ -155,12 +161,12 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
 
         Route::apiResource('paypal', PayPalController::class);
-        Route::post( 'paypal/getTransactionsByCourse', [PayPalController::class,'getTransactionsByCourse']);
+        Route::post('paypal/getTransactionsByCourse', [PayPalController::class, 'getTransactionsByCourse']);
 
     });
 
-    Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
-        ->group(function () {
+Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
+    ->group(function () {
         Route::apiResource('students', ApiStudentController::class);
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
@@ -218,7 +224,8 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::delete('schedule/{classroomId}/destroy', [ApiScheduleController::class, 'destroyByClassroomId']);
     });
 
-    Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
+
+Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
         Route::get('/', [StudentController::class, 'getStudentDetail']);
         Route::get('subjects', [StudentController::class, 'getSubjects']);
@@ -226,8 +233,16 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
         Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
-        Route::get('timetable', [StudentController::class, 'getTimetable']);
+        Route::get('statistics/{semesterId}', [SyllabusController::class, 'getStatisticsBySubject']);
 
+        Route::get('syllabus', [SyllabusController::class, 'getSyllabus']);
+        Route::get('syllabus/{subjectId}', [SyllabusController::class, 'getDetailClassroom']);
+
+        Route::get('timetable', [StudentController::class, 'getTimetable']);
+        Route::get('getFeeBySemester', [PayPalController::class, 'getFeeBySemester']);
+
+        Route::get('semesters', [StudentController::class, 'getSemester']);
+        Route::get('{semesterId}/timetable', [StudentController::class, 'getTimetableBySemester']);
 
         Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
         Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);
@@ -239,9 +254,17 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
         Route::get('notifications/read', [StudentNoticeController::class, 'getReadNotifications']);
         Route::get('notification/read/{id}', [StudentNoticeController::class, 'detailNotification']);
+
+        Route::post('queue/add', [AccessController::class, 'addToQueue']);
+        Route::post('queue/check', [AccessController::class, 'checkPosition']);
+        Route::post('queue/process', [AccessController::class, 'processQueue']);
+        Route::post('queue/finish', [AccessController::class, 'finishProcessing']);
+
+        Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
+        Route::apiResource('paypal', PayPalController::class);
     });
 
-    Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
+Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);

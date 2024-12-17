@@ -160,17 +160,16 @@ class ApiSemesterController extends Controller
 
             $activeCourses = Course::where(function ($query) use ($data) {
                 $query->where('start_date', '<=', $data['end_date'])
-                      ->where('end_date', '>=', $data['start_date']);
+                    ->where('end_date', '>=', $data['start_date']);
             })->get();
 
 
             if ($activeCourses->isNotEmpty()) {
                 $maxOrder = 9;
 
-
                 $coursesWithOrder = $activeCourses->mapWithKeys(function ($course) use ($maxOrder) {
                     $currentMaxOrder = CourseSemester::where('course_id', $course->id)
-                                    ->max('order');
+                        ->max('order');
                     $newOrder = min($currentMaxOrder + 1, $maxOrder);
                     return [$course->id => ['order' => $newOrder]];
                 });
@@ -178,7 +177,6 @@ class ApiSemesterController extends Controller
 
                 $semester->courses()->syncWithoutDetaching($coursesWithOrder);
             }
-
 
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -203,20 +201,18 @@ class ApiSemesterController extends Controller
             }
 
             $data = [
-                    'id' => $semester->id,
-                    'name' => $semester->name,
-
-                    'start_date' => Carbon::parse($semester->start_date),
-                    'end_date' => Carbon::parse($semester->end_date),
-
-                    'courses' => $semester->orders->map(function ($order) {
-                        return [
-                            'id' => $order->course->id,
-                            'order' => $order->order,
-                        ];
-                    }),
-                    'status' => $status
-                ];
+                'id' => $semester->id,
+                'name' => $semester->name,
+                'start_date' => Carbon::parse($semester->start_date),
+                'end_date' => Carbon::parse($semester->end_date),
+                'courses' => $semester->orders->map(function ($order) {
+                    return [
+                        'id' => $order->course->id,
+                        'order' => $order->order,
+                    ];
+                }),
+                'status' => $status
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -233,7 +229,6 @@ class ApiSemesterController extends Controller
             'start_date' => 'sometimes|date',
 
             'end_date' => 'sometimes|date|after_or_equal:start_date',
-
             'status' => 'sometimes|integer|in:0,1,2',
             'courses' => 'sometimes|array',
             'courses.*.id' => 'sometimes|exists:courses,id',
@@ -294,4 +289,3 @@ class ApiSemesterController extends Controller
     }
 
 }
-

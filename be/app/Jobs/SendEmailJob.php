@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Mail\SendHtmlMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -30,13 +31,6 @@ class SendEmailJob implements ShouldQueue
      */
     public function handle(): void
     {
-        try {
-            Mail::raw($this->message, function ($mail) {
-                $mail->to($this->email)
-                     ->subject($this->subject);
-            });
-        } catch (\Exception $e) {
-            \Log::error('Error sending email to ' . $this->email . ': ' . $e->getMessage());
-        }
+        Mail::to($this->email)->send(new SendHtmlMail($this->subject, $this->message));
     }
 }

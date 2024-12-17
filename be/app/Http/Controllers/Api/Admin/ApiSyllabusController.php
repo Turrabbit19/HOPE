@@ -57,6 +57,7 @@ class ApiSyllabusController extends Controller
             return response()->json(
                 $subjects
             , 200);
+
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
         } catch (\Exception $e) {
@@ -110,6 +111,7 @@ class ApiSyllabusController extends Controller
         }
     }
 
+
     public function getCoursesByMajor($majorId)
     {
         try {
@@ -158,40 +160,40 @@ class ApiSyllabusController extends Controller
 
     }
 
-
     public function getMajorAndSubMajor()
     {
         try {
-            $mainMajors = Major::where('main', 1)->get();
-
             $currentDate = Carbon::now();
+
+            $mainMajors = Major::where('main', 1)
+                ->with('children')
+                ->get();
 
             $data = $mainMajors->map(function ($mm) use ($currentDate) {
                 $courses = Course::whereHas('students.majors', function ($query) use ($mm) {
-                    $query->where('major_id', $mm->id);
+                    $query->where('majors.id', $mm->id);
                 })
                     ->where('start_date', '<=', $currentDate)
                     ->where('end_date', '>=', $currentDate)
                     ->withCount('students')
                     ->get();
 
-                $courseData = $courses->isEmpty() ? [] : $courses->map(function ($course) {
-                    return [
-                        'id' => $course->id,
-                        'name' => $course->name,
-                    ];
-                });
-
                 return [
                     'id' => $mm->id,
                     'code' => $mm->code,
                     'name' => $mm->name,
-                    'children' => $mm->children->map(function ($child) use ($courseData) {
+                    'courses' => $courses->map(function ($course) {
+                        return [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                            'students_count' => $course->students_count,
+                        ];
+                    }),
+                    'children' => $mm->children->map(function ($child) {
                         return [
                             'id' => $child->id,
                             'code' => $child->code,
                             'name' => $child->name,
-                            'courses' => $courseData,
                         ];
                     }),
                 ];
@@ -200,8 +202,12 @@ class ApiSyllabusController extends Controller
 
             return response()->json($data, 200);
 
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Majors hoặc Courses',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -264,4 +270,3 @@ class ApiSyllabusController extends Controller
     }
 
 }
-

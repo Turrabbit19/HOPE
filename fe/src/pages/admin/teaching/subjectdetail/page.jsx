@@ -49,6 +49,7 @@ const MajorDetailSubject = () => {
 
   const fetchLessons = async () => {
     const response = await instance.get(`admin/subject/${subjectId}/lessons`);
+    console.log(response.data.data);
     setLectureData(response.data.data);
     // console.log(response.data.data);
   };

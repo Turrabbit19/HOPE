@@ -27,7 +27,7 @@ export default function HeaderClient() {
   const buttonRef = useRef(null);
   const navigate = useNavigate();
   const exchangeRate = 23000;
-  const [feeData, setFeeData] = useState({ total_credit: 0, price: 0 });
+  const [feeData, setFeeData] = useState({ total_credit: 0, price: 0, order:0 });
   // const [error, setError] = useState(null);
   const unreadNotificationsCount = notifications.filter(
     (n) => n.status !== "Đã xem"
@@ -109,7 +109,10 @@ export default function HeaderClient() {
             "http://127.0.0.1:8000/api/student/getFeeBySemester"
           );
           console.log(data);
-          setFeeData(data);
+          if(typeof data === 'object' && data !== null)
+            setFeeData(data);
+          else 
+            setErrorMessage(data);
         } catch (error) {
           if (error.response && error.response.status === 403) {
             setErrorMessage("Đã kết thúc ngày nộp học phí. Nếu chưa nộp vui lòng liên hệ phòng hỗ trợ Sinh Viên");
@@ -150,13 +153,14 @@ export default function HeaderClient() {
     payment_id: "",
     amount: feeData.price,
     currency: "VND",
+    semester: feeData.order
   };
 
   const onApprove = async (data, actions) => {
     try {
       const details = await actions.order.capture();
       infor.payment_id = details.id;
-      const response = await instance.post(`admin/paypal`, infor);
+      const response = await instance.post(`student/paypal`, infor);
       notification.success({
         message: "Thanh toán học phí thành công",
       });
@@ -397,6 +401,9 @@ export default function HeaderClient() {
           ) : (
             <>
               <div>
+                <p>
+                  <strong>Kỳ học cần đóng: </strong> {feeData.order}
+                </p>
                 <p>
                   <strong>Tổng tín chỉ: </strong> {feeData.total_credit}
                 </p>

@@ -261,6 +261,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::post('queue/finish', [AccessController::class, 'finishProcessing']);
 
         Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
+        Route::apiResource('paypal', PayPalController::class);
     });
 
 Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')

@@ -49,50 +49,51 @@ class GoogleController extends Controller
         }
     }
     public function googleLogin(Request $request)
-    {
-        $credential = $request->input('credential');
+{
+    $credential = $request->input('credential');
 
-        if (!$credential) {
-            return response()->json(['error' => 'Missing ID Token'], 400);
-        }
-
-        $client = new GoogleClient(['client_id' => env('GOOGLE_CLIENT_ID')]);
-
-        try {
-            $payload = $client->verifyIdToken($credential);
-
-            if ($payload) {
-                $user = User::where('email', $payload['email'])->first();
-
-                if (!$user) {
-                    return response()->json(['message' => 'User not found with this email'], 404);
-                }
-
-                $cacheKey = 'user:' . $user->id . ':data';
-                $cachedData = Redis::get($cacheKey);
-
-                if ($cachedData) {
-                    return response()->json([
-                        'token' => $user->createToken('auth_token')->plainTextToken,
-                        'user' => json_decode($cachedData, true),
-                    ], 200);
-                }
-
-                $formattedData = $this->formatUserData($user);
-
-                Redis::setex($cacheKey, 3600, json_encode($formattedData));
-
-                return response()->json([
-                    'token' => $user->createToken('auth_token')->plainTextToken,
-                    'user' => $formattedData,
-                ], 200);
-            } else {
-                return response()->json(['error' => 'Invalid ID Token'], 401);
-            }
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Google Verification Failed', 'details' => $e->getMessage()], 500);
-        }
+    if (!$credential) {
+        return response()->json(['error' => 'Missing ID Token'], 400);
     }
+
+    $client = new GoogleClient(['client_id' => env('GOOGLE_CLIENT_ID')]);
+
+    try {
+        $payload = $client->verifyIdToken($credential);
+
+        if ($payload) {
+            $user = User::where('email', $payload['email'])->first();
+
+            if (!$user) {
+                return response()->json(['message' => 'User not found with this email'], 404);
+            }
+
+            $cacheKey = 'user:' . $user->id . ':refresh_token';
+
+            $cachedToken = Redis::get($cacheKey);
+
+            if ($cachedToken) {
+                return response()->json([
+                    'token' => $cachedToken,
+                    'user' => $this->formatUserData($user),
+                ], 200);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            Redis::setex($cacheKey, 604800, $token);
+
+            return response()->json([
+                'token' => $token,
+                'user' => $this->formatUserData($user),
+            ], 200);
+        } else {
+            return response()->json(['error' => 'Invalid ID Token'], 401);
+        }
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Google Verification Failed', 'details' => $e->getMessage()], 500);
+    }
+}
 
     public function formatUserData(User $user)
     {

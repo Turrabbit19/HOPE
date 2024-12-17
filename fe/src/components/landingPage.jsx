@@ -84,6 +84,7 @@ const LandingPage = () => {
                 credential: credentialResponse.credential,
             });
             localStorage.setItem("role", data.user.role);
+            localStorage.setItem("user_id", data.user.id);
             localStorage.setItem("token", data.token);
             console.log("Server Response:", data);
             setShowGoogleLogin(false);

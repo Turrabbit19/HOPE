@@ -325,9 +325,9 @@ const StatisticalReport = () => {
       {subMajorStats.length > 0 ? (
         <div
           style={{
-            maxWidth: "400px",
+            maxWidth: "300px",
             margin: "0 auto",
-            height: "400px",
+            height: "300px",
           }}
         >
           <Doughnut data={chartData} options={options} />

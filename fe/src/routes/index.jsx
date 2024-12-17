@@ -79,6 +79,7 @@ import COnfirmChangeSchedule from "../pages/student/confirmChangeSchedule/page";
 import SubMajorsList from "../pages/student/sub-majorRegistration/page";
 import Syllabus from "../pages/student/syllabus/page";
 import StatisticSemester from "../pages/student/statistics-semester/page";
+import ProtectedRoute from "./ProtectedRoute";
 
 const Router = createBrowserRouter([
   {
@@ -501,9 +502,10 @@ const Router = createBrowserRouter([
         path: "schedule",
         element: <DashboardActions />,
       },
+
       {
         path: "class-registration",
-        element: <ScheduleRegistration />,
+        element: <ProtectedRoute component={ScheduleRegistration}/>,
       },
       {
         path: "confirm-change-schedule",

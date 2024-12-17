@@ -19,6 +19,10 @@ class QueueUpdated implements ShouldBroadcast
     {
         return new Channel('queue');
     }
+
+    public function broadcastAs() {
+        return "queueUpdated";
+    }
     public function broadcastWith()
     {
         return [

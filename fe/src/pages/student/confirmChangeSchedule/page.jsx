@@ -1,115 +1,128 @@
-import { Button, Modal } from "antd";
+import { Button, Modal, message as antdMessage } from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import instance from "../../../config/axios"; // Giả sử bạn có instance axios đã cấu hình
-import echo from "../../../config/echo";
+import instance from "../../../config/axios";
+import Echo from "laravel-echo";
+import { io } from "socket.io-client";
 
 const ConfirmChangeSchedule = () => {
-  const user_id = localStorage.getItem("user_id");
-  const [waitCount, setWaitCount] = useState(null);
-  const [message, setMessage] = useState("Nhấn nút để tham gia hàng đợi.");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [queuePosition, setQueuePosition] = useState(null);  // Vị trí trong hàng đợi
-  const [neededCount, setNeededCount] = useState(null);  // Số người cần chờ trước khi đến lượt
-  const navigate = useNavigate();
   const userId = localStorage.getItem("user_id");
+  const [waitCount, setWaitCount] = useState(null);
+  const [queuePosition, setQueuePosition] = useState(null);
+  const [neededCount, setNeededCount] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const echo = new Echo({
+      broadcaster: "socket.io",
+      client: io,
+      host: "http://localhost:6001",
+      debug: true
+    });
+    console.log(echo);
+    echo.connector.socket.on('connect', () => {
+      console.log("Connected to Laravel Echo Server!");
+    });
+    echo.connector.socket.on('disconnect', () => {
+      console.log("Disconnected from Laravel Echo Server!");
+    });
+    echo.channel("queue").listen("queueUpdated", (data) => {
+      console.log(data);
+      const { userId: eventUserId, waitCount, status } = data;
+
+      if (eventUserId === userId) {
+        if (status === "updated") {
+          setWaitCount(waitCount);
+          setQueuePosition(waitCount);
+          setNeededCount(waitCount > 2 ? waitCount - 2 : 0);
+
+          if (waitCount === -1) {
+            localStorage.setItem("in_queue", "true");
+            antdMessage.success("Đến lượt bạn! Chuyển sang trang xử lý...");
+            navigate("/student/class-registration");
+          }
+        } else if (status === "removed") {
+          setWaitCount(null);
+          setQueuePosition(null);
+          setNeededCount(null);
+          antdMessage.info("Bạn đã bị xóa khỏi hàng đợi.");
+        }
+      }
+    });
+
+    return () => {
+      echo.disconnect();
+    };
+  }, [userId, navigate]);
 
   const handleJoinQueue = async () => {
     try {
-      const response = await instance.post("student/queue/add", {
-        user_id: userId,
-      });
+      const response = await instance.post("student/queue/add", { user_id: userId });
       const { wait_count } = response.data;
-      console.log(wait_count);
-      setWaitCount(wait_count);
 
-      if (wait_count <= 2) {
+      setWaitCount(wait_count);
+      setQueuePosition(wait_count + 2);
+      setNeededCount(wait_count);
+
+      if (wait_count === -1) {
+        localStorage.setItem("in_queue", "true");
+        antdMessage.success("Bạn đã đến lượt!");
         navigate("/student/class-registration");
       } else {
-        setMessage(`Bạn đang chờ ${wait_count} lượt.`);
-        setQueuePosition(wait_count);  // Cập nhật vị trí trong hàng đợi
-        setNeededCount(wait_count > 2 ? wait_count - 2 : 0);  // Cập nhật số người cần chờ
-        setIsModalVisible(true);  // Mở modal
+        antdMessage.info(`Bạn đang chờ ${wait_count} lượt.`);
+        setIsModalVisible(true);
       }
     } catch (error) {
-      setMessage("Lỗi khi tham gia hàng đợi. Vui lòng thử lại.");
+      antdMessage.error("Lỗi khi tham gia hàng đợi. Vui lòng thử lại.");
     }
   };
 
   const handleDeleteQueue = async () => {
     try {
-      await instance.post("student/queue/finish", {
-        user_id: userId,
-      });
-      setMessage("Đã hủy tham gia hàng đợi.");
+      await instance.post("student/queue/finish", { user_id: userId });
+      antdMessage.success("Bạn đã xóa khỏi hàng đợi.");
       setWaitCount(null);
+      setQueuePosition(null);
+      setNeededCount(null);
+      localStorage.setItem("in_queue", "false");
     } catch (error) {
-      setMessage("Lỗi khi tham gia hàng đợi. Vui lòng thử lại.");
+      antdMessage.error("Lỗi khi xóa khỏi hàng đợi. Vui lòng thử lại.");
     }
   };
 
-  useEffect(() => {
-    debugger
-    // if (waitCount === null || waitCount <= 2) return;
-
-    const channel = echo.channel("queue");
-
-    const handleQueueUpdate = (data) => {
-      console.log("Received data from Pusher:", data);
-
-      if (data.userId === userId) {
-        if (data.waitCount === 0) {
-          setMessage("Đến lượt bạn! Chuyển sang trang xử lý...");
-          navigate("/student/class-registration");
-        } else {
-          setWaitCount(data.waitCount);
-          setMessage(`Bạn đang chờ ${data.waitCount} lượt.`);
-          
-          setQueuePosition(data.waitCount);
-          setNeededCount(data.waitCount > 2 ? data.waitCount - 2 : 0);
-        }
-      }
-    };
-
-    channel.listen("QueueUpdated", handleQueueUpdate);
-
-    return () => {
-      echo.leaveChannel("queue");
-    };
-  }, [waitCount, userId, navigate]);
-
   return (
-    <>
+    <div>
       <nav className="space-y-2">
-        <Button onClick={handleJoinQueue}>Xác nhận đổi lịch học</Button>
+        <Button type="primary" onClick={handleJoinQueue}>
+          Xác nhận đổi lịch học
+        </Button>
       </nav>
+
       <div>
         <h1>Trạng thái Hàng Đợi</h1>
-        <p>{message}</p>
-        {waitCount !== null && waitCount > 0 && (
-          <p>Lượt chờ hiện tại: {waitCount}</p>
-        )}
+        <p>{waitCount !== null ? `Bạn đang chờ ${waitCount} lượt.` : "Chưa tham gia hàng đợi."}</p>
+        {queuePosition !== null && <p>Vị trí hiện tại: {queuePosition}</p>}
       </div>
-      <Button onClick={handleDeleteQueue}>Xóa</Button>
 
-      {/* Modal hiển thị vị trí hàng đợi và số người cần chờ */}
+      <Button danger onClick={handleDeleteQueue}>
+        Xóa khỏi hàng đợi
+      </Button>
+
       <Modal
         title="Thông tin Hàng Đợi"
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
-        footer={null}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setIsModalVisible(false)}>
+            Đóng
+          </Button>,
+        ]}
       >
         <p>Vị trí hiện tại của bạn trong hàng đợi: {queuePosition}</p>
-        <p>Số người còn lại trước khi đến lượt bạn: {neededCount}</p>
-        <Button
-          onClick={() => setIsModalVisible(false)}
-          type="primary"
-          block
-        >
-          Đóng
-        </Button>
+        <p>Số người cần chờ trước khi đến lượt: {neededCount}</p>
       </Modal>
-    </>
+    </div>
   );
 };
 

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Events\QueueUpdated;
@@ -10,91 +9,57 @@ class AccessController extends Controller
 {
     private $queueKey = 'change_schedule_access_queue';
     private $processingKey = 'processing_queue';
+    private $maxProcessing = 2;
+    private $processingTimeLimit = 300;
+
     public function addToQueue(Request $request)
     {
         $userId = $request->input('user_id');
-        $queueKey = $this->queueKey;
-        $processingKey = $this->processingKey;
 
-        $waitCount = $this->findUserPosition($queueKey, $userId);
-
-        if ($waitCount !== -1) {
-            return response()->json([
-                'wait_count' => $waitCount,
-            ]);
+        if ($this->findUserPosition($this->queueKey, $userId) !== -1 || $this->findUserPosition($this->processingKey, $userId) !== -1) {
+            return response()->json(['message' => 'Bạn đã có trong hàng đợi hoặc đang được xử lý.'], 400);
         }
 
-        Redis::rpush($queueKey, $userId);
+        Redis::rpush($this->queueKey, $userId);
 
-        $queueSize = Redis::llen($queueKey);
-        $processingCount = Redis::llen($processingKey);
+        $this->processQueue();
 
-        $waitCount = max(0, $queueSize - $processingCount);
+        $waitCount = $this->calculateWaitCount($this->queueKey, $this->processingKey, $userId);
 
-        if ($waitCount === 0) {
-            Redis::rpush($processingKey, $userId);
-            Redis::expire($this->processingKey, 300);
-        }
+        broadcast(new QueueUpdated($userId, $waitCount));
 
-        return response()->json([
-            'wait_count' => $waitCount,
-        ]);
+        return response()->json(['wait_count' => $waitCount]);
     }
-
-    public function checkPosition(Request $request)
-    {
-        $userId = $request->input('user_id');
-        $queue = Redis::lrange($this->queueKey, 0, -1);
-
-        $waitCount = array_search($userId, $queue);
-
-        if ($waitCount === false) {
-            return response()->json([
-                'message' => 'Bạn chưa ở trong hàng đợi.',
-            ], 404);
-        }
-
-        return response()->json([
-            'wait_count' => $waitCount,
-        ]);
-    }
-
 
     public function processQueue()
-    {
+{
+    $queue = Redis::lrange($this->queueKey, 0, -1);
+    $processingQueue = Redis::lrange($this->processingKey, 0, -1);
+
+    while (count($processingQueue) < $this->maxProcessing && !empty($queue)) {
+        $userId = array_shift($queue);
+
+        $data = [
+            'user_id' => $userId,
+            'timestamp' => time(),
+            'expire_at' => time() + $this->processingTimeLimit,
+        ];
+
+        Redis::rpush($this->processingKey, json_encode($data));
+
+        Redis::lpop($this->queueKey);
+
+        broadcast(new QueueUpdated($userId, 0));
+
         $queue = Redis::lrange($this->queueKey, 0, -1);
         $processingQueue = Redis::lrange($this->processingKey, 0, -1);
-
-        if (count($processingQueue) < 2) {
-            $neededSlots = 2 - count($processingQueue);
-            $usersToProcess = array_slice($queue, 0, $neededSlots);
-
-            foreach ($usersToProcess as $userId) {
-                $data = [
-                    'user_id' => $userId,
-                    'timestamp' => time(),
-                ];
-                Redis::rpush($this->processingKey, json_encode($data));
-
-                Redis::lrem($this->queueKey, 0, $userId);
-
-                broadcast(new QueueUpdated($userId, 0));
-            }
-        }
-
-        $this->removeExpiredUsers();
-
-        return response()->json([
-            'processing_users' => Redis::lrange($this->processingKey, 0, -1),
-        ]);
     }
-
+}
 
 
     public function finishProcessing(Request $request)
     {
         $userId = $request->input('user_id');
-
         $processingQueue = Redis::lrange($this->processingKey, 0, -1);
 
         foreach ($processingQueue as $item) {
@@ -105,13 +70,11 @@ class AccessController extends Controller
             }
         }
 
-        Redis::lrem($this->queueKey, 0, $userId);
-
         broadcast(new QueueUpdated($userId, -1));
 
-        return response()->json([
-            'message' => 'Đã hoàn thành xử lý và xóa khỏi hàng đợi.',
-        ]);
+        $this->processQueue();
+
+        return response()->json(['message' => 'Đã hoàn thành xử lý và xóa khỏi hàng đợi.']);
     }
 
     private function findUserPosition($queueKey, $userId)
@@ -121,18 +84,27 @@ class AccessController extends Controller
 
         return $position === false ? -1 : $position;
     }
-    private function removeExpiredUsers()
+
+    private function calculateWaitCount($queueKey, $processingKey, $userId)
+    {
+        $queue = Redis::lrange($queueKey, 0, -1);
+        $processingCount = Redis::llen($processingKey);
+        $position = array_search($userId, $queue);
+
+        return $position === false ? -1 : max(0, $position + 1);
+    }
+
+    public function cleanExpiredProcessingItems()
     {
         $processingQueue = Redis::lrange($this->processingKey, 0, -1);
+        $currentTime = time();
 
         foreach ($processingQueue as $item) {
             $data = json_decode($item, true);
-
-            if (time() - $data['timestamp'] > 2) {
+            if (isset($data['expire_at']) && $data['expire_at'] <= $currentTime) {
                 Redis::lrem($this->processingKey, 0, $item);
                 broadcast(new QueueUpdated($data['user_id'], -1));
             }
         }
     }
-
 }

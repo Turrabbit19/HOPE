@@ -117,6 +117,9 @@ Route::prefix('admin')
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
         Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
+        Route::get('statistics/statisticSubMajors/{majorId}', [StatisticsController::class, "statisticSubMajors"]);
+        Route::get('statistics/majorsByCourse/{courseId}', [StatisticsController::class, 'getMajorsByCourse']);
+        Route::get('statistics/classrooms', [StatisticsController::class, 'getClassrooms']);
     });
 
 Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')

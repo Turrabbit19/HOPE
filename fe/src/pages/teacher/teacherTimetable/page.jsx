@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, User, Book, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, User, Book, Info, AlertCircle } from 'lucide-react';
 
 const TeacherTimetable = () => {
   const [currentWeek, setCurrentWeek] = useState(() => new Date());
@@ -9,16 +9,24 @@ const TeacherTimetable = () => {
   const [error, setError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState(null);
 
   const daysOfWeek = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
   const shifts = ['Ca 1', 'Ca 2', 'Ca 3', 'Ca 4', 'Ca 5', 'Ca 6'];
 
   useEffect(() => {
     setSelectedDay(getCurrentDay());
-    fetchTimetableData();
+    fetchSemesters();
   }, []);
 
-  const fetchTimetableData = async () => {
+  useEffect(() => {
+    if (selectedSemester) {
+      fetchTimetableData(selectedSemester.id);
+    }
+  }, [selectedSemester]);
+
+  const fetchSemesters = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -27,7 +35,7 @@ const TeacherTimetable = () => {
         throw new Error('Không tìm thấy token xác thực');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/teacher/timetable', {
+      const response = await fetch('http://127.0.0.1:8000/api/teacher/semesters', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -35,9 +43,38 @@ const TeacherTimetable = () => {
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Token không hợp lệ hoặc đã hết hạn');
-        }
+        throw new Error('Không thể tải danh sách kỳ học');
+      }
+
+      const data = await response.json();
+      setSemesters(data.data || []);
+      if (data.data && data.data.length > 0) {
+        setSelectedSemester(data.data[0]);
+      }
+    } catch (err) {
+      setError(err.message || 'Đã xảy ra lỗi khi tải danh sách kỳ học');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTimetableData = async (semesterId) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực');
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/api/teacher/${semesterId}/timetable`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
         throw new Error('Không thể tải lịch dạy');
       }
 
@@ -63,7 +100,10 @@ const TeacherTimetable = () => {
     setCurrentWeek((prevWeek) => {
       const nextWeek = new Date(prevWeek);
       nextWeek.setDate(prevWeek.getDate() + 7);
-      return nextWeek;
+      if (selectedSemester && nextWeek <= new Date(selectedSemester.end_date)) {
+        return nextWeek;
+      }
+      return prevWeek;
     });
   };
 
@@ -71,13 +111,21 @@ const TeacherTimetable = () => {
     setCurrentWeek((prevWeek) => {
       const previousWeek = new Date(prevWeek);
       previousWeek.setDate(prevWeek.getDate() - 7);
-      return previousWeek;
+      if (selectedSemester && previousWeek >= new Date(selectedSemester.start_date)) {
+        return previousWeek;
+      }
+      return prevWeek;
     });
   };
 
   const handleGoToCurrentWeek = () => {
-    setCurrentWeek(new Date());
-    setSelectedDay(getCurrentDay());
+    const today = new Date();
+    if (selectedSemester &&
+        today >= new Date(selectedSemester.start_date) &&
+        today <= new Date(selectedSemester.end_date)) {
+      setCurrentWeek(today);
+      setSelectedDay(getCurrentDay());
+    }
   };
 
   const getWeekDates = () => {
@@ -113,6 +161,13 @@ const TeacherTimetable = () => {
     setSelectedSchedule(null);
   };
 
+  const handleSemesterChange = (event) => {
+    const semesterId = event.target.value;
+    const semester = semesters.find(sem => sem.id === parseInt(semesterId));
+    setSelectedSemester(semester);
+    setCurrentWeek(new Date(semester.start_date));
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -144,6 +199,18 @@ const TeacherTimetable = () => {
               Tuần hiện tại
             </button>
           </div>
+
+          <select
+            onChange={handleSemesterChange}
+            value={selectedSemester ? selectedSemester.id : ''}
+            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
+          >
+            {semesters.map((semester) => (
+              <option key={semester.id} value={semester.id}>
+                {semester.name}
+              </option>
+            ))}
+          </select>
 
           <select
             onChange={handleDayChange}
@@ -182,7 +249,15 @@ const TeacherTimetable = () => {
           </button>
         </div>
 
-        {selectedDay ? (
+        {timetableData.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 text-yellow-500 mb-4">
+              <AlertCircle className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có dữ liệu lịch dạy</h3>
+            <p className="text-gray-500">Không có lịch dạy nào được tìm thấy cho kỳ học này.</p>
+          </div>
+        ) : selectedDay ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
             {shifts.map((shift) => {
               const schedule = getScheduleForDayAndShift(selectedDay, shift);
@@ -302,7 +377,6 @@ const TeacherTimetable = () => {
                 Chi tiết lịch dạy
               </h2>
               <div className="space-y-3">
-                
                 <p className="flex items-center text-gray-700">
                   <Book className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Môn học:</span>

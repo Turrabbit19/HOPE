@@ -276,6 +276,78 @@ class   StudentController extends Controller
         }
     }
 
+    public function getStudentClassrooms()
+    {
+        $user = Auth::user();
+
+        try {
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+
+            $currentDateTime = Carbon::now();
+
+            $classroomIds = StudentClassroom::where('student_id', $student->id)
+                ->where('study_start', '<=', $currentDateTime)
+                ->where('study_end', '>=', $currentDateTime)
+                ->pluck('classroom_id');
+
+            $schedules = StudentSchedule::where('student_id', $student->id)
+                ->whereHas('schedule', function ($query) use ($classroomIds, $currentDateTime) {
+                    $query->whereIn('classroom_id', $classroomIds)
+                        ->where('end_date', '>=', $currentDateTime)
+                        ->where('start_date', '<=', $currentDateTime);
+                })
+                ->with('schedule.days', 'schedule.shift', 'schedule.room', 'schedule.classroom', 'schedule.subject')
+                ->get();
+
+            if ($schedules->isEmpty()) {
+                return response()->json(['message' => 'Sinh viên không có lịch học nào.'], 200);
+            }
+
+            $carbonDayOfWeek = $currentDateTime->dayOfWeek;
+            $currentDayOfWeek = $carbonDayOfWeek === 0 ? 1 : $carbonDayOfWeek + 1;
+
+            $data = $schedules->map(function ($schedule) use ($currentDateTime, $currentDayOfWeek) {
+                $todayHasSchedule = $schedule->schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
+
+                $status = null;
+
+                if ($todayHasSchedule) {
+                    $shiftStart = Carbon::parse($schedule->schedule->shift->start_time);
+                    $shiftEnd = Carbon::parse($schedule->schedule->shift->end_time);
+
+                    if ($currentDateTime < $shiftStart) {
+                        $status = "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                    } elseif ($currentDateTime > $shiftEnd) {
+                        $status = "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
+                    } else {
+                        $status = "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                    }
+                } else {
+                    $status = "Không có lịch hôm nay";
+                }
+
+                return [
+                    'id' => $schedule->id,
+                    'subject_id' => $schedule->schedule->subject->id,
+                    'classroom' => $schedule->schedule->classroom->code,
+                    'subject_name' => $schedule->schedule->subject->name,
+                    'shift_name' => $schedule->schedule->shift->name,
+                    'room_name' => $schedule->schedule->room->name,
+                    'start_date' => Carbon::parse($schedule->schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($schedule->schedule->end_date)->format('d/m/Y'),
+                    'days_of_week' => $schedule->schedule->days->sortBy('id')->pluck('id')->map(fn($id) => "Thứ $id")->toArray(),
+                    'schedule_status' => $status,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy thông tin cho sinh viên đã đăng nhập.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function getTimetable()
     {
         $user = Auth::user();
@@ -410,6 +482,7 @@ class   StudentController extends Controller
 
                         return [
                             'name' => $lesson->name,
+                            'description' => $lesson->description,
                             'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
                             'status' => $status,
                         ];
@@ -424,7 +497,6 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function getSubMajors()
     {
         $user = Auth::user();

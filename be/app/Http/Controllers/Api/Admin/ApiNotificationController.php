@@ -68,12 +68,30 @@ class ApiNotificationController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'section_id' => 'required|exists:sections,id',   
-            'name' => 'required|string|max:255|unique:notifications',   
-            'description' => 'required|string', 
+            'section_id' => 'required|exists:sections,id',
+            'name' => 'required|string|max:255|unique:notifications',
+            'description' => 'required|string',
             'courses' => 'required|array',
-            'courses.*.id' => 'required|exists:courses,id',   
+            'courses.*.id' => 'required|exists:courses,id',
+        ], [
+            'section_id.required' => 'Mã phần học là bắt buộc.',
+            'section_id.exists' => 'Mã phần học không tồn tại.',
+            
+            'name.required' => 'Tên thông báo là bắt buộc.',
+            'name.string' => 'Tên thông báo phải là chuỗi ký tự.',
+            'name.max' => 'Tên thông báo không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên thông báo đã tồn tại.',
+            
+            'description.required' => 'Mô tả là bắt buộc.',
+            'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            
+            'courses.required' => 'Danh sách khóa học là bắt buộc.',
+            'courses.array' => 'Danh sách khóa học phải là một mảng.',
+            
+            'courses.*.id.required' => 'Mã khóa học là bắt buộc trong mỗi khóa học.',
+            'courses.*.id.exists' => 'Mã khóa học không tồn tại.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -138,11 +156,22 @@ class ApiNotificationController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'section_id' => 'sometimes|exists:sections,id',   
-            'name' => 'sometimes|string|max:255|unique:notifications,name,' . $id,   
-            'description' => 'sometimes|string',  
+            'section_id' => 'sometimes|exists:sections,id',
+            'name' => 'sometimes|string|max:255|unique:notifications,name,' . $id,
+            'description' => 'sometimes|string',
             'time' => 'sometimes|date_format:Y-m-d H:i:s',
+        ], [
+            'section_id.exists' => 'Mã phần học không tồn tại.',
+            
+            'name.string' => 'Tên thông báo phải là chuỗi ký tự.',
+            'name.max' => 'Tên thông báo không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên thông báo đã tồn tại.',
+            
+            'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            
+            'time.date_format' => 'Thời gian phải có định dạng Y-m-d H:i:s.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

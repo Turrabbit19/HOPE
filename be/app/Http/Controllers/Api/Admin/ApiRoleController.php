@@ -31,7 +31,12 @@ class ApiRoleController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50|unique:roles'
+            'name' => 'required|string|max:50|unique:roles',
+        ], [
+            'name.required' => 'Tên vai trò là bắt buộc.',
+            'name.string' => 'Tên vai trò phải là chuỗi ký tự.',
+            'name.max' => 'Tên vai trò không được vượt quá 50 ký tự.',
+            'name.unique' => 'Tên vai trò đã tồn tại.',
         ]);
 
         if ($validator->fails()) {
@@ -69,7 +74,11 @@ class ApiRoleController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:50|unique:roles,name,' . $id,
-        ]);
+        ], [
+            'name.string' => 'Tên vai trò phải là chuỗi ký tự.',
+            'name.max' => 'Tên vai trò không được vượt quá 50 ký tự.',
+            'name.unique' => 'Tên vai trò đã tồn tại.',
+        ]);       
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

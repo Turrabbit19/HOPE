@@ -728,12 +728,14 @@ class ApiScheduleController extends Controller
                 return response()->json(['message' => 'Tất cả sinh viên đã đăng ký môn học này'], 200);
             }
 
-            $remainingStudents = $unregisteredStudents->count(); 
+            $assignedStudents = [];
+            $conflictedStudents = [];
+            $remainingStudents = $unregisteredStudents->count();
 
             foreach ($schedules as $schedule) {
-                $maxCapacity = $schedule->classroom->max_students; 
-                $minCapacity = ceil($maxCapacity * 0.8); 
-                $currentCapacity = $schedule->students->count(); 
+                $maxCapacity = $schedule->classroom->max_students;
+                $minCapacity = ceil($maxCapacity * 0.8);
+                $currentCapacity = $schedule->students->count();
 
                 if ($currentCapacity >= $minCapacity) {
                     continue;
@@ -743,7 +745,7 @@ class ApiScheduleController extends Controller
 
                 for ($i = 0; $i < $studentsToAssign; $i++) {
                     if ($unregisteredStudents->isEmpty()) {
-                        break; 
+                        break;
                     }
 
                     $student = $unregisteredStudents->pop();
@@ -754,14 +756,14 @@ class ApiScheduleController extends Controller
                     });
 
                     if ($hasConflict) {
-                        $unregisteredStudents->push($student);
+                        $conflictedStudents[] = $student->id;
                         continue;
                     }
 
                     DB::transaction(function () use ($student, $schedule) {
                         StudentSchedule::create([
                             'student_id' => $student->id,
-                            'schedule_id' => $schedule->id
+                            'schedule_id' => $schedule->id,
                         ]);
 
                         StudentClassroom::create([
@@ -779,7 +781,7 @@ class ApiScheduleController extends Controller
                 $remainingStudents -= $studentsToAssign;
 
                 if ($remainingStudents <= 0) {
-                    break; 
+                    break;
                 }
             }
 
@@ -796,13 +798,14 @@ class ApiScheduleController extends Controller
                     });
 
                     if ($hasConflict) {
-                        continue; 
+                        $conflictedStudents[] = $student->id;
+                        continue;
                     }
 
                     DB::transaction(function () use ($student, $schedule) {
                         StudentSchedule::create([
                             'student_id' => $student->id,
-                            'schedule_id' => $schedule->id
+                            'schedule_id' => $schedule->id,
                         ]);
 
                         StudentClassroom::create([
@@ -825,23 +828,60 @@ class ApiScheduleController extends Controller
                 }
             }
 
+            $errorMessages = [];
+            if (!empty($conflictedStudents)) {
+                $errorMessages[] = 'Một số sinh viên không thể phân bổ vì trùng lịch học.';
+            }
+
+            if ($remainingStudents > 0) {
+                $errorMessages[] = 'Không đủ chỗ để phân bổ tất cả sinh viên.';
+            }
+
             return response()->json([
-                'message' => 'Phân bổ thành công',
+                'message' => empty($errorMessages) ? 'Phân bổ thành công' : 'Phân bổ chưa hoàn tất',
                 'assigned_students_count' => count($assignedStudents),
                 'remaining_students_count' => $remainingStudents,
-                'details' => $assignedStudents
-            ], 200);
+                'conflicted_students' => $conflictedStudents,
+                'details' => $assignedStudents,
+                'errors' => $errorMessages,
+            ], empty($errorMessages) ? 200 : 207);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin yêu cầu.'], 404);
         } catch (\Exception $e) {
+            Log::error('Error assigning students to subject', ['exception' => $e]);
             return response()->json([
                 'error' => 'Không thể xử lý yêu cầu',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function removeStudentsFromClass($scheduleId)
+    {
+        try {
+            $schedule = Schedule::findOrFail($scheduleId);
+
+            DB::transaction(function () use ($schedule) {
+                StudentClassroom::where('classroom_id', $schedule->classroom_id)->delete();
+
+                StudentSchedule::where('schedule_id', $schedule->id)->delete();
+            });
+
+            return response()->json([
+                'message' => 'Đã xóa tất cả sinh viên khỏi lớp thành công.'
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy lịch học cho lớp này.'], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Không thể xóa sinh viên khỏi lớp.',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
 
-    public function deleteEmptySchedules($semesterId, $courseId, $majorId, $subjectId)
+    public function deleteEmptyClassrooms($semesterId, $courseId, $majorId, $subjectId)
     {
         try {
             $schedules = Schedule::with('students')

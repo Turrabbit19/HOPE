@@ -53,7 +53,7 @@ class ApiOfficerController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'nullable|string', 
+            'avatar' => 'nullable|string',
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:10|unique:users',
@@ -63,7 +63,47 @@ class ApiOfficerController extends Controller
             'address' => 'required|string|max:255',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
+        ], [
+            'avatar.string' => 'Ảnh đại diện phải là chuỗi ký tự.',
+            
+            'name.required' => 'Tên là bắt buộc.',
+            'name.string' => 'Tên phải là chuỗi ký tự.',
+            'name.max' => 'Tên không được vượt quá 100 ký tự.',
+            
+            'email.required' => 'Email là bắt buộc.',
+            'email.string' => 'Email phải là chuỗi ký tự.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.max' => 'Email không được vượt quá 255 ký tự.',
+            'email.unique' => 'Email đã tồn tại.',
+            
+            'phone.required' => 'Số điện thoại là bắt buộc.',
+            'phone.string' => 'Số điện thoại phải là chuỗi ký tự.',
+            'phone.max' => 'Số điện thoại không được vượt quá 10 ký tự.',
+            'phone.unique' => 'Số điện thoại đã tồn tại.',
+            
+            'dob.required' => 'Ngày sinh là bắt buộc.',
+            'dob.date' => 'Ngày sinh không hợp lệ.',
+            'dob.before' => 'Ngày sinh phải trước ngày hôm nay.',
+            
+            'gender.required' => 'Giới tính là bắt buộc.',
+            'gender.boolean' => 'Giới tính phải là giá trị boolean (true/false hoặc 0/1).',
+            
+            'ethnicity.required' => 'Dân tộc là bắt buộc.',
+            'ethnicity.string' => 'Dân tộc phải là chuỗi ký tự.',
+            'ethnicity.max' => 'Dân tộc không được vượt quá 100 ký tự.',
+            
+            'address.required' => 'Địa chỉ là bắt buộc.',
+            'address.string' => 'Địa chỉ phải là chuỗi ký tự.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+            
+            'password.required' => 'Mật khẩu là bắt buộc.',
+            'password.string' => 'Mật khẩu phải là chuỗi ký tự.',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
+            
+            'role_id.required' => 'Mã vai trò là bắt buộc.',
+            'role_id.exists' => 'Mã vai trò không tồn tại.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -118,7 +158,7 @@ class ApiOfficerController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'nullable|string', 
+            'avatar' => 'nullable|string',
             'name' => 'sometimes|string|max:100',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
@@ -127,8 +167,39 @@ class ApiOfficerController extends Controller
             'ethnicity' => 'sometimes|string|max:100',
             'address' => 'sometimes|string|max:255',
             'password' => 'sometimes|string|min:8',
-            'role_id' => 'sometimes|exists:roles,id|',
+            'role_id' => 'sometimes|exists:roles,id',
+        ], [
+            'avatar.string' => 'Ảnh đại diện phải là chuỗi ký tự.',
+            
+            'name.string' => 'Tên phải là chuỗi ký tự.',
+            'name.max' => 'Tên không được vượt quá 100 ký tự.',
+            
+            'email.string' => 'Email phải là chuỗi ký tự.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.max' => 'Email không được vượt quá 255 ký tự.',
+            'email.unique' => 'Email đã tồn tại.',
+            
+            'phone.string' => 'Số điện thoại phải là chuỗi ký tự.',
+            'phone.max' => 'Số điện thoại không được vượt quá 10 ký tự.',
+            'phone.unique' => 'Số điện thoại đã tồn tại.',
+            
+            'dob.date' => 'Ngày sinh không hợp lệ.',
+            'dob.before' => 'Ngày sinh phải trước ngày hôm nay.',
+            
+            'gender.boolean' => 'Giới tính phải là giá trị boolean (true/false hoặc 0/1).',
+            
+            'ethnicity.string' => 'Dân tộc phải là chuỗi ký tự.',
+            'ethnicity.max' => 'Dân tộc không được vượt quá 100 ký tự.',
+            
+            'address.string' => 'Địa chỉ phải là chuỗi ký tự.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+            
+            'password.string' => 'Mật khẩu phải là chuỗi ký tự.',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
+            
+            'role_id.exists' => 'Mã vai trò không tồn tại.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

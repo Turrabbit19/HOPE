@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   X,
   Book,
@@ -11,7 +11,8 @@ import {
   CheckCircle,
   XCircle,
   HelpCircle,
-  AppWindowMac,
+  Check,
+  Info,
 } from "lucide-react";
 
 function SubjectDetailsModal({ subject, isOpen, onClose }) {
@@ -107,7 +108,6 @@ function SubjectDetailsModal({ subject, isOpen, onClose }) {
                 ))}
               </div>
 
-              {/* Thống kê điểm danh */}
               <div className="bg-green-50 p-6 rounded-lg">
                 <h3 className="text-3xl font-semibold mb-4 text-green-800">
                   Thống kê điểm danh
@@ -122,14 +122,42 @@ function SubjectDetailsModal({ subject, isOpen, onClose }) {
                     {subject.statistics.attended_lessons}
                   </p>
                   <p>
-                    <strong>Tỷ lệ tham gia:</strong>{" "}
-                    {subject.statistics.attendance_rate}
+                    <strong>Số buổi vắng:</strong>{" "}
+                    {subject.statistics.missed_lessons}
+                  </p>
+                  <p>
+                    <strong>Tỷ lệ tham gia:</strong>
+                    <span className="text-green-600">
+                      {subject.statistics.attendance_rate}
+                    </span>
+                  </p>
+                  <p>
+                    <strong>Tỷ lệ vắng mặt:</strong>
+                    <span className="text-red-600">
+                      {subject.statistics.missed_rate}
+                    </span>
                   </p>
                 </div>
+
+                {/* Gộp thanh tiến độ tổng hợp */}
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
-                    className="bg-green-600 h-2.5 rounded-full"
-                    style={{ width: subject.statistics.attendance_rate }}
+                    className="h-2.5"
+                    style={{
+                      width: `${parseFloat(
+                        subject.statistics.attendance_rate
+                      )}%`,
+                      backgroundColor: "#4CAF50",
+                      float: "left",
+                    }}
+                  ></div>
+                  <div
+                    className="h-2.5"
+                    style={{
+                      width: `${parseFloat(subject.statistics.missed_rate)}%`,
+                      backgroundColor: "#F44336",
+                      float: "left",
+                    }}
                   ></div>
                 </div>
               </div>
@@ -178,10 +206,12 @@ export default function Syllabus() {
   const [activeTab, setActiveTab] = useState("Curriculum");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subjectsWithSchedule, setSubjectsWithSchedule] = useState(() => {
+    const saved = localStorage.getItem("subjectsWithSchedule");
+    return saved ? JSON.parse(saved) : {};
+  });
 
-  const tabs = [
-    { id: "Curriculum", label: "Curriculum", icon: "📚" },
-  ];
+  const tabs = [{ id: "Curriculum", label: "Curriculum", icon: "📚" }];
 
   useEffect(() => {
     const fetchCurriculum = async () => {
@@ -212,7 +242,7 @@ export default function Syllabus() {
     fetchCurriculum();
   }, []);
 
-  const fetchSubjectDetails = async (subjectId) => {
+  const fetchSubjectDetails = useCallback(async (subjectId) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -229,12 +259,26 @@ export default function Syllabus() {
       }
 
       const data = await response.json();
+
+      console.log(data);
       setSelectedSubject(data.data);
       setIsModalOpen(true);
+
+      setSubjectsWithSchedule((prev) => ({
+        ...prev,
+        [subjectId]: data.data.schedule && data.data.schedule.length > 0,
+      }));
     } catch (err) {
       console.error("Error fetching subject details:", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "subjectsWithSchedule",
+      JSON.stringify(subjectsWithSchedule)
+    );
+  }, [subjectsWithSchedule]);
 
   if (loading) {
     return (
@@ -268,6 +312,33 @@ export default function Syllabus() {
         ))}
       </div>
 
+      <div className="flex justify-between items-start mb-4">
+        <div className="mb-4 p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
+          <Info className="w-5 h-5 text-blue-500" />
+          <span className="text-lg">Chú thích:</span>
+          <div className="flex items-center">
+            <Check className="w-5 h-5 text-green-500 mr-1" />
+            <span className="text-lg">Có dữ liệu lịch học</span>
+          </div>
+          <div className="flex items-center ml-4">
+            <X className="w-5 h-5 text-red-500 mr-1" />
+            <span className="text-lg">Không có dữ liệu lịch học</span>
+          </div>
+        </div>
+        <div className="p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
+          <Info className="w-5 h-5 text-blue-500" />
+          <span className="text-lg">Trạng thái lớp học:</span>
+          <div className="flex items-center">
+            <div className="w-5 h-5 bg-yellow-400 rounded-full mr-1"></div>
+            <span className="text-lg">Đang có lớp hoạt động</span>
+          </div>
+          <div className="flex items-center ml-4">
+            <div className="w-5 h-5 bg-gray-300 rounded-full mr-1"></div>
+            <span className="text-lg">Không có lớp hoạt động</span>
+          </div>
+        </div>
+      </div>
+
       {/* Curriculum Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
         {curriculumData?.data.map((semester) => (
@@ -295,6 +366,9 @@ export default function Syllabus() {
                     <th className="border py-1 px-2 text-center text-xl">
                       Hình thức
                     </th>
+                    <th className="border py-1 px-2 text-center text-xl">
+                      Trạng thái
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -304,12 +378,28 @@ export default function Syllabus() {
                         {index + 1}
                       </td>
                       <td className="border py-3 px-4">
-                        <button
-                          onClick={() => fetchSubjectDetails(subject.id)}
-                          className="text-blue-600 hover:underline text-xl text-left"
-                        >
-                          {subject.name}
-                        </button>
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => fetchSubjectDetails(subject.id)}
+                            className="text-blue-600 hover:underline text-xl text-left flex items-center"
+                          >
+                            {subject.name}
+                          </button>
+                          <div className="flex items-center ml-2">
+                            {subjectsWithSchedule[subject.id] && (
+                              <Check
+                                className="w-5 h-5 text-green-500"
+                                title="Có dữ liệu lịch học"
+                              />
+                            )}
+                            {subject.hasOngoingClass && (
+                              <div
+                                className="w-3 h-3 bg-blue-500 rounded-full ml-1"
+                                title="Đang có lớp học"
+                              ></div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="border py-1 px-2 text-center text-xl">
                         {subject.credit}
@@ -324,6 +414,19 @@ export default function Syllabus() {
                         >
                           {subject.form}
                         </span>
+                      </td>
+                      <td className="border py-1 px-2 text-center text-xl">
+                        {subject.hasActiveClass ? (
+                          <div
+                            className="w-5 h-5 bg-yellow-400 rounded-full mx-auto"
+                            title="Đang có lớp hoạt động"
+                          ></div>
+                        ) : (
+                          <div
+                            className="w-5 h-5 bg-gray-300 rounded-full mx-auto"
+                            title="Không có lớp hoạt động"
+                          ></div>
+                        )}
                       </td>
                     </tr>
                   ))}

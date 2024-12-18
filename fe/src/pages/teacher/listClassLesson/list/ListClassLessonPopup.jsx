@@ -15,7 +15,7 @@ const ListClassLessonPopup = ({ schedule, onClose, token }) => {
           }
         });
         if (!response.ok) {
-          throw new Error('Không thể lấy chi tiết lịch học');
+          throw new Error('Không thể lấy chi tiết lịch dạy');
         }
         const data = await response.json();
         setScheduleDetail(data);

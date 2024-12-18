@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  BookOpen,
-  Users,
-  Clock,
-  AlertCircle,
-  LinkIcon,
-  CheckCircle,
-} from "lucide-react";
+import { BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react';
 
 export default function CourseRegistration() {
   const [subjects, setSubjects] = useState([]);
@@ -242,7 +235,7 @@ export default function CourseRegistration() {
 
   return (
     <div className="flex flex-col bg-gradient-to-br from-blue-100 to-white min-h-screen w-full">
-      <div className="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col flex-grow py-12 px-4 sm:px-6 lg:px-8">
         <div className=" mx-auto">
           <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
@@ -276,7 +269,13 @@ export default function CourseRegistration() {
             </div>
           )}
 
-          {!isLoading && !error && (
+          {!isLoading && !error && subjects.length === 0 && shifts.length === 0 && classrooms.length === 0 && (
+            <div className="flex-grow flex items-center justify-center">
+              <p className="text-xl text-gray-600">Không có dữ liệu để hiển thị.</p>
+            </div>
+          )}
+
+          {!isLoading && !error && (subjects.length > 0 || shifts.length > 0 || classrooms.length > 0) && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {subjects.map((subject) => (
@@ -448,3 +447,4 @@ export default function CourseRegistration() {
     </div>
   );
 }
+

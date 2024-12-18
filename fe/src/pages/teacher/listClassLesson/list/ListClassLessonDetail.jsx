@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  BookOpen,
-  Users,
-  Clock,
-  AlertCircle,
-  LinkIcon,
-  CheckCircle,
-} from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react';
 import moment from "moment";
 
 const ListClassLessonDetail = ({ scheduleData }) => {
@@ -112,6 +103,12 @@ const ListClassLessonDetail = ({ scheduleData }) => {
   };
 
   const toggleAttendance = (studentId) => {
+    const lesson = ScheduleInfor.schedule_lessons.find(
+      (lesson) => lesson.id === selectedLesson
+    );
+    if (lesson?.status === "Đã hoàn thành") {
+      return; // Do nothing if the lesson is completed
+    }
     setAttendanceStatus((prevStatus) => ({
       ...prevStatus,
       [studentId]: prevStatus[studentId] === 1 ? 0 : 1,
@@ -127,6 +124,17 @@ const ListClassLessonDetail = ({ scheduleData }) => {
 
     if (!token) {
       setError("Không tìm thấy token. Vui lòng đăng nhập lại.");
+      setLoading(false);
+      return;
+    }
+
+    // Kiểm tra trạng thái tiết học
+    const lesson = ScheduleInfor.schedule_lessons.find(
+      (lesson) => lesson.id === lessonId
+    );
+
+    if (lesson?.status === "Đã hoàn thành" || lesson?.status === "Xem điểm danh") {
+      setError("Không thể cập nhật điểm danh cho tiết học này.");
       setLoading(false);
       return;
     }
@@ -158,7 +166,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
       }
 
       if (!response.ok) {
-        throw new Error("Không thể tải danh sách sinh viên");
+        throw new Error("Không thể tải danh sách sinh viên.");
       }
 
       const result = await response.json();
@@ -172,6 +180,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
       setLoading(false);
     }
   };
+
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -238,9 +247,8 @@ const ListClassLessonDetail = ({ scheduleData }) => {
             {ScheduleInfor.schedule_lessons.map((lesson) => (
               <div
                 key={lesson.id}
-                className={`bg-white rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg ${
-                  isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
-                }`}
+                className={`bg-white rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg ${isCurrentDate(lesson.date) ? "border-l-4 border-blue-500" : ""
+                  }`}
               >
                 <div className="flex flex-wrap justify-between items-center mb-4">
                   <h4 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -253,13 +261,12 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                     )}
                   </h4>
                   <span
-                    className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                      lesson.status === "Đã hoàn thành"
-                        ? "bg-green-100 text-green-800"
-                        : lesson.status === "Đang dạy"
+                    className={`px-3 py-1 text-sm font-semibold rounded-full ${lesson.status === "Đã hoàn thành"
+                      ? "bg-green-100 text-green-800"
+                      : lesson.status === "Đang dạy"
                         ? "bg-blue-100 text-blue-800"
                         : "bg-yellow-100 text-yellow-800"
-                    }`}
+                      }`}
                   >
                     {lesson.status}
                   </span>
@@ -274,20 +281,19 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                 </p>
                 <button
                   onClick={() => handleAttendance(lesson.id)}
-                  className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out ${
-                    checkLessonStatus(
-                      lesson.date,
-                      ScheduleInfor.shift_start_time,
-                      lesson.status
-                    ) === "Chưa đến giờ" ||
+                  className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out ${checkLessonStatus(
+                    lesson.date,
+                    ScheduleInfor.shift_start_time,
+                    lesson.status
+                  ) === "Chưa đến giờ" ||
                     checkLessonStatus(
                       lesson.date,
                       ScheduleInfor.shift_start_time,
                       lesson.status
                     ) === "Quá giờ"
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                    }`}
                   disabled={
                     checkLessonStatus(
                       lesson.date,
@@ -304,10 +310,10 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                   {loading && selectedLesson === lesson.id
                     ? "Đang tải..."
                     : checkLessonStatus(
-                        lesson.date,
-                        ScheduleInfor.shift_start_time,
-                        lesson.status
-                      )}
+                      lesson.date,
+                      ScheduleInfor.shift_start_time,
+                      lesson.status
+                    )}
                 </button>
               </div>
             ))}
@@ -417,13 +423,12 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                               {student.student_name}
                             </td>
                             <td className="py-4 px-6 whitespace-nowrap">
-                              {isAttendanceSubmitted ? (
+                              {isAttendanceSubmitted || ScheduleInfor.schedule_lessons.find(lesson => lesson.id === selectedLesson)?.status === "Đã hoàn thành" ? (
                                 <span
-                                  className={`px-4 py-2 inline-flex  leading-5 font-semibold rounded-full ${
-                                    attendanceStatus[student.student_id] === 1
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800"
-                                  }`}
+                                  className={`px-4 py-2 inline-flex  leading-5 font-semibold rounded-full ${attendanceStatus[student.student_id] === 1
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                    }`}
                                 >
                                   {attendanceStatus[student.student_id] === 1
                                     ? "Có mặt"
@@ -434,11 +439,10 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                                   onClick={() =>
                                     toggleAttendance(student.student_id)
                                   }
-                                  className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full transition-colors duration-200 ${
-                                    attendanceStatus[student.student_id] === 1
-                                      ? "bg-green-100 hover:bg-green-200 text-green-800"
-                                      : "bg-red-100 hover:bg-red-200 text-red-800"
-                                  }`}
+                                  className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full transition-colors duration-200 ${attendanceStatus[student.student_id] === 1
+                                    ? "bg-green-100 hover:bg-green-200 text-green-800"
+                                    : "bg-red-100 hover:bg-red-200 text-red-800"
+                                    }`}
                                 >
                                   {attendanceStatus[student.student_id] === 1
                                     ? "Có mặt"
@@ -464,24 +468,41 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                       Trước
                     </button>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Hiển thị{" "}
-                      <span className="font-medium">
-                        {(currentPage - 1) * studentsPerPage + 1}
-                      </span>{" "}
-                      đến{" "}
-                      <span className="font-medium">
-                        {Math.min(
-                          currentPage * studentsPerPage,
-                          students.length
-                        )}
-                      </span>{" "}
-                      trong tổng số{" "}
-                      <span className="font-medium">{students.length}</span>{" "}
-                      sinh viên
-                    </p>
+                  <div className="p-6 bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 rounded-xl shadow-lg border border-blue-300 flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-blue-500 animate-bounce"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M9 12a4 4 0 100-8 4 4 0 000 8z" />
+                        <path
+                          fillRule="evenodd"
+                          d="M2 9a7 7 0 1114 0 7 7 0 01-14 0zm7-4a4 4 0 100 8 4 4 0 000-8z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-lg font-medium text-gray-800">
+                        Hiển thị{" "}
+                        <span className="font-bold text-blue-700 text-xl">
+                          {(currentPage - 1) * studentsPerPage + 1}
+                        </span>{" "}
+                        đến{" "}
+                        <span className="font-bold text-blue-700 text-xl">
+                          {Math.min(currentPage * studentsPerPage, students.length)}
+                        </span>{" "}
+                        trong tổng số{" "}
+                        <span className="font-bold text-blue-700 text-xl">
+                          {students.length}
+                        </span>{" "}
+                        sinh viên
+                      </p>
+                    </div>
                   </div>
+
                   <div className="flex items-center">
                     <button
                       onClick={() =>
@@ -517,15 +538,18 @@ const ListClassLessonDetail = ({ scheduleData }) => {
                 </p>
               </div>
             )}
-            {!isAttendanceSubmitted && students.length > 0 && (
-              <button
-                onClick={() => submitAttendance(selectedLesson)}
-                className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out text-lg w-full"
-                disabled={loading}
-              >
-                {loading ? "Đang cập nhật..." : "Cập nhật điểm danh"}
-              </button>
-            )}
+            {!isAttendanceSubmitted &&
+              selectedLesson &&
+              ScheduleInfor.schedule_lessons.find((lesson) => lesson.id === selectedLesson)?.status !== "Đã hoàn thành" && (
+                <button
+                  onClick={() => submitAttendance(selectedLesson)}
+                  className="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out text-lg w-full"
+                  disabled={loading}
+                >
+                  {loading ? "Đang cập nhật..." : "Cập nhật điểm danh"}
+                </button>
+              )}
+
             {successMessage && (
               <p className="mt-4 text-green-500 font-semibold text-center">
                 {successMessage}
@@ -539,3 +563,4 @@ const ListClassLessonDetail = ({ scheduleData }) => {
 };
 
 export default ListClassLessonDetail;
+

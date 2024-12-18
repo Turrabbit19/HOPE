@@ -243,7 +243,7 @@ export default function CourseRegistration() {
   return (
     <div className="flex flex-col bg-gradient-to-br from-blue-100 to-white min-h-screen w-full">
       <div className="flex flex-col flex-grow py-12 px-4 sm:px-6 lg:px-8">
-        <div className="">
+        <div className="mx-auto">
           <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
               Đăng ký lớp học

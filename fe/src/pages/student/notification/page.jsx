@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Bell, X, AlertCircle, RefreshCw } from "lucide-react";
+import { Bell, X, AlertCircle, RefreshCw, Check } from 'lucide-react';
 
 // Utility function to strip HTML tags
 const stripHtml = (html) => {
@@ -11,33 +11,45 @@ const stripHtml = (html) => {
 };
 
 // Popup Component
-function Popup({ notification, onClose }) {
+function Popup({ notification, onClose, onMarkAsRead }) {
+    useEffect(() => {
+        if (notification.status !== "Đã xem") {
+            onMarkAsRead(notification.id);
+        }
+    }, [notification]);
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">
-                        {stripHtml(notification.notification)}
-                    </h3>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700"
-                        aria-label="Close Popup"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-                <div
-                    className="text-gray-600 mb-2"
-                    dangerouslySetInnerHTML={{
-                        __html: notification.description || "Không có mô tả",
-                    }}
-                />
-                <p className="text-sm text-gray-500 mb-4">
-                    Trạng thái: {notification.status}
-                </p>
-            </div>
+    <div className="bg-white rounded-3xl p-10 max-w-xl w-full mx-6 shadow-2xl transform transition-all duration-300 ease-in-out scale-100 hover:scale-105 hover:shadow-2xl">
+        <div className="flex justify-between items-center mb-8">
+            <h3 className="text-4xl font-extrabold text-gradient tracking-tight">
+                {stripHtml(notification.notification)}
+            </h3>
+            <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-800 transition-all duration-300 transform hover:rotate-90"
+                aria-label="Close Popup"
+            >
+                <X className="w-8 h-8" />
+            </button>
         </div>
+        <div
+            className="text-gray-700 mb-6 text-lg leading-relaxed font-medium"
+            dangerouslySetInnerHTML={{
+                __html: notification.description || "Không có mô tả",
+            }}
+        />
+        <p className="text-lg text-gray-600 font-semibold">
+            Trạng thái: 
+            <span className={`font-bold text-${notification.status === 'Hoàn thành' ? 'green' : 'red'}-500`}>
+                {notification.status}
+            </span>
+        </p>
+    </div>
+</div>
+
+    
+
     );
 }
 
@@ -47,6 +59,7 @@ export default function NotificationPage() {
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null); // Thêm state để quản lý thông báo lỗi
 
     // Fetch notifications from the API
     const fetchNotifications = async () => {
@@ -108,6 +121,7 @@ export default function NotificationPage() {
 
             // Assuming the API returns the updated notification
             const updatedNotification = await response.json();
+            console.log("Notification marked as read:", updatedNotification);
 
             setNotifications((prevNotifications) =>
                 prevNotifications.map((notification) =>
@@ -117,18 +131,17 @@ export default function NotificationPage() {
                 )
             );
 
-            // Update the selected notification if it's the one marked as read
-            if (
-                selectedNotification &&
-                selectedNotification.id === notificationId
-            ) {
+            if (selectedNotification && selectedNotification.id === notificationId) {
                 setSelectedNotification((prev) => ({
                     ...prev,
                     status: "Đã xem",
                 }));
             }
+
+            setErrorMessage(null); // Xóa thông báo lỗi nếu thành công
         } catch (err) {
             console.error("Lỗi khi đánh dấu đã xem:", err);
+            setErrorMessage("Không thể cập nhật trạng thái thông báo. Vui lòng thử lại sau.");
         }
     };
 
@@ -149,20 +162,22 @@ export default function NotificationPage() {
         (n) => n.status !== "Đã xem"
     ).length;
 
-    // Handle clicking on a notification
-    const handleNotificationClick = async (notification) => {
+    const handleNotificationClick = (notification) => {
+        setSelectedNotification(notification);
         if (notification.status !== "Đã xem") {
-            await markAsRead(notification.id);
+            markAsRead(notification.id);
         }
-        setSelectedNotification({
-            ...notification,
-            status: "Đã xem",
-        });
     };
 
     // Handle closing the popup
     const closePopup = () => {
         setSelectedNotification(null);
+    };
+
+    const handleMarkAsRead = async (notificationId) => {
+        console.log("Handling mark as read:", notificationId);
+        await markAsRead(notificationId);
+        closePopup();
     };
 
     if (isLoading) {
@@ -199,31 +214,28 @@ export default function NotificationPage() {
                 <h2 className="text-2xl font-bold mb-4">Thông báo</h2>
                 <div className="flex space-x-2 mb-6">
                     <button
-                        className={`px-4 py-2 rounded-md ${
-                            filter === "all"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-md ${filter === "all"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                            }`}
                         onClick={() => setFilter("all")}
                     >
                         Tất cả ({countAll})
                     </button>
                     <button
-                        className={`px-4 py-2 rounded-md ${
-                            filter === "read"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-md ${filter === "read"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                            }`}
                         onClick={() => setFilter("read")}
                     >
                         Đã đọc ({countRead})
                     </button>
                     <button
-                        className={`px-4 py-2 rounded-md ${
-                            filter === "unread"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-md ${filter === "unread"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                            }`}
                         onClick={() => setFilter("unread")}
                     >
                         Chưa đọc ({countUnread})
@@ -244,19 +256,17 @@ export default function NotificationPage() {
                                 }
                             >
                                 <Bell
-                                    className={`w-6 h-6 ${
-                                        notification.status === "Đã xem"
-                                            ? "text-gray-400"
-                                            : "text-blue-500"
-                                    }`}
+                                    className={`w-6 h-6 ${notification.status === "Đã xem"
+                                        ? "text-gray-400"
+                                        : "text-blue-500"
+                                        }`}
                                 />
                                 <div className="flex-1">
                                     <p
-                                        className={`${
-                                            notification.status === "Đã xem"
-                                                ? "text-gray-600"
-                                                : "text-gray-900 font-medium"
-                                        }`}
+                                        className={`${notification.status === "Đã xem"
+                                            ? "text-gray-600"
+                                            : "text-gray-900 font-medium"
+                                            }`}
                                         dangerouslySetInnerHTML={{
                                             __html: stripHtml(
                                                 notification.notification
@@ -281,8 +291,15 @@ export default function NotificationPage() {
                 <Popup
                     notification={selectedNotification}
                     onClose={closePopup}
+                    onMarkAsRead={handleMarkAsRead}
                 />
+            )}
+            {errorMessage && ( // Thêm hiển thị thông báo lỗi
+                <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg">
+                    {errorMessage}
+                </div>
             )}
         </div>
     );
 }
+

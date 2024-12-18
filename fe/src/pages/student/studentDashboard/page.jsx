@@ -23,6 +23,8 @@ export default function Component() {
     const [error, setError] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date());
 
+    
+
     useEffect(() => {
         const fetchData = async () => {
             const token = localStorage.getItem("token");

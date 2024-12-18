@@ -206,9 +206,7 @@ function SubjectDetailsModal({ subject, isOpen, onClose }) {
                                                 <p className="text-sm text-gray-600 text-xl">
                                                     Ngày: {lesson.date}
                                                 </p>
-                                                <p className="text-sm text-gray-600 text-xl">
-                                                    Trạng thái: {lesson.status}
-                                                </p>
+                                                
                                             </div>
                                         )
                                     )}
@@ -406,24 +404,7 @@ export default function Syllabus() {
                                     </span>
                                 </div>
                             </div>
-                            <div className="p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
-                                <Info className="w-5 h-5 text-blue-500" />
-                                <span className="text-lg">
-                                    Trạng thái lớp học:
-                                </span>
-                                <div className="flex items-center">
-                                    <div className="w-5 h-5 bg-yellow-400 rounded-full mr-1"></div>
-                                    <span className="text-lg">
-                                        Đang có lớp hoạt động
-                                    </span>
-                                </div>
-                                <div className="flex items-center ml-4">
-                                    <div className="w-5 h-5 bg-gray-300 rounded-full mr-1"></div>
-                                    <span className="text-lg">
-                                        Không có lớp hoạt động
-                                    </span>
-                                </div>
-                            </div>
+                           
                         </div>
 
                         {/* Curriculum Content */}
@@ -456,9 +437,6 @@ export default function Syllabus() {
                                                     </th>
                                                     <th className="border py-1 px-2 text-center text-xl">
                                                         Hình thức
-                                                    </th>
-                                                    <th className="border py-1 px-2 text-center text-xl">
-                                                        Trạng thái
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -522,19 +500,7 @@ export default function Syllabus() {
                                                                     }
                                                                 </span>
                                                             </td>
-                                                            <td className="border py-1 px-2 text-center text-xl">
-                                                                {subject.hasActiveClass ? (
-                                                                    <div
-                                                                        className="w-5 h-5 bg-yellow-400 rounded-full mx-auto"
-                                                                        title="Đang có lớp hoạt động"
-                                                                    ></div>
-                                                                ) : (
-                                                                    <div
-                                                                        className="w-5 h-5 bg-gray-300 rounded-full mx-auto"
-                                                                        title="Không có lớp hoạt động"
-                                                                    ></div>
-                                                                )}
-                                                            </td>
+                                                            
                                                         </tr>
                                                     )
                                                 )}

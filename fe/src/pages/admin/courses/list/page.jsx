@@ -183,40 +183,43 @@ const ListCourse = () => {
   return (
     <div className="row row-cols-2 g-3">
       <div className="col-12">
-        <div className="col-12">
-          <div className="justify-between flex">
-            <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-              Quản Lý Khóa Học
-              <button>
-                <img src="/assets/svg/reload.svg" alt="reload..." />
-              </button>
-            </h1>
-
-            <div>
+        <div className="p-6 bg-white shadow-md rounded-lg">
+          <div className="flex justify-between items-center mb-6">
+            {/* Input tìm kiếm */}
+            <div className="flex-1 max-w-sm">
               <Input.Search
                 placeholder="Tìm kiếm khóa học..."
                 onSearch={handleSearch}
                 onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 300 }}
                 allowClear
+                className="rounded-lg"
+                style={{ width: "100%" }}
               />
             </div>
+
+            {/* Button reload */}
+            <button>
+              <img src="/assets/svg/reload.svg" alt="reload..." />
+            </button>
           </div>
 
-          <div className="flex justify-between items-center mt-6">
+          <div className="flex justify-between items-center">
+            {/* Button tạo mới */}
             <Button
               onClick={showAddModal}
-              className="btn btn--outline text-[#7017E2]"
+              className="btn btn--outline text-[#7017E2] flex items-center gap-2"
             >
               <PlusOutlined />
               Tạo mới
             </Button>
 
-            <span className="font-bold text-[14px] text-[#000]">
+            {/* Hiển thị số lượng khóa học */}
+            <span className="font-semibold text-lg text-gray-700">
               {filteredCourses.length} items
             </span>
           </div>
         </div>
+
         <div className="row row-cols-2 g-3">
           {courses.length > 0 ? (
             courses.map((course, index) => (

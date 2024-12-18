@@ -7,6 +7,7 @@ use App\Models\Classroom;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiClassroomController extends Controller
@@ -186,16 +187,23 @@ class ApiClassroomController extends Controller
     }
 
     public function destroy(string $id)
-    {
-        try {
-            $classroom = Classroom::findOrFail($id);
-            $classroom->delete();
+{
+    try {
+        $classroom = Classroom::findOrFail($id);
 
-            return response()->json(['message' => 'Xóa mềm thành công'], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
-        }
+        $subjectId = $classroom->subject_id;
+
+        $classroom->delete();
+
+        $cacheKey = 'classrooms_subject_' . $subjectId;
+        Redis::del($cacheKey);
+
+        return response()->json(['message' => 'Xóa mềm thành công'], 200);
+    } catch (ModelNotFoundException $e) {
+        return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
     }
+}
+
 }

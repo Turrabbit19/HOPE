@@ -342,6 +342,13 @@ class ApiSubjectController extends Controller
     public function getAllLessons(string $id)
     {
         try {
+            $cacheKey = 'lessons_subject_' . $id;
+            $cachedLessons = Redis::get($cacheKey);
+
+            if ($cachedLessons) {
+                return response()->json(['data' => json_decode($cachedLessons)], 200);
+            }
+
             $lessons = Lesson::where('subject_id', $id)->get();
 
             $data = $lessons->map(function ($lesson) {
@@ -351,6 +358,8 @@ class ApiSubjectController extends Controller
                     'description' => $lesson->description,
                 ];
             });
+
+            Redis::setex($cacheKey, 6 * 30 * 24 * 60 * 60, json_encode($data));
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -387,13 +396,12 @@ class ApiSubjectController extends Controller
     }
 
 
-    public function addLessons(Request $request, string $id) {
-
+    public function addLessons(Request $request, string $id)
+    {
         $validator = Validator::make($request->all(), [
             '*.name' => 'required|string|max:50',
             '*.description' => 'required|string',
         ]);
-
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -406,9 +414,11 @@ class ApiSubjectController extends Controller
             foreach ($validatedData as $lessonData) {
                 $lessonData['subject_id'] = $id;
                 $lesson = Lesson::create($lessonData);
-                // $lessons[] = $lesson;
                 $lessons[] = $lesson->only(['id', 'name', 'description']);
             }
+
+            $cacheKey = 'lessons_subject_' . $id;
+            Redis::del($cacheKey);
 
             return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -417,20 +427,28 @@ class ApiSubjectController extends Controller
     }
 
 
+
     public function getAllClassrooms(string $id)
     {
         try {
-            $classrooms = Classroom::where('subject_id', $id)->get();
+            $cacheKey = 'classrooms_subject_' . $id;
 
-            $data = $classrooms->map(function ($classroom) {
-                return [
-                    'id' => $classroom->id,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
-                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
+            if (Redis::exists($cacheKey)) {
+                $data = json_decode(Redis::get($cacheKey), true);
+            } else {
+                $classrooms = Classroom::where('subject_id', $id)->get();
 
+                $data = $classrooms->map(function ($classroom) {
+                    return [
+                        'id' => $classroom->id,
+                        'code' => $classroom->code,
+                        'max_students' => $classroom->max_students,
+                        'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                    ];
+                });
+
+                Redis::setex($cacheKey, 60 * 60 * 24 * 180, json_encode($data));
+            }
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -439,6 +457,7 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
+
     public function addClassrooms(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
@@ -461,10 +480,13 @@ class ApiSubjectController extends Controller
                 $classrooms[] = $classroom;
             }
 
+            $cacheKey = 'classrooms_subject_' . $id;
+            Redis::del($cacheKey);
+
             return response()->json(['data' => $classrooms, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-
     }
+
 }

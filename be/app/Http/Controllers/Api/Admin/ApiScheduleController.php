@@ -944,13 +944,13 @@ class ApiScheduleController extends Controller
                 ->where('major_id', $majorId)
                 ->where('subject_id', $subjectId)
                 ->get();
-
+    
             foreach ($schedules as $schedule) {
                 if ($schedule->students->count() == 0) {
-                    $schedule->delete();
+                    $schedule->forceDelete();
                 }
             }
-
+    
             return response()->json(['message' => 'Đã xóa các lớp học không có sinh viên'], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -959,4 +959,5 @@ class ApiScheduleController extends Controller
             ], 500);
         }
     }
+    
 }

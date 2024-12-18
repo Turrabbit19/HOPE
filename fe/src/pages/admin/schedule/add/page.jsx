@@ -147,7 +147,7 @@ const ScheduleAdd = () => {
   
         // Xử lý dữ liệu teachers
         console.log("Teachers API response:", teachersRes.data);
-        let teachersData = teachersRes.data.listTeachers;
+        let teachersData = teachersRes.data.data;
         if (Array.isArray(teachersData)) {
           setTeachers(teachersData);
         } else {

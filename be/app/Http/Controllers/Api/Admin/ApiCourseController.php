@@ -13,43 +13,42 @@ use Illuminate\Support\Facades\Validator;
 class ApiCourseController extends Controller
 {
     public function index()
-{
-    try {
-        $now = Carbon::now();
-        $courses = Course::with('semesters')->get();
-
-        $data = $courses->map(function ($course) use ($now) {
-            $currentSemester = $course->semesters()->first();
-
-            $semesterOrder = $currentSemester ? $currentSemester->pivot->order : null;
-
-            $startDate = Carbon::parse($course->start_date);
-            $endDate = Carbon::parse($course->end_date);
-
-            $status = match (true) {
-                $now->lt($startDate) => "Chờ diễn ra",
-                $now->between($startDate, $endDate) => "Đang diễn ra",
-                $now->gt($endDate) => "Kết thúc",
-            };
-
-            return [
-                'id' => $course->id,
-                'name' => $course->name,
-                'start_date' => $startDate->toDateString(),
-                'end_date' => $endDate->toDateString(),
-                'status' => $status,
-                'semester_order' => $semesterOrder,
-            ];
-        });
-
-        return response()->json(['data' => $data], 200);
-    } catch (\Exception $e) {
-        \Log::error('Error fetching courses', ['exception' => $e]);
-        return response()->json(['error' => 'Không thể truy vấn tới bảng Courses'], 500);
+    {
+        try {
+            $now = Carbon::now();
+            $courses = Course::all(); 
+    
+            $data = $courses->map(function ($course) use ($now) {
+                $currentSemester = $course->semesters()->orderByDesc('start_date')->first();
+    
+                $semesterOrder = $currentSemester ? $currentSemester->pivot->order : null;
+    
+                $startDate = Carbon::parse($course->start_date);
+                $endDate = Carbon::parse($course->end_date);
+    
+                $status = match (true) {
+                    $now->lt($startDate) => "Chờ diễn ra",
+                    $now->between($startDate, $endDate) => "Đang diễn ra",
+                    $now->gt($endDate) => "Kết thúc",
+                };
+    
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'start_date' => $startDate->toDateString(),
+                    'end_date' => $endDate->toDateString(),
+                    'status' => $status,
+                    'semester_order' => $semesterOrder,
+                ];
+            });
+    
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching courses', ['exception' => $e]);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses'], 500);
+        }
     }
-}
-
-
+    
     public function getSemestersByCourse($courseId)
     {
         try {

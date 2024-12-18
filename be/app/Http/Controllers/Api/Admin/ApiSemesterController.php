@@ -95,7 +95,7 @@ class ApiSemesterController extends Controller
             'year' => 'nullable|integer|min:1900|max:' . Carbon::now()->year
         ], [
             'year.integer' => 'Năm phải là một số nguyên.',
-            'year.min' => 'Năm không được nhỏ hơn 1900.',
+            'year.min' => 'Năm không được nhỏ hơn 1900.',   
             'year.max' => 'Năm không được lớn hơn ' . Carbon::now()->year . '.',
         ]);
 

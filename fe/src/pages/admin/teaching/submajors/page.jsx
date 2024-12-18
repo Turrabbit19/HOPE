@@ -79,6 +79,7 @@ const SubMajors = () => {
     try {
       const values = await form.validateFields();
       console.log(values);
+  
       if (editingMajor) {
         const response = await instance.put(`/admin/majors/${idMajor}`, {
           ...values,
@@ -99,18 +100,40 @@ const SubMajors = () => {
         });
         setMajors([
           ...majors,
-          { id: majors.length + 1, ...response.data.data },
+          { id: response.data.data.id, ...response.data.data },
         ]);
         notification.success({
           message: "Thêm mới chuyên ngành thành công",
         });
       }
       handleModalCancel();
-    } catch (errorInfo) {
-      console.log("Validate Failed:", errorInfo);
+    } catch (error) {
+      if (error.response) {
+        const { data } = error.response;
+  
+        if (data.errors) {
+          Object.keys(data.errors).forEach((field) => {
+            notification.error({
+              message: `Lỗi ở trường  ${field}`,
+              description: data.errors[field].join(", "),
+            });
+          });
+        } else {
+          notification.error({
+            message: "Lỗi",
+            description: data.message || "Có lỗi xảy ra!",
+          });
+        }
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: "Không thể kết nối đến server, vui lòng thử lại sau!",
+        });
+      }
     }
   };
-
+  
+  
   const handleModalCancel = () => {
     setIsEditModalVisible(false);
     setIsAddModalVisible(false);
@@ -226,6 +249,7 @@ const SubMajors = () => {
 
                     <Popconfirm
                       title="Xóa chuyên ngành"
+                      description={`Bạn có chắc chắn muốn xóa chuyên ngành ${major.name} không? `}
                       onConfirm={() => confirmDelete(major.id)}
                       okText="Có"
                       cancelText="Không"

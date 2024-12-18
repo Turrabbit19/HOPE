@@ -66,20 +66,19 @@ const ScheduleAdd = () => {
 
   // Fetch dữ liệu khi component mount
   useEffect(() => {
-    // Kiểm tra nếu thiếu thông tin cần thiết
     if (!courseId || !semesterId || !majorId || !subjectId) {
       message.error("Thiếu thông tin cần thiết để thêm lịch học!");
       navigate("/schedule-list");
       return;
     }
-
+  
     console.log("Major ID:", majorId);
-
+  
     // Hàm để lấy dữ liệu từ API
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-
+  
         // Gọi các API song song
         const [shiftsRes, classroomsRes, teachersRes, roomsRes] =
           await Promise.all([
@@ -110,7 +109,7 @@ const ScheduleAdd = () => {
               },
             }),
           ]);
-
+  
         // Xử lý dữ liệu shifts
         console.log("Shifts API response:", shiftsRes.data);
         let shiftsData = shiftsRes.data;
@@ -121,7 +120,7 @@ const ScheduleAdd = () => {
         } else {
           throw new Error("Dữ liệu shifts không hợp lệ.");
         }
-
+  
         // Xử lý dữ liệu classrooms
         console.log("Classrooms API response:", classroomsRes.data);
         let classroomsData = classroomsRes.data;
@@ -130,9 +129,11 @@ const ScheduleAdd = () => {
         } else if (Array.isArray(classroomsData.classrooms)) {
           setClassrooms(classroomsData.classrooms);
         } else {
-          throw new Error("Dữ liệu classrooms không hợp lệ.");
+          message.error("Không có lớp học nào để thêm. Vui lòng thêm lớp học.");
+          navigate(`/list-subject/detail/${subjectId}`);
+          return;
         }
-
+  
         // Xử lý dữ liệu rooms
         console.log("Rooms API response:", roomsRes.data.data);
         let roomsData = roomsRes.data.data;
@@ -143,16 +144,16 @@ const ScheduleAdd = () => {
         } else {
           throw new Error("Dữ liệu rooms không hợp lệ.");
         }
-
+  
         // Xử lý dữ liệu teachers
         console.log("Teachers API response:", teachersRes.data);
-        let teachersData = teachersRes.data.listTeachers;
+        let teachersData = teachersRes.data.data;
         if (Array.isArray(teachersData)) {
           setTeachers(teachersData);
         } else {
           throw new Error("Dữ liệu teachers không hợp lệ.");
         }
-
+  
         setLoading(false);
         setLoadingShifts(false);
       } catch (error) {
@@ -162,9 +163,10 @@ const ScheduleAdd = () => {
         setLoadingShifts(false);
       }
     };
-
+  
     fetchData();
   }, [courseId, semesterId, majorId, subjectId, navigate]);
+  
 
   useEffect(() => {
     if (semesterId) {

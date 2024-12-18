@@ -15,41 +15,40 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
-            $courses = Course::get();
             $now = Carbon::now();
+            $courses = Course::all(); 
     
             $data = $courses->map(function ($course) use ($now) {
-                $currentSemester = $course->semesters()
-                    ->where('start_date', '<=', $now)
-                    ->where('end_date', '>=', $now)
-                    ->first();
+                $currentSemester = $course->semesters()->orderByDesc('start_date')->first();
     
                 $semesterOrder = $currentSemester ? $currentSemester->pivot->order : null;
     
-                if ($now->lt(Carbon::parse($course->start_date))) {
-                    $status = "Chờ diễn ra"; 
-                } elseif ($now->between(Carbon::parse($course->start_date), Carbon::parse($course->end_date))) {
-                    $status = "Đang diễn ra"; 
-                } elseif ($now->gt(Carbon::parse($course->end_date))) {
-                    $status = "Kết thúc"; 
-                }
+                $startDate = Carbon::parse($course->start_date);
+                $endDate = Carbon::parse($course->end_date);
+    
+                $status = match (true) {
+                    $now->lt($startDate) => "Chờ diễn ra",
+                    $now->between($startDate, $endDate) => "Đang diễn ra",
+                    $now->gt($endDate) => "Kết thúc",
+                };
     
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
-                    'start_date' => Carbon::parse($course->start_date),
-                    'end_date' => Carbon::parse($course->end_date),
+                    'start_date' => $startDate->toDateString(),
+                    'end_date' => $endDate->toDateString(),
                     'status' => $status,
-                    'semester_order' => $semesterOrder,  
+                    'semester_order' => $semesterOrder,
                 ];
             });
     
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
+            \Log::error('Error fetching courses', ['exception' => $e]);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses'], 500);
         }
-    }    
-
+    }
+    
     public function getSemestersByCourse($courseId)
     {
         try {

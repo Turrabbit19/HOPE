@@ -11,6 +11,7 @@ import {
   Col,
   message,
   Radio,
+  notification,
 } from "antd";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
@@ -31,46 +32,74 @@ const ListSubject = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState([]);
   const [majorId, setMajorId] = useState(null);
 
-  // State cho popup tạo khóa học mới
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [form] = Form.useForm();
 
-  // State cho lựa chọn kỳ học và ngành học
   const [selectedMajor, setSelectedMajor] = useState(majors[0]);
   const [subjects, setSubjects] = useState([]);
   const [initialValues, setInitialValues] = useState();
   const [update, setUpdate] = useState(false);
-  // State cho các biến thể được thêm vào
   const [additionalVariants, setAdditionalVariants] = useState([
     {
       major: selectedMajor,
     },
   ]);
-
+  const [total, setTotal] = useState(0);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingCourse, setEditingCourse] = useState(null);
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const [selectedMajor1, setSelectedMajor1] = useState(null);
 
   useEffect(() => {
-    (async () => {
+    const fetchSubjects = async () => {
       try {
         setLoading(true);
-        const [subjectsResponse, majorsResponse] = await Promise.all([
-          instance.get("admin/all/subjects"),
-          instance.get("admin/main/majors"),
-        ]);
-        setMajors(majorsResponse.data.data);
-        setSubjects(subjectsResponse.data.data);
+
+        const endpoint = selectedMajor1
+          ? `admin/filter-by-major/${selectedMajor1}/subjects`
+          : "admin/subjects";
+
+        const response = await instance.get(endpoint, {
+          params: {
+            page: currentPage,
+            per_page: 10,
+          },
+        });
+
+        setSubjects(response.data.data);
+        setTotal(response.data.pagination.total);
       } catch (error) {
-        console.log("Error loading data:", error.message);
+        message.error("Error fetching subjects");
       } finally {
         setLoading(false);
       }
-    })();
+    };
+
+    fetchSubjects();
+  }, [currentPage, selectedMajor1]);
+
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        setLoading(true);
+        const response = await instance.get("admin/main/majors");
+        console.log("Majors Response:", response);
+        setMajors(response.data.data);
+      } catch (error) {
+        console.error("Error fetching majors:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMajors();
   }, []);
+
+  const handlePageChange = (page) => {
+    console.log(page);
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     console.log("Selected Specialization:", selectedSpecialization);
@@ -88,9 +117,9 @@ const ListSubject = () => {
             .map((response) => response.data.data)
             .flat();
 
-          console.log("Sub Majors:", combinedSubMajors); // Kiểm tra dữ liệu subMajors từ API
+          console.log("Sub Majors:", combinedSubMajors);
 
-          setSubMajors(combinedSubMajors); // Cập nhật lại subMajors
+          setSubMajors(combinedSubMajors);
         } catch (error) {
           console.error("Lỗi tải chuyên ngành hẹp:", error.message);
         } finally {
@@ -100,18 +129,17 @@ const ListSubject = () => {
     }
   }, [selectedSpecialization, selectedType]);
 
-  // Thêm một useEffect để theo dõi sự thay đổi của chuyên ngành chính và chuyên ngành hẹp
   useEffect(() => {
     if (selectedSpecialization.length > 0) {
-      setSelectedType("sub_major"); // Nếu đã chọn chuyên ngành chính, mặc định chọn chuyên ngành hẹp
+      setSelectedType("sub_major");
     }
-  }, [selectedSpecialization]); // Theo dõi sự thay đổi của selectedSpecialization
+  }, [selectedSpecialization]);
 
   const onHandleDelete = async (id) => {
     try {
       setLoading(true);
       await instance.delete(`admin/subjects/${id}`);
-      setSubjects(subjects.filter((item) => item.id != id));
+      setSubjects(subjects.filter((item) => item.id !== id));
       message.success(
         <span>
           Xóa mềm thành công,{" "}
@@ -142,18 +170,18 @@ const ListSubject = () => {
     }
   };
 
-  const handleSearch = (event) => {
-    const value = event.target.value.trim();
-    setSearchValue(value);
+  const handleSearch = (value) => {
+    const searchVal =
+      typeof value === "string" ? value.trim() : value.target.value.trim();
+    setSearchValue(searchVal);
 
-    if (value === "") {
-      setFilteredCourses(subjects);
+    if (searchVal === "") {
+      setFilteredCourses([]);
     } else {
-      setFilteredCourses(
-        subjects.filter((course) =>
-          course.name.toLowerCase().includes(value.toLowerCase())
-        )
+      const filtered = subjects.filter((course) =>
+        course.name.toLowerCase().includes(searchVal.toLowerCase())
       );
+      setFilteredCourses(filtered);
     }
     setCurrentPage(1);
   };
@@ -190,15 +218,16 @@ const ListSubject = () => {
       const response = await instance.post("/admin/subjects", payload);
 
       setSubjects((prevSubjects) => [...prevSubjects, response.data.data]);
-      message.success("Thêm môn học mới thành công!");
+
+      notification.success({
+        message: "Thành công",
+        description: "Thêm môn học mới thành công!",
+      });
 
       form.resetFields();
       setIsPopupVisible(false);
     } catch (error) {
-      console.error("Form submission error:", error);
-      message.error(
-        error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!"
-      );
+      handleError(error);
     } finally {
       setLoading(false);
     }
@@ -251,7 +280,10 @@ const ListSubject = () => {
         majors: mainMajors.map((m) => m.id),
         sub_major:
           subMajorsResponse.length > 0
-            ? subMajorsResponse.map((m) => ({ value: m.id, label: m.name }))
+            ? subMajorsResponse.map((m) => ({
+                value: m.id,
+                label: m.name,
+              }))
             : null,
       });
     } catch (error) {
@@ -265,7 +297,10 @@ const ListSubject = () => {
       setLoading(true);
 
       if (!initialValues) {
-        message.error("Dữ liệu môn học không hợp lệ.");
+        notification.error({
+          message: "Lỗi",
+          description: "Dữ liệu môn học không hợp lệ.",
+        });
         return;
       }
 
@@ -281,15 +316,56 @@ const ListSubject = () => {
         sub_major: selectedType === "sub_major" ? values.sub_major : null,
       };
 
-      await instance.put(`/admin/subjects/${initialValues}`, updatedValues);
+      const response = await instance.put(
+        `/admin/subjects/${initialValues}`,
+        updatedValues
+      );
 
-      message.success("Cập nhật môn học thành công");
+      const updatedSubject = response.data.data;
+
+      setSubjects((prevSubjects) =>
+        prevSubjects.map((subject) =>
+          subject.id === updatedSubject.id ? updatedSubject : subject
+        )
+      );
+
+      notification.success({
+        message: "Thành công",
+        description: "Cập nhật môn học thành công!",
+      });
+
       setIsPopupVisible(false);
     } catch (error) {
-      console.error("Cập nhật thất bại:", error);
-      message.error("Cập nhật không thành công, vui lòng thử lại!");
+      handleError(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleError = (error) => {
+    console.error("Lỗi xử lý:", error);
+
+    if (error.response) {
+      const { data } = error.response;
+
+      if (data.errors) {
+        Object.keys(data.errors).forEach((field) => {
+          notification.error({
+            message: `Lỗi ở trường ${field}`,
+            description: data.errors[field].join(", "),
+          });
+        });
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: data.message || "Có lỗi xảy ra, vui lòng thử lại!",
+        });
+      }
+    } else {
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể kết nối đến server, vui lòng thử lại sau!",
+      });
     }
   };
 
@@ -318,36 +394,18 @@ const ListSubject = () => {
     form
       .validateFields()
       .then((values) => {
-        console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
+        console.log("Selected Filters:", values);
         // Xử lý lọc ở đây
-        setIsModalVisible(false); // Đóng modal sau khi xử lý xong
+        setIsModalVisible(false);
       })
       .catch((info) => {
-        console.log("Validate Failed:", info); // Xử lý lỗi xác thực
+        console.log("Validate Failed:", info);
       });
-  };
-
-  // Hàm hủy bỏ việc hiển thị modal
-  const handleCancel = () => {
-    setIsModalVisible(false); // Ẩn modal lọc
   };
 
   if (loading) {
     return <Loading />;
   }
-
-  const handleRadioChange = (e) => {
-    const value = e.target.value;
-    setSelectedType(value);
-    setSelectedSpecialization([]);
-    setSubMajors([]);
-    setMajorId(null);
-  };
-
-  const handleSpecializationChange = (value) => {
-    setSelectedSpecialization(value);
-    setMajorId(value);
-  };
 
   const displaySubjects =
     searchValue.trim() === "" ? subjects : filteredCourses;
@@ -357,13 +415,11 @@ const ListSubject = () => {
     currentPage * pageSize
   );
 
-  const renderSubjects = paginatedSubjects.length ? (
-    paginatedSubjects.map((subject) => (
-      <div key={subject.id}>{/* Subject display code here */}</div>
-    ))
-  ) : (
-    <div>Không tìm thấy môn học nào.</div>
-  );
+  const handleMajorChange = (majorId) => {
+    console.log(majorId);
+    setSelectedMajor1(majorId);
+    setCurrentPage(1);
+  };
 
   return (
     <>
@@ -372,45 +428,73 @@ const ListSubject = () => {
           <div className="flex gap-4 row-cols-2 relative">
             {/* Item */}
             <div className="col-12">
-              <div>
-                <div className="flex justify-between">
-                  <h1 className="flex gap-2 pb-5 items-center text-[#7017E2] text-[20px] font-semibold">
-                    Danh Sách Môn Học
-                    <button>
-                      <img src="/assets/svg/reload.svg" alt="reload..." />
-                    </button>
-                  </h1>
+              <div className="p-6 bg-white shadow-md rounded-lg">
+                {/* Tiêu đề quản lý môn học */}
+                <h1 className="text-4xl font-bold text-center text-[#7017E2] mb-6">
+                  Quản Lý Môn Học
+                </h1>
 
-                  <Input.Search
-                    placeholder="Tìm kiếm môn học..."
-                    onChange={handleSearch}
-                    style={{ width: 300 }}
-                    allowClear
-                  />
+                <div className="flex justify-between items-center mb-6 gap-4">
+                  {/* Input tìm kiếm */}
+                  <div className="flex-1 max-w-sm">
+                    <Input.Search
+                      placeholder="Tìm kiếm môn học..."
+                      onSearch={handleSearch}
+                      onChange={handleSearch}
+                      allowClear
+                      className="rounded-lg"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+
+                  {/* Bộ lọc theo ngành */}
+                  <div className="flex-1 max-w-xl">
+                    <Form.Item
+                      label="Lọc theo ngành"
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Select
+                        placeholder="Chọn ngành"
+                        value={selectedMajor1}
+                        onChange={handleMajorChange}
+                        allowClear
+                        className="rounded-lg"
+                        style={{ width: "100%" }}
+                      >
+                        {majors.map((item) => (
+                          <Select.Option key={item.id} value={item.id}>
+                            {item.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </div>
                 </div>
+
                 <div className="flex justify-between items-center">
+                  {/* Button thêm môn học */}
                   <button
                     onClick={togglePopup}
                     className="btn btn--outline text-[#7017E2]"
                   >
-                    <img src="/assets/svg/plus.svg" alt="" />
+                    <img
+                      src="/assets/svg/plus.svg"
+                      alt="Thêm"
+                      className="w-4 h-4"
+                    />
                     Thêm Môn Học
                   </button>
-                  <div className="flex gap-6 items-center">
-                    <span className="font-bold text-[14px] text-[#000]">
-                      {displaySubjects.length} items
-                    </span>
 
-                    <Button type="primary" onClick={handleShowModalFilter}>
-                      Lọc môn Học
-                    </Button>
-                  </div>
+                  {/* Hiển thị số lượng môn học */}
+                  <span className="font-bold text-xl text-gray-700">
+                    {displaySubjects.length} môn học
+                  </span>
                 </div>
               </div>
 
               <div className="row row-cols-2 g-3">
-                {paginatedSubjects.length > 0 ? (
-                  paginatedSubjects.map((subject) => (
+                {subjects.length > 0 ? (
+                  subjects.map((subject) => (
                     <div className="col" key={subject.id}>
                       <div className="listCourse__item ">
                         <div className="listCourse__item-top flex justify-between items-center">
@@ -425,52 +509,54 @@ const ListSubject = () => {
 
                         <div className="listCourse__item-body">
                           <div className="flex gap-8">
-                            <div className="listCourse__item-status_group">
-                              <div className="flex gap-2 listCourse__item-status">
-                                <span className="ml-3 text-[#9E9E9E]">
-                                  Hình thức:
-                                </span>
+                          <div className="listCourse__item-status_group">
+  {/* Hình thức và trạng thái */}
+  <div className="flex items-center gap-3 listCourse__item-status">
+    <span className="text-[#9E9E9E]">Hình thức:</span>
+    <div className="flex items-center gap-1 bg-[#44cc151a] px-2 py-1 rounded">
+      <img
+        className="fill-current svg-green"
+        src="/assets/svg/status.svg"
+        alt="status"
+      />
+      <span className="text-[#44CC15] text-[12px] font-semibold">
+        {subject.form}
+      </span>
+    </div>
+  </div>
 
-                                <div className="flex gap-1 bg-[#44cc151a]">
-                                  <img
-                                    className="fill-current svg-green"
-                                    src="/assets/svg/status.svg"
-                                    alt=""
-                                  />
-                                  <span className="text-[#44CC15] text-[12px]">
-                                    {subject.form}
-                                  </span>
-                                </div>
-                              </div>
+  {/* Mã môn học */}
+  <p className="text-[#9E9E9E] mt-2">
+    <strong className="text-black">Code:</strong>
+    <span className="text-black ml-2">{subject.code}</span>
+  </p>
 
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Code:
-                                <span className="text-black ml-2">
-                                  {subject.code}
-                                </span>
-                              </p>
+  {/* Tín chỉ và kỳ học */}
+  <div className="flex gap-4 mt-3">
+    <p className="text-[#9E9E9E] flex-1">
+      <strong className="text-black">Tín chỉ:</strong>
+      <span className="text-black ml-2">{subject.credit}</span>
+    </p>
 
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Tín chỉ :
-                                <span className="text-black ml-2">
-                                  {subject.credit}
-                                </span>
-                              </p>
+    <p className="text-[#9E9E9E] flex-1">
+      <strong className="text-black">Kỳ học:</strong>
+      <span className="text-black ml-2">{subject.order}</span>
+    </p>
+  </div>
 
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Kỳ học :
-                                <span className="text-black ml-2">
-                                  {subject.order}
-                                </span>
-                              </p>
+  {/* Số lượng sinh viên */}
+  <p className="text-[#9E9E9E] mt-3">
+    <strong className="text-black">Số lượng sinh viên:</strong>
+    <span className="text-black ml-2">{subject.max_students}</span>
+  </p>
 
-                              <div className="text-[#9E9E9E] gap-2 mt-3 ml-3 flex">
-                                <span className="flex-shrink-0">Mô tả :</span>
-                                <span className="text-black ml-2 line-clamp-2">
-                                  {subject.description}
-                                </span>
-                              </div>
-                            </div>
+  {/* Mô tả */}
+  <div className="flex items-center gap-2 mt-3">
+    <span className="text-[#9E9E9E] flex-shrink-0">Mô tả:</span>
+    <span className="text-black ml-2 line-clamp-2">{subject.description}</span>
+  </div>
+</div>
+
                           </div>
                         </div>
 
@@ -524,20 +610,17 @@ const ListSubject = () => {
                 )}
               </div>
 
-              {/* Pagination Component */}
-              {displaySubjects.length > pageSize && (
-                <Pagination
-                  align="center"
-                  current={currentPage}
-                  pageSize={pageSize}
-                  total={displaySubjects.length}
-                  onChange={(page) => setCurrentPage(page)}
-                  style={{
-                    marginTop: 16,
-                    textAlign: "center",
-                  }}
-                />
-              )}
+              <Pagination
+                align="center"
+                current={currentPage}
+                pageSize={pageSize}
+                total={total}
+                onChange={(page) => handlePageChange(page)}
+                style={{
+                  marginTop: 16,
+                  textAlign: "center",
+                }}
+              />
             </div>
           </div>
 

@@ -237,7 +237,7 @@ export default function ScheduleTable() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Các buổi</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thống kê điểm danh</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thống kê</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">

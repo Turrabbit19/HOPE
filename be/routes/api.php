@@ -46,10 +46,12 @@ Route::prefix('admin')
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
         Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
         Route::post('decrement-semester', [ApiStudentController::class, 'decrementStudentsSemester']);
+        Route::post('students/filter', [ApiStudentController::class, 'filters']);
 
 
         Route::apiResource('teachers', ApiTeacherController::class);
-        Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);
+        Route::get('teachersfilter', [ApiTeacherController::class, 'getTeachers']);
+        Route::get('teachers/by-status/{status}', [ApiTeacherController::class, 'getTeachersByStatus']);
         Route::get('export-teacher', [ApiTeacherController::class, 'exportTeacher']);
         Route::post('import-teacher', [ApiTeacherController::class, 'importTeacher']);
 
@@ -63,12 +65,14 @@ Route::prefix('admin')
         Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
         Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']);
+
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
         Route::get('sub/{majorId}/majors', [ApiMajorController::class, 'getSubMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
+        Route::get('major/{majorId}/teachers', [ApiMajorController::class, 'getTeachersByMajor']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('all/subjects', [ApiSubjectController::class, 'getAll']);

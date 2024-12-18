@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  BookOpen,
-  Users,
-  Clock,
-  AlertCircle,
-  LinkIcon,
-  CheckCircle,
-} from "lucide-react";
-
+import { BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react';
+function LoadingSpinner() {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <svg className="animate-spin h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+  )
+}
 export default function CourseRegistration() {
   const [subjects, setSubjects] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -250,30 +252,31 @@ export default function CourseRegistration() {
             </span>
           </h1>
           {message && (
-            <div className="text-center mb-6">
-              <p className="text-xl font-semibold text-blue-600">{message}</p>
-              {/* {timeLeft !== null && (
-                <div className="mt-4 flex items-center justify-center space-x-2">
-                  <Clock className="w-6 h-6 text-blue-500" />
-                  <p className="text-lg text-gray-700">
-                    Thời gian còn lại: {formatTime(timeLeft)}
-                  </p>
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto mb-8">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-green-500" />
                 </div>
-              )} */}
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Thông báo</h2>
+                <p className="text-gray-600">{message}</p>
+              </div>
             </div>
           )}
           {isLoading && (
-            <div className="text-center mt-8">
-              <Clock className="animate-spin h-8 w-8 mx-auto text-blue-500" />
-              <p className="mt-2">Đang tải...</p>
-            </div>
+            <LoadingSpinner />
           )}
 
           {error && (
-            <div className="text-center mt-8 text-red-500">
-              <AlertCircle className="h-8 w-8 mx-auto" />
-              <p className="mt-2">{error}</p>
+            <div className="flex items-center justify-center  bg-gradient-to-br from-green-100 to-pink-100">
+              <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full text-center">
+                <div className="w-16 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                  <AlertCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                </div>
+                <h2 className="text-3xl font-bold mb-4 text-green-600 items-center justify-center">Thông báo</h2>
+                <p className="text-xl mb-6 text-gray-700">{error}</p>
+              </div>
             </div>
+
           )}
 
           {!isLoading &&
@@ -304,19 +307,17 @@ export default function CourseRegistration() {
                         setSelectedShift(null);
                         setClassrooms([]);
                       }}
-                      className={`p-4 rounded-lg transition-all duration-200 relative ${
-                        selectedSubject?.id === subject.id
+                      className={`p-4 rounded-lg transition-all duration-200 relative ${selectedSubject?.id === subject.id
                           ? "bg-blue-500 text-white shadow-lg"
                           : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                      }`}
+                        }`}
                     >
                       <h3 className="font-bold text">{subject.name}</h3>
                       <p
-                        className={`mt-2 ${
-                          selectedSubject?.id === subject.id
+                        className={`mt-2 ${selectedSubject?.id === subject.id
                             ? "text-blue-100"
                             : "text-gray-600"
-                        }`}
+                          }`}
                       >
                         <span className="inline-flex items-center mr-4">
                           <BookOpen size={16} className="mr-1" /> Mã môn:{" "}
@@ -344,11 +345,10 @@ export default function CourseRegistration() {
                             setSelectedShift(shift);
                             setClassrooms([]);
                           }}
-                          className={`p-4 rounded-lg transition-all duration-200 ${
-                            selectedShift?.id === shift.id
+                          className={`p-4 rounded-lg transition-all duration-200 ${selectedShift?.id === shift.id
                               ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
                               : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                          }`}
+                            }`}
                         >
                           <h3 className="font-bold text">{shift.name}</h3>
                           <p className=" text-gray-600 mt-2">
@@ -369,11 +369,10 @@ export default function CourseRegistration() {
                         <button
                           key={classroom.id}
                           onClick={() => setSelectedClassroom(classroom)}
-                          className={`p-4 rounded-lg transition-all duration-200 ${
-                            selectedClassroom?.id === classroom.id
+                          className={`p-4 rounded-lg transition-all duration-200 ${selectedClassroom?.id === classroom.id
                               ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
                               : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                          }`}
+                            }`}
                         >
                           <h3 className="font-bold text">
                             {classroom.classroom}
@@ -468,3 +467,4 @@ export default function CourseRegistration() {
     </div>
   );
 }
+

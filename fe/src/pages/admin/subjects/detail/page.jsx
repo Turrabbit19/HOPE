@@ -203,7 +203,7 @@ const DetailSubject = () => {
 
   const handleAddClassrooms = async (values) => {
     const newClassrooms = values.classrooms.map((item, index) => ({
-      code: item.name,
+      code: item.code,
       max_students: item.max_students,
     }));
     try {
@@ -461,44 +461,39 @@ const DetailSubject = () => {
                 </Form.Item>
               </Form>
             ) : (
-              // Form Thêm Nhiều Bài Giảng
               <Form
+                form={form}
                 layout="vertical"
                 onFinish={handleAddLectures}
                 initialValues={{
                   lectureCount: lectureCount,
-                  lectures: Array(lectureCount).fill({
-                    name: "",
-                    description: "",
-                  }),
+                  lectures: [...Array(lectureCount)].map((_, index) => ({
+                    name: `Tiết ${index + 1}`, // Truyền tên tiết học trực tiếp
+                    description: "", // Bạn có thể để trống hoặc truyền một giá trị mặc định khác
+                  })),
                 }}
               >
                 {/* Trường nhập số lượng bài học */}
                 <Form.Item
                   name="lectureCount"
-                  label="Tổng số tiết học của môn tính theo tín ( số tín x 4 )"
+                  label="Tổng số tiết học của môn tính theo tín (số tín x 4)"
                   initialValue={lectureCount}
                 >
                   <InputNumber
                     min={1}
                     disabled
-                    onChange={(value) => {
-                      setLectureCount(value || 1);
-                    }}
+                    onChange={(value) => setLectureCount(value || 1)}
                     className="w-full"
                   />
                 </Form.Item>
 
                 {lectureCount > 0 && (
                   <Tabs defaultActiveKey="1" type="card">
-                    {[...Array(classroomCount)].map((_, index) => (
-                      <TabPane
-                        tab={`Lớp học ${index + 1}`}
-                        key={`class-${index}`}
-                      >
+                    {[...Array(lectureCount)].map((_, index) => (
+                      <TabPane tab={`Tiết ${index + 1}`} key={`class-${index}`}>
                         <Card
                           type="inner"
-                          title={`Thông tin Lớp học ${index + 1}`}
+                          title={`Thông tin tiết học ${index + 1}`}
                           className="mb-4"
                         >
                           <Form.Item
@@ -510,12 +505,12 @@ const DetailSubject = () => {
                                 message: "Vui lòng nhập tên bài giảng!",
                               },
                             ]}
+                            initialValue={`Tiết ${index + 1}`}
+                            disabled
                           >
-                            <Input
-                              placeholder="Nhập tên bài giảng"
-                              defaultValue={`Tiết ${index + 1}`}
-                            />
+                            <Input placeholder="Nhập tên bài giảng" />
                           </Form.Item>
+
                           <Form.Item
                             name={["lectures", index, "description"]}
                             label="Mô Tả"
@@ -634,10 +629,10 @@ const DetailSubject = () => {
                   classrooms: Array.from(
                     { length: classroomCount },
                     (_, index) => ({
-                      name: `${code}-R${(index + 1)
+                      code: `${code}-R${(index + 1)
                         .toString()
                         .padStart(2, "0")}`,
-                      max_students: max_students,
+                      max_students: max_students, 
                     })
                   ),
                 }}
@@ -646,12 +641,12 @@ const DetailSubject = () => {
                     const newClassrooms = Array.from(
                       { length: changedValues.classroomCount },
                       (_, index) => ({
-                        name:
-                          allValues.classrooms?.[index]?.name ||
+                        code:
+                          allValues.classrooms?.[index]?.code ||
                           `${code}-R${(index + 1).toString().padStart(2, "0")}`,
                         max_students:
                           allValues.classrooms?.[index]?.max_students ||
-                          max_students,
+                          `${max_students}`, 
                       })
                     );
                     form.setFieldsValue({ classrooms: newClassrooms });
@@ -659,7 +654,6 @@ const DetailSubject = () => {
                   }
                 }}
               >
-                {/* Trường nhập số lượng lớp học */}
                 <Form.Item
                   name="classroomCount"
                   label="Số lượng lớp học"
@@ -688,7 +682,7 @@ const DetailSubject = () => {
                           className="mb-4"
                         >
                           <Form.Item
-                            name={["classrooms", index, "name"]}
+                            name={["classrooms", index, "code"]}
                             label="Tên Lớp"
                             rules={[
                               {
@@ -711,9 +705,9 @@ const DetailSubject = () => {
                             ]}
                           >
                             <InputNumber
-                              min={max_students * 0.6}
+                              min={max_students * 0.7}
                               max={max_students}
-                              placeholder="Nhập số học sinh (tối đa 50)"
+                              placeholder="Nhập số học sinh (tối đa)"
                               className="w-full"
                             />
                           </Form.Item>

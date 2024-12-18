@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\PlanSubject;
+use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -273,6 +274,24 @@ class ApiMajorController extends Controller
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId, 404]);
         } catch (\Exception $e) {
             return response()->json(['error' => "Không thể truy cập vào bảng Majors", 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getTeachersByMajor(string $majorId)
+    {
+        try {
+            $teachers = Teacher::where('major_id', $majorId)->where('status', 1)->get();
+
+            $data = $teachers->map(function ($teacher) {
+                return [
+                    'id' => $teacher->id,
+                    'name' => $teacher->user->name,
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn dữ liệu giáo viên', 'message' => $e->getMessage()], 500);
         }
     }
 }

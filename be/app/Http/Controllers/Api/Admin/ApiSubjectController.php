@@ -11,6 +11,7 @@ use App\Models\Subject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Redis;
 
 class ApiSubjectController extends Controller
 {
@@ -29,6 +30,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
+                    'max_students' => $subject->max_students,
                     'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
             });
@@ -226,6 +228,7 @@ class ApiSubjectController extends Controller
             if (isset($data['sub_major'])) {
                 $subject->majors()->sync([$data['sub_major']]);
             }
+            Redis::del('syllabus');
 
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -269,6 +272,7 @@ class ApiSubjectController extends Controller
                 'name' => $subject->name,
                 'description' => $subject->description,
                 'credit' => $subject->credit,
+                'max_students' => $subject->max_students,
                 'order' => $subject->order,
                 'form' => $subject->form,
                 'majors' => $majors,
@@ -454,7 +458,7 @@ class ApiSubjectController extends Controller
                 return [
                     'id' => $classroom->id,
                     'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
+                    'max_students' => $classroom->subject->max_students,
                     'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });

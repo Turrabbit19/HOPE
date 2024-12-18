@@ -788,7 +788,7 @@ class ApiScheduleController extends Controller
 
             foreach ($schedules as $schedule) {
                 $maxCapacity = $schedule->classroom->max_students;
-                $minCapacity = ceil($maxCapacity * 0.8);
+                $minCapacity = ceil($maxCapacity * 0.7);
                 $currentCapacity = $schedule->students->count();
 
                 if ($currentCapacity >= $minCapacity) {
@@ -944,13 +944,13 @@ class ApiScheduleController extends Controller
                 ->where('major_id', $majorId)
                 ->where('subject_id', $subjectId)
                 ->get();
-
+    
             foreach ($schedules as $schedule) {
                 if ($schedule->students->count() == 0) {
-                    $schedule->delete();
+                    $schedule->forceDelete();
                 }
             }
-
+    
             return response()->json(['message' => 'Đã xóa các lớp học không có sinh viên'], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -959,4 +959,5 @@ class ApiScheduleController extends Controller
             ], 500);
         }
     }
+    
 }

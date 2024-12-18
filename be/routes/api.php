@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Student\StudentController;
 use App\Http\Controllers\Api\Student\StudentNoticeController;
 use App\Http\Controllers\Api\Student\SyllabusController;
 use App\Http\Controllers\Api\Teacher\TeacherController;
+use App\Http\Controllers\PayPalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,8 @@ Route::prefix('admin')
         Route::get('export-student', [ApiStudentController::class, 'exportStudent']);
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
         Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
+        Route::post('decrement-semester', [ApiStudentController::class, 'decrementStudentsSemester']);
+
 
         Route::apiResource('teachers', ApiTeacherController::class);
         Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);
@@ -120,6 +123,9 @@ Route::prefix('admin')
         Route::get('statistics/statisticSubMajors/{majorId}', [StatisticsController::class, "statisticSubMajors"]);
         Route::get('statistics/majorsByCourse/{courseId}', [StatisticsController::class, 'getMajorsByCourse']);
         Route::get('statistics/classrooms', [StatisticsController::class, 'getClassrooms']);
+
+        Route::apiResource('paypal', PayPalController::class);
+        Route::post('paypal/getTransactionsByCourse', [PayPalController::class, 'getTransactionsByCourse']);
     });
 
 Route::middleware(['auth:sanctum', 'role:Cán bộ'])->prefix('officer')
@@ -199,6 +205,8 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::get('{semesterId}/timetable', [StudentController::class, 'getTimetableBySemester']);
 
         Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
+        Route::get('getFeeBySemester', [PayPalController::class, 'getFeeBySemester']);
+        Route::apiResource('paypal', PayPalController::class);
         Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);
 
         Route::get('notifications', [StudentNoticeController::class, 'getStudentNotifications']);

@@ -8,6 +8,7 @@ import {
   Maximize,
   Minimize,
   X,
+  CircleDollarSign,
 } from "lucide-react";
 
 export default function HeaderClient() {
@@ -16,11 +17,19 @@ export default function HeaderClient() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isTuitionModalVisible, setIsTuitionModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const notificationRef = useRef(null);
   const buttonRef = useRef(null);
   const navigate = useNavigate();
-
+  const exchangeRate = 23000;
+  const [feeData, setFeeData] = useState({
+    total_credit: 0,
+    price: 0,
+    order: 0,
+  });
+  // const [error, setError] = useState(null);
   const unreadNotificationsCount = notifications.filter(
     (n) => n.status !== "Đã xem"
   ).length;
@@ -197,6 +206,7 @@ export default function HeaderClient() {
               </span>
             )}
           </button>
+
           {showNotifications && (
             <div
               ref={notificationRef}

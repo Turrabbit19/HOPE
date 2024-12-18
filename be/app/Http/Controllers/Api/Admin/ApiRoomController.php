@@ -7,28 +7,38 @@ use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiRoomController extends Controller
 {
+
     public function index()
     {
         try {
+            $cachedRooms = Redis::get('rooms_all');
+
+            if ($cachedRooms) {
+                return response()->json(['data' => json_decode($cachedRooms)], 200);
+            }
+
             $rooms = Room::get();
 
-            $data = $rooms->map(function ($room){
+            $data = $rooms->map(function ($room) {
                 return [
                     'id' => $room->id,
                     'name' => $room->name,
                     'status' => $room->status ? "Đang trống" : "Đang hoạt động",
                 ];
             });
+
+            Redis::setex('rooms_all', 6 * 30 * 24 * 60 * 60, json_encode($data));
+
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -43,28 +53,12 @@ class ApiRoomController extends Controller
         try {
             $data = $validator->validated();
             $room = Room::create($data);
-            
+
+            Redis::del('rooms_all');
+
             return response()->json(['data' => $room, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function show(string $id)
-    {
-        try {
-            $room = Room::findOrFail($id);
-            $data = [
-                    'id' => $room->id,
-                    'name' => $room->name,
-                    'status' => $room->status ? "Đang trống" : "Đang hoạt động",
-                ];
-
-            return response()->json(['data' => $data], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -81,9 +75,10 @@ class ApiRoomController extends Controller
 
         try {
             $room = Room::findOrFail($id);
-            
             $data = $validator->validated();
             $room->update($data);
+
+            Redis::del('rooms_all');
 
             return response()->json(['data' => $room, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -98,6 +93,9 @@ class ApiRoomController extends Controller
         try {
             $room = Room::findOrFail($id);
             $room->delete();
+
+            Redis::del('rooms_all');
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
@@ -105,4 +103,25 @@ class ApiRoomController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
+
+    public function show(string $id)
+    {
+        try {
+            $room = Room::findOrFail($id);
+            $data = [
+                'id' => $room->id,
+                'name' => $room->name,
+                'status' => $room->status ? "Đang trống" : "Đang hoạt động",
+            ];
+
+            return response()->json(['data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Book, Lightbulb, Users } from "lucide-react";
+import { Book, Lightbulb, Users } from 'lucide-react';
 
 export default function SchoolLogin() {
   const [email, setEmail] = useState("");
@@ -59,19 +59,19 @@ export default function SchoolLogin() {
         setError(errorMessage);
         setShowErrorPopup(true);
         return;
+      } else {
+        console.log("Login successful, received token:", data.token);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
+        localStorage.setItem("user_id", data.user.id);
+        localStorage.setItem("loginSuccess", "Đăng nhập thành công!");
+
+        if (!rememberMe) {
+          window.addEventListener("beforeunload", clearToken);
+        }
+
+        redirectToRolePage(data.user.role);
       }
-
-      console.log("Login successful, received token:", data.token);
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
-      localStorage.setItem("user_id", data.user.id);
-
-      if (!rememberMe) {
-        window.addEventListener("beforeunload", clearToken);
-      }
-
-      redirectToRolePage(data.user.role);
     } catch (err) {
       console.error("Error during login:", err);
       setError("Có lỗi xảy ra trong quá trình đăng nhập");
@@ -97,6 +97,7 @@ export default function SchoolLogin() {
   const closeErrorPopup = () => {
     setShowErrorPopup(false);
   };
+
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-blue-600 to-indigo-800">
@@ -210,3 +211,4 @@ export default function SchoolLogin() {
     </div>
   );
 }
+

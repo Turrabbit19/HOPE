@@ -26,8 +26,6 @@ export default function SchoolLogin() {
     };
   }, []);
 
-
-
   const redirectToRolePage = (role) => {
     if (role === "Sinh viên") {
       navigate("/student/home");
@@ -53,12 +51,11 @@ export default function SchoolLogin() {
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMessage =
-          data.errors
-            ? typeof data.errors === "object"
-              ? Object.values(data.errors).join(", ")
-              : data.errors
-            : data.error || "Đăng nhập thất bại";
+        const errorMessage = data.errors
+          ? typeof data.errors === "object"
+            ? Object.values(data.errors).join(", ")
+            : data.errors
+          : data.error || "Đăng nhập thất bại";
         setError(errorMessage);
         setShowErrorPopup(true);
         return;
@@ -66,11 +63,10 @@ export default function SchoolLogin() {
 
       console.log("Login successful, received token:", data.token);
 
-      // Lưu token vào localStorage tạm thời
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
+      localStorage.setItem("user_id", data.user.id);
 
-      // Nếu không chọn "Ghi nhớ đăng nhập", thêm sự kiện để xóa token khi rời trang
       if (!rememberMe) {
         window.addEventListener("beforeunload", clearToken);
       }
@@ -87,8 +83,6 @@ export default function SchoolLogin() {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
   };
-
-
 
   const handleSubmit = (e) => {
     e.preventDefault();

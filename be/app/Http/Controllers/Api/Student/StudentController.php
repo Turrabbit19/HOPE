@@ -172,6 +172,7 @@ class   StudentController extends Controller
             $data = $schedules->map(function ($schedule) {
                 $studentsCount = $schedule->classroom->students->count();
                 $maxStudents = $schedule->classroom->max_students;
+                $minStudents = (int)($maxStudents * 0.7);
 
                 $status = ($studentsCount >= $maxStudents) ? 'Đã đầy' : 'Còn chỗ';
 
@@ -184,6 +185,7 @@ class   StudentController extends Controller
                     'days_of_week' => $schedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
                     'students' => $studentsCount,
                     'max_students' => $maxStudents,
+                    'min_students' => $minStudents,
                     'status' => $status,
                 ];
             });
@@ -307,23 +309,31 @@ class   StudentController extends Controller
             $currentDayOfWeek = $carbonDayOfWeek === 0 ? 1 : $carbonDayOfWeek + 1;
 
             $data = $schedules->map(function ($schedule) use ($currentDateTime, $currentDayOfWeek) {
-                $todayHasSchedule = $schedule->schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
+                $studentsCount = $schedule->schedule->classroom->students->count();
+                $maxStudents = $schedule->schedule->classroom->max_students;
+                $minStudents = (int)($maxStudents * 0.7);
 
-                $status = null;
-
-                if ($todayHasSchedule) {
-                    $shiftStart = Carbon::parse($schedule->schedule->shift->start_time);
-                    $shiftEnd = Carbon::parse($schedule->schedule->shift->end_time);
-
-                    if ($currentDateTime < $shiftStart) {
-                        $status = "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
-                    } elseif ($currentDateTime > $shiftEnd) {
-                        $status = "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
-                    } else {
-                        $status = "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
-                    }
+                if ($studentsCount < $minStudents) {
+                    $status = "Đang chờ xếp lớp";
                 } else {
-                    $status = "Không có lịch hôm nay";
+                    $status = null;
+
+                    $todayHasSchedule = $schedule->schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
+
+                    if ($todayHasSchedule) {
+                        $shiftStart = Carbon::parse($schedule->schedule->shift->start_time);
+                        $shiftEnd = Carbon::parse($schedule->schedule->shift->end_time);
+
+                        if ($currentDateTime < $shiftStart) {
+                            $status = "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                        } elseif ($currentDateTime > $shiftEnd) {
+                            $status = "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
+                        } else {
+                            $status = "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                        }
+                    } else {
+                        $status = "Không có lịch hôm nay";
+                    }
                 }
 
                 return [
@@ -347,6 +357,7 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function getTimetable()
     {
@@ -437,7 +448,6 @@ class   StudentController extends Controller
 
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
-
             $semester = Semester::findOrFail($semesterId);
             $semesterStartDate = Carbon::parse($semester->start_date);
             $semesterEndDate = Carbon::parse($semester->end_date);
@@ -450,19 +460,28 @@ class   StudentController extends Controller
                 ->get();
 
             $data = $timetable->map(function ($tt) use ($student) {
+                $schedule = $tt->schedule;
+                $studentsCount = $schedule->classroom->students->count();
+                $maxStudents = $schedule->classroom->max_students;
+                $minStudents = (int)($maxStudents * 0.7);
+
+                if ($studentsCount < $minStudents) {
+                    return null;
+                }
+
                 return [
-                    'id' => $tt->schedule->id,
-                    'subject_name' => $tt->schedule->subject->name,
-                    'classroom_code' => $tt->schedule->classroom->code,
-                    'teacher_name' => $tt->schedule->teacher->user->name,
-                    'shift_name' => $tt->schedule->shift->name,
-                    'room_name' => $tt->schedule->room->name ?? "Null",
-                    'link' => $tt->schedule->link ?? "Null",
-                    'start_date' => Carbon::parse($tt->schedule->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($tt->schedule->end_date)->format('d/m/Y'),
-                    'schedule_lessons' => $tt->schedule->lessons->map(function ($lesson) use ($student, $tt) {
+                    'id' => $schedule->id,
+                    'subject_name' => $schedule->subject->name,
+                    'classroom_code' => $schedule->classroom->code,
+                    'teacher_name' => $schedule->teacher->user->name,
+                    'shift_name' => $schedule->shift->name,
+                    'room_name' => $schedule->room->name ?? "Null",
+                    'link' => $schedule->link ?? "Null",
+                    'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
+                    'schedule_lessons' => $schedule->lessons->map(function ($lesson) use ($student, $schedule) {
                         $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
-                            ->setTimeFrom(Carbon::parse($tt->schedule->shift->start_time));
+                            ->setTimeFrom(Carbon::parse($schedule->shift->start_time));
 
                         $currentDateTime = now();
 
@@ -488,7 +507,7 @@ class   StudentController extends Controller
                         ];
                     }),
                 ];
-            });
+            })->filter()->values();
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -497,6 +516,7 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
     }
+
     public function getSubMajors()
     {
         $user = Auth::user();

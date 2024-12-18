@@ -68,6 +68,7 @@ import ScheduleRegistration from "../pages/student/classRegitration/page";
 import StudentDashboard from "../pages/student/studentDashboard/page";
 import NotificationPage from "../pages/student/notification/page";
 import SchoolLogin from "../pages/student/login/page";
+import TuitionPaymentPage from "../pages/student/tuition-fee/page";
 import LayoutClient from "../components/layout/layoutStudent";
 import LayoutTeacher from "../components/layout/layoutTeacher";
 import TeacherInfo from "../pages/teacher/teacherDashboard/page";
@@ -76,6 +77,7 @@ import TeacherTimetable from "../pages/teacher/teacherTimetable/page";
 import SubMajorsList from "../pages/student/sub-majorRegistration/page";
 import Syllabus from "../pages/student/syllabus/page";
 import StatisticSemester from "../pages/student/statistics-semester/page";
+import TuitionFee from "../pages/admin/tuition-fee/page";
 
 const Router = createBrowserRouter([
   {
@@ -99,14 +101,17 @@ const Router = createBrowserRouter([
         path: "",
         element: (
           <>
-            <BreadCrumb />
-            <NotificationManage />
+            <StatisticalReport />
           </>
         ),
       },
       {
         path: "test",
         element: <Testing />,
+      },
+      {
+        path: "tuition-fee",
+        element: <TuitionFee />,
       },
       {
         path: "list-syllabus",
@@ -325,10 +330,7 @@ const Router = createBrowserRouter([
         path: "list-schedule/add",
         element: <ScheduleAdd />,
       },
-      // {
-      //     path: "list-schedule/details/:id/edit",
-      //     element: <ScheduleEdit />,
-      // },
+
       {
         path: "list-schedule/details/:id",
         element: <ScheduleDetail />,
@@ -527,6 +529,10 @@ const Router = createBrowserRouter([
       {
         path: "statistics-semester",
         element: <StatisticSemester />,
+      },
+      {
+        path: "tuition-fee",
+        element: <TuitionPaymentPage />,
       },
     ],
   },

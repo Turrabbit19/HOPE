@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Student;
 use App\Models\StudentMajor;
 use App\Models\User;
@@ -390,6 +391,92 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Không tìm thấy dữ liệu cho course hoặc major'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function incrementSemester($studentId)
+    {
+        try {
+            $student = Student::findOrFail($studentId);
+
+            if ($student->current_semester < 9) {
+                $student->current_semester += 1;
+
+                if ($student->current_semester === 9) {
+                    $student->status = 2;
+                }
+
+                $student->save();
+
+                return response()->json([
+                    'message' => 'Tăng học kỳ thành công',
+                    'data' => [
+                        'id' => $student->id,
+                        'current_semester' => $student->current_semester,
+                        'status' => $student->status,
+                    ],
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Học kỳ hiện tại đã đạt tối đa',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Không thể tăng học kỳ',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function decrementStudentsSemester()
+    {
+        try {
+            $now = Carbon::now();
+
+            $courses = Course::where('start_date', '<=', $now)
+                ->where('end_date', '>=', $now)
+                ->get();
+
+            if ($courses->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không có khóa học nào đang diễn ra trong thời gian này.',
+                ], 404);
+            }
+
+            $updatedStudents = [];
+
+            foreach ($courses as $course) {
+                $students = $course->students;
+
+                foreach ($students as $student) {
+                    if ($student->current_semester > 1) {
+                        $student->current_semester -= 1;
+                        $student->save();
+
+                        $updatedStudents[] = [
+                            'student_id' => $student->id,
+                            'current_semester' => $student->current_semester,
+                        ];
+                    }
+                }
+            }
+
+            if (count($updatedStudents) > 0) {
+                return response()->json([
+                    'message' => 'Giảm học kỳ thành công cho các sinh viên.',
+                    'data' => $updatedStudents,
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Không có sinh viên nào cần giảm học kỳ.',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Đã xảy ra lỗi khi giảm học kỳ cho sinh viên.',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 }

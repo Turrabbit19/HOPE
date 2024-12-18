@@ -160,6 +160,13 @@ export default function HeaderClient() {
     }
   };
 
+  // Utility function to strip HTML tags
+  const stripHtml = (html) => {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
+
   return (
     <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
       <div className="flex items-center w-1/3">

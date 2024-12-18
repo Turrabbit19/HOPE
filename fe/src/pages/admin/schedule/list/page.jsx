@@ -57,14 +57,13 @@ const ScheduleList = () => {
     }
   };
 
-  // Lấy danh sách ngành học cho một khóa học cụ thể
   const fetchMajorsForSemester = async (semesterId, courseId) => {
     setError(null);
     try {
       const response = await instance.get(
         `admin/semester/${semesterId}/${courseId}/majors`
       );
-      console.log("Majors data:", response.data.majors); // Kiểm tra dữ liệu majors
+      console.log("Majors data:", response.data.majors); 
       setMajorsBySemester((prev) => ({
         ...prev,
         [`${semesterId}_${courseId}`]: response.data.majors || [],
@@ -116,19 +115,16 @@ const ScheduleList = () => {
     }
   };
 
-  // Xử lý mở rộng/tắt mở rộng cho từng khóa học, kỳ học, ngành học và môn học
   const toggleSemester = (semesterId) => {
     setExpandedSemester((prev) => {
       const newSemester = prev === semesterId ? null : semesterId;
 
-      // Chỉ gọi API nếu không có khóa học cho kỳ học này
       if (newSemester && !coursesBySemester[semesterId]) {
         fetchCoursesForSemester(newSemester);
       }
 
       return newSemester;
     });
-    // Reset các trạng thái con khi thay đổi kỳ học
     setExpandedCourse(null);
     setExpandedMajor(null);
     setExpandedSubject(null);
@@ -139,7 +135,7 @@ const ScheduleList = () => {
       const newCourse = prev === courseId ? null : courseId;
 
       if (newCourse && !majorsBySemester[`${semesterId}_${courseId}`]) {
-        fetchMajorsForSemester(semesterId, newCourse); // Gọi API nếu chưa có dữ liệu
+        fetchMajorsForSemester(semesterId, newCourse); 
       }
 
       return newCourse;
@@ -568,7 +564,7 @@ const ScheduleList = () => {
                                                                 <p
                                                                   className={`text-3xl font-semibold ${
                                                                     classroom.students >=
-                                                                    30
+                                                                    classroom.max_students * 0.7
                                                                       ? "text-green-600"
                                                                       : classroom.students >=
                                                                         10

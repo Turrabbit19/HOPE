@@ -145,7 +145,7 @@ const AsideAdmin = () => {
       label: <Link to="/admin/list-sections">Quản lý thông báo</Link>,
     },
     {
-      key: "sub5",
+      key: "sub6",
       icon: <BellOutlined />,
       label: <Link to="/admin/tuition-fee">Quản lý học phí</Link>,
     },

@@ -788,7 +788,7 @@ class ApiScheduleController extends Controller
 
             foreach ($schedules as $schedule) {
                 $maxCapacity = $schedule->classroom->max_students;
-                $minCapacity = ceil($maxCapacity * 0.8);
+                $minCapacity = ceil($maxCapacity * 0.7);
                 $currentCapacity = $schedule->students->count();
 
                 if ($currentCapacity >= $minCapacity) {

@@ -8,7 +8,6 @@ import {
   Maximize,
   Minimize,
   X,
-  CircleDollarSign,
 } from "lucide-react";
 
 export default function HeaderClient() {
@@ -17,19 +16,11 @@ export default function HeaderClient() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isTuitionModalVisible, setIsTuitionModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const notificationRef = useRef(null);
   const buttonRef = useRef(null);
   const navigate = useNavigate();
-  const exchangeRate = 23000;
-  const [feeData, setFeeData] = useState({
-    total_credit: 0,
-    price: 0,
-    order: 0,
-  });
-  // const [error, setError] = useState(null);
+
   const unreadNotificationsCount = notifications.filter(
     (n) => n.status !== "Đã xem"
   ).length;
@@ -169,6 +160,13 @@ export default function HeaderClient() {
     }
   };
 
+  // Utility function to strip HTML tags
+  const stripHtml = (html) => {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
+
   return (
     <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
       <div className="flex items-center w-1/3">
@@ -206,7 +204,6 @@ export default function HeaderClient() {
               </span>
             )}
           </button>
-
           {showNotifications && (
             <div
               ref={notificationRef}

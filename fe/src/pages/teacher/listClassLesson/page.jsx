@@ -117,28 +117,22 @@ export default function ScheduleTable() {
 
     if (!data || !Array.isArray(data) || data.length === 0) {
       return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-2xl font-bold mb-4">Thống kê điểm danh sinh viên</h2>
             <p className="text-center text-red-500">
               {!data ? "Không thể tải danh sách sinh viên. Vui lòng thử lại sau." : "Lớp học này không có sinh viên."}
             </p>
-            <button
-              onClick={onClose}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Đóng
-            </button>
           </div>
         </div>
       );
     }
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white shadow-md rounded-lg p-8  max-w-8xl max-h-[90vh] overflow-auto">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">📊 Thống kê điểm danh sinh viên</h2>
-          <table className="table-auto w-full border-collapse border border-gray-400 text-center text-base">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+        <div className="bg-white shadow-md rounded-lg p-8 max-w-[95%] w-auto max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+          <h2 className="text-4xl font-bold mb-8 text-gray-800 text-center">📊 Thống kê điểm danh sinh viên</h2>
+          <table className="table-auto w-full border-collapse border border-gray-400 text-center text-lg">
             <thead className="bg-gray-200 text-gray-700">
               <tr>
                 <th className="border border-gray-400 px-4 py-3">STT</th>
@@ -148,7 +142,6 @@ export default function ScheduleTable() {
                 <th className="border border-gray-400 px-4 py-3">Số buổi có mặt</th>
                 <th className="border border-gray-400 px-4 py-3">Số buổi vắng</th>
                 <th className="border border-gray-400 px-4 py-3">Tỷ lệ điểm danh</th>
-                {/* Tạo cột Tiết học tự động */}
                 {data.length > 0 && Array.from({ length: data[0].total_lessons }).map((_, index) => (
                   <th key={index} className="border border-gray-400 px-4 py-3">Tiết {index + 1}</th>
                 ))}
@@ -170,10 +163,10 @@ export default function ScheduleTable() {
                     <td className="border border-gray-400 px-4 py-3">{student.absent_lessons}</td>
                     <td className="border border-gray-400 px-4 py-3">
                       <div className="flex items-center justify-center">
-                        <span>{attendanceRate}%</span>
-                        <div className="ml-2 w-40 h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <span className="text-lg">{attendanceRate}%</span>
+                        <div className="ml-2 w-40 h-4 bg-gray-200 rounded-full overflow-hidden">
                           <div
-                            className={`h-3 ${attendanceRate >= 75
+                            className={`h-4 ${attendanceRate >= 75
                                 ? 'bg-green-500'
                                 : attendanceRate >= 50
                                   ? 'bg-yellow-500'
@@ -184,17 +177,23 @@ export default function ScheduleTable() {
                         </div>
                       </div>
                     </td>
-                    {/* Tạo động các tiết học cho từng sinh viên */}
                     {Array.from({ length: student.total_lessons }).map((_, lessonIndex) => {
                       const lesson = student.absent_details[lessonIndex];
                       const isAbsent = lesson && lesson.status === 'Vắng';
+                      const hasOccurred = lesson && new Date(lesson.study_date) <= new Date();
                       return (
                         <td key={lessonIndex} className="border border-gray-400 px-4 py-3">
                           <span
-                            className={`text-xl ${isAbsent ? 'text-red-500' : 'text-green-500'}`}
+                            className={`text-2xl ${
+                              !hasOccurred
+                                ? 'text-gray-300'
+                                : isAbsent
+                                  ? 'text-red-500'
+                                  : 'text-green-500'
+                            }`}
                             title={`Tiết ${lessonIndex + 1}: ${lesson ? lesson.study_date : ''}`}
                           >
-                            {isAbsent ? 'X' : '✔'}
+                            {!hasOccurred ? '-' : isAbsent ? 'X' : '✔'}
                           </span>
                         </td>
                       );
@@ -204,14 +203,7 @@ export default function ScheduleTable() {
               })}
             </tbody>
           </table>
-          <button
-            onClick={onClose}
-            className="mt-8 px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded hover:bg-blue-700 transition"
-          >
-            Đóng
-          </button>
         </div>
-
       </div>
     );
   };
@@ -237,7 +229,7 @@ export default function ScheduleTable() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Các buổi</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thống kê điểm danh</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thống kê </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">

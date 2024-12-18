@@ -81,7 +81,20 @@ class ApiCourseController extends Controller
             'name' => 'required|string|max:10|unique:courses',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+        ], [
+            'name.required' => 'Tên khóa học là bắt buộc.',
+            'name.string' => 'Tên khóa học phải là chuỗi ký tự.',
+            'name.max' => 'Tên khóa học không được vượt quá 10 ký tự.',
+            'name.unique' => 'Tên khóa học đã tồn tại.',
+            
+            'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
+            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
+            
+            'end_date.required' => 'Ngày kết thúc là bắt buộc.',
+            'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
         ]);
+        
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -133,7 +146,16 @@ class ApiCourseController extends Controller
             'name' => 'sometimes|string|max:50|unique:courses,name,' . $id,
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date',
-        ]);
+        ], [
+            'name.string' => 'Tên khóa học phải là chuỗi ký tự.',
+            'name.max' => 'Tên khóa học không được vượt quá 50 ký tự.',
+            'name.unique' => 'Tên khóa học đã tồn tại.',
+            
+            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
+            
+            'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+        ]); 
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

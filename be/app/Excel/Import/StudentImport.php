@@ -47,6 +47,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
                 'role_id' => 3,
             ]);
 
+
             $student = Student::create([
                 'user_id' => $user->id,
                 'course_id' => $courseId,
@@ -74,7 +75,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
 
             return $student;
         } catch (\Exception $e) {
-            Log::error('Failed to import student data: ' . $e->getMessage());
+            Log::error('Lỗi khi import dòng: ', ['row' => $row, 'message' => $e->getMessage()]);
             return null;
         }
     }
@@ -90,6 +91,8 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             '*.gioi_tinh' => 'required|in:Nam,Nữ',
             '*.dan_toc' => 'required|string|max:100',
             '*.dia_chi' => 'required|string|max:255',
+            '*.khoa' => 'required|exists:courses,name',
+            '*.nganh' => 'required|exists:majors,name',
             '*.khoa' => 'required|exists:courses,name',
             '*.nganh' => 'required|exists:majors,name',
             '*.ki_hien_tai' => 'required|integer|min:1',

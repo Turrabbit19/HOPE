@@ -243,7 +243,7 @@ const ListCourse = () => {
 
                         {/* Hiển thị số lượng khóa học */}
                         <span className="font-semibold text-lg text-gray-700">
-                            {filteredCourses.length} items
+                            {filteredCourses.length} khóa học
                         </span>
                     </div>
                 </div>

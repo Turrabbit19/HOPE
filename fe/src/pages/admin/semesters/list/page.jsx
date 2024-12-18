@@ -31,6 +31,7 @@ const ListSemester = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
     const fetchData = async () => {
         try {
             setLoading(true);
@@ -53,6 +54,7 @@ const ListSemester = () => {
             setLoading(false);
         }
     };
+
     const handleSearch = (value) => {
         setSearchTerm(value.toLowerCase());
         setCurrentPage(1);
@@ -66,8 +68,8 @@ const ListSemester = () => {
             setLoading(true);
             const response = await instance.get(
                 filteredYear
-                    ? `http://127.0.0.1:8000/api/admin/filter-by-year/semesters?year=${filteredYear}`
-                    : `http://127.0.0.1:8000/api/admin/filter-by-year/semesters`
+                    ? `admin/filter-by-year/semesters?year=${filteredYear}`
+                    : `admin/filter-by-year/semesters`
             );
 
             setSemesters(response.data.data);
@@ -262,6 +264,10 @@ const ListSemester = () => {
         }
     };
 
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
     if (loading) {
         return <Loading />;
     }
@@ -271,7 +277,7 @@ const ListSemester = () => {
             <div className="row row-cols-2 g-3">
                 <div className="col-12">
                     <div className="p-6 bg-white shadow-md rounded-lg">
-                        <h1 className="text-4xl font-bold text-center text-[#7017E2] mb-6">
+                        <h1 className="text-4xl font-bold text-center text-[#7017E2]">
                             Quản Lý Kỳ Học
                         </h1>
                         <div className="justify-end flex ">
@@ -288,7 +294,6 @@ const ListSemester = () => {
                                         value={selectedYear}
                                     >
                                         <Select.Option key="all" value="all">
-                                            {" "}
                                             Tất cả
                                         </Select.Option>
                                         {allYears.map((year) => (
@@ -304,7 +309,7 @@ const ListSemester = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center mt-6">
+                        <div className="flex justify-between items-center mt-2">
                             <Button
                                 onClick={showAddModal}
                                 className="btn btn--outline text-[#7017E2]"
@@ -314,7 +319,7 @@ const ListSemester = () => {
                             </Button>
 
                             <span className="font-bold text-[14px] text-[#000]">
-                                {displaySemesters.length} items
+                                {displaySemesters.length} kỳ học
                             </span>
                         </div>
                     </div>
@@ -324,16 +329,16 @@ const ListSemester = () => {
                             paginatedSemesters.map((semester) => (
                                 <div className="col" key={semester.id}>
                                     <div className="teaching__card">
-                                        <div className="teaching__card-top">
+                                        <div className="teaching__card-top flex justify-between items-center">
                                             <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                                                 <img
                                                     src="/assets/svg/share.svg"
                                                     alt=""
                                                 />
                                                 Kỳ học:{" "}
-                                                <p className="text-red-300 uppercase ml-2 font-bold">
+                                                <span className="text-red-300 uppercase ml-2 font-bold">
                                                     {semester.name}
-                                                </p>
+                                                </span>
                                             </h2>
                                             <button>
                                                 <img
@@ -349,7 +354,7 @@ const ListSemester = () => {
                                                     <p className="text-[#9E9E9E]">
                                                         Trạng thái:
                                                     </p>
-                                                    <div className="teaching__card-status">
+                                                    <div className="teaching__card-status flex items-center gap-1">
                                                         <img
                                                             className="svg-green"
                                                             src="/assets/svg/status.svg"
@@ -387,31 +392,31 @@ const ListSemester = () => {
                                         semester.status === "Kết thúc" ? (
                                             ""
                                         ) : (
-                                            <div className="teaching__card-bottom">
-                                                <>
-                                                    <button
-                                                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                                                        onClick={() =>
-                                                            confirmDelete(
-                                                                semester.id
-                                                            )
-                                                        }
-                                                    >
+                                            <div className="teaching__card-bottom flex gap-2">
+                                                <Popconfirm
+                                                    title="Xóa kỳ học"
+                                                    onConfirm={() =>
+                                                        confirmDelete(
+                                                            semester.id
+                                                        )
+                                                    }
+                                                    okText="Có"
+                                                    cancelText="Không"
+                                                >
+                                                    <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
                                                         <DeleteOutlined />
                                                         Xóa
                                                     </button>
-                                                    <button
-                                                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                                                        onClick={() =>
-                                                            showEditModal(
-                                                                semester
-                                                            )
-                                                        }
-                                                    >
-                                                        <EditOutlined />
-                                                        Sửa Thông Tin
-                                                    </button>
-                                                </>
+                                                </Popconfirm>
+                                                <button
+                                                    className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                                                    onClick={() =>
+                                                        showEditModal(semester)
+                                                    }
+                                                >
+                                                    <EditOutlined />
+                                                    Sửa Thông Tin
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -430,99 +435,96 @@ const ListSemester = () => {
                     {displaySemesters.length > pageSize && (
                         <Pagination
                             current={currentPage}
+                            align="center"
                             pageSize={pageSize}
                             total={displaySemesters.length}
-                            onChange={(page) => setCurrentPage(page)}
+                            onChange={handlePageChange}
                             style={{ marginTop: 16, textAlign: "center" }}
                         />
                     )}
                 </div>
-
-                <Modal
-                    title={
-                        editingSemester
-                            ? "Sửa Thông Tin Kỳ Học"
-                            : "Thêm Mới Kỳ Học"
-                    }
-                    open={isEditModalVisible || isAddModalVisible}
-                    onCancel={handleModalCancel}
-                    footer={null}
-                    centered
-                    width={600}
-                >
-                    <div className="createScheduleForm pb-6">
-                        <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
-                            {editingSemester ? "Sửa Kỳ Học" : "Tạo Kỳ Học Mới"}
-                        </h3>
-
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onFinish={
-                                isEditModalVisible
-                                    ? onHandleUpdate
-                                    : handleModalOk
-                            }
-                            autoComplete="off"
-                        >
-                            <Form.Item
-                                label="Tên Kỳ Học"
-                                name="name"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Vui lòng nhập tên kỳ học!",
-                                    },
-                                ]}
-                            >
-                                <Input placeholder="Tên kỳ học" />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Ngày Khởi Tạo"
-                                name="start_date"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Vui lòng chọn ngày khởi tạo!",
-                                    },
-                                ]}
-                            >
-                                <DatePicker
-                                    style={{ width: "100%" }}
-                                    format="DD/MM/YYYY"
-                                    placeholder="Ngày bắt đầu"
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Ngày Kết Thúc"
-                                name="end_date"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Vui lòng chọn ngày kết thúc!",
-                                    },
-                                ]}
-                            >
-                                <DatePicker
-                                    style={{ width: "100%" }}
-                                    format="DD/MM/YYYY"
-                                    placeholder="Ngày kết thúc"
-                                />
-                            </Form.Item>
-
-                            <div className="flex justify-center items-center mt-4">
-                                <Button type="primary" htmlType="submit">
-                                    {isEditModalVisible
-                                        ? "Cập nhật kỳ học"
-                                        : "Tạo kỳ học"}
-                                </Button>
-                            </div>
-                        </Form>
-                    </div>
-                </Modal>
             </div>
+
+            <Modal
+                title={
+                    editingSemester ? "Sửa Thông Tin Kỳ Học" : "Thêm Mới Kỳ Học"
+                }
+                open={isEditModalVisible || isAddModalVisible}
+                onCancel={handleModalCancel}
+                footer={null}
+                centered
+                width={600}
+            >
+                <div className="createScheduleForm pb-6">
+                    <h3 className="text-[#7017E2] text-[20px] font-semibold mb-4">
+                        {editingSemester ? "Sửa Kỳ Học" : "Tạo Kỳ Học Mới"}
+                    </h3>
+
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={
+                            editingSemester ? onHandleUpdate : handleModalOk
+                        }
+                        autoComplete="off"
+                    >
+                        <Form.Item
+                            label="Tên Kỳ Học"
+                            name="name"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Vui lòng nhập tên kỳ học!",
+                                },
+                            ]}
+                        >
+                            <Input placeholder="Tên kỳ học" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Ngày Khởi Tạo"
+                            name="start_date"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Vui lòng chọn ngày khởi tạo!",
+                                },
+                            ]}
+                        >
+                            <DatePicker
+                                style={{ width: "100%" }}
+                                format="DD/MM/YYYY"
+                                placeholder="Ngày bắt đầu"
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Ngày Kết Thúc"
+                            name="end_date"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Vui lòng chọn ngày kết thúc!",
+                                },
+                            ]}
+                        >
+                            <DatePicker
+                                style={{ width: "100%" }}
+                                format="DD/MM/YYYY"
+                                placeholder="Ngày kết thúc"
+                            />
+                        </Form.Item>
+
+                        <div className="flex justify-center items-center mt-4">
+                            <Button type="primary" htmlType="submit">
+                                {editingSemester
+                                    ? "Cập nhật kỳ học"
+                                    : "Tạo kỳ học"}
+                            </Button>
+                        </div>
+                    </Form>
+                </div>
+            </Modal>
         </div>
     );
 };

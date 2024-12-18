@@ -93,6 +93,11 @@ class ApiSemesterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'year' => 'required|integer|min:1900|max:' . Carbon::now()->year
+        ], [
+            'year.required' => 'Năm là trường bắt buộc.',
+            'year.integer' => 'Năm phải là một số nguyên.',
+            'year.min' => 'Năm không được nhỏ hơn 1900.',
+            'year.max' => 'Năm không được lớn hơn ' . Carbon::now()->year . '.',
         ]);
 
         if ($validator->fails()) {
@@ -139,6 +144,21 @@ class ApiSemesterController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'integer|in:0,1,2'
+        ], [
+            'name.required' => 'Tên học kỳ là bắt buộc.',
+            'name.string' => 'Tên học kỳ phải là chuỗi ký tự.',
+            'name.max' => 'Tên học kỳ không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên học kỳ đã tồn tại trong hệ thống.',
+
+            'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
+            'start_date.date' => 'Ngày bắt đầu phải là một ngày hợp lệ.',
+
+            'end_date.required' => 'Ngày kết thúc là bắt buộc.',
+            'end_date.date' => 'Ngày kết thúc phải là một ngày hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+
+            'status.integer' => 'Trạng thái phải là một số nguyên.',
+            'status.in' => 'Trạng thái phải là các giá trị: 0, 1, 2.',
         ]);
 
         if ($validator->fails()) {
@@ -219,6 +239,18 @@ class ApiSemesterController extends Controller
             'courses' => 'sometimes|array',
             'courses.*.id' => 'sometimes|exists:courses,id',
             'courses.*.order' => 'sometimes|integer|min:1',
+        ], [
+            'name.unique' => 'Tên học kỳ đã tồn tại.',
+            'name.max' => 'Tên học kỳ không được vượt quá 255 ký tự.',
+            'start_date.date' => 'Ngày bắt đầu không đúng định dạng.',
+            'end_date.date' => 'Ngày kết thúc không đúng định dạng.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+            'status.integer' => 'Trạng thái phải là một số nguyên.',
+            'status.in' => 'Trạng thái phải là 0, 1, 2.',
+            'courses.array' => 'Khóa học phải là một mảng.',
+            'courses.*.id.exists' => 'Khóa học được chọn không tồn tại.',
+            'courses.*.order.integer' => 'Thứ tự khóa học phải là một số nguyên.',
+            'courses.*.order.min' => 'Thứ tự khóa học phải ít nhất là 1.',
         ]);
 
         if ($validator->fails()) {

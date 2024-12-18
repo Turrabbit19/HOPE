@@ -40,6 +40,16 @@ class ApiShiftController extends Controller
             'name' => 'required|string|max:100|unique:shifts', 
             'start_time' => 'required|date_format:H:i:s',
             'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
+        ], [
+            'name.required' => 'Tên ca làm việc là bắt buộc.',
+            'name.string' => 'Tên ca làm việc phải là chuỗi ký tự.',
+            'name.max' => 'Tên ca làm việc không được dài quá 100 ký tự.',
+            'name.unique' => 'Tên ca làm việc này đã tồn tại trong hệ thống.',
+            'start_time.required' => 'Giờ bắt đầu là bắt buộc.',
+            'start_time.date_format' => 'Giờ bắt đầu phải có định dạng H:i:s.',
+            'end_time.required' => 'Giờ kết thúc là bắt buộc.',
+            'end_time.date_format' => 'Giờ kết thúc phải có định dạng H:i:s.',
+            'end_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
         ]);
 
         if ($validator->fails()) {
@@ -87,6 +97,16 @@ class ApiShiftController extends Controller
             'name' => 'sometimes|string|max:100|unique:shifts,name,' . $id,
             'start_time' => 'sometimes|date_format:H:i:s',
             'end_time' =>  'sometimes|date_format:H:i:s|after_or_equal:start_time', 
+        ], [
+            'name.sometimes' => 'Tên ca làm việc không bắt buộc nhưng nếu có thì phải là chuỗi.',
+            'name.string' => 'Tên ca làm việc phải là chuỗi ký tự.',
+            'name.max' => 'Tên ca làm việc không được dài quá 100 ký tự.',
+            'name.unique' => 'Tên ca làm việc này đã tồn tại trong hệ thống.',
+            'start_time.sometimes' => 'Giờ bắt đầu không bắt buộc nhưng nếu có thì phải có định dạng H:i:s.',
+            'start_time.date_format' => 'Giờ bắt đầu phải có định dạng H:i:s.',
+            'end_time.sometimes' => 'Giờ kết thúc không bắt buộc nhưng nếu có thì phải có định dạng H:i:s.',
+            'end_time.date_format' => 'Giờ kết thúc phải có định dạng H:i:s.',
+            'end_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
         ]);
 
         if ($validator->fails()) {

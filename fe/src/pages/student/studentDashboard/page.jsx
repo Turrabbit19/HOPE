@@ -218,22 +218,23 @@ function ClassroomList() {
   if (error) return <ErrorMessage error={error} />
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4">Lớp Học Đang Tham Gia</h3>
-      <ul className="space-y-4">
-        {classroomsData.map((classroom) => (
-          <li key={classroom.id} className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-lg">{classroom.subject_name}</h4>
-            <p>Lớp: {classroom.classroom}</p>
-            <p>Phòng: {classroom.room_name}</p>
-            <p>Thời gian: {classroom.shift_name}</p>
-            <p>Ngày học: {classroom.days_of_week.join(", ")}</p>
-            <p>Thời gian: {classroom.start_date} - {classroom.end_date}</p>
-            <p className="mt-2 text-sm text-gray-600">{classroom.schedule_status}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+  <h3 className="text-xl font-semibold mb-6 text-gray-800">Lớp Học Đang Tham Gia</h3>
+  <ul className="space-y-6">
+    {classroomsData.map((classroom) => (
+      <li key={classroom.id} className="bg-gray-100 p-5 rounded-lg shadow-sm hover:bg-gray-200 transition duration-300">
+        <h4 className="font-semibold text-lg text-gray-800">{classroom.subject_name}</h4>
+        <p className="text-xl text-gray-700">Lớp: {classroom.classroom}</p>
+        <p className="text-xl text-gray-700">Phòng: {classroom.room_name}</p>
+        <p className="text-xl text-gray-700">Thời gian: {classroom.shift_name}</p>
+        <p className="text-xl text-gray-700">Ngày học: {classroom.days_of_week.join(", ")}</p>
+        <p className="text-xl text-gray-700">Thời gian: {classroom.start_date} - {classroom.end_date}</p>
+        <p className="mt-2 text-xl text-gray-500">{classroom.schedule_status}</p>
+      </li>
+    ))}
+  </ul>
+</div>
+
   )
 }
 

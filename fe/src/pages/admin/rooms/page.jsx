@@ -14,8 +14,12 @@ import {
     message,
     notification,
 } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import {
+    ArrowLeftOutlined,
+    EditOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
 import moment from "moment";
 import Loading from "../../../components/loading";
 import instance from "../../../config/axios";
@@ -32,6 +36,7 @@ const ListRooms = () => {
     const [form] = Form.useForm();
     const [initialValues, setInitialValues] = useState();
 
+    const navigate = useNavigate();
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
@@ -191,11 +196,37 @@ const ListRooms = () => {
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
+    const handleBack = () => {
+        navigate("/admin");
+    };
 
     return (
         <div className="test__list">
             <div className="col-12">
                 <div className="p-6 bg-white shadow-md rounded-lg">
+                    <Space
+                        align="center"
+                        style={{ cursor: "pointer" }}
+                        onClick={handleBack}
+                    >
+                        <div
+                            style={{
+                                border: "1.5px solid #1890ff",
+                                borderRadius: "50%",
+                                padding: "6px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <ArrowLeftOutlined
+                                style={{
+                                    fontSize: "16px",
+                                    color: "#1890ff",
+                                }}
+                            />
+                        </div>
+                    </Space>
                     <h1 className="text-4xl font-bold text-center text-[#7017E2]">
                         Quản Lý Phòng Học
                     </h1>

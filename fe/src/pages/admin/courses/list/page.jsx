@@ -11,8 +11,12 @@ import {
     Pagination,
     notification,
 } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import {
+    ArrowLeftOutlined,
+    EditOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
 import moment from "moment";
 import Loading from "../../../../components/loading";
 import instance from "../../../../config/axios";
@@ -29,6 +33,8 @@ const ListCourse = () => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [id, setId] = useState();
+
+    const navigate = useNavigate();
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -200,6 +206,9 @@ const ListCourse = () => {
     const handlePageChange = (page) => {
         setCurrentPage(page);
     };
+    const handleBack = () => {
+        navigate("/admin");
+    };
 
     if (loading) {
         return <Loading />;
@@ -208,11 +217,34 @@ const ListCourse = () => {
         <div className="row row-cols-2 g-3">
             <div className="col-12">
                 <div className="p-6 bg-white shadow-md rounded-lg">
+                    <Space
+                        align="center"
+                        style={{ cursor: "pointer" }}
+                        onClick={handleBack}
+                    >
+                        <div
+                            style={{
+                                border: "1.5px solid #1890ff",
+                                borderRadius: "50%",
+                                padding: "6px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <ArrowLeftOutlined
+                                style={{
+                                    fontSize: "16px",
+                                    color: "#1890ff",
+                                }}
+                            />
+                        </div>
+                    </Space>
                     {/* Tiêu đề quản lý khóa học */}
                     <h1 className="text-4xl font-bold text-center text-[#7017E2] mb-6">
                         Quản Lý Khóa Học
                     </h1>
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex justify-end items-center mb-6">
                         {/* Input tìm kiếm */}
                         <div className="flex-1 max-w-sm">
                             <Input.Search
@@ -224,11 +256,6 @@ const ListCourse = () => {
                                 style={{ width: "100%" }}
                             />
                         </div>
-
-                        {/* Button reload */}
-                        <button>
-                            <img src="/assets/svg/reload.svg" alt="reload..." />
-                        </button>
                     </div>
 
                     <div className="flex justify-between items-center">

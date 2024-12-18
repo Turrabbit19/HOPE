@@ -11,8 +11,12 @@ import {
     message,
     Pagination,
 } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link, useLocation } from "react-router-dom";
+import {
+    ArrowLeftOutlined,
+    EditOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import moment from "moment";
 import Loading from "../../../components/loading";
 import instance from "../../../config/axios";
@@ -33,6 +37,8 @@ const ClassRoom = () => {
         pageSize: 8,
         total: 0,
     });
+    const navigate = useNavigate();
+
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const { subjectId } = useLocation().state || {};
@@ -222,21 +228,41 @@ const ClassRoom = () => {
         return <Loading />;
     }
 
+    const handleBack = () => {
+        navigate("/admin");
+    };
+
     return (
         <div className="row row-cols-2 g-3">
             <div className="col-12">
-                <div>
-                    <div className="justify-between flex">
-                        <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-                            Quản Lý Lớp Học
-                            <button>
-                                <img
-                                    src="/assets/svg/reload.svg"
-                                    alt="reload..."
-                                />
-                            </button>
-                        </h1>
-
+                <div className="p-6 bg-white shadow-md rounded-lg">
+                    <Space
+                        align="center"
+                        style={{ cursor: "pointer" }}
+                        onClick={handleBack}
+                    >
+                        <div
+                            style={{
+                                border: "1.5px solid #1890ff",
+                                borderRadius: "50%",
+                                padding: "6px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <ArrowLeftOutlined
+                                style={{
+                                    fontSize: "16px",
+                                    color: "#1890ff",
+                                }}
+                            />
+                        </div>
+                    </Space>
+                    <h1 className="text-4xl font-bold text-center text-[#7017E2]">
+                        Quản Lý Lớp Học
+                    </h1>
+                    <div className="justify-end flex">
                         <div>
                             <Input.Search
                                 placeholder="Tìm kiếm lớp học..."

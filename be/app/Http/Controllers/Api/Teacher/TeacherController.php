@@ -328,6 +328,7 @@ class TeacherController extends Controller
 
             $classroomId = $scheduleInfor->classroom->id;
             $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
+            $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time); 
 
             $listStudents = StudentClassroom::where('classroom_id', $classroomId)->get();
 
@@ -341,16 +342,17 @@ class TeacherController extends Controller
 
             $currentDateTime = now();
 
-            $data = $listStudents->map(function ($ls) use ($lessons, $shiftEndTime, $currentDateTime) {
+            $data = $listStudents->map(function ($ls) use ($lessons, $shiftStartTime, $shiftEndTime, $currentDateTime) {
                 $attendedCount = 0;
                 $absentCount = 0;
                 $absentDetails = [];
                 $upcomingLessons = 0;
 
                 foreach ($lessons as $lesson) {
+                    $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
                     $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftEndTime);
 
-                    if ($lessonEndTime <= $currentDateTime) {
+                    if ($lessonStartTime <= $currentDateTime && $lessonEndTime >= $currentDateTime) {
                         $attendance = StudentLesson::where('student_id', $ls->student_id)
                             ->where('lesson_id', $lesson->lesson_id)
                             ->first();
@@ -358,6 +360,11 @@ class TeacherController extends Controller
                         if ($attendance) {
                             if ($attendance->status == 1) {
                                 $attendedCount++;
+                                $absentDetails[] = [
+                                    'lesson_id' => $lesson->lesson_id,
+                                    'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
+                                    'status' => 'Có mặt'
+                                ];
                             } else {
                                 $absentCount++;
                                 $absentDetails[] = [
@@ -366,6 +373,21 @@ class TeacherController extends Controller
                                     'status' => 'Vắng'
                                 ];
                             }
+                        } else {
+                            $absentCount++;
+                            $absentDetails[] = [
+                                'lesson_id' => $lesson->lesson_id,
+                                'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
+                                'status' => 'Vắng'
+                            ];
+                        }
+                    } elseif ($lessonEndTime <= $currentDateTime) {
+                        $attendance = StudentLesson::where('student_id', $ls->student_id)
+                            ->where('lesson_id', $lesson->lesson_id)
+                            ->first();
+
+                        if ($attendance && $attendance->status == 1) {
+                            $attendedCount++;
                         } else {
                             $absentCount++;
                             $absentDetails[] = [

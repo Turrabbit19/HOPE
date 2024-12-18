@@ -20,30 +20,36 @@ function Popup({ notification, onClose, onMarkAsRead }) {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">
-                        {stripHtml(notification.notification)}
-                    </h3>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700"
-                        aria-label="Close Popup"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-                <div
-                    className="text-gray-600 mb-2"
-                    dangerouslySetInnerHTML={{
-                        __html: notification.description || "Không có mô tả",
-                    }}
-                />
-                <p className="text-sm text-gray-500 mb-4">
-                    Trạng thái: {notification.status}
-                </p>
-            </div>
+    <div className="bg-white rounded-3xl p-10 max-w-xl w-full mx-6 shadow-2xl transform transition-all duration-300 ease-in-out scale-100 hover:scale-105 hover:shadow-2xl">
+        <div className="flex justify-between items-center mb-8">
+            <h3 className="text-4xl font-extrabold text-gradient tracking-tight">
+                {stripHtml(notification.notification)}
+            </h3>
+            <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-800 transition-all duration-300 transform hover:rotate-90"
+                aria-label="Close Popup"
+            >
+                <X className="w-8 h-8" />
+            </button>
         </div>
+        <div
+            className="text-gray-700 mb-6 text-lg leading-relaxed font-medium"
+            dangerouslySetInnerHTML={{
+                __html: notification.description || "Không có mô tả",
+            }}
+        />
+        <p className="text-lg text-gray-600 font-semibold">
+            Trạng thái: 
+            <span className={`font-bold text-${notification.status === 'Hoàn thành' ? 'green' : 'red'}-500`}>
+                {notification.status}
+            </span>
+        </p>
+    </div>
+</div>
+
+    
+
     );
 }
 
@@ -101,7 +107,7 @@ export default function NotificationPage() {
             const response = await fetch(
                 `http://127.0.0.1:8000/api/student/notification/${notificationId}?status=Đã xem`,
                 {
-                    method: "POST",
+                    method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -208,31 +214,28 @@ export default function NotificationPage() {
                 <h2 className="text-2xl font-bold mb-4">Thông báo</h2>
                 <div className="flex space-x-2 mb-6">
                     <button
-                        className={`px-4 py-2 rounded-md ${
-                            filter === "all"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-md ${filter === "all"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                            }`}
                         onClick={() => setFilter("all")}
                     >
                         Tất cả ({countAll})
                     </button>
                     <button
-                        className={`px-4 py-2 rounded-md ${
-                            filter === "read"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-md ${filter === "read"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                            }`}
                         onClick={() => setFilter("read")}
                     >
                         Đã đọc ({countRead})
                     </button>
                     <button
-                        className={`px-4 py-2 rounded-md ${
-                            filter === "unread"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-md ${filter === "unread"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                            }`}
                         onClick={() => setFilter("unread")}
                     >
                         Chưa đọc ({countUnread})
@@ -253,19 +256,17 @@ export default function NotificationPage() {
                                 }
                             >
                                 <Bell
-                                    className={`w-6 h-6 ${
-                                        notification.status === "Đã xem"
-                                            ? "text-gray-400"
-                                            : "text-blue-500"
-                                    }`}
+                                    className={`w-6 h-6 ${notification.status === "Đã xem"
+                                        ? "text-gray-400"
+                                        : "text-blue-500"
+                                        }`}
                                 />
                                 <div className="flex-1">
                                     <p
-                                        className={`${
-                                            notification.status === "Đã xem"
-                                                ? "text-gray-600"
-                                                : "text-gray-900 font-medium"
-                                        }`}
+                                        className={`${notification.status === "Đã xem"
+                                            ? "text-gray-600"
+                                            : "text-gray-900 font-medium"
+                                            }`}
                                         dangerouslySetInnerHTML={{
                                             __html: stripHtml(
                                                 notification.notification

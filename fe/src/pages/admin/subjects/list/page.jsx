@@ -40,9 +40,9 @@ const ListSubject = () => {
   const [initialValues, setInitialValues] = useState();
   const [update, setUpdate] = useState(false);
   const [additionalVariants, setAdditionalVariants] = useState([
-      {
-          major: selectedMajor,
-      },
+    {
+      major: selectedMajor,
+    },
   ]);
   const [total, setTotal] = useState(0);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -52,351 +52,333 @@ const ListSubject = () => {
   const [selectedMajor1, setSelectedMajor1] = useState(null);
 
   useEffect(() => {
-      const fetchSubjects = async () => {
-          try {
-              setLoading(true);
+    const fetchSubjects = async () => {
+      try {
+        setLoading(true);
 
-              const endpoint = selectedMajor1
-                  ? `admin/filter-by-major/${selectedMajor1}/subjects`
-                  : "admin/subjects";
+        const endpoint = selectedMajor1
+          ? `admin/filter-by-major/${selectedMajor1}/subjects`
+          : "admin/subjects";
 
-              const response = await instance.get(endpoint, {
-                  params: {
-                      page: currentPage,
-                      per_page: 10,
-                  },
-              });
+        const response = await instance.get(endpoint, {
+          params: {
+            page: currentPage,
+            per_page: 10,
+          },
+        });
 
-              setSubjects(response.data.data);
-              setTotal(response.data.pagination.total);
-          } catch (error) {
-              message.error("Error fetching subjects");
-          } finally {
-              setLoading(false);
-          }
-      };
+        setSubjects(response.data.data);
+        setTotal(response.data.pagination.total);
+      } catch (error) {
+        message.error("Error fetching subjects");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchSubjects();
+    fetchSubjects();
   }, [currentPage, selectedMajor1]);
 
   useEffect(() => {
-      const fetchMajors = async () => {
-          try {
-              setLoading(true);
-              const response = await instance.get("admin/main/majors");
-              console.log("Majors Response:", response);
-              setMajors(response.data.data);
-          } catch (error) {
-              console.error("Error fetching majors:", error.message);
-          } finally {
-              setLoading(false);
-          }
-      };
+    const fetchMajors = async () => {
+      try {
+        setLoading(true);
+        const response = await instance.get("admin/main/majors");
+        console.log("Majors Response:", response);
+        setMajors(response.data.data);
+      } catch (error) {
+        console.error("Error fetching majors:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchMajors();
+    fetchMajors();
   }, []);
 
   const handlePageChange = (page) => {
-      console.log(page);
-      setCurrentPage(page);
+    console.log(page);
+    setCurrentPage(page);
   };
 
   useEffect(() => {
-      console.log("Selected Specialization:", selectedSpecialization);
-      if (selectedSpecialization.length > 0 && selectedType === "sub_major") {
-          (async () => {
-              try {
-                  setLoading(true);
+    console.log("Selected Specialization:", selectedSpecialization);
+    if (selectedSpecialization.length > 0 && selectedType === "sub_major") {
+      (async () => {
+        try {
+          setLoading(true);
 
-                  const promises = selectedSpecialization.map((majorId) =>
-                      instance.get(`admin/sub/${majorId}/majors`)
-                  );
-                  const responses = await Promise.all(promises);
+          const promises = selectedSpecialization.map((majorId) =>
+            instance.get(`admin/sub/${majorId}/majors`)
+          );
+          const responses = await Promise.all(promises);
 
-                  const combinedSubMajors = responses
-                      .map((response) => response.data.data)
-                      .flat();
+          const combinedSubMajors = responses
+            .map((response) => response.data.data)
+            .flat();
 
-                  console.log("Sub Majors:", combinedSubMajors);
+          console.log("Sub Majors:", combinedSubMajors);
 
-                  setSubMajors(combinedSubMajors);
-              } catch (error) {
-                  console.error("Lỗi tải chuyên ngành hẹp:", error.message);
-              } finally {
-                  setLoading(false);
-              }
-          })();
-      }
+          setSubMajors(combinedSubMajors);
+        } catch (error) {
+          console.error("Lỗi tải chuyên ngành hẹp:", error.message);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
   }, [selectedSpecialization, selectedType]);
 
   useEffect(() => {
-      if (selectedSpecialization.length > 0) {
-          setSelectedType("sub_major");
-      }
+    if (selectedSpecialization.length > 0) {
+      setSelectedType("sub_major");
+    }
   }, [selectedSpecialization]);
 
   const onHandleDelete = async (id) => {
-      try {
-          setLoading(true);
-          await instance.delete(`admin/subjects/${id}`);
-          setSubjects(subjects.filter((item) => item.id !== id));
-          message.success(
-              <span>
-                  Xóa mềm thành công,{" "}
-                  <button
-                      onClick={() => undoSubject(id)}
-                      className="underline"
-                  >
-                      Hoàn tác
-                  </button>
-              </span>,
-              5
-          );
-      } catch (error) {
-          console.log(error.message);
-      } finally {
-          setLoading(false);
-      }
+    try {
+      setLoading(true);
+      await instance.delete(`admin/subjects/${id}`);
+      setSubjects(subjects.filter((item) => item.id !== id));
+      message.success(
+        <span>
+          Xóa mềm thành công,{" "}
+          <button onClick={() => undoSubject(id)} className="underline">
+            Hoàn tác
+          </button>
+        </span>,
+        5
+      );
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const undoSubject = async (id) => {
-      try {
-          const response = await instance.post(
-              `admin/subjects/${id}/restore`
-          );
-          const restoredSubject = response.data.data;
-          message.success("Khôi phục thành công");
-          setSubjects((prevSubject) => [...prevSubject, restoredSubject]);
-      } catch (error) {
-          console.log(error.message);
-          message.error("Khôi phục thất bại thất bại");
-      } finally {
-          setLoading(false);
-      }
+    try {
+      const response = await instance.post(`admin/subjects/${id}/restore`);
+      const restoredSubject = response.data.data;
+      message.success("Khôi phục thành công");
+      setSubjects((prevSubject) => [...prevSubject, restoredSubject]);
+    } catch (error) {
+      console.log(error.message);
+      message.error("Khôi phục thất bại thất bại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearch = (value) => {
-      const searchVal =
-          typeof value === "string"
-              ? value.trim()
-              : value.target.value.trim();
-      setSearchValue(searchVal);
+    const searchVal =
+      typeof value === "string" ? value.trim() : value.target.value.trim();
+    setSearchValue(searchVal);
 
-      if (searchVal === "") {
-          setFilteredCourses([]);
-      } else {
-          const filtered = subjects.filter((course) =>
-              course.name.toLowerCase().includes(searchVal.toLowerCase())
-          );
-          setFilteredCourses(filtered);
-      }
-      setCurrentPage(1);
+    if (searchVal === "") {
+      setFilteredCourses([]);
+    } else {
+      const filtered = subjects.filter((course) =>
+        course.name.toLowerCase().includes(searchVal.toLowerCase())
+      );
+      setFilteredCourses(filtered);
+    }
+    setCurrentPage(1);
   };
 
   const togglePopup = () => {
-      setIsPopupVisible(!isPopupVisible);
-      form.resetFields();
-      setUpdate(false);
-      setAdditionalVariants([
-          {
-              major: majors[0],
-          },
-      ]);
+    setIsPopupVisible(!isPopupVisible);
+    form.resetFields();
+    setUpdate(false);
+    setAdditionalVariants([
+      {
+        major: majors[0],
+      },
+    ]);
   };
 
   const handleFormSubmit = async (values) => {
-      setLoading(true);
-      try {
-          const majors = values.majors ? values.majors.filter((m) => m) : [];
+    setLoading(true);
+    try {
+      const majors = values.majors ? values.majors.filter((m) => m) : [];
 
-          const payload = {
-              name: values.name,
-              description: values.description,
-              credit: values.credit,
-              majors,
-              order: values.order,
-              code: values.code,
-              max_students: values.max_students,
-              form: values.form,
-              status: 0,
-              sub_major:
-                  selectedType === "sub_major" ? values.sub_major : null,
-          };
+      const payload = {
+        name: values.name,
+        description: values.description,
+        credit: values.credit,
+        majors,
+        order: values.order,
+        code: values.code,
+        max_students: values.max_students,
+        form: values.form,
+        status: 0,
+        sub_major: selectedType === "sub_major" ? values.sub_major : null,
+      };
 
-          const response = await instance.post("/admin/subjects", payload);
+      const response = await instance.post("/admin/subjects", payload);
 
-          setSubjects((prevSubjects) => [
-              ...prevSubjects,
-              response.data.data,
-          ]);
+      setSubjects((prevSubjects) => [...prevSubjects, response.data.data]);
 
-          notification.success({
-              message: "Thành công",
-              description: "Thêm môn học mới thành công!",
-          });
+      notification.success({
+        message: "Thành công",
+        description: "Thêm môn học mới thành công!",
+      });
 
-          form.resetFields();
-          setIsPopupVisible(false);
-      } catch (error) {
-          handleError(error);
-      } finally {
-          setLoading(false);
-      }
+      form.resetFields();
+      setIsPopupVisible(false);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cancel = (e) => {
-      console.log(e);
+    console.log(e);
   };
 
   const getMajorIdBySubjectId = async (subjectId) => {
-      const response = await instance.get(
-          `/admin/subject/${subjectId}/majors`
-      );
-      console.log(response);
-      return response.data.data;
+    const response = await instance.get(`/admin/subject/${subjectId}/majors`);
+    console.log(response);
+    return response.data.data;
   };
 
   const openEditModal = async (values) => {
-      try {
-          setInitialValues(values.id);
-          setIsPopupVisible(true);
-          setUpdate(true);
+    try {
+      setInitialValues(values.id);
+      setIsPopupVisible(true);
+      setUpdate(true);
 
-          const majors = await getMajorIdBySubjectId(values.id);
+      const majors = await getMajorIdBySubjectId(values.id);
 
-          const mainMajors = majors.filter((m) => m.status === "Ngành chính");
-          const subMajorsResponse = majors.filter(
-              (m) => m.status === "Chuyên ngành hẹp"
-          );
-          const basicMajors = majors.filter((m) => m.status === "Cơ bản");
+      const mainMajors = majors.filter((m) => m.status === "Ngành chính");
+      const subMajorsResponse = majors.filter(
+        (m) => m.status === "Chuyên ngành hẹp"
+      );
+      const basicMajors = majors.filter((m) => m.status === "Cơ bản");
 
-          if (basicMajors.length > 0) {
-              setSelectedType("basic");
-          } else if (subMajorsResponse.length > 0) {
-              setSelectedType("sub_major");
-              setSelectedSpecialization(mainMajors.map((m) => m.id));
+      if (basicMajors.length > 0) {
+        setSelectedType("basic");
+      } else if (subMajorsResponse.length > 0) {
+        setSelectedType("sub_major");
+        setSelectedSpecialization(mainMajors.map((m) => m.id));
 
-              const responses = await Promise.all(
-                  mainMajors.map((major) =>
-                      instance.get(`sub/${major.id}/majors`)
-                  )
-              );
-              const combinedSubMajors = responses
-                  .map((response) => response.data.data)
-                  .flat();
+        const responses = await Promise.all(
+          mainMajors.map((major) => instance.get(`sub/${major.id}/majors`))
+        );
+        const combinedSubMajors = responses
+          .map((response) => response.data.data)
+          .flat();
 
-              setSubMajors(combinedSubMajors);
-          } else {
-              setSelectedType("majors");
-          }
-
-          form.setFieldsValue({
-              ...values,
-              majors: mainMajors.map((m) => m.id),
-              sub_major:
-                  subMajorsResponse.length > 0
-                      ? subMajorsResponse.map((m) => ({
-                            value: m.id,
-                            label: m.name,
-                        }))
-                      : null,
-          });
-      } catch (error) {
-          console.error("Lỗi khi mở modal chỉnh sửa:", error);
-          message.error("Không thể mở cửa sổ chỉnh sửa, vui lòng thử lại!");
+        setSubMajors(combinedSubMajors);
+      } else {
+        setSelectedType("majors");
       }
+
+      form.setFieldsValue({
+        ...values,
+        majors: mainMajors.map((m) => m.id),
+        sub_major:
+          subMajorsResponse.length > 0
+            ? subMajorsResponse.map((m) => ({
+                value: m.id,
+                label: m.name,
+              }))
+            : null,
+      });
+    } catch (error) {
+      console.error("Lỗi khi mở modal chỉnh sửa:", error);
+      message.error("Không thể mở cửa sổ chỉnh sửa, vui lòng thử lại!");
+    }
   };
 
   const onHandleUpdate = async (values) => {
-      try {
-          setLoading(true);
+    try {
+      setLoading(true);
 
-          if (!initialValues) {
-              notification.error({
-                  message: "Lỗi",
-                  description: "Dữ liệu môn học không hợp lệ.",
-              });
-              return;
-          }
-
-          const updatedValues = {
-              ...values,
-              form: formatForm(values.form, true),
-              majors:
-                  selectedType === "sub_major"
-                      ? selectedSpecialization
-                      : selectedType === "basic"
-                      ? [1]
-                      : values.majors,
-              sub_major:
-                  selectedType === "sub_major" ? values.sub_major : null,
-          };
-
-          const response = await instance.put(
-              `/admin/subjects/${initialValues}`,
-              updatedValues
-          );
-
-          const updatedSubject = response.data.data;
-
-          setSubjects((prevSubjects) =>
-              prevSubjects.map((subject) =>
-                  subject.id === updatedSubject.id ? updatedSubject : subject
-              )
-          );
-
-          notification.success({
-              message: "Thành công",
-              description: "Cập nhật môn học thành công!",
-          });
-
-          setIsPopupVisible(false);
-      } catch (error) {
-          handleError(error);
-      } finally {
-          setLoading(false);
+      if (!initialValues) {
+        notification.error({
+          message: "Lỗi",
+          description: "Dữ liệu môn học không hợp lệ.",
+        });
+        return;
       }
+
+      const updatedValues = {
+        ...values,
+        form: formatForm(values.form, true),
+        majors:
+          selectedType === "sub_major"
+            ? selectedSpecialization
+            : selectedType === "basic"
+            ? [1]
+            : values.majors,
+        sub_major: selectedType === "sub_major" ? values.sub_major : null,
+      };
+
+      const response = await instance.put(
+        `/admin/subjects/${initialValues}`,
+        updatedValues
+      );
+
+      const updatedSubject = response.data.data;
+
+      setSubjects((prevSubjects) =>
+        prevSubjects.map((subject) =>
+          subject.id === updatedSubject.id ? updatedSubject : subject
+        )
+      );
+
+      notification.success({
+        message: "Thành công",
+        description: "Cập nhật môn học thành công!",
+      });
+
+      setIsPopupVisible(false);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleError = (error) => {
-      console.error("Lỗi xử lý:", error);
+    console.error("Lỗi xử lý:", error);
 
-      if (error.response) {
-          const { data } = error.response;
+    if (error.response) {
+      const { data } = error.response;
 
-          if (data.errors) {
-              Object.keys(data.errors).forEach((field) => {
-                  notification.error({
-                      message: `Lỗi ở trường ${field}`,
-                      description: data.errors[field].join(", "),
-                  });
-              });
-          } else {
-              notification.error({
-                  message: "Lỗi",
-                  description:
-                      data.message || "Có lỗi xảy ra, vui lòng thử lại!",
-              });
-          }
-      } else {
+      if (data.errors) {
+        Object.keys(data.errors).forEach((field) => {
           notification.error({
-              message: "Lỗi",
-              description:
-                  "Không thể kết nối đến server, vui lòng thử lại sau!",
+            message: `Lỗi ở trường ${field}`,
+            description: data.errors[field].join(", "),
           });
+        });
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: data.message || "Có lỗi xảy ra, vui lòng thử lại!",
+        });
       }
+    } else {
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể kết nối đến server, vui lòng thử lại sau!",
+      });
+    }
   };
 
   const formatForm = (formValue, toServer = false) => {
-      if (toServer) {
-          return formValue === "0" ? "0" : "1";
-      }
-      return formValue === "0" ? "Trực tiếp" : "Trực tuyến";
+    if (toServer) {
+      return formValue === "0" ? "0" : "1";
+    }
+    return formValue === "0" ? "Trực tiếp" : "Trực tuyến";
   };
 
   const closeEditModal = () => {
-      setIsEditModalVisible(false);
-      form.resetFields();
+    setIsEditModalVisible(false);
+    form.resetFields();
   };
 
   // State cho modal lọc khóa học
@@ -404,38 +386,39 @@ const ListSubject = () => {
 
   // Hàm hiển thị modal lọc khóa học
   const handleShowModalFilter = () => {
-      setIsModalVisible(true);
+    setIsModalVisible(true);
   };
 
   // Hàm xử lý khi nhấn OK trong modal lọc
   const handleOk = () => {
-      form.validateFields()
-          .then((values) => {
-              console.log("Selected Filters:", values);
-              // Xử lý lọc ở đây
-              setIsModalVisible(false);
-          })
-          .catch((info) => {
-              console.log("Validate Failed:", info);
-          });
+    form
+      .validateFields()
+      .then((values) => {
+        console.log("Selected Filters:", values);
+        // Xử lý lọc ở đây
+        setIsModalVisible(false);
+      })
+      .catch((info) => {
+        console.log("Validate Failed:", info);
+      });
   };
 
   if (loading) {
-      return <Loading />;
+    return <Loading />;
   }
 
   const displaySubjects =
-      searchValue.trim() === "" ? subjects : filteredCourses;
+    searchValue.trim() === "" ? subjects : filteredCourses;
 
   const paginatedSubjects = displaySubjects.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   const handleMajorChange = (majorId) => {
-      console.log(majorId);
-      setSelectedMajor1(majorId);
-      setCurrentPage(1);
+    console.log(majorId);
+    setSelectedMajor1(majorId);
+    setCurrentPage(1);
   };
 
   return (
@@ -526,52 +509,54 @@ const ListSubject = () => {
 
                         <div className="listCourse__item-body">
                           <div className="flex gap-8">
-                            <div className="listCourse__item-status_group">
-                              <div className="flex gap-2 listCourse__item-status">
-                                <span className="ml-3 text-[#9E9E9E]">
-                                  Hình thức:
-                                </span>
+                          <div className="listCourse__item-status_group">
+  {/* Hình thức và trạng thái */}
+  <div className="flex items-center gap-3 listCourse__item-status">
+    <span className="text-[#9E9E9E]">Hình thức:</span>
+    <div className="flex items-center gap-1 bg-[#44cc151a] px-2 py-1 rounded">
+      <img
+        className="fill-current svg-green"
+        src="/assets/svg/status.svg"
+        alt="status"
+      />
+      <span className="text-[#44CC15] text-[12px] font-semibold">
+        {subject.form}
+      </span>
+    </div>
+  </div>
 
-                                <div className="flex gap-1 bg-[#44cc151a]">
-                                  <img
-                                    className="fill-current svg-green"
-                                    src="/assets/svg/status.svg"
-                                    alt=""
-                                  />
-                                  <span className="text-[#44CC15] text-[12px]">
-                                    {subject.form}
-                                  </span>
-                                </div>
-                              </div>
+  {/* Mã môn học */}
+  <p className="text-[#9E9E9E] mt-2">
+    <strong className="text-black">Code:</strong>
+    <span className="text-black ml-2">{subject.code}</span>
+  </p>
 
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Code:
-                                <span className="text-black ml-2">
-                                  {subject.code}
-                                </span>
-                              </p>
+  {/* Tín chỉ và kỳ học */}
+  <div className="flex gap-4 mt-3">
+    <p className="text-[#9E9E9E] flex-1">
+      <strong className="text-black">Tín chỉ:</strong>
+      <span className="text-black ml-2">{subject.credit}</span>
+    </p>
 
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Tín chỉ :
-                                <span className="text-black ml-2">
-                                  {subject.credit}
-                                </span>
-                              </p>
+    <p className="text-[#9E9E9E] flex-1">
+      <strong className="text-black">Kỳ học:</strong>
+      <span className="text-black ml-2">{subject.order}</span>
+    </p>
+  </div>
 
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Kỳ học :
-                                <span className="text-black ml-2">
-                                  {subject.order}
-                                </span>
-                              </p>
+  {/* Số lượng sinh viên */}
+  <p className="text-[#9E9E9E] mt-3">
+    <strong className="text-black">Số lượng sinh viên:</strong>
+    <span className="text-black ml-2">{subject.max_students}</span>
+  </p>
 
-                              <div className="text-[#9E9E9E] gap-2 mt-3 ml-3 flex">
-                                <span className="flex-shrink-0">Mô tả :</span>
-                                <span className="text-black ml-2 line-clamp-2">
-                                  {subject.description}
-                                </span>
-                              </div>
-                            </div>
+  {/* Mô tả */}
+  <div className="flex items-center gap-2 mt-3">
+    <span className="text-[#9E9E9E] flex-shrink-0">Mô tả:</span>
+    <span className="text-black ml-2 line-clamp-2">{subject.description}</span>
+  </div>
+</div>
+
                           </div>
                         </div>
 

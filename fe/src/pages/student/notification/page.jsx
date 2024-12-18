@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Bell, X, AlertCircle, RefreshCw, Check } from "lucide-react";
+import { Bell, X, AlertCircle, RefreshCw, Check } from 'lucide-react';
 
 // Utility function to strip HTML tags
 const stripHtml = (html) => {
@@ -12,6 +12,12 @@ const stripHtml = (html) => {
 
 // Popup Component
 function Popup({ notification, onClose, onMarkAsRead }) {
+    useEffect(() => {
+        if (notification.status !== "Đã xem") {
+            onMarkAsRead(notification.id);
+        }
+    }, [notification]);
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -36,15 +42,6 @@ function Popup({ notification, onClose, onMarkAsRead }) {
                 <p className="text-sm text-gray-500 mb-4">
                     Trạng thái: {notification.status}
                 </p>
-                {notification.status !== "Đã xem" && (
-                    <button
-                        onClick={() => onMarkAsRead(notification.id)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center"
-                    >
-                        <Check className="w-5 h-5 mr-2" />
-                        Đánh dấu đã xem
-                    </button>
-                )}
             </div>
         </div>
     );
@@ -56,6 +53,7 @@ export default function NotificationPage() {
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null); // Thêm state để quản lý thông báo lỗi
 
     const fetchNotifications = async () => {
         setIsLoading(true);
@@ -100,16 +98,15 @@ export default function NotificationPage() {
                 throw new Error("Không tìm thấy token xác thực");
             }
 
-            // Thay đổi phương thức từ 'GET' sang 'PATCH'
             const response = await fetch(
                 `http://127.0.0.1:8000/api/student/notification/${notificationId}`,
                 {
-                    method: "PATCH", // Sử dụng PATCH hoặc POST tùy API
+                    method: "POST",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ status: "Đã xem" }), // Gửi dữ liệu cần cập nhật
+                    body: JSON.stringify({ status: "Đã xem" }),
                 }
             );
 
@@ -118,31 +115,27 @@ export default function NotificationPage() {
             }
 
             const updatedNotification = await response.json();
+            console.log("Notification marked as read:", updatedNotification);
 
             setNotifications((prevNotifications) =>
                 prevNotifications.map((notification) =>
                     notification.id === notificationId
-                        ? {
-                              ...notification,
-                              status: updatedNotification.status,
-                          }
+                        ? { ...notification, status: "Đã xem" }
                         : notification
                 )
             );
 
-            if (
-                selectedNotification &&
-                selectedNotification.id === notificationId
-            ) {
+            if (selectedNotification && selectedNotification.id === notificationId) {
                 setSelectedNotification((prev) => ({
                     ...prev,
-                    status: updatedNotification.status,
+                    status: "Đã xem",
                 }));
             }
 
-            console.log("Notification marked as read:", updatedNotification);
+            setErrorMessage(null); // Xóa thông báo lỗi nếu thành công
         } catch (err) {
             console.error("Lỗi khi đánh dấu đã xem:", err);
+            setErrorMessage("Không thể cập nhật trạng thái thông báo. Vui lòng thử lại sau.");
         }
     };
 
@@ -165,6 +158,9 @@ export default function NotificationPage() {
 
     const handleNotificationClick = (notification) => {
         setSelectedNotification(notification);
+        if (notification.status !== "Đã xem") {
+            markAsRead(notification.id);
+        }
     };
 
     const closePopup = () => {
@@ -175,7 +171,6 @@ export default function NotificationPage() {
     const handleMarkAsRead = async (notificationId) => {
         console.log("Handling mark as read:", notificationId);
         await markAsRead(notificationId);
-        await fetchNotifications(); // Refresh the notifications list
         closePopup();
     };
 
@@ -295,9 +290,15 @@ export default function NotificationPage() {
                 <Popup
                     notification={selectedNotification}
                     onClose={closePopup}
-                    onMarkAsRead={handleMarkAsRead} // Bỏ comment để truyền prop
+                    onMarkAsRead={handleMarkAsRead}
                 />
+            )}
+            {errorMessage && ( // Thêm hiển thị thông báo lỗi
+                <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg">
+                    {errorMessage}
+                </div>
             )}
         </div>
     );
 }
+

@@ -8,7 +8,6 @@ import {
   Modal,
   Popconfirm,
   Table,
-  notification,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -255,38 +254,6 @@ const StudentManager = () => {
     };
   });
 
-  const handleDecrementSemester = async () => {
-    try {
-      const response = await axios.post(
-        "http://localhost:8000/api/admin/decrement-semester"
-      );
-      const { message, data } = response.data;
-
-      if (response.status === 200) {
-        notification.success({
-          message: "Thành công",
-          description: message,
-          placement: "topRight",
-        });
-        console.log("Cập nhật học kỳ thành công cho các sinh viên:", data);
-      } else {
-        notification.warning({
-          message: "Thông báo",
-          description: message || "Không có sinh viên nào cần giảm học kỳ.",
-          placement: "topRight",
-        });
-      }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Đã xảy ra lỗi không xác định.";
-      notification.error({
-        message: "Lỗi",
-        description: errorMessage,
-        placement: "topRight",
-      });
-    }
-  };
-
   const handleDetailClick = (record) => {
     setSelectedRecord(record);
     setIsModalVisible(true);
@@ -426,7 +393,7 @@ const StudentManager = () => {
             </Button>
           </div>
         </div>
-        <div className="relative flex items-center gap-2">
+        <div className="relative">
           <Input
             value={textSearch}
             allowClear={true}
@@ -436,6 +403,7 @@ const StudentManager = () => {
                 setPanigation((pre) => ({
                   ...pre,
                   current_page: 1,
+                  total: dataSearch?.length || 12
                 }));
               }
             }}
@@ -443,13 +411,6 @@ const StudentManager = () => {
             placeholder="Tìm kiếm theo mã hoặc tên sinh viên ...."
             className="xl:w-[300px] md:w-[180px] max-[767px]:w-[120px]"
           />
-
-          <button
-            onClick={handleDecrementSemester}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-          >
-            Giảm học kỳ
-          </button>
         </div>
       </div>
 

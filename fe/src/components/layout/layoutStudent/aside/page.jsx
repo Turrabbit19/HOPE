@@ -184,7 +184,7 @@ const AsideClient = () => {
           </Link>
 
           <Link
-            to="tuition"
+            to="tuition-fee"
             className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
           >
             <svg

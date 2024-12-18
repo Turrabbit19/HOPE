@@ -221,11 +221,6 @@ const StatisticalReport = () => {
 
   return (
     <div className=" mx-auto py-8 px-6 bg-gray-50">
-      {/* Tiêu đề chính */}
-      <h1 className="text-center text-4xl font-extrabold text-blue-600 mb-10">
-        Báo Cáo Thống Kê Sinh Viên
-      </h1>
-
       <div className="grid grid-cols-12 gap-6 mb-10">
         {/* 4 Ô Thống kê tổng quan */}
         <div className="col-span-12 grid grid-cols-4 gap-6">

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
+use App\Models\Schedule;
+use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -14,9 +16,55 @@ class ApiClassroomController extends Controller
     public function index()
     {
         try {
-            $classrooms = Classroom::with('subject')->paginate(9);
+            $perPage = 10;
 
-            $data = collect($classrooms->items())->map(function($classroom) {
+            $latestSemester = Semester::orderBy('end_date', 'desc')->first();
+            $schedules = [];
+
+            if ($latestSemester) {
+                $schedules = Schedule::where('semester_id', $latestSemester->id)
+                    ->pluck('classroom_id')->toArray();
+            }
+
+            $classroomsQuery = Classroom::with('subject');
+
+            $classroomsQuery->orderByRaw("CASE WHEN id IN (" . implode(',', $schedules) . ") THEN 0 ELSE 1 END");
+
+            $classrooms = $classroomsQuery->paginate($perPage);
+
+            $classrooms->getCollection()->transform(function ($classroom) use ($schedules) {
+                $scheduleExists = in_array($classroom->id, $schedules);
+
+                return [
+                    'id' => $classroom->id,
+                    'subject_name' => $classroom->subject->name,
+                    'code' => $classroom->code,
+                    'max_students' => $classroom->max_students,
+                    'status' => $scheduleExists ? "Đang có lịch học" : "Không có lịch học",
+                    'has_schedule' => $scheduleExists
+                ];
+            });
+
+            return response()->json([
+                'data' => $classrooms->items(),
+                'pagination' => [
+                    'total' => $classrooms->total(),
+                    'per_page' => $classrooms->perPage(),
+                    'current_page' => $classrooms->currentPage(),
+                    'last_page' => $classrooms->lastPage()
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAll()
+    {
+        try {
+            $classrooms = Classroom::get();
+
+            $data = $classrooms->map(function ($classroom) {
                 return [
                     'id' => $classroom->id,
                     'subject_name' => $classroom->subject->name,
@@ -25,35 +73,6 @@ class ApiClassroomController extends Controller
                     'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
-
-            return response()->json([
-                'data' => $data,
-                'pagination' => [
-                    'total' => $classrooms->total(),
-                    'per_page' => $classrooms->perPage(),
-                    'current_page' => $classrooms->currentPage(),
-                    'last_page' => $classrooms->lastPage(),
-                ]
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function getAll() 
-    {
-        try {
-            $classrooms = Classroom::get();
-
-            $data = $classrooms->map(function ($classroom){
-                return [
-                    'id' => $classroom->id,
-                    'subject_name' => $classroom->subject->name,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
-                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            }); 
 
             return response()->json([
                 'data' => $data
@@ -66,7 +85,7 @@ class ApiClassroomController extends Controller
     public function getClassroomsWithoutSchedule($subjectId)
     {
         try {
-            $today = Carbon::today(); 
+            $today = Carbon::today();
 
             $classrooms = Classroom::where('subject_id', $subjectId)
                 ->whereDoesntHave('schedules', function ($query) use ($subjectId) {
@@ -74,25 +93,24 @@ class ApiClassroomController extends Controller
                 })
                 ->orWhereHas('schedules', function ($query) use ($subjectId, $today) {
                     $query->where('subject_id', $subjectId)
-                          ->where('end_date', '<', $today); 
+                        ->where('end_date', '<', $today);
                 })
                 ->get();
-    
+
             if ($classrooms->isEmpty()) {
                 return response()->json([
                     'message' => 'Không có lớp học nào thỏa điều kiện.',
                 ], 404);
             }
-    
+
             return response()->json([
                 'classrooms' => $classrooms
             ], 200);
-    
         } catch (\Exception $e) {
             return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
         }
     }
-    
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -133,7 +151,6 @@ class ApiClassroomController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
-
     }
 
     public function show(string $id)
@@ -141,11 +158,11 @@ class ApiClassroomController extends Controller
         try {
             $classroom = Classroom::with('subject')->findOrFail($id);
             $data = [
-                    'subject_name' => $classroom->subject->name,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
-                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
+                'subject_name' => $classroom->subject->name,
+                'code' => $classroom->code,
+                'max_students' => $classroom->max_students,
+                'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -173,7 +190,7 @@ class ApiClassroomController extends Controller
             'max_students.min' => 'Số lượng học viên tối đa phải lớn hơn hoặc bằng 1.',
             'status.boolean' => 'Trạng thái phải là giá trị true hoặc false.',
         ]);
-        
+
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);

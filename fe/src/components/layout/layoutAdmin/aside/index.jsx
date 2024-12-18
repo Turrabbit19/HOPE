@@ -61,15 +61,16 @@ const AsideAdmin = () => {
       link: "/admin/list-semesters",
       icon: <CalendarOutlined />,
     },
-    {
-      name: "Quản lý phòng học",
-      link: "/admin/list-rooms",
-      icon: <HomeOutlined />,
-    },
+
     {
       name: "Quản lý lớp học",
       link: "/admin/classrooms",
       icon: <ReadOutlined />,
+    },
+    {
+      name: "Quản lý phòng học",
+      link: "/admin/list-rooms",
+      icon: <HomeOutlined />,
     },
   ];
 
@@ -142,6 +143,11 @@ const AsideAdmin = () => {
       key: "sub5",
       icon: <BellOutlined />,
       label: <Link to="/admin/list-sections">Quản lý thông báo</Link>,
+    },
+    {
+      key: "sub5",
+      icon: <BellOutlined />,
+      label: <Link to="/admin/tuition-fee">Quản lý học phí</Link>,
     },
   ];
 

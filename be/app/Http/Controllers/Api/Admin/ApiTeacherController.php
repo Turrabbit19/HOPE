@@ -162,6 +162,44 @@ class ApiTeacherController extends Controller
             'teacher_major_id' => 'required|exists:majors,id',
 
             'teacher_code' => 'required|unique:teachers,teacher_code',
+        ], [
+            'avatar.string' => 'Ảnh đại diện phải là chuỗi ký tự.',
+            
+            'name.required' => 'Tên là bắt buộc.',
+            'name.string' => 'Tên phải là chuỗi ký tự.',
+            'name.max' => 'Tên không được vượt quá 50 ký tự.',
+            
+            'email.required' => 'Email là bắt buộc.',
+            'email.string' => 'Email phải là chuỗi ký tự.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.max' => 'Email không được vượt quá 255 ký tự.',
+            'email.unique' => 'Email đã tồn tại trong hệ thống.',
+            
+            'phone.required' => 'Số điện thoại là bắt buộc.',
+            'phone.string' => 'Số điện thoại phải là chuỗi ký tự.',
+            'phone.max' => 'Số điện thoại không được vượt quá 10 ký tự.',
+            'phone.unique' => 'Số điện thoại đã tồn tại trong hệ thống.',
+            
+            'dob.required' => 'Ngày sinh là bắt buộc.',
+            'dob.date' => 'Ngày sinh phải là ngày hợp lệ.',
+            'dob.before' => 'Ngày sinh phải trước ngày hôm nay.',
+            
+            'gender.required' => 'Giới tính là bắt buộc.',
+            'gender.boolean' => 'Giới tính phải là giá trị boolean true hoặc false.',
+            
+            'ethnicity.required' => 'Dân tộc là bắt buộc.',
+            'ethnicity.string' => 'Dân tộc phải là chuỗi ký tự.',
+            'ethnicity.max' => 'Dân tộc không được vượt quá 50 ký tự.',
+            
+            'address.required' => 'Địa chỉ là bắt buộc.',
+            'address.string' => 'Địa chỉ phải là chuỗi ký tự.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+            
+            'teacher_major_id.required' => 'Chuyên ngành là bắt buộc.',
+            'teacher_major_id.exists' => 'Chuyên ngành không tồn tại trong hệ thống.',
+            
+            'teacher_code.required' => 'Mã giáo viên là bắt buộc.',
+            'teacher_code.unique' => 'Mã giáo viên đã tồn tại trong hệ thống.',
         ]);
 
         if ($validator->fails()) {
@@ -259,6 +297,44 @@ class ApiTeacherController extends Controller
             'teacher_major_id' => 'sometimes|exists:majors,id',
 
             'teacher_code' => 'sometimes|unique:teachers,teacher_code,' . $id,
+        ], [
+            'avatar.string' => 'Ảnh đại diện phải là chuỗi ký tự.',
+            
+            'name.sometimes' => 'Tên là không bắt buộc nhưng nếu có phải là chuỗi và không quá 50 ký tự.',
+            'name.string' => 'Tên phải là chuỗi ký tự.',
+            'name.max' => 'Tên không được vượt quá 50 ký tự.',
+            
+            'email.sometimes' => 'Email là không bắt buộc nhưng nếu có phải là chuỗi và không quá 255 ký tự.',
+            'email.string' => 'Email phải là chuỗi ký tự.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.max' => 'Email không được vượt quá 255 ký tự.',
+            'email.unique' => 'Email đã tồn tại trong hệ thống.',
+            
+            'phone.sometimes' => 'Số điện thoại là không bắt buộc nhưng nếu có phải là chuỗi và không quá 10 ký tự.',
+            'phone.string' => 'Số điện thoại phải là chuỗi ký tự.',
+            'phone.max' => 'Số điện thoại không được vượt quá 10 ký tự.',
+            'phone.unique' => 'Số điện thoại đã tồn tại trong hệ thống.',
+            
+            'dob.sometimes' => 'Ngày sinh là không bắt buộc nhưng nếu có phải là ngày hợp lệ.',
+            'dob.date' => 'Ngày sinh phải là ngày hợp lệ.',
+            'dob.before' => 'Ngày sinh phải trước ngày hôm nay.',
+            
+            'gender.sometimes' => 'Giới tính là không bắt buộc nhưng nếu có phải là giá trị boolean.',
+            'gender.boolean' => 'Giới tính phải là giá trị true hoặc false.',
+            
+            'ethnicity.sometimes' => 'Dân tộc là không bắt buộc nhưng nếu có phải là chuỗi và không quá 50 ký tự.',
+            'ethnicity.string' => 'Dân tộc phải là chuỗi ký tự.',
+            'ethnicity.max' => 'Dân tộc không được vượt quá 50 ký tự.',
+            
+            'address.sometimes' => 'Địa chỉ là không bắt buộc nhưng nếu có phải là chuỗi và không quá 255 ký tự.',
+            'address.string' => 'Địa chỉ phải là chuỗi ký tự.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+            
+            'teacher_major_id.sometimes' => 'Chuyên ngành là không bắt buộc nhưng nếu có phải tồn tại trong bảng majors.',
+            'teacher_major_id.exists' => 'Chuyên ngành không tồn tại trong hệ thống.',
+            
+            'teacher_code.sometimes' => 'Mã giáo viên là không bắt buộc nhưng nếu có phải là duy nhất.',
+            'teacher_code.unique' => 'Mã giáo viên đã tồn tại trong hệ thống.',
         ]);
 
         if ($validator->fails()) {

@@ -118,7 +118,7 @@ const UserEdit = () => {
       );
     } else {
       switch (res.data.data.role) {
-        case "officer":
+        case "Cán bộ":
           setRoleNumber(2);
           form.setFieldValue("role", "admin1");
           setRole("admin1");

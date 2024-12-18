@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Student;
 use App\Models\StudentMajor;
 use App\Models\User;
@@ -60,6 +61,73 @@ class ApiStudentController extends Controller
             ], 500);
         }
     }
+
+    public function filters(Request $request){
+        try{
+            $majorId = $request->input('major_id');
+            $course_id = $request->input('course_id');
+            $status = $request->input('status');
+    
+            $query = Student::with('majors', 'course'); 
+            
+            $majors = StudentMajor::with('major')
+            ->where('status', 1)
+            ->get()
+            ->groupBy('student_id');
+
+            if (!empty($majorId)) {
+                $query->whereHas('majors', function ($q) use ($majorId) {
+                    $q->where('majors.id', $majorId);
+                });
+            }
+    
+            if (!empty($course_id)) {
+                $query->where('course_id', $course_id);
+            }
+    
+            if (!empty($status)) {
+                $query->where('status', $status);
+            }
+            
+            $students = $query->get();
+
+            if ($students->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không có sinh viên nào.',
+                ], 404);
+            }
+
+            $data = $students->map(function ($student) use ($majors) {
+                $studentMajor = $majors[$student->id]->first() ?? null;
+                return [
+                    "id" => $student->id,
+                    "avatar" => $student->user->avatar ?? null,
+                    "student_code" => $student->student_code,
+                    "name" => $student->user->name,
+                    "email" => $student->user->email,
+                    "phone" => $student->user->phone,
+
+                    'course_name' => $student->course->name,
+                    'major_name' => $studentMajor->major->name,
+                    'current_semester' => $student->current_semester,
+                    'status' => match ($student->status) {
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
+                        default => "Không xác định"
+                    },
+                ];
+            });
+
+    
+            return response()->json($data);
+        }catch (\Exception $e){
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Students',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    } 
 
     public function exportStudent()
     {
@@ -134,6 +202,37 @@ class ApiStudentController extends Controller
             'student_major_id' => 'required|exists:majors,id',
 
             'student_code' => 'required|unique:students,student_code',
+        ], [
+            'avatar.string' => 'Ảnh đại diện phải là chuỗi.',
+            'name.required' => 'Tên là bắt buộc.',
+            'name.string' => 'Tên phải là chuỗi.',
+            'name.max' => 'Tên không được vượt quá 50 ký tự.',
+            'email.required' => 'Email là bắt buộc.',
+            'email.string' => 'Email phải là chuỗi.',
+            'email.email' => 'Email phải có định dạng hợp lệ.',
+            'email.max' => 'Email không được vượt quá 255 ký tự.',
+            'email.unique' => 'Email này đã được sử dụng.',
+            'phone.required' => 'Số điện thoại là bắt buộc.',
+            'phone.string' => 'Số điện thoại phải là chuỗi.',
+            'phone.max' => 'Số điện thoại không được vượt quá 10 ký tự.',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng.',
+            'dob.required' => 'Ngày sinh là bắt buộc.',
+            'dob.date' => 'Ngày sinh phải có định dạng hợp lệ.',
+            'dob.before' => 'Ngày sinh phải trước hôm nay.',
+            'gender.required' => 'Giới tính là bắt buộc.',
+            'gender.boolean' => 'Giới tính phải là true hoặc false.',
+            'ethnicity.required' => 'Dân tộc là bắt buộc.',
+            'ethnicity.string' => 'Dân tộc phải là chuỗi.',
+            'ethnicity.max' => 'Dân tộc không được vượt quá 50 ký tự.',
+            'address.required' => 'Địa chỉ là bắt buộc.',
+            'address.string' => 'Địa chỉ phải là chuỗi.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+            'student_course_id.required' => 'Khóa học là bắt buộc.',
+            'student_course_id.exists' => 'Khóa học không tồn tại.',
+            'student_major_id.required' => 'Chuyên ngành là bắt buộc.',
+            'student_major_id.exists' => 'Chuyên ngành không tồn tại.',
+            'student_code.required' => 'Mã sinh viên là bắt buộc.',
+            'student_code.unique' => 'Mã sinh viên này đã được sử dụng.',
         ]);
 
         if ($validator->fails()) {
@@ -359,6 +458,92 @@ class ApiStudentController extends Controller
             return response()->json(['error' => 'Không tìm thấy dữ liệu cho course hoặc major'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Students', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function incrementSemester($studentId)
+    {
+        try {
+            $student = Student::findOrFail($studentId);
+
+            if ($student->current_semester < 9) {
+                $student->current_semester += 1;
+
+                if ($student->current_semester === 9) {
+                    $student->status = 2;
+                }
+
+                $student->save();
+
+                return response()->json([
+                    'message' => 'Tăng học kỳ thành công',
+                    'data' => [
+                        'id' => $student->id,
+                        'current_semester' => $student->current_semester,
+                        'status' => $student->status,
+                    ],
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Học kỳ hiện tại đã đạt tối đa',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Không thể tăng học kỳ',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function decrementStudentsSemester()
+    {
+        try {
+            $now = Carbon::now();
+
+            $courses = Course::where('start_date', '<=', $now)
+                ->where('end_date', '>=', $now)
+                ->get();
+
+            if ($courses->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không có khóa học nào đang diễn ra trong thời gian này.',
+                ], 404);
+            }
+
+            $updatedStudents = [];
+
+            foreach ($courses as $course) {
+                $students = $course->students;
+
+                foreach ($students as $student) {
+                    if ($student->current_semester > 1) {
+                        $student->current_semester -= 1;
+                        $student->save();
+
+                        $updatedStudents[] = [
+                            'student_id' => $student->id,
+                            'current_semester' => $student->current_semester,
+                        ];
+                    }
+                }
+            }
+
+            if (count($updatedStudents) > 0) {
+                return response()->json([
+                    'message' => 'Giảm học kỳ thành công cho các sinh viên.',
+                    'data' => $updatedStudents,
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Không có sinh viên nào cần giảm học kỳ.',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Đã xảy ra lỗi khi giảm học kỳ cho sinh viên.',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 }

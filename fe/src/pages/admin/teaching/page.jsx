@@ -42,18 +42,6 @@ const Teach = () => {
 
     fetchMajors();
   }, []);
-  // useEffect(() => {
-  //   const fetchMajors = async () => {
-  //       try {
-  //           const response = await instance.get('/admin/main/majors');
-  //           setMainMajors(response.data.data);
-  //       } catch (error) {
-  //           message.error("Không thể tải dữ liệu ngành");
-  //       }
-  //   };
-
-  //       fetchMajors();
-  //   }, []);
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
@@ -90,6 +78,7 @@ const Teach = () => {
     try {
       const values = await form.validateFields();
       console.log(values);
+
       if (editingMajor) {
         const response = await instance.put(`/admin/majors/${idMajor}`, values);
         setMajors(
@@ -107,15 +96,40 @@ const Teach = () => {
         });
         setMajors([
           ...majors,
-          { id: majors.length + 1, ...response.data.data },
+          { id: response.data.data.id, ...response.data.data },
         ]);
         notification.success({
           message: "Thêm mới ngành thành công",
         });
       }
       handleModalCancel();
-    } catch (errorInfo) {
-      console.log("Validate Failed:", errorInfo);
+    } catch (error) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data.errors) {
+          // Hiển thị lỗi từ từng trường (validation backend)
+          Object.keys(data.errors).forEach((field) => {
+            notification.error({
+              message: `Lỗi ở trường ${field}`,
+              description: data.errors[field].join(", "),
+            });
+          });
+        } else {
+          // Hiển thị lỗi chung từ backend
+          notification.error({
+            message: "Lỗi",
+            description: data.message || "Đã xảy ra lỗi, vui lòng thử lại.",
+          });
+        }
+      } else {
+        // Lỗi không có phản hồi từ server (network error)
+        notification.error({
+          message: "Lỗi",
+          description: "Không thể kết nối đến server, vui lòng thử lại sau!",
+        });
+      }
+      console.log("Error details:", error);
     }
   };
 
@@ -143,17 +157,16 @@ const Teach = () => {
   };
 
   return (
-    <div className="row row-cols-2 g-3">
+    <div className="row row-cols-2">
       <div className="col-12">
-        <div className="col-12">
-          <div className="justify-between flex">
-            <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-              Quản lý Ngành học
-              <button>
-                <img src="/assets/svg/reload.svg" alt="reload..." />
-              </button>
-            </h1>
+        <div className="p-4 bg-white shadow-md rounded-lg">
+          {/* Tiêu đề quản lý ngành học */}
+          <h1 className="text-4xl font-bold text-center text-[#7017E2] mb-6">
+            Quản Lý Ngành Học
+          </h1>
 
+          <div className="flex justify-between items-center">
+            {/* Input tìm kiếm */}
             <div>
               <Input.Search
                 placeholder="Tìm kiếm ngành..."
@@ -165,6 +178,7 @@ const Teach = () => {
             </div>
           </div>
 
+          {/* Bố trí nút tạo mới và hiển thị số lượng */}
           <div className="flex justify-between items-center mt-6">
             <Button
               onClick={showAddModal}
@@ -175,10 +189,11 @@ const Teach = () => {
             </Button>
 
             <span className="font-bold text-[14px] text-[#000]">
-              {majors.length} items
+              {majors.length} ngành
             </span>
           </div>
         </div>
+
         <div className="row row-cols-2 g-3">
           {filteredMajors.length > 0 ? (
             filteredMajors.map((major) => (
@@ -238,7 +253,8 @@ const Teach = () => {
                     </Link>
 
                     <Popconfirm
-                      title="Xóa ngành"
+                      title="Xóa ngành học"
+                      description={`Bạn có chắc chắn muốn xóa ngành ${major.name} không? `}
                       onConfirm={() => confirmDelete(major.id)}
                       okText="Có"
                       cancelText="Không"

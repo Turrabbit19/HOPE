@@ -56,6 +56,60 @@ class ApiTeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function getTeachers(Request $request)
+    {
+        try {
+            // Lấy dữ liệu từ request
+            $majorId = $request->input('major_id');
+            $status = $request->input('status');
+    
+            // Khởi tạo truy vấn với các quan hệ user và major
+            $query = Teacher::with(['user', 'major']); 
+    
+            // Lọc theo major_id nếu có
+            if (!empty($majorId)) {
+                $query->where('major_id', $majorId);
+            }
+    
+            // Lọc theo status nếu có
+            if (!empty($status)) {
+                $query->where('status', $status);
+            }
+    
+            // Lấy danh sách giảng viên sau khi đã áp dụng bộ lọc
+            $teachers = $query->get();
+    
+            // Kiểm tra nếu không có giảng viên nào phù hợp
+            if ($teachers->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không tìm thấy giảng viên nào.',
+                ], 404);
+            }
+    
+            // Xử lý dữ liệu trả về
+            $data = $teachers->map(function ($teacher) {
+                return [
+                    "id" => $teacher->id,
+                    "name" => $teacher->user ? $teacher->user->name : 'null',
+                    "major" => $teacher->major ? $teacher->major->name : 'null',
+                    "teacher_code" => $teacher->teacher_code,
+                    "status" => $teacher->status == 0 ? 'Đang dạy' : 'Nghỉ'
+                ];
+            });
+    
+            // Trả về dữ liệu đã xử lý
+            return response()->json(['teachers' => $data]);
+    
+        } catch (\Exception $e) {
+            // Trả về lỗi nếu có vấn đề trong quá trình truy vấn
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Teachers',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function exportTeacher(){
         try {
             return Excel::download(new TeacherExport, 'teachers.xlsx');

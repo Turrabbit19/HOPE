@@ -46,10 +46,12 @@ Route::prefix('admin')
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
         Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
         Route::post('decrement-semester', [ApiStudentController::class, 'decrementStudentsSemester']);
+        Route::post('students/filter', [ApiStudentController::class, 'filters']);
 
 
         Route::apiResource('teachers', ApiTeacherController::class);
-        Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);
+        Route::get('teachersfilter', [ApiTeacherController::class, 'getTeachers']);
+        Route::get('teachers/by-status/{status}', [ApiTeacherController::class, 'getTeachersByStatus']);
         Route::get('export-teacher', [ApiTeacherController::class, 'exportTeacher']);
         Route::post('import-teacher', [ApiTeacherController::class, 'importTeacher']);
 

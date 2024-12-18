@@ -55,6 +55,7 @@ export default function NotificationPage() {
     const [error, setError] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null); // Thêm state để quản lý thông báo lỗi
 
+    // Fetch notifications from the API
     const fetchNotifications = async () => {
         setIsLoading(true);
         setError(null);
@@ -91,7 +92,6 @@ export default function NotificationPage() {
     };
 
     const markAsRead = async (notificationId) => {
-        console.log("Marking as read:", notificationId);
         try {
             const token = localStorage.getItem("token");
             if (!token) {
@@ -99,14 +99,13 @@ export default function NotificationPage() {
             }
 
             const response = await fetch(
-                `http://127.0.0.1:8000/api/student/notification/${notificationId}`,
+                `http://127.0.0.1:8000/api/student/notification/${notificationId}?status=Đã xem`,
                 {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ status: "Đã xem" }),
                 }
             );
 
@@ -114,6 +113,7 @@ export default function NotificationPage() {
                 throw new Error("Không thể cập nhật trạng thái thông báo");
             }
 
+            // Assuming the API returns the updated notification
             const updatedNotification = await response.json();
             console.log("Notification marked as read:", updatedNotification);
 
@@ -163,8 +163,8 @@ export default function NotificationPage() {
         }
     };
 
+    // Handle closing the popup
     const closePopup = () => {
-        console.log("Closing popup");
         setSelectedNotification(null);
     };
 

@@ -18,17 +18,18 @@ const ConfirmChangeSchedule = () => {
       broadcaster: "socket.io",
       client: io,
       host: "http://localhost:6001",
-      debug: true
+      debug: true,
     });
-    console.log(echo);
-    echo.connector.socket.on('connect', () => {
+
+    echo.connector.socket.on("connect", () => {
       console.log("Connected to Laravel Echo Server!");
     });
-    echo.connector.socket.on('disconnect', () => {
+
+    echo.connector.socket.on("disconnect", () => {
       console.log("Disconnected from Laravel Echo Server!");
     });
-    echo.channel("queue").listen("queueUpdated", (data) => {
-      console.log(data);
+
+    echo.channel("queue").listen("QueueUpdated", (data) => {
       const { userId: eventUserId, waitCount, status } = data;
 
       if (eventUserId === userId) {
@@ -58,7 +59,18 @@ const ConfirmChangeSchedule = () => {
 
   const handleJoinQueue = async () => {
     try {
-      const response = await instance.post("student/queue/add", { user_id: userId });
+      const checkResponse = await instance.post("student/queue/check", {
+        user_id: userId,
+      });
+
+      if (checkResponse.data.inQueue) {
+        localStorage.setItem("in_queue", "true");
+        navigate("/student/class-registration");
+      }
+
+      const response = await instance.post("student/queue/add", {
+        user_id: userId,
+      });
       const { wait_count } = response.data;
 
       setWaitCount(wait_count);
@@ -101,7 +113,11 @@ const ConfirmChangeSchedule = () => {
 
       <div>
         <h1>Trạng thái Hàng Đợi</h1>
-        <p>{waitCount !== null ? `Bạn đang chờ ${waitCount} lượt.` : "Chưa tham gia hàng đợi."}</p>
+        <p>
+          {waitCount !== null
+            ? `Bạn đang chờ ${waitCount} lượt.`
+            : "Chưa tham gia hàng đợi."}
+        </p>
         {queuePosition !== null && <p>Vị trí hiện tại: {queuePosition}</p>}
       </div>
 
@@ -114,7 +130,11 @@ const ConfirmChangeSchedule = () => {
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
-          <Button key="close" type="primary" onClick={() => setIsModalVisible(false)}>
+          <Button
+            key="close"
+            type="primary"
+            onClick={() => setIsModalVisible(false)}
+          >
             Đóng
           </Button>,
         ]}

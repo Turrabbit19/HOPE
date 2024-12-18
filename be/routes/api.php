@@ -256,7 +256,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::get('notification/read/{id}', [StudentNoticeController::class, 'detailNotification']);
 
         Route::post('queue/add', [AccessController::class, 'addToQueue']);
-        Route::post('queue/check', [AccessController::class, 'checkPosition']);
+        Route::post('queue/check', [AccessController::class, 'checkQueue']);
         Route::post('queue/process', [AccessController::class, 'processQueue']);
         Route::post('queue/finish', [AccessController::class, 'finishProcessing']);
 

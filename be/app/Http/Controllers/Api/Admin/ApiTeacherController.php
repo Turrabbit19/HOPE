@@ -56,6 +56,60 @@ class ApiTeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
     }
+    public function getTeachersByMajor($majorId)
+    {
+        try {
+            $teachers = Teacher::with(['user', 'major'])
+                ->where('major_id', $majorId)
+                ->get();
+
+            if ($teachers->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy giảng viên nào liên quan'], 404);
+            }
+
+            $data = $teachers->map(function ($teacher) {
+                return [
+                    "id" => $teacher->id,
+                    "name" => $teacher->user ? $teacher->user->name : 'null',
+                    "major" => $teacher->major ? $teacher->major->name : 'null',
+                    "teacher_code" => $teacher->teacher_code,
+                    "status" => $teacher->status == 0 ? 'Đang dạy' : 'Nghỉ'
+                ];
+            });
+
+            return response()->json(['teachers' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn giảng viên', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getTeachersByStatus($status)
+    {
+        try {
+            $teachers = Teacher::with(['user', 'major'])
+                ->where('status', $status) // Lọc theo status
+                ->get();
+
+            if ($teachers->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy giảng viên nào với trạng thái này'], 404);
+            }
+
+            $data = $teachers->map(function ($teacher) {
+                return [
+                    "id" => $teacher->id,
+                    "name" => $teacher->user ? $teacher->user->name : 'null', 
+                    "major" => $teacher->major ? $teacher->major->name : 'null', 
+                    "teacher_code" => $teacher->teacher_code,
+                    "status" => $teacher->status == 0 ? 'Đang dạy' : 'Nghỉ'
+                ];
+            });
+
+            return response()->json(['teachers' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn giảng viên', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function exportTeacher(){
         try {
             return Excel::download(new TeacherExport, 'teachers.xlsx');

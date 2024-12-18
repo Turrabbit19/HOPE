@@ -31,46 +31,73 @@ const ListSubject = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState([]);
   const [majorId, setMajorId] = useState(null);
 
-  // State cho popup tạo khóa học mới
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [form] = Form.useForm();
 
-  // State cho lựa chọn kỳ học và ngành học
   const [selectedMajor, setSelectedMajor] = useState(majors[0]);
   const [subjects, setSubjects] = useState([]);
   const [initialValues, setInitialValues] = useState();
   const [update, setUpdate] = useState(false);
-  // State cho các biến thể được thêm vào
   const [additionalVariants, setAdditionalVariants] = useState([
     {
       major: selectedMajor,
     },
   ]);
-
+  const [total, setTotal] = useState();
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingCourse, setEditingCourse] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
-
+  const [selectedMajor1, setSelectedMajor1] = useState(null);
   useEffect(() => {
-    (async () => {
+    const fetchSubjects = async () => {
       try {
         setLoading(true);
-        const [subjectsResponse, majorsResponse] = await Promise.all([
-          instance.get("admin/all/subjects"),
-          instance.get("admin/main/majors"),
-        ]);
 
-        setMajors(majorsResponse.data.data);
-        setSubjects(subjectsResponse.data.data);
+        const endpoint = selectedMajor1
+          ? `admin/filter-by-major/${selectedMajor1}/subjects`
+          : "admin/subjects";
+
+        const response = await instance.get(endpoint, {
+          params: {
+            page: currentPage,
+            per_page: 10,
+          },
+        });
+
+        setSubjects(response.data.data);
+        setTotal(response.data.pagination.total); // Set total subjects for pagination
       } catch (error) {
-        console.log("Error loading data:", error.message);
+        message.error("Error fetching subjects");
       } finally {
         setLoading(false);
       }
-    })();
+    };
+
+    fetchSubjects();
+  }, [currentPage, selectedMajor1]);
+
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        setLoading(true);
+        const response = await instance.get("admin/main/majors");
+        console.log("Majors Response:", response);
+        setMajors(response.data.data);
+      } catch (error) {
+        console.error("Error fetching majors:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMajors();
   }, []);
+
+  const handlePageChange = (page) => {
+    console.log(page);
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     console.log("Selected Specialization:", selectedSpecialization);
@@ -100,7 +127,6 @@ const ListSubject = () => {
     }
   }, [selectedSpecialization, selectedType]);
 
-  // Thêm một useEffect để theo dõi sự thay đổi của chuyên ngành chính và chuyên ngành hẹp
   useEffect(() => {
     if (selectedSpecialization.length > 0) {
       setSelectedType("sub_major"); // Nếu đã chọn chuyên ngành chính, mặc định chọn chuyên ngành hẹp
@@ -146,7 +172,6 @@ const ListSubject = () => {
     const value = event.target.value.trim();
     setSearchValue(value);
 
-
     if (value === "") {
       setFilteredCourses(subjects);
     } else {
@@ -156,7 +181,6 @@ const ListSubject = () => {
         )
       );
     }
-
     setCurrentPage(1);
   };
 
@@ -172,12 +196,7 @@ const ListSubject = () => {
   };
 
   const handleFormSubmit = async (values) => {
-    debugger;
     setLoading(true);
-    const translationMap = {
-      "The code has already been taken.": "Mã môn học đã tồn tại.",
-      "The name has already been taken.": "Tên môn học đã tồn tại.",
-    };
     try {
       const majors = values.majors ? values.majors.filter((m) => m) : [];
 
@@ -202,7 +221,6 @@ const ListSubject = () => {
       form.resetFields();
       setIsPopupVisible(false);
     } catch (error) {
-
       console.error("Form submission error:", error);
       message.error(
         error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!"
@@ -223,7 +241,6 @@ const ListSubject = () => {
   };
 
   const openEditModal = async (values) => {
-
     try {
       setInitialValues(values.id);
       setIsPopupVisible(true);
@@ -302,7 +319,6 @@ const ListSubject = () => {
     }
   };
 
-
   const formatForm = (formValue, toServer = false) => {
     if (toServer) {
       return formValue === "0" ? "0" : "1";
@@ -315,18 +331,21 @@ const ListSubject = () => {
     form.resetFields();
   };
 
+  // State cho modal lọc khóa học
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // Hàm hiển thị modal lọc khóa học
   const handleShowModalFilter = () => {
     setIsModalVisible(true);
   };
 
+  // Hàm xử lý khi nhấn OK trong modal lọc
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
         console.log("Selected Filters:", values); // In ra các bộ lọc đã chọn
-
+        // Xử lý lọc ở đây
         setIsModalVisible(false); // Đóng modal sau khi xử lý xong
       })
       .catch((info) => {
@@ -334,43 +353,25 @@ const ListSubject = () => {
       });
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
+
 
   if (loading) {
     return <Loading />;
   }
 
-
-  const handleRadioChange = (e) => {
-    const value = e.target.value;
-    setSelectedType(value);
-    setSelectedSpecialization([]);
-    setSubMajors([]);
-    setMajorId(null);
-  };
-
-  const handleSpecializationChange = (value) => {
-    setSelectedSpecialization(value);
-    setMajorId(value);
-  };
-
   const displaySubjects =
     searchValue.trim() === "" ? subjects : filteredCourses;
 
-  const paginatedSubjects = displaySubjects.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+  const paginatedSubjects = subjects.slice(
+    (currentPage - 1) * 10,
+    currentPage * 10
   );
 
-  const renderSubjects = paginatedSubjects.length ? (
-    paginatedSubjects.map((subject) => (
-      <div key={subject.id}>{/* Subject display code here */}</div>
-    ))
-  ) : (
-    <div>Không tìm thấy môn học nào.</div>
-  );
+  const handleMajorChange = (majorId) => {
+    console.log(majorId);
+    setSelectedMajor1(majorId);
+    setCurrentPage(1);
+  };
 
   return (
     <>
@@ -380,21 +381,6 @@ const ListSubject = () => {
             {/* Item */}
             <div className="col-12">
               <div>
-                <div className="flex justify-between">
-                  <h1 className="flex gap-2 pb-5 items-center text-[#7017E2] text-[20px] font-semibold">
-                    Danh Sách Môn Học
-                    <button>
-                      <img src="/assets/svg/reload.svg" alt="reload..." />
-                    </button>
-                  </h1>
-
-                  <Input.Search
-                    placeholder="Tìm kiếm môn học..."
-                    onChange={handleSearch}
-                    style={{ width: 300 }}
-                    allowClear
-                  />
-                </div>
                 <div className="flex justify-between items-center">
                   <button
                     onClick={togglePopup}
@@ -403,21 +389,35 @@ const ListSubject = () => {
                     <img src="/assets/svg/plus.svg" alt="" />
                     Thêm Môn Học
                   </button>
-                  <div className="flex gap-6 items-center">
+                  <div className="flex gap-6 items-center justify-center">
                     <span className="font-bold text-[14px] text-[#000]">
                       {displaySubjects.length} items
                     </span>
-
-                    <Button type="primary" onClick={handleShowModalFilter}>
-                      Lọc môn Học
-                    </Button>
+                    <Form.Item
+                      label="Lọc theo ngành"
+                      style={{ marginBottom: 16 }}
+                    >
+                      <Select
+                        placeholder="Chọn ngành"
+                        value={selectedMajor1}
+                        onChange={handleMajorChange}
+                        allowClear
+                        style={{ width: 200 }}
+                      >
+                        {majors.map((item) => (
+                          <Select.Option key={item.id} value={item.id}>
+                            {item.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
                   </div>
                 </div>
               </div>
 
               <div className="row row-cols-2 g-3">
-                {paginatedSubjects.length > 0 ? (
-                  paginatedSubjects.map((subject) => (
+                {subjects.length > 0 ? (
+                  subjects.map((subject) => (
                     <div className="col" key={subject.id}>
                       <div className="listCourse__item ">
                         <div className="listCourse__item-top flex justify-between items-center">
@@ -445,22 +445,15 @@ const ListSubject = () => {
                                     alt=""
                                   />
                                   <span className="text-[#44CC15] text-[12px]">
-                                    {subject.form ? "Trực tuyến" : "Trực tiếp"}
+                                    {subject.form}
                                   </span>
                                 </div>
                               </div>
+
                               <p className="text-[#9E9E9E] mt-3 ml-3">
                                 Code:
                                 <span className="text-black ml-2">
                                   {subject.code}
-                                </span>
-                              </p>
-                              <p className="text-[#9E9E9E] mt-3 ml-3">
-                                Trạng thái:
-                                <span className="text-black ml-2">
-                                  {subject.status
-                                    ? "Đang hoạt động"
-                                    : "Tạm dừng"}
                                 </span>
                               </p>
 
@@ -487,6 +480,7 @@ const ListSubject = () => {
                             </div>
                           </div>
                         </div>
+
                         <div className="listCourse__item-bottom teaching__card-bottom pb-3 border !mx-[-1px]">
                           <button className="text-[#1167B4] font-bold flex items-center gap-2 justify-center">
                             <img src="/assets/svg/eye.svg" alt="" />
@@ -494,39 +488,36 @@ const ListSubject = () => {
                               to={`detail/${subject.id}`}
                               state={{
                                 subjectName: subject.name,
+                                max_students: subject.max_students,
+                                code: subject.code,
                                 credit: subject.credit,
                               }}
                             >
                               Chi Tiết
                             </Link>
                           </button>
-                          {subject.status ? (
-                            ""
-                          ) : (
-                            <>
-                              <Popconfirm
-                                title="Xóa môn học"
-                                description={`Bạn có chắc chắn muốn xóa môn học ${subject.name} không? `}
-                                onConfirm={() => onHandleDelete(subject.id)}
-                                onCancel={cancel}
-                                okText="Có"
-                                cancelText="Không"
-                              >
-                                <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                                  <img src="/assets/svg/remove.svg" alt="" />
-                                  Xóa khỏi Danh Sách
-                                </button>
-                              </Popconfirm>
 
-                              <button
-                                className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                                onClick={() => openEditModal(subject)}
-                              >
-                                <EditOutlined />
-                                Sửa Thông Tin
-                              </button>
-                            </>
-                          )}
+                          <Popconfirm
+                            title="Xóa môn học"
+                            description={`Bạn có chắc chắn muốn xóa môn học ${subject.name} không? `}
+                            onConfirm={() => onHandleDelete(subject.id)}
+                            onCancel={cancel}
+                            okText="Có"
+                            cancelText="Không"
+                          >
+                            <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                              <img src="/assets/svg/remove.svg" alt="" />
+                              Xóa khỏi Danh Sách
+                            </button>
+                          </Popconfirm>
+
+                          <button
+                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                            onClick={() => openEditModal(subject)}
+                          >
+                            <EditOutlined />
+                            Sửa Thông Tin
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -540,20 +531,17 @@ const ListSubject = () => {
                 )}
               </div>
 
-              {/* Pagination Component */}
-              {displaySubjects.length > pageSize && (
-                <Pagination
-                  align="center"
-                  current={currentPage}
-                  pageSize={pageSize}
-                  total={displaySubjects.length}
-                  onChange={(page) => setCurrentPage(page)}
-                  style={{
-                    marginTop: 16,
-                    textAlign: "center",
-                  }}
-                />
-              )}
+              <Pagination
+                align="center"
+                current={currentPage}
+                pageSize={pageSize}
+                total={total}
+                onChange={(page) => handlePageChange(page)}
+                style={{
+                  marginTop: 16,
+                  textAlign: "center",
+                }}
+              />
             </div>
           </div>
 
@@ -608,8 +596,6 @@ const ListSubject = () => {
                               message: "Vui lòng nhập mã môn học!",
                             },
                           ]}
-                          // help={error}
-                          // validateStatus="error"
                         >
                           <Input placeholder="Mã môn học" />
                         </Form.Item>
@@ -625,7 +611,6 @@ const ListSubject = () => {
                     <Row gutter={24}>
                       {/* Cột cho các trường tín chỉ và kỳ học */}
                       <Col span={12}>
-
                         <Row gutter={16}>
                           <Col span={12}>
                             <Form.Item
@@ -716,7 +701,6 @@ const ListSubject = () => {
                           rules={[
                             {
                               required: true,
-
                               message: "Vui lòng chọn hình thức",
                             },
                             {
@@ -727,33 +711,14 @@ const ListSubject = () => {
                           ]}
                         >
                           <Select
-                            placeholder="Chọn hình thức học"
+                            placeholder="Chọn hình thức"
                             options={[
-
                               { value: "0", label: "Trực tiếp" },
                               { value: "1", label: "Trực tuyến" },
                             ]}
                           />
                         </Form.Item>
                       </Col>
-                      {update ? (
-                        <Col span={12}>
-                          <Form.Item label="Trạng thái" name="status">
-                            <Select
-                              placeholder="Chọn trạng thái"
-                              options={[
-                                {
-                                  value: 0,
-                                  label: "Tạm dừng",
-                                },
-                                { value: 1, label: "Đang hoạt động" },
-                              ]}
-                            />
-                          </Form.Item>
-                        </Col>
-                      ) : (
-                        ""
-                      )}
                     </Row>
                   </Col>
 

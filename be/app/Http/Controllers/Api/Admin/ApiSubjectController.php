@@ -12,6 +12,7 @@ use App\Models\Subject;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiSubjectController extends Controller
@@ -195,7 +196,7 @@ class ApiSubjectController extends Controller
             if (isset($data['sub_major'])) {
                 $subject->majors()->sync([$data['sub_major']]);
             }
-
+            Redis::del('syllabus');
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);

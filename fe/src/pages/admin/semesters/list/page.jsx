@@ -9,11 +9,18 @@ import {
     Select,
     Pagination,
     notification,
+    Space,
 } from "antd";
-import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+    EditOutlined,
+    PlusOutlined,
+    DeleteOutlined,
+    ArrowLeftOutlined,
+} from "@ant-design/icons";
 import moment from "moment";
 import instance from "../../../../config/axios";
 import Loading from "../../../../components/loading";
+import { useNavigate } from "react-router-dom";
 
 const ListSemester = () => {
     const [semesters, setSemesters] = useState([]);
@@ -31,6 +38,7 @@ const ListSemester = () => {
     useEffect(() => {
         fetchData();
     }, []);
+    const navigate = useNavigate();
 
     const fetchData = async () => {
         try {
@@ -268,6 +276,10 @@ const ListSemester = () => {
         setCurrentPage(page);
     };
 
+    const handleBack = () => {
+        navigate("/admin");
+    };
+
     if (loading) {
         return <Loading />;
     }
@@ -277,6 +289,29 @@ const ListSemester = () => {
             <div className="row row-cols-2 g-3">
                 <div className="col-12">
                     <div className="p-6 bg-white shadow-md rounded-lg">
+                        <Space
+                            align="center"
+                            style={{ cursor: "pointer" }}
+                            onClick={handleBack}
+                        >
+                            <div
+                                style={{
+                                    border: "1.5px solid #1890ff",
+                                    borderRadius: "50%",
+                                    padding: "6px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <ArrowLeftOutlined
+                                    style={{
+                                        fontSize: "16px",
+                                        color: "#1890ff",
+                                    }}
+                                />
+                            </div>
+                        </Space>
                         <h1 className="text-4xl font-bold text-center text-[#7017E2]">
                             Quản Lý Kỳ Học
                         </h1>

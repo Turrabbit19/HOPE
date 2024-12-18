@@ -92,7 +92,11 @@ class ApiSemesterController extends Controller
     public function filterByYear(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'year' => 'required|integer|min:1900|max:' . Carbon::now()->year
+            'year' => 'nullable|integer|min:1900|max:' . Carbon::now()->year
+        ], [
+            'year.integer' => 'Năm phải là một số nguyên.',
+            'year.min' => 'Năm không được nhỏ hơn 1900.',
+            'year.max' => 'Năm không được lớn hơn ' . Carbon::now()->year . '.',
         ]);
 
         if ($validator->fails()) {
@@ -101,10 +105,12 @@ class ApiSemesterController extends Controller
 
         try {
             $year = $request->input('year');
-            $semesters = Semester::whereYear('start_date', $year)
-                ->orWhereYear('end_date', $year)
-                ->orderBy('start_date', 'asc')
-                ->get();
+
+            $query = Semester::query();
+            if ($year) {
+                $query->where('name', 'like', '%' . $year . '%');
+            }
+            $semesters = $query->orderBy('start_date', 'asc')->get();
 
             $now = Carbon::now();
 
@@ -139,6 +145,21 @@ class ApiSemesterController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'integer|in:0,1,2'
+        ], [
+            'name.required' => 'Tên học kỳ là bắt buộc.',
+            'name.string' => 'Tên học kỳ phải là chuỗi ký tự.',
+            'name.max' => 'Tên học kỳ không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên học kỳ đã tồn tại trong hệ thống.',
+
+            'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
+            'start_date.date' => 'Ngày bắt đầu phải là một ngày hợp lệ.',
+
+            'end_date.required' => 'Ngày kết thúc là bắt buộc.',
+            'end_date.date' => 'Ngày kết thúc phải là một ngày hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+
+            'status.integer' => 'Trạng thái phải là một số nguyên.',
+            'status.in' => 'Trạng thái phải là các giá trị: 0, 1, 2.',
         ]);
 
         if ($validator->fails()) {
@@ -147,8 +168,20 @@ class ApiSemesterController extends Controller
 
         try {
             $data = $validator->validated();
+
+            // Kiểm tra học kỳ gần nhất và so sánh end_date với ngày hiện tại
+            $latestSemester = Semester::orderBy('end_date', 'desc')->first();
+
+            if ($latestSemester && Carbon::now()->lte($latestSemester->end_date)) {
+                return response()->json([
+                    'error' => 'Không thể tạo học kỳ mới. Học kỳ gần nhất chưa kết thúc.'
+                ], 400);
+            }
+
+            // Tạo mới học kỳ
             $semester = Semester::create($data);
 
+            // Lấy các khóa học đang hoạt động trong khoảng thời gian này
             $activeCourses = Course::where(function ($query) use ($data) {
                 $query->where('start_date', '<=', $data['end_date'])
                     ->where('end_date', '>=', $data['start_date']);
@@ -156,15 +189,23 @@ class ApiSemesterController extends Controller
 
             if ($activeCourses->isNotEmpty()) {
                 $maxOrder = 9;
-
-                $coursesWithOrder = $activeCourses->mapWithKeys(function ($course) use ($maxOrder) {
+                $activeCourses->each(function ($course) use ($semester, $maxOrder) {
                     $currentMaxOrder = CourseSemester::where('course_id', $course->id)
                         ->max('order');
-                    $newOrder = min($currentMaxOrder + 1, $maxOrder);
-                    return [$course->id => ['order' => $newOrder]];
-                });
 
-                $semester->courses()->syncWithoutDetaching($coursesWithOrder);
+                    $newOrder = min($currentMaxOrder + 1, $maxOrder);
+
+                    // Gắn khóa học vào học kỳ mới với order
+                    $semester->courses()->attach($course->id, ['order' => $newOrder]);
+
+                    // Cập nhật current_semester cho tất cả sinh viên
+                    $students = $course->students()->get();
+
+                    $students->each(function ($student) use ($newOrder) {
+                        // Cập nhật giá trị current_semester
+                        $student->update(['current_semester' => $newOrder]);
+                    });
+                });
             }
 
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
@@ -172,6 +213,7 @@ class ApiSemesterController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function show(string $id)
     {
@@ -219,6 +261,18 @@ class ApiSemesterController extends Controller
             'courses' => 'sometimes|array',
             'courses.*.id' => 'sometimes|exists:courses,id',
             'courses.*.order' => 'sometimes|integer|min:1',
+        ], [
+            'name.unique' => 'Tên học kỳ đã tồn tại.',
+            'name.max' => 'Tên học kỳ không được vượt quá 255 ký tự.',
+            'start_date.date' => 'Ngày bắt đầu không đúng định dạng.',
+            'end_date.date' => 'Ngày kết thúc không đúng định dạng.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+            'status.integer' => 'Trạng thái phải là một số nguyên.',
+            'status.in' => 'Trạng thái phải là 0, 1, 2.',
+            'courses.array' => 'Khóa học phải là một mảng.',
+            'courses.*.id.exists' => 'Khóa học được chọn không tồn tại.',
+            'courses.*.order.integer' => 'Thứ tự khóa học phải là một số nguyên.',
+            'courses.*.order.min' => 'Thứ tự khóa học phải ít nhất là 1.',
         ]);
 
         if ($validator->fails()) {

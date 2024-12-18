@@ -86,9 +86,11 @@ class ApiScheduleController extends Controller
                 ->whereHas('subjects', function ($query) use ($order) {
                     $query->where('subjects.order', $order);
                 })
-                ->withCount(['students' => function ($query) use ($courseId) {
-                    $query->where('course_id', $courseId);
-                }])
+                ->withCount([
+                    'students' => function ($query) use ($courseId) {
+                        $query->where('course_id', $courseId);
+                    }
+                ])
                 ->get();
 
             $data = $majors->map(function ($major) {
@@ -129,9 +131,11 @@ class ApiScheduleController extends Controller
                 ->whereHas('subjects', function ($query) use ($order) {
                     $query->where('subjects.order', $order);
                 })
-                ->withCount(['students' => function ($query) use ($courseId) {
-                    $query->where('course_id', $courseId);
-                }])
+                ->withCount([
+                    'students' => function ($query) use ($courseId) {
+                        $query->where('course_id', $courseId);
+                    }
+                ])
                 ->get();
 
             $data = $subjects->map(function ($subject) use ($courseId, $majors) {
@@ -225,6 +229,14 @@ class ApiScheduleController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'days_of_week' => 'required|array',
             'days_of_week.*' => 'integer'
+        ], [
+            'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
+            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
+            'subject_id.required' => 'Mã môn học là bắt buộc.',
+            'subject_id.exists' => 'Mã môn học không tồn tại.',
+            'days_of_week.required' => 'Cần chọn ít nhất một ngày trong tuần.',
+            'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
+            'days_of_week.*.integer' => 'Các ngày trong tuần phải là kiểu số nguyên.'
         ]);
 
         if ($validator->fails()) {
@@ -323,6 +335,26 @@ class ApiScheduleController extends Controller
             'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
             'classrooms.*.days_of_week' => 'required|array',
             'classrooms.*.days_of_week.*' => 'integer'
+        ], [
+            'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
+            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
+            'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
+            'end_date.required' => 'Ngày kết thúc là bắt buộc.',
+            'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau ngày bắt đầu.',
+
+            'days_of_week.required' => 'Cần chọn ít nhất một ngày trong tuần.',
+            'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
+            'days_of_week.*.integer' => 'Các ngày trong tuần phải là kiểu số nguyên.',
+
+            'classrooms.required' => 'Lớp học là bắt buộc.',
+            'classrooms.array' => 'Lớp học phải là một mảng.',
+            'classrooms.*.id.required' => 'Mã lớp học là bắt buộc.',
+            'classrooms.*.id.exists' => 'Lớp học không tồn tại.',
+            'classrooms.*.shift_id.required' => 'ID ca học là bắt buộc.',
+            'classrooms.*.shift_id.exists' => 'Ca học không tồn tại trong hệ thống.',
+            'classrooms.*.room_id.exists' => 'Phòng học không tồn tại trong hệ thống.',
+            'classrooms.*.link.url' => 'Đường dẫn lớp học phải là một URL hợp lệ.',
         ]);
 
         if ($validator->fails()) {
@@ -465,6 +497,13 @@ class ApiScheduleController extends Controller
             'schedules' => 'required|array',
             'schedules.*.teacher_id' => 'required|exists:teachers,id',
             'schedules.*.schedule_id' => 'required|exists:schedules,id',
+        ], [
+            'schedules.required' => 'Danh sách lịch học là bắt buộc.',
+            'schedules.array' => 'Danh sách lịch học phải là một mảng.',
+            'schedules.*.teacher_id.required' => 'Mã giảng viên là bắt buộc.',
+            'schedules.*.teacher_id.exists' => 'Giảng viên không tồn tại trong hệ thống.',
+            'schedules.*.schedule_id.required' => 'Mã lịch học là bắt buộc.',
+            'schedules.*.schedule_id.exists' => 'Lịch học không tồn tại trong hệ thống.',
         ]);
 
         if ($validator->fails()) {
@@ -554,6 +593,19 @@ class ApiScheduleController extends Controller
             'shift_id' => 'sometimes|exists:shifts,id',
             'room_id' => 'nullable|exists:rooms,id',
             'link' => 'nullable|sometimes|url',
+        ], [
+            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
+            'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
+            'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+        
+            'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
+            'days_of_week.*.integer' => 'Mỗi ngày trong tuần phải là kiểu số nguyên.',
+        
+            'shift_id.exists' => 'Ca học không tồn tại trong hệ thống.',
+            'room_id.exists' => 'Phòng học không tồn tại trong hệ thống.',
+        
+            'link.url' => 'Đường dẫn phải là một URL hợp lệ.',
         ]);
 
         if ($validator->fails()) {
@@ -575,10 +627,12 @@ class ApiScheduleController extends Controller
             $checkConflict = isset($data['start_date']) || isset($data['end_date']) ||
                 isset($data['days_of_week']) || isset($data['shift_id']) || isset($data['room_id']);
 
-            if ($checkConflict && $this->hasConflict([
-                'shift_id' => $data['shift_id'] ?? $schedule->shift_id,
-                'room_id' => $data['room_id'] ?? $schedule->room_id,
-            ], $startDate, $endDate, $daysOfWeek)) {
+            if (
+                $checkConflict && $this->hasConflict([
+                    'shift_id' => $data['shift_id'] ?? $schedule->shift_id,
+                    'room_id' => $data['room_id'] ?? $schedule->room_id,
+                ], $startDate, $endDate, $daysOfWeek)
+            ) {
                 return response()->json(['error' => "Lịch học có xung đột với các lịch hiện tại."], 409);
             }
 

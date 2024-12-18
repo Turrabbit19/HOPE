@@ -166,6 +166,44 @@ class ApiSubjectController extends Controller
             'majors' => 'nullable|array',
             'majors.*' => 'required_with:majors|exists:majors,id',
             'sub_major' => 'nullable|integer|exists:majors,id',
+        ], [
+            'code.required' => 'Mã môn học là bắt buộc.',
+            'code.string' => 'Mã môn học phải là chuỗi.',
+            'code.max' => 'Mã môn học không được vượt quá 50 ký tự.',
+            'code.unique' => 'Mã môn học này đã tồn tại.',
+            
+            'name.required' => 'Tên môn học là bắt buộc.',
+            'name.string' => 'Tên môn học phải là chuỗi.',
+            'name.max' => 'Tên môn học không được vượt quá 100 ký tự.',
+            'name.unique' => 'Tên môn học này đã tồn tại trong hệ thống.',
+            
+            'description.string' => 'Mô tả môn học phải là chuỗi ký tự.',
+            'description.max' => 'Mô tả môn học không được vượt quá 255 ký tự.',
+            
+            'credit.required' => 'Số tín chỉ là bắt buộc.',
+            'credit.integer' => 'Số tín chỉ phải là một số nguyên.',
+            'credit.min' => 'Số tín chỉ phải lớn hơn hoặc bằng 1.',
+            'credit.max' => 'Số tín chỉ không được vượt quá 19.',
+            
+            'order.required' => 'Thứ tự môn học là bắt buộc.',
+            'order.integer' => 'Thứ tự môn học phải là một số nguyên.',
+            'order.min' => 'Thứ tự môn học phải lớn hơn hoặc bằng 1.',
+            'order.max' => 'Thứ tự môn học không được vượt quá 9.',
+            
+            'max_students.required' => 'Số lượng sinh viên tối đa là bắt buộc.',
+            'max_students.integer' => 'Số lượng sinh viên tối đa phải là một số nguyên.',
+            'max_students.min' => 'Số lượng sinh viên tối đa phải ít nhất là 30.',
+            
+            'form.required' => 'Hình thức học là bắt buộc.',
+            'form.boolean' => 'Hình thức học phải là true hoặc false.',
+            'form.in' => 'Hình thức học phải có giá trị là 0 hoặc 1.',
+            
+            'majors.array' => 'Các chuyên ngành phải là một mảng.',
+            'majors.*.required_with' => 'Mỗi chuyên ngành phải được chọn khi có giá trị cho các chuyên ngành.',
+            'majors.*.exists' => 'Chuyên ngành không tồn tại.',
+            
+            'sub_major.integer' => 'Chuyên ngành phụ phải là một số nguyên.',
+            'sub_major.exists' => 'Chuyên ngành phụ không tồn tại trong hệ thống.',
         ]);
 
         if ($validator->fails()) {
@@ -257,6 +295,44 @@ class ApiSubjectController extends Controller
             'majors' => 'nullable|array',
             'majors.*' => 'required_with:majors|exists:majors,id',
             'sub_major' => 'nullable|integer|exists:majors,id',
+        ], [
+            'code.sometimes' => 'Mã môn học là tùy chọn nhưng nếu có, phải là chuỗi và không vượt quá 50 ký tự.',
+            'code.string' => 'Mã môn học phải là chuỗi.',
+            'code.max' => 'Mã môn học không được vượt quá 50 ký tự.',
+            'code.unique' => 'Mã môn học này đã tồn tại.',
+            
+            'name.sometimes' => 'Tên môn học là tùy chọn nhưng nếu có, phải là chuỗi và không vượt quá 100 ký tự.',
+            'name.string' => 'Tên môn học phải là chuỗi.',
+            'name.max' => 'Tên môn học không được vượt quá 100 ký tự.',
+            'name.unique' => 'Tên môn học này đã tồn tại.',
+            
+            'description.string' => 'Mô tả môn học phải là chuỗi.',
+            'description.max' => 'Mô tả môn học không được vượt quá 255 ký tự.',
+            
+            'credit.sometimes' => 'Số tín chỉ là tùy chọn nhưng nếu có, phải là số nguyên và trong phạm vi từ 1 đến 19.',
+            'credit.integer' => 'Số tín chỉ phải là một số nguyên.',
+            'credit.min' => 'Số tín chỉ phải lớn hơn hoặc bằng 1.',
+            'credit.max' => 'Số tín chỉ không được vượt quá 19.',
+            
+            'order.sometimes' => 'Thứ tự môn học là tùy chọn nhưng nếu có, phải là số nguyên và trong phạm vi từ 1 đến 9.',
+            'order.integer' => 'Thứ tự môn học phải là một số nguyên.',
+            'order.min' => 'Thứ tự môn học phải lớn hơn hoặc bằng 1.',
+            'order.max' => 'Thứ tự môn học không được vượt quá 9.',
+            
+            'max_students.sometimes' => 'Số lượng sinh viên tối đa là tùy chọn nhưng nếu có, phải là số nguyên và ít nhất 30.',
+            'max_students.integer' => 'Số lượng sinh viên tối đa phải là một số nguyên.',
+            'max_students.min' => 'Số lượng sinh viên tối đa phải ít nhất là 30.',
+            
+            'form.sometimes' => 'Hình thức học là tùy chọn nhưng nếu có, phải là boolean và có giá trị là 0 hoặc 1.',
+            'form.boolean' => 'Hình thức học phải là true hoặc false.',
+            'form.in' => 'Hình thức học phải có giá trị là 0 hoặc 1.',
+            
+            'majors.array' => 'Các chuyên ngành phải là một mảng.',
+            'majors.*.required_with' => 'Mỗi chuyên ngành phải được chọn khi có giá trị cho các chuyên ngành.',
+            'majors.*.exists' => 'Chuyên ngành không tồn tại.',
+            
+            'sub_major.integer' => 'Chuyên ngành phụ phải là một số nguyên.',
+            'sub_major.exists' => 'Chuyên ngành phụ không tồn tại trong hệ thống.',
         ]);
 
         if ($validator->fails()) {
@@ -340,6 +416,13 @@ class ApiSubjectController extends Controller
         $validator = Validator::make($request->all(), [
             '*.name' => 'required|string|max:50',
             '*.description' => 'required|string',
+        ], [
+            '*.name.required' => 'Tên là bắt buộc.',
+            '*.name.string' => 'Tên phải là chuỗi ký tự.',
+            '*.name.max' => 'Tên không được vượt quá 50 ký tự.',
+            
+            '*.description.required' => 'Mô tả là bắt buộc.',
+            '*.description.string' => 'Mô tả phải là chuỗi ký tự.',
         ]);
 
         if ($validator->fails()) {
@@ -389,6 +472,17 @@ class ApiSubjectController extends Controller
             '*.code' => 'required|string|max:10|unique:classrooms,code',
             '*.max_students' => 'required|integer|min:1',
             '*.status' => 'boolean',
+        ], [
+            '*.code.required' => 'Mã lớp học là bắt buộc.',
+            '*.code.string' => 'Mã lớp học phải là chuỗi ký tự.',
+            '*.code.max' => 'Mã lớp học không được vượt quá 10 ký tự.',
+            '*.code.unique' => 'Mã lớp học này đã tồn tại trong hệ thống.',
+            
+            '*.max_students.required' => 'Số lượng học sinh là bắt buộc.',
+            '*.max_students.integer' => 'Số lượng học sinh phải là một số nguyên.',
+            '*.max_students.min' => 'Số lượng học sinh phải lớn hơn hoặc bằng 1.',
+            
+            '*.status.boolean' => 'Trạng thái phải là giá trị true hoặc false.',
         ]);
 
         if ($validator->fails()) {

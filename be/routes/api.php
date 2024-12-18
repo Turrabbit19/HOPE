@@ -50,8 +50,7 @@ Route::prefix('admin')
 
 
         Route::apiResource('teachers', ApiTeacherController::class);
-        Route::get('major/{majorId}/teachers', [ApiTeacherController::class, 'filterTeachersByMajor']);
-        Route::get('teachers/by-major/{majorId}', [ApiTeacherController::class, 'getTeachersByMajor']);
+        Route::get('teachersfilter', [ApiTeacherController::class, 'getTeachers']);
         Route::get('teachers/by-status/{status}', [ApiTeacherController::class, 'getTeachersByStatus']);
         Route::get('export-teacher', [ApiTeacherController::class, 'exportTeacher']);
         Route::post('import-teacher', [ApiTeacherController::class, 'importTeacher']);

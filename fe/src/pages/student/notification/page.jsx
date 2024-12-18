@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Bell, X, AlertCircle, RefreshCw, Check } from "lucide-react";
+import { Bell, X, AlertCircle, RefreshCw } from "lucide-react";
 
 // Utility function to strip HTML tags
 const stripHtml = (html) => {
@@ -11,7 +11,7 @@ const stripHtml = (html) => {
 };
 
 // Popup Component
-function Popup({ notification, onClose, onMarkAsRead }) {
+function Popup({ notification, onClose }) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -36,15 +36,6 @@ function Popup({ notification, onClose, onMarkAsRead }) {
                 <p className="text-sm text-gray-500 mb-4">
                     Trạng thái: {notification.status}
                 </p>
-                {notification.status !== "Đã xem" && (
-                    <button
-                        onClick={() => onMarkAsRead(notification.id)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center"
-                    >
-                        <Check className="w-5 h-5 mr-2" />
-                        Đánh dấu đã xem
-                    </button>
-                )}
             </div>
         </div>
     );
@@ -57,6 +48,7 @@ export default function NotificationPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Fetch notifications from the API
     const fetchNotifications = async () => {
         setIsLoading(true);
         setError(null);
@@ -93,23 +85,20 @@ export default function NotificationPage() {
     };
 
     const markAsRead = async (notificationId) => {
-        console.log("Marking as read:", notificationId);
         try {
             const token = localStorage.getItem("token");
             if (!token) {
                 throw new Error("Không tìm thấy token xác thực");
             }
 
-            // Thay đổi phương thức từ 'GET' sang 'PATCH'
             const response = await fetch(
-                `http://127.0.0.1:8000/api/student/notification/${notificationId}`,
+                `http://127.0.0.1:8000/api/student/notification/${notificationId}?status=Đã xem`,
                 {
-                    method: "PATCH", // Sử dụng PATCH hoặc POST tùy API
+                    method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ status: "Đã xem" }), // Gửi dữ liệu cần cập nhật
                 }
             );
 
@@ -117,30 +106,27 @@ export default function NotificationPage() {
                 throw new Error("Không thể cập nhật trạng thái thông báo");
             }
 
+            // Assuming the API returns the updated notification
             const updatedNotification = await response.json();
 
             setNotifications((prevNotifications) =>
                 prevNotifications.map((notification) =>
                     notification.id === notificationId
-                        ? {
-                              ...notification,
-                              status: updatedNotification.status,
-                          }
+                        ? { ...notification, status: "Đã xem" }
                         : notification
                 )
             );
 
+            // Update the selected notification if it's the one marked as read
             if (
                 selectedNotification &&
                 selectedNotification.id === notificationId
             ) {
                 setSelectedNotification((prev) => ({
                     ...prev,
-                    status: updatedNotification.status,
+                    status: "Đã xem",
                 }));
             }
-
-            console.log("Notification marked as read:", updatedNotification);
         } catch (err) {
             console.error("Lỗi khi đánh dấu đã xem:", err);
         }
@@ -163,20 +149,20 @@ export default function NotificationPage() {
         (n) => n.status !== "Đã xem"
     ).length;
 
-    const handleNotificationClick = (notification) => {
-        setSelectedNotification(notification);
+    // Handle clicking on a notification
+    const handleNotificationClick = async (notification) => {
+        if (notification.status !== "Đã xem") {
+            await markAsRead(notification.id);
+        }
+        setSelectedNotification({
+            ...notification,
+            status: "Đã xem",
+        });
     };
 
+    // Handle closing the popup
     const closePopup = () => {
-        console.log("Closing popup");
         setSelectedNotification(null);
-    };
-
-    const handleMarkAsRead = async (notificationId) => {
-        console.log("Handling mark as read:", notificationId);
-        await markAsRead(notificationId);
-        await fetchNotifications(); // Refresh the notifications list
-        closePopup();
     };
 
     if (isLoading) {
@@ -295,7 +281,6 @@ export default function NotificationPage() {
                 <Popup
                     notification={selectedNotification}
                     onClose={closePopup}
-                    onMarkAsRead={handleMarkAsRead} // Bỏ comment để truyền prop
                 />
             )}
         </div>

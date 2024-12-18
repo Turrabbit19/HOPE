@@ -1,11 +1,22 @@
 import React from "react";
-import { Navigate, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ component: Component, ...rest }) => {
-  const userId = localStorage.getItem("user_id");
-  const role = localStorage.getItem("role") === "Sinh viên";
+const Guard = ({ children, allowedRoles }) => {
+    const userRole = localStorage.getItem("role");
 
-  return isInQueue ? <Component /> : <Navigate to="/student/confirm-change-schedule" />;
+    if (!userRole || !allowedRoles.includes(userRole)) {
+        if (userRole === "Sinh viên") {
+            return <Navigate to="/student/home" />;
+        }
+        if (userRole === "Giảng viên") {
+            return <Navigate to="/teacher/home" />;
+        }
+        if (userRole === "Quản trị viên") {
+            return <Navigate to="/admin" />;
+        }
+    }
+
+    return children;
 };
 
-export default ProtectedRoute;
+export default Guard;

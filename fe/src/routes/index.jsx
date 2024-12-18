@@ -33,7 +33,6 @@ import ListSubjects from "../pages/admin/subjects/list/page";
 import ClassRoom from "../pages/admin/classroom/page";
 import ListRooms from "../pages/admin/rooms/page";
 
-
 import SyllabusList from "../pages/admin/syllabus/list/page";
 
 import ListCourse from "../pages/admin/courses/list/page";
@@ -80,6 +79,7 @@ import SubMajorsList from "../pages/student/sub-majorRegistration/page";
 import Syllabus from "../pages/student/syllabus/page";
 import StatisticSemester from "../pages/student/statistics-semester/page";
 import ProtectedRoute from "./ProtectedRoute";
+import Guard from "./guard";
 
 const Router = createBrowserRouter([
   {
@@ -478,7 +478,11 @@ const Router = createBrowserRouter([
   },
   {
     path: "teacher",
-    element: <LayoutTeacher />,
+    element: (
+      <Guard allowedRoles={["Giảng viên"]}>
+        <LayoutTeacher />
+      </Guard>
+    ),
     children: [
       {
         path: "home",
@@ -496,7 +500,11 @@ const Router = createBrowserRouter([
   },
   {
     path: "student",
-    element: <LayoutClient />,
+    element: (
+      <Guard allowedRoles={["Sinh viên"]}>
+        <LayoutClient />
+      </Guard>
+    ),
     children: [
       {
         path: "schedule",
@@ -505,7 +513,7 @@ const Router = createBrowserRouter([
 
       {
         path: "class-registration",
-        element: <ProtectedRoute component={ScheduleRegistration}/>,
+        element: <ProtectedRoute component={ScheduleRegistration} />,
       },
       {
         path: "confirm-change-schedule",
@@ -530,7 +538,7 @@ const Router = createBrowserRouter([
       {
         path: "statistics-semester",
         element: <StatisticSemester />,
-      }
+      },
     ],
   },
   {

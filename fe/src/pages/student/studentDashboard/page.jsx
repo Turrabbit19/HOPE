@@ -243,7 +243,7 @@ export default function CombinedDashboard() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Student Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-4">Sinh viên</h1>
       <div className="mb-4">
         <nav className="flex border-b border-gray-200">
           {['profile', 'today', 'classrooms'].map((tab) => (

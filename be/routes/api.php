@@ -46,6 +46,7 @@ Route::prefix('admin')
         Route::post('import-student', [ApiStudentController::class, 'importStudent']);
         Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
         Route::post('decrement-semester', [ApiStudentController::class, 'decrementStudentsSemester']);
+        Route::post('students/filter', [ApiStudentController::class, 'filters']);
 
 
         Route::apiResource('teachers', ApiTeacherController::class);

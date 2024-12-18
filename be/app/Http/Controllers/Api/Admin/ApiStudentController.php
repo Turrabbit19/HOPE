@@ -62,6 +62,73 @@ class ApiStudentController extends Controller
         }
     }
 
+    public function filters(Request $request){
+        try{
+            $majorId = $request->input('major_id');
+            $course_id = $request->input('course_id');
+            $status = $request->input('status');
+    
+            $query = Student::with('majors', 'course'); 
+            
+            $majors = StudentMajor::with('major')
+            ->where('status', 1)
+            ->get()
+            ->groupBy('student_id');
+
+            if (!empty($majorId)) {
+                $query->whereHas('majors', function ($q) use ($majorId) {
+                    $q->where('majors.id', $majorId);
+                });
+            }
+    
+            if (!empty($course_id)) {
+                $query->where('course_id', $course_id);
+            }
+    
+            if (!empty($status)) {
+                $query->where('status', $status);
+            }
+            
+            $students = $query->get();
+
+            if ($students->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không có sinh viên nào.',
+                ], 404);
+            }
+
+            $data = $students->map(function ($student) use ($majors) {
+                $studentMajor = $majors[$student->id]->first() ?? null;
+                return [
+                    "id" => $student->id,
+                    "avatar" => $student->user->avatar ?? null,
+                    "student_code" => $student->student_code,
+                    "name" => $student->user->name,
+                    "email" => $student->user->email,
+                    "phone" => $student->user->phone,
+
+                    'course_name' => $student->course->name,
+                    'major_name' => $studentMajor->major->name,
+                    'current_semester' => $student->current_semester,
+                    'status' => match ($student->status) {
+                        '0' => "Đang học",
+                        '1' => "Bảo lưu",
+                        '2' => "Hoàn thành",
+                        default => "Không xác định"
+                    },
+                ];
+            });
+
+    
+            return response()->json($data);
+        }catch (\Exception $e){
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Students',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    } 
+
     public function exportStudent()
     {
         try {

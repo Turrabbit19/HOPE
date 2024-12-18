@@ -15,7 +15,6 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 
 class SyllabusController extends Controller
 {
@@ -28,39 +27,29 @@ class SyllabusController extends Controller
 
             $majors = $student->majors;
 
-            $cacheKey = "syllabus_" . implode('_', $majors->pluck('id')->toArray());
+            $subjects = MajorSubject::whereIn('major_id', $majors->pluck('id'))
+                ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
+                ->select('subjects.id', 'subjects.name', 'subjects.credit', 'subjects.order', 'subjects.form')
+                ->orderBy('subjects.order')
+                ->get()
+                ->groupBy('order')
+                ->map(function ($subjects, $order) {
+                    return [
+                        'order' => $order,
+                        'subjects' => $subjects->map(function ($subject) {
+                            return [
+                                'id' => $subject->id,
+                                'name' => $subject->name,
+                                'credit' => $subject->credit,
+                                'form' => $subject->form ? "ONL" : "OFF"
+                            ];
+                        })->values()
+                    ];
+                })
+                ->values();
 
-            $cachedSubjects = Redis::get($cacheKey);
-
-            if ($cachedSubjects) {
-                $subjects = json_decode($cachedSubjects, true);
-            } else {
-                $subjects = MajorSubject::whereIn('major_id', $majors->pluck('id'))
-                    ->join('subjects', 'major_subjects.subject_id', '=', 'subjects.id')
-                    ->select('subjects.id', 'subjects.name', 'subjects.credit', 'subjects.order', 'subjects.form')
-                    ->orderBy('subjects.order')
-                    ->get()
-                    ->groupBy('order')
-                    ->map(function ($subjects, $order) {
-                        return [
-                            'order' => $order,
-                            'subjects' => $subjects->map(function ($subject) {
-                                return [
-                                    'id' => $subject->id,
-                                    'name' => $subject->name,
-                                    'credit' => $subject->credit,
-                                    'form' => $subject->form ? "ONL" : "OFF"
-                                ];
-                            })->values()
-                        ];
-                    })
-                    ->values();
-
-                if ($subjects->isEmpty()) {
-                    return response()->json(['error' => 'Không tìm thấy môn học cho sinh viên.'], 404);
-                }
-
-                Redis::setex($cacheKey, 31536000, json_encode($subjects));
+            if ($subjects->isEmpty()) {
+                return response()->json(['error' => 'Không tìm thấy môn học cho sinh viên.'], 404);
             }
 
             return response()->json(['data' => $subjects], 200);

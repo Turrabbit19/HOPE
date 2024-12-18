@@ -285,9 +285,7 @@ class ApiMajorController extends Controller
             $data = $teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
-                    'name' => $teacher->name,
-                    'email' => $teacher->email,
-                    'status' => $teacher->status ? "Đang hoạt động" : "Tạm dừng",
+                    'name' => $teacher->user->name,
                 ];
             });
 

@@ -205,6 +205,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::get('{semesterId}/timetable', [StudentController::class, 'getTimetableBySemester']);
 
         Route::get('sub-majors', [StudentController::class, 'getSubMajors']);
+
         Route::get('getFeeBySemester', [PayPalController::class, 'getFeeBySemester']);
         Route::apiResource('paypal', PayPalController::class);
         Route::post('sub-majors/{subMajorId}/register', [StudentController::class, 'registerSubMajor']);

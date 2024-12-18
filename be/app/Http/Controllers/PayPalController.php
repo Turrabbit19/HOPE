@@ -35,9 +35,7 @@ class PayPalController extends Controller
         return response()->json(['email' => $userEmail], 200);
     }
 
-    /**
-     * Check tuition fees with specific filters.
-     */
+
     public function checkTuitionFee(Request $request)
     {
         $validated = $request->validate([
@@ -62,9 +60,6 @@ class PayPalController extends Controller
         return response()->json(['status' => 'success', 'data' => $tuitionFees], 200);
     }
 
-    /**
-     * Get transactions by course with optional date filters.
-     */
     public function getTransactionsByCourse(Request $request)
     {
         $validated = $request->validate([
@@ -85,7 +80,6 @@ class PayPalController extends Controller
             })
             ->get();
 
-        // Lọc dữ liệu không cần thiết từ kết quả trả về
         $transactions->transform(function ($transaction) {
             $transaction->makeHidden(['updated_at']);
             $transaction->student->makeHidden(['id', 'user_id', 'course_id', 'status', 'deleted_at']);
@@ -97,32 +91,37 @@ class PayPalController extends Controller
         return response()->json($transactions, 200);
     }
 
-    /**
-     * Get fee details by semester for the current authenticated user.
-     */
     public function getFeeBySemester()
     {
         $user = Auth::user();
         $student = Student::where('user_id', $user->id)->firstOrFail();
         $fee = Transaction::where('user_id', $user->id)->first();
 
-        $semesterInfo = $this->getNextSemesterInfo($student->course_id, $student->current_semester + 1);
+        $semesterInfo = $this->getNextSemesterInfo($student->course_id, $student->current_semester);  // Kỳ học hiện tại
+
         if (!$semesterInfo) {
-            return response()->json(['error' => 'Không tìm thấy thông tin kỳ học.'], 404);
+            return response()->json(['error' => 'Không tìm thấy thông tin kỳ học hiện tại.'], 404);
+        }
+
+        if ($student->current_semester == 1) {
+            return response()->json("Bạn đã nộp học phí cho kỳ 1 rồi !!!", 200);
         }
 
         $registrationPeriod = $this->getRegistrationPeriod($semesterInfo->start_date);
         $now = Carbon::now();
 
-        // Check if the student has already paid tuition fee
         if ($fee && Carbon::parse($fee->created_at)->between($registrationPeriod['start'], $registrationPeriod['end'])) {
-            return response()->json("Bạn đã nộp học phí trong kỳ " . $fee->semester . " rồi !!!", 200);
+            if ($fee->semester == $student->current_semester) {
+                return response()->json("Bạn đã nộp học phí trong kỳ " . $fee->semester . " rồi !!!", 200);
+            } else {
+                return response()->json("Bạn đã nộp học phí trong kỳ " . $fee->semester . " rồi. Cảm ơn bạn !!!", 200);
+            }
         }
 
-        // Check registration period status
         if ($now->lt($registrationPeriod['start'])) {
             return response()->json(['error' => 'Thời gian nộp học phí chưa bắt đầu.'], 405);
         }
+
         if ($now->gt($registrationPeriod['end'])) {
             return response()->json([
                 'error' => 'Đã kết thúc ngày nộp học phí. Nếu chưa nộp vui lòng liên hệ phòng hỗ trợ Sinh Viên.',
@@ -136,13 +135,11 @@ class PayPalController extends Controller
         return response()->json([
             'total_credit' => $totalCredit,
             'price' => $totalPrice,
-            'order' => $student->current_semester + 1,
+            'order' => $student->current_semester,
         ], 200);
     }
 
-    /**
-     * Get the next semester info based on course and semester order.
-     */
+
     private function getNextSemesterInfo($course_id, $nextSemesterOrder)
     {
         return CourseSemester::where('course_id', $course_id)
@@ -152,9 +149,6 @@ class PayPalController extends Controller
             ->first();
     }
 
-    /**
-     * Calculate the registration period for a semester.
-     */
     private function getRegistrationPeriod($startDate)
     {
         $start = Carbon::parse($startDate)->subDays(10);
@@ -162,9 +156,6 @@ class PayPalController extends Controller
         return ['start' => $start, 'end' => $end];
     }
 
-    /**
-     * Get the subjects available for registration for a student.
-     */
     private function getSubjectsForRegistration($student)
     {
         $registeredSubjects = StudentSchedule::where('student_id', $student->id)

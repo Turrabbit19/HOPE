@@ -24,7 +24,7 @@ class TeacherImport implements ToModel, WithHeadingRow, WithValidation
             $majorId = $major ? $major->id : null;
 
             if (!$majorId) {
-                Log::warning("Major not found for row: ", $row);
+                Log::warning("Không tìm thấy Major: ", $row);
                 return null;
             }
 
@@ -54,7 +54,7 @@ class TeacherImport implements ToModel, WithHeadingRow, WithValidation
                 }
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to import teacher data: ' . $e->getMessage());
+            Log::error('Lỗi khi import dòng: ', ['row' => $row, 'message' => $e->getMessage()]);
             return null;
         }
     }

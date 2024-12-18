@@ -57,42 +57,50 @@ class TeacherController extends Controller
     public function getSchedules()
     {
         $user = Auth::user();
-
+    
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
+    
             $schedules = Schedule::where('teacher_id', $teacher->id)
                 ->where('end_date', '>=', Carbon::now())
                 ->with('days', 'shift', 'room', 'classroom', 'course', 'semester', 'major', 'subject')
                 ->get();
-
+    
             $currentDateTime = Carbon::now();
             $carbonDayOfWeek = $currentDateTime->dayOfWeek;
-
-            $currentDayOfWeek = $carbonDayOfWeek === 0 ? 1 : $carbonDayOfWeek + 1;
-
+            $currentDayOfWeek = $carbonDayOfWeek === 0 ? 1 : $carbonDayOfWeek + 1; 
+    
             $data = $schedules->map(function ($schedule) use ($currentDateTime, $currentDayOfWeek) {
-                $todayHasSchedule = $schedule->days
-                    ->pluck('id')
-                    ->contains($currentDayOfWeek);
-
+                $studentsCount = $schedule->classroom->students->count();
+                $maxStudents = $schedule->classroom->max_students;
+                $minStudents = (int)($maxStudents * 0.7); 
+    
                 $status = null;
-
-                if ($todayHasSchedule) {
-                    $shiftStart = Carbon::parse($schedule->shift->start_time);
-                    $shiftEnd = Carbon::parse($schedule->shift->end_time);
-
-                    if ($currentDateTime < $shiftStart) {
-                        $status = "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
-                    } elseif ($currentDateTime > $shiftEnd) {
-                        $status = "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
-                    } else {
-                        $status = "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
-                    }
+                if ($studentsCount < $minStudents) {
+                    $status = "Đang chờ xếp lớp"; 
                 } else {
-                    $status = "Không có lịch hôm nay";
+                    $scheduleEndDate = Carbon::parse($schedule->end_date); 
+                    if ($currentDateTime > $scheduleEndDate) {
+                        $status = "Đã kết thúc (Kết thúc vào: " . $scheduleEndDate->format('d/m/Y') . ")";
+                    } else {
+                        $todayHasSchedule = $schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
+                        if ($todayHasSchedule) {
+                            $shiftStart = Carbon::parse($schedule->shift->start_time);
+                            $shiftEnd = Carbon::parse($schedule->shift->end_time);
+    
+                            if ($currentDateTime < $shiftStart) {
+                                $status = "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                            } elseif ($currentDateTime > $shiftEnd) {
+                                $status = "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
+                            } else {
+                                $status = "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                            }
+                        } else {
+                            $status = "Không có lịch hôm nay";
+                        }
+                    }
                 }
-
+    
                 return [
                     'id' => $schedule->id,
                     'classroom' => $schedule->classroom->code,
@@ -102,34 +110,45 @@ class TeacherController extends Controller
                     'subject_name' => $schedule->subject->name,
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name,
-                    'link' => $schedule->link ? $schedule->link : "NULL",
+                    'link' => $schedule->link ?? "NULL", 
                     'start_date' => Carbon::parse($schedule->start_date)->format('d/m/Y'),
                     'end_date' => Carbon::parse($schedule->end_date)->format('d/m/Y'),
                     'days_of_week' => $schedule->days->sortBy('id')->map(fn($day) => ["Thứ" => $day->id])->values()->toArray(),
                     'schedule_status' => $status,
                 ];
             });
-
+    
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
-    }
+    }    
 
     public function getTimetable()
     {
         $user = Auth::user();
-
+    
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
+    
+            $lastestSemester = Semester::orderByDesc('start_date')->firstOrFail();
+    
             $timetable = Schedule::where('teacher_id', $teacher->id)
-                ->where('end_date', '>=', Carbon::now())
+                ->where('semester_id', $lastestSemester->id) 
+                ->with(['classroom', 'subject', 'shift', 'room', 'lessons'])
                 ->get();
-
+    
             $data = $timetable->map(function ($tt) {
+                $studentsCount = $tt->classroom->students->count();
+                $maxStudents = $tt->classroom->max_students;
+                $minStudents = (int)($maxStudents * 0.7); 
+    
+                if ($studentsCount < $minStudents) {
+                    return null; 
+                }
+    
                 return [
                     'id' => $tt->id,
                     'classroom_code' => $tt->classroom->code,
@@ -142,9 +161,9 @@ class TeacherController extends Controller
                     'schedule_lessons' => $tt->lessons->map(function ($lesson) use ($tt) {
                         $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
                             ->setTimeFrom(Carbon::parse($tt->shift->start_time));
-
+    
                         $currentDateTime = now();
-
+    
                         if ($currentDateTime < $lessonDateTime) {
                             $status = "Chưa tới";
                         } elseif ($currentDateTime >= $lessonDateTime && $currentDateTime <= $lessonDateTime->copy()->addMinutes($tt->shift->duration)) {
@@ -152,7 +171,7 @@ class TeacherController extends Controller
                         } else {
                             $status = "Đã kết thúc";
                         }
-
+    
                         return [
                             'name' => $lesson->name,
                             'description' => $lesson->description,
@@ -162,7 +181,9 @@ class TeacherController extends Controller
                     }),
                 ];
             });
-
+    
+            $data = $data->filter()->values();
+    
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
@@ -170,6 +191,7 @@ class TeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedules', 'message' => $e->getMessage()], 500);
         }
     }
+    
 
     public function getSemesterForTeacher()
     {
@@ -178,14 +200,14 @@ class TeacherController extends Controller
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
 
-            $semesters = Semester::all();
+            $semesters = Schedule::where('teacher_id', $teacher->id)->get();
 
             $data = $semesters->map(function ($sm) {
                 return [
-                    'id' => $sm->id,
-                    'name' => $sm->name,
-                    'start_date' => Carbon::parse($sm->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($sm->end_date)->format('d/m/Y'),
+                    'id' => $sm->semester->id,
+                    'name' => $sm->semester->name,
+                    'start_date' => Carbon::parse($sm->semester->start_date)->format('d/m/Y'),
+                    'end_date' => Carbon::parse($sm->semester->end_date)->format('d/m/Y'),
                 ];
             });
 
@@ -197,20 +219,16 @@ class TeacherController extends Controller
     public function getTimetableBySemesterForTeacher(string $semesterId)
     {
         $user = Auth::user();
-
+    
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
-            $semester = Semester::findOrFail($semesterId);
-            $semesterStartDate = Carbon::parse($semester->start_date);
-            $semesterEndDate = Carbon::parse($semester->end_date);
-
-            $timetable = Schedule::where('teacher_id', $teacher->id)
-                ->whereBetween('start_date', [$semesterStartDate, $semesterEndDate])
-                ->whereBetween('end_date', [$semesterStartDate, $semesterEndDate])
+    
+            $schedules = Schedule::where('semester_id', $semesterId)
+                ->where('teacher_id', $teacher->id) 
+                ->with(['classroom', 'subject', 'shift', 'room', 'lessons']) 
                 ->get();
-
-            $data = $timetable->map(function ($tt) {
+    
+            $data = $schedules->map(function ($tt) {
                 return [
                     'id' => $tt->id,
                     'subject_name' => $tt->subject->name,
@@ -223,9 +241,9 @@ class TeacherController extends Controller
                     'schedule_lessons' => $tt->lessons->map(function ($lesson) use ($tt) {
                         $lessonDateTime = Carbon::parse($lesson->pivot->study_date)
                             ->setTimeFrom(Carbon::parse($tt->shift->start_time));
-
+    
                         $currentDateTime = now();
-
+    
                         if ($currentDateTime < $lessonDateTime) {
                             $status = "Chưa tới";
                         } elseif ($currentDateTime >= $lessonDateTime && $currentDateTime <= $lessonDateTime->copy()->addMinutes($tt->shift->duration)) {
@@ -233,7 +251,7 @@ class TeacherController extends Controller
                         } else {
                             $status = "Đã kết thúc";
                         }
-
+    
                         return [
                             'name' => $lesson->name,
                             'description' => $lesson->description,
@@ -243,7 +261,7 @@ class TeacherController extends Controller
                     }),
                 ];
             });
-
+    
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập hoặc kỳ học không tồn tại.'], 404);
@@ -251,7 +269,7 @@ class TeacherController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
     }
-
+    
 
     public function getDetailSchedule(string $scheduleId)
     {

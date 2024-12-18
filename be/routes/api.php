@@ -65,12 +65,14 @@ Route::prefix('admin')
         Route::get('all/semesters', [ApiSemesterController::class, 'getAll']);
         Route::get('semester/{id}/restore', [ApiSemesterController::class, 'restore']);
         Route::get('filter-by-year/semesters', [ApiSemesterController::class, 'filterByYear']);
+
         Route::apiResource('majors', ApiMajorController::class);
         Route::get('main/majors', [ApiMajorController::class, 'getMainMajors']);
         Route::get('sub/majors', [ApiMajorController::class, 'getAllSubMajors']);
         Route::get('sub/{majorId}/majors', [ApiMajorController::class, 'getSubMajors']);
         Route::post('major/{id}/restore', [ApiMajorController::class, 'restore']);
         Route::get('major/{id}/subjects', [ApiMajorController::class, 'getAllSubjects']);
+        Route::get('major/{majorId}/teachers', [ApiMajorController::class, 'getTeachersByMajor']);
 
         Route::apiResource('subjects', ApiSubjectController::class);
         Route::get('all/subjects', [ApiSubjectController::class, 'getAll']);

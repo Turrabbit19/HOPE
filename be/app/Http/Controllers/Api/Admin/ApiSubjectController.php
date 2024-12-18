@@ -30,6 +30,7 @@ class ApiSubjectController extends Controller
                     'description' => $subject->description,
                     'credit' => $subject->credit,
                     'order' => $subject->order,
+                    'max_students' => $subject->max_students,
                     'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
                 ];
             });
@@ -271,6 +272,7 @@ class ApiSubjectController extends Controller
                 'name' => $subject->name,
                 'description' => $subject->description,
                 'credit' => $subject->credit,
+                'max_students' => $subject->max_students,
                 'order' => $subject->order,
                 'form' => $subject->form,
                 'majors' => $majors,
@@ -456,7 +458,7 @@ class ApiSubjectController extends Controller
                 return [
                     'id' => $classroom->id,
                     'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
+                    'max_students' => $classroom->subject->max_students,
                     'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });

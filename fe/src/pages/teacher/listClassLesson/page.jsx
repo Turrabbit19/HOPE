@@ -128,6 +128,8 @@ export default function ScheduleTable() {
       );
     }
 
+    const currentDate = new Date();
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
         <div className="bg-white shadow-md rounded-lg p-8 max-w-[95%] w-auto max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
@@ -142,7 +144,7 @@ export default function ScheduleTable() {
                 <th className="border border-gray-400 px-4 py-3">Số buổi có mặt</th>
                 <th className="border border-gray-400 px-4 py-3">Số buổi vắng</th>
                 <th className="border border-gray-400 px-4 py-3">Tỷ lệ điểm danh</th>
-                {data.length > 0 && Array.from({ length: data[0].total_lessons }).map((_, index) => (
+                {data[0].absent_details.map((_, index) => (
                   <th key={index} className="border border-gray-400 px-4 py-3">Tiết {index + 1}</th>
                 ))}
               </tr>
@@ -167,33 +169,41 @@ export default function ScheduleTable() {
                         <div className="ml-2 w-40 h-4 bg-gray-200 rounded-full overflow-hidden">
                           <div
                             className={`h-4 ${attendanceRate >= 75
-                                ? 'bg-green-500'
-                                : attendanceRate >= 50
-                                  ? 'bg-yellow-500'
-                                  : 'bg-red-500'
+                              ? 'bg-green-500'
+                              : attendanceRate >= 50
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
                               }`}
                             style={{ width: `${attendanceRate}%` }}
                           ></div>
                         </div>
                       </div>
                     </td>
-                    {Array.from({ length: student.total_lessons }).map((_, lessonIndex) => {
-                      const lesson = student.absent_details[lessonIndex];
-                      const isAbsent = lesson && lesson.status === 'Vắng';
-                      const hasOccurred = lesson && new Date(lesson.study_date) <= new Date();
+                    {student.absent_details.map((lesson, lessonIndex) => {
+                      const lessonDate = lesson ? new Date(lesson.study_date.split('/').reverse().join('-')) : null; // Parse "DD/MM/YYYY"
+                      const hasOccurred = lessonDate && lessonDate <= currentDate; // Check if the lesson date has passed
+                      const status = lesson ? lesson.status : "Chưa rõ"; // Default to "Chưa rõ" if status is missing
+
                       return (
                         <td key={lessonIndex} className="border border-gray-400 px-4 py-3">
                           <span
-                            className={`text-2xl ${
-                              !hasOccurred
-                                ? 'text-gray-300'
-                                : isAbsent
-                                  ? 'text-red-500'
-                                  : 'text-green-500'
-                            }`}
-                            title={`Tiết ${lessonIndex + 1}: ${lesson ? lesson.study_date : ''}`}
+                            className={`text-2xl ${status === 'Chưa rõ'
+                                ? 'text-gray-300' // Pending lesson
+                                : status === 'Vắng'
+                                  ? 'text-red-500' // Absent
+                                  : status === 'Có mặt'
+                                    ? 'text-green-500' // Present
+                                    : ''
+                              }`}
+                            title={`Tiết ${lessonIndex + 1}: ${lesson ? lesson.study_date : 'N/A'}`}
                           >
-                            {!hasOccurred ? '-' : isAbsent ? 'X' : '✔'}
+                            {status === 'Chưa rõ'
+                              ? '-'
+                              : status === 'Vắng'
+                                ? 'X'
+                                : status === 'Có mặt'
+                                  ? '✔'
+                                  : ''}
                           </span>
                         </td>
                       );
@@ -277,10 +287,10 @@ export default function ScheduleTable() {
                   <td className="px-4 py-3">
                     <div
                       className={`text-md font-bold ${schedule.schedule_status === 'Active'
-                          ? 'text-green-600'
-                          : schedule.schedule_status === 'Pending'
-                            ? 'text-yellow-600'
-                            : 'text-red-600'
+                        ? 'text-green-600'
+                        : schedule.schedule_status === 'Pending'
+                          ? 'text-yellow-600'
+                          : 'text-red-600'
                         }`}
                     >
                       {schedule.schedule_status || 'N/A'}

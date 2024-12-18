@@ -11,7 +11,7 @@ const ContentClient = () => {
         <Content
             className=""
             style={{
-                padding: 24,
+                padding: 0,
                 margin: 0,
                 minHeight: "100vh",
                 background: colorBgContainer,

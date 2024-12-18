@@ -317,60 +317,61 @@ class TeacherController extends Controller
     public function getDetailsClassroom(string $scheduleId)
     {
         $user = Auth::user();
-
+    
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
+    
             $scheduleInfor = Schedule::where('teacher_id', $teacher->id)
                 ->where('id', $scheduleId)
                 ->with('shift')
                 ->firstOrFail();
-
+    
             $classroomId = $scheduleInfor->classroom->id;
             $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
             $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time); 
-
+    
             $listStudents = StudentClassroom::where('classroom_id', $classroomId)->get();
-
+    
             if ($listStudents->isEmpty()) {
                 return response()->json(['message' => 'Hiện chưa có học sinh nào trong lớp này'], 200);
             }
-
+    
             $lessons = ScheduleLesson::where('schedule_id', $scheduleId)
                 ->orderBy('study_date', 'asc')
                 ->get();
-
+    
             $currentDateTime = now();
-
+    
             $data = $listStudents->map(function ($ls) use ($lessons, $shiftStartTime, $shiftEndTime, $currentDateTime) {
                 $attendedCount = 0;
                 $absentCount = 0;
                 $absentDetails = [];
                 $upcomingLessons = 0;
-
+    
                 foreach ($lessons as $lesson) {
                     $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
                     $lessonEndTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftEndTime);
-
-                    if ($lessonStartTime <= $currentDateTime && $lessonEndTime >= $currentDateTime) {
+    
+                    if ($lessonEndTime < $currentDateTime) {
+                        // Lesson has passed
                         $attendance = StudentLesson::where('student_id', $ls->student_id)
                             ->where('lesson_id', $lesson->lesson_id)
                             ->first();
-
+    
                         if ($attendance) {
                             if ($attendance->status == 1) {
                                 $attendedCount++;
                                 $absentDetails[] = [
                                     'lesson_id' => $lesson->lesson_id,
                                     'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
-                                    'status' => 'Có mặt'
+                                    'status' => 'Có mặt',
                                 ];
                             } else {
                                 $absentCount++;
                                 $absentDetails[] = [
                                     'lesson_id' => $lesson->lesson_id,
                                     'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
-                                    'status' => 'Vắng'
+                                    'status' => 'Vắng',
                                 ];
                             }
                         } else {
@@ -378,34 +379,20 @@ class TeacherController extends Controller
                             $absentDetails[] = [
                                 'lesson_id' => $lesson->lesson_id,
                                 'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
-                                'status' => 'Vắng'
+                                'status' => 'Vắng',
                             ];
                         }
-                    } elseif ($lessonEndTime <= $currentDateTime) {
-                        $attendance = StudentLesson::where('student_id', $ls->student_id)
-                            ->where('lesson_id', $lesson->lesson_id)
-                            ->first();
-
-                        if ($attendance && $attendance->status == 1) {
-                            $attendedCount++;
-                        } else {
-                            $absentCount++;
-                            $absentDetails[] = [
-                                'lesson_id' => $lesson->lesson_id,
-                                'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
-                                'status' => 'Vắng'
-                            ];
-                        }
-                    } else {
+                    } elseif ($lessonStartTime > $currentDateTime) {
+                        // Lesson is upcoming
                         $upcomingLessons++;
                         $absentDetails[] = [
                             'lesson_id' => $lesson->lesson_id,
                             'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
-                            'status' => 'Chưa rõ'
+                            'status' => 'Chưa rõ',
                         ];
                     }
                 }
-
+    
                 return [
                     'student_id' => $ls->student->id,
                     'student_name' => $ls->student->user->name,
@@ -418,7 +405,7 @@ class TeacherController extends Controller
                     'absent_details' => $absentDetails,
                 ];
             });
-
+    
             return response()->json(['ListStudents' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
@@ -429,6 +416,7 @@ class TeacherController extends Controller
             ], 500);
         }
     }
+    
 
     public function getDetailClassroom(string $scheduleId, $lessonId)
     {

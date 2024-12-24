@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,4 +20,9 @@ Route::get('/', function () {
 
 Route::get('users', function () {
     return view('user');
+});
+
+Route::get('redis-test', function () {
+    $ping = Redis::ping();
+    return response()->json(['ping' => $ping]);
 });

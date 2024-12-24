@@ -79,6 +79,7 @@ import Syllabus from "../pages/student/syllabus/page";
 import StatisticSemester from "../pages/student/statistics-semester/page";
 import TuitionFee from "../pages/admin/tuition-fee/page";
 import Guard from "./guard";
+import TestNew from "../pages/admin/testNew";
 
 const Router = createBrowserRouter([
   {
@@ -115,6 +116,10 @@ const Router = createBrowserRouter([
       {
         path: "tuition-fee",
         element: <TuitionFee />,
+      },
+      {
+        path: "test-new",
+        element: <TestNew />,
       },
       {
         path: "list-syllabus",

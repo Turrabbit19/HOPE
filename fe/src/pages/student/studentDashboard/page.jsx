@@ -311,7 +311,6 @@ function TodayClasses() {
       </ul>
 
       {/* Modal */}
-
     </div>
   );
 }
@@ -375,19 +374,11 @@ function ClassroomList() {
   )
 }
 
-// Main Combined Dashboard Component
 export default function CombinedDashboard() {
   const [activeTab, setActiveTab] = useState("Thông tin");
 
   return (
-    <div className="container mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-4">
-        Quản lý Thông tin
-      </h1>
-      <p className="text-gray-500 text-lg mb-6">
-        Xem thông tin cá nhân, lịch học hôm nay và danh sách lớp học.
-      </p>
-
+    <div className=" mx-auto p-6 bg-white shadow-lg rounded-lg">
       <nav className="flex border-b border-gray-300 mb-6">
         {["Thông tin", "Hôm nay", "Các lớp hiện tại"].map((tab) => (
           <button

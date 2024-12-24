@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Layout, Menu, theme, Button } from "antd";
 import { Link } from "react-router-dom";
+
 import {
   DoubleLeftOutlined,
   DoubleRightOutlined,
@@ -149,6 +150,11 @@ const AsideAdmin = () => {
       icon: <BellOutlined />,
       label: <Link to="/admin/tuition-fee">Quản lý học phí</Link>,
     },
+    {
+      key: "sub7",
+      icon: <BellOutlined />,
+      label: <Link to="/admin/test-new">Test</Link>,
+    }
   ];
 
   const {

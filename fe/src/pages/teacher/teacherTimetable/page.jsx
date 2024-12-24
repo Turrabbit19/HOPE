@@ -168,6 +168,17 @@ const TeacherTimetable = () => {
     setCurrentWeek(new Date(semester.start_date));
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Đã kết thúc":
+        return "bg-green-100";
+      case "Đang dạy":
+        return "bg-red-100";
+      default:
+        return "bg-gray-100";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -268,8 +279,9 @@ const TeacherTimetable = () => {
               return (
                 <div
                   key={shift}
-                  className="bg-white shadow-sm rounded-lg p-6 relative border border-gray-200"
-                >
+                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
+                    lesson ? getStatusColor(lesson.status) : "bg-white"
+                  }`}                >
                   <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
                     {shift}
                   </div>
@@ -338,7 +350,9 @@ const TeacherTimetable = () => {
                       return (
                         <td
                           key={day}
-                          className="p-3 text-center border border-gray-200"
+                          className={`p-3 text-center border border-gray-200 ${
+                            lesson ? getStatusColor(lesson.status) : ""
+                          }`}
                         >
                           {schedule && lesson ? (
                             <div>

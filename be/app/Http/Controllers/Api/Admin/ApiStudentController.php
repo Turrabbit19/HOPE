@@ -6,6 +6,7 @@ use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseSemester;
 use App\Models\Student;
 use App\Models\StudentMajor;
 use App\Models\User;
@@ -31,6 +32,7 @@ class ApiStudentController extends Controller
 
             $data = $students->map(function ($student) use ($majors) {
                 $studentMajor = $majors[$student->id]->first() ?? null;
+
                 return [
                     "id" => $student->id,
                     "avatar" => $student->user->avatar ?? null,

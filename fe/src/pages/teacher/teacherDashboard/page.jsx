@@ -140,16 +140,7 @@ export default function TeacherInfo() {
           >
             Thông tin cá nhân
           </button>
-          <button
-            onClick={() => setActiveTab('timetable')}
-            className={`flex-1 py-3 text-xl ${
-              activeTab === 'timetable'
-                ? 'text-blue-600 border-b-4 border-blue-600'
-                : 'text-gray-600'
-            }`}
-          >
-            Lịch dạy hôm nay
-          </button>
+
         </div>
 
         {activeTab === 'info' && (

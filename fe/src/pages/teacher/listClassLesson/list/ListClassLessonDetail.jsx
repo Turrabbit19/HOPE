@@ -29,7 +29,7 @@ const ListClassLessonDetail = ({ scheduleData }) => {
       `${lessonDate} ${lessonTime}`,
       "DD/MM/YYYY HH:mm"
     );
-    const lessonEnd = lessonStart.clone().add(15, "minutes");
+    const lessonEnd = lessonStart.clone().add(120, "minutes");
 
     if (lessonStatus === "Đang dạy") {
       if (now.isAfter(lessonStart) && now.isBefore(lessonEnd)) {

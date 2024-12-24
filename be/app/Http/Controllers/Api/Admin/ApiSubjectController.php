@@ -11,6 +11,7 @@ use App\Models\Subject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 
 class ApiSubjectController extends Controller
@@ -19,8 +20,15 @@ class ApiSubjectController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
+            $cacheKey = "subjects_per_page_{$perPage}";
 
-            $subjects = Subject::paginate($perPage);
+            $subjects = Cache::get($cacheKey);
+
+            if (!$subjects) {
+                $subjects = Subject::paginate($perPage);
+
+                Cache::put($cacheKey, $subjects, now()->addMinutes(30));
+            }
 
             $data = collect($subjects->items())->map(function ($subject) {
                 return [
@@ -173,37 +181,37 @@ class ApiSubjectController extends Controller
             'code.string' => 'Mã môn học phải là chuỗi.',
             'code.max' => 'Mã môn học không được vượt quá 50 ký tự.',
             'code.unique' => 'Mã môn học này đã tồn tại.',
-            
+
             'name.required' => 'Tên môn học là bắt buộc.',
             'name.string' => 'Tên môn học phải là chuỗi.',
             'name.max' => 'Tên môn học không được vượt quá 100 ký tự.',
             'name.unique' => 'Tên môn học này đã tồn tại trong hệ thống.',
-            
+
             'description.string' => 'Mô tả môn học phải là chuỗi ký tự.',
             'description.max' => 'Mô tả môn học không được vượt quá 255 ký tự.',
-            
+
             'credit.required' => 'Số tín chỉ là bắt buộc.',
             'credit.integer' => 'Số tín chỉ phải là một số nguyên.',
             'credit.min' => 'Số tín chỉ phải lớn hơn hoặc bằng 1.',
             'credit.max' => 'Số tín chỉ không được vượt quá 19.',
-            
+
             'order.required' => 'Thứ tự môn học là bắt buộc.',
             'order.integer' => 'Thứ tự môn học phải là một số nguyên.',
             'order.min' => 'Thứ tự môn học phải lớn hơn hoặc bằng 1.',
             'order.max' => 'Thứ tự môn học không được vượt quá 9.',
-            
+
             'max_students.required' => 'Số lượng sinh viên tối đa là bắt buộc.',
             'max_students.integer' => 'Số lượng sinh viên tối đa phải là một số nguyên.',
             'max_students.min' => 'Số lượng sinh viên tối đa phải ít nhất là 30.',
-            
+
             'form.required' => 'Hình thức học là bắt buộc.',
             'form.boolean' => 'Hình thức học phải là true hoặc false.',
             'form.in' => 'Hình thức học phải có giá trị là 0 hoặc 1.',
-            
+
             'majors.array' => 'Các chuyên ngành phải là một mảng.',
             'majors.*.required_with' => 'Mỗi chuyên ngành phải được chọn khi có giá trị cho các chuyên ngành.',
             'majors.*.exists' => 'Chuyên ngành không tồn tại.',
-            
+
             'sub_major.integer' => 'Chuyên ngành phụ phải là một số nguyên.',
             'sub_major.exists' => 'Chuyên ngành phụ không tồn tại trong hệ thống.',
         ]);
@@ -228,7 +236,6 @@ class ApiSubjectController extends Controller
             if (isset($data['sub_major'])) {
                 $subject->majors()->sync([$data['sub_major']]);
             }
-            Redis::del('syllabus');
 
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -304,37 +311,37 @@ class ApiSubjectController extends Controller
             'code.string' => 'Mã môn học phải là chuỗi.',
             'code.max' => 'Mã môn học không được vượt quá 50 ký tự.',
             'code.unique' => 'Mã môn học này đã tồn tại.',
-            
+
             'name.sometimes' => 'Tên môn học là tùy chọn nhưng nếu có, phải là chuỗi và không vượt quá 100 ký tự.',
             'name.string' => 'Tên môn học phải là chuỗi.',
             'name.max' => 'Tên môn học không được vượt quá 100 ký tự.',
             'name.unique' => 'Tên môn học này đã tồn tại.',
-            
+
             'description.string' => 'Mô tả môn học phải là chuỗi.',
             'description.max' => 'Mô tả môn học không được vượt quá 255 ký tự.',
-            
+
             'credit.sometimes' => 'Số tín chỉ là tùy chọn nhưng nếu có, phải là số nguyên và trong phạm vi từ 1 đến 19.',
             'credit.integer' => 'Số tín chỉ phải là một số nguyên.',
             'credit.min' => 'Số tín chỉ phải lớn hơn hoặc bằng 1.',
             'credit.max' => 'Số tín chỉ không được vượt quá 19.',
-            
+
             'order.sometimes' => 'Thứ tự môn học là tùy chọn nhưng nếu có, phải là số nguyên và trong phạm vi từ 1 đến 9.',
             'order.integer' => 'Thứ tự môn học phải là một số nguyên.',
             'order.min' => 'Thứ tự môn học phải lớn hơn hoặc bằng 1.',
             'order.max' => 'Thứ tự môn học không được vượt quá 9.',
-            
+
             'max_students.sometimes' => 'Số lượng sinh viên tối đa là tùy chọn nhưng nếu có, phải là số nguyên và ít nhất 30.',
             'max_students.integer' => 'Số lượng sinh viên tối đa phải là một số nguyên.',
             'max_students.min' => 'Số lượng sinh viên tối đa phải ít nhất là 30.',
-            
+
             'form.sometimes' => 'Hình thức học là tùy chọn nhưng nếu có, phải là boolean và có giá trị là 0 hoặc 1.',
             'form.boolean' => 'Hình thức học phải là true hoặc false.',
             'form.in' => 'Hình thức học phải có giá trị là 0 hoặc 1.',
-            
+
             'majors.array' => 'Các chuyên ngành phải là một mảng.',
             'majors.*.required_with' => 'Mỗi chuyên ngành phải được chọn khi có giá trị cho các chuyên ngành.',
             'majors.*.exists' => 'Chuyên ngành không tồn tại.',
-            
+
             'sub_major.integer' => 'Chuyên ngành phụ phải là một số nguyên.',
             'sub_major.exists' => 'Chuyên ngành phụ không tồn tại trong hệ thống.',
         ]);
@@ -421,12 +428,12 @@ class ApiSubjectController extends Controller
             '*.name' => 'required|string|max:50',
             '*.description' => 'required|string',
         ], [
-            '*.name.required' => 'Tên là bắt buộc.',
-            '*.name.string' => 'Tên phải là chuỗi ký tự.',
-            '*.name.max' => 'Tên không được vượt quá 50 ký tự.',
-            
-            '*.description.required' => 'Mô tả là bắt buộc.',
-            '*.description.string' => 'Mô tả phải là chuỗi ký tự.',
+            '*.name.required' => 'Tên bài học là bắt buộc.',
+            '*.name.string' => 'Tên bài học phải là chuỗi ký tự.',
+            '*.name.max' => 'Tên bài học không được vượt quá 50 ký tự.',
+
+            '*.description.required' => 'Mô tả bài học là bắt buộc.',
+            '*.description.string' => 'Mô tả bài học phải là chuỗi ký tự.',
         ]);
 
         if ($validator->fails()) {
@@ -434,18 +441,25 @@ class ApiSubjectController extends Controller
         }
 
         try {
-            $validatedData = $validator->validated();
+            $subject = Subject::findOrFail($id);
+
+            $lessonsData = $validator->validated();
             $lessons = [];
 
-            foreach ($validatedData as $lessonData) {
-                $lessonData['subject_id'] = $id;
-                $lesson = Lesson::create($lessonData);
-                $lessons[] = $lesson;
+            foreach ($lessonsData as $lesson) {
+                $lessons[] = new Lesson([
+                    'name' => $lesson['name'],
+                    'description' => $lesson['description'],
+                ]);
             }
 
-            return response()->json(['data' => $lessons, 'message' => 'Tạo mới thành công'], 201);
+            $subject->lessons()->saveMany($lessons);
+
+            return response()->json(['message' => 'Thêm bài học thành công.', 'data' => $lessons], 201);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Thêm bài học thất bại.', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -481,11 +495,11 @@ class ApiSubjectController extends Controller
             '*.code.string' => 'Mã lớp học phải là chuỗi ký tự.',
             '*.code.max' => 'Mã lớp học không được vượt quá 10 ký tự.',
             '*.code.unique' => 'Mã lớp học này đã tồn tại trong hệ thống.',
-            
+
             '*.max_students.required' => 'Số lượng học sinh là bắt buộc.',
             '*.max_students.integer' => 'Số lượng học sinh phải là một số nguyên.',
             '*.max_students.min' => 'Số lượng học sinh phải lớn hơn hoặc bằng 1.',
-            
+
             '*.status.boolean' => 'Trạng thái phải là giá trị true hoặc false.',
         ]);
 

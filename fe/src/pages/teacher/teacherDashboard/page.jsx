@@ -59,14 +59,14 @@ export default function TeacherInfo() {
             },
           }
         );
-        console.log("Đã nhận phản hồi:", response.status, response.statusText);
+        // console.log("Đã nhận phản hồi:", response.status, response.statusText);
         if (!response.ok) {
           throw new Error(
             `Không thể lấy lịch dạy: ${response.status} ${response.statusText}`
           );
         }
         const data = await response.json();
-        console.log("Dữ liệu lịch học nhận được:", data);
+        // console.log("Dữ liệu lịch học nhận được:", data);
 
         const today = new Date();
         const todayString = today.toLocaleDateString("en-GB");

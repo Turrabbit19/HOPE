@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  Book,
-  Info,
-  AlertCircle,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, Book, Info, AlertCircle } from 'lucide-react';
 
 const TeacherTimetable = () => {
   const [currentWeek, setCurrentWeek] = useState(() => new Date());
@@ -68,11 +58,13 @@ const TeacherTimetable = () => {
       }
 
       const data = await response.json();
+      console.log("Fetched semesters:", data);
       setSemesters(data.data || []);
       if (data.data && data.data.length > 0) {
         setSelectedSemester(data.data[0]);
       }
     } catch (err) {
+      console.error("Error fetching semesters:", err);
       setError(err.message || "Đã xảy ra lỗi khi tải danh sách kỳ học");
     } finally {
       setIsLoading(false);
@@ -109,8 +101,10 @@ const TeacherTimetable = () => {
       }
 
       const data = await response.json();
+      console.log("Fetched timetable data:", data);
       setTimetableData(data.data || []);
     } catch (err) {
+      console.error("Error fetching timetable data:", err);
       setError(err.message || "Đã xảy ra lỗi khi tải lịch dạy");
     } finally {
       setIsLoading(false);
@@ -130,10 +124,7 @@ const TeacherTimetable = () => {
     setCurrentWeek((prevWeek) => {
       const nextWeek = new Date(prevWeek);
       nextWeek.setDate(prevWeek.getDate() + 7);
-      if (selectedSemester && nextWeek <= new Date(selectedSemester.end_date)) {
-        return nextWeek;
-      }
-      return prevWeek;
+      return nextWeek;
     });
   };
 
@@ -141,26 +132,22 @@ const TeacherTimetable = () => {
     setCurrentWeek((prevWeek) => {
       const previousWeek = new Date(prevWeek);
       previousWeek.setDate(prevWeek.getDate() - 7);
-      if (
-        selectedSemester &&
-        previousWeek >= new Date(selectedSemester.start_date)
-      ) {
-        return previousWeek;
-      }
-      return prevWeek;
+      return previousWeek;
     });
   };
 
   const handleGoToCurrentWeek = () => {
     const today = new Date();
-    if (
-      selectedSemester &&
-      today >= new Date(selectedSemester.start_date) &&
-      today <= new Date(selectedSemester.end_date)
-    ) {
-      setCurrentWeek(today);
-      setSelectedDay(getCurrentDay());
-    }
+    setCurrentWeek(today);
+    setSelectedDay(getCurrentDay());
+  };
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const getWeekDates = () => {
@@ -168,28 +155,47 @@ const TeacherTimetable = () => {
     startOfWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    return `${startOfWeek.toLocaleDateString(
-      "vi-VN"
-    )} - ${endOfWeek.toLocaleDateString("vi-VN")}`;
+    return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
   };
 
   const getScheduleForDayAndShift = (day, shift) => {
+    if (!Array.isArray(timetableData)) {
+      console.error("timetableData is not an array:", timetableData);
+      return undefined;
+    }
+
     const dayDate = new Date(currentWeek);
     dayDate.setDate(
       currentWeek.getDate() - currentWeek.getDay() + daysOfWeek.indexOf(day) + 1
     );
-    const formattedDate = dayDate.toLocaleDateString("vi-VN");
-    return timetableData.find(
-      (schedule) =>
-        schedule.shift_name === shift &&
-        schedule.schedule_lessons.some(
-          (lesson) => lesson.date === formattedDate
-        )
-    );
+    const formattedDate = formatDate(dayDate);
+
+    // console.log("Looking for schedule:", { day, shift, formattedDate });
+
+    const schedule = timetableData.find(item => {
+      return item.shift_name === shift;
+    });
+
+    if (schedule) {
+      const hasLessonOnDate = schedule.schedule_lessons.some(
+        lesson => lesson.date === formattedDate
+      );
+      if (hasLessonOnDate) {
+        return {
+          ...schedule,
+          subject_name: schedule.subject_name,
+          room_name: schedule.room_name,
+          classroom_code: schedule.classroom_code
+        };
+      }
+    }
+
+    return undefined;
   };
 
   const getLessonForDate = (schedule, date) => {
-    return schedule.schedule_lessons.find((lesson) => lesson.date === date);
+    if (!schedule || !schedule.schedule_lessons) return null;
+    return schedule.schedule_lessons.find(lesson => lesson.date === date);
   };
 
   const openPopup = (schedule, lesson) => {
@@ -327,7 +333,7 @@ const TeacherTimetable = () => {
                   daysOfWeek.indexOf(selectedDay) +
                   1
               );
-              const formattedDate = dayDate.toLocaleDateString("vi-VN");
+              const formattedDate = formatDate(dayDate);
               const lesson = schedule
                 ? getLessonForDate(schedule, formattedDate)
                 : null;
@@ -382,10 +388,7 @@ const TeacherTimetable = () => {
                         <div className="flex flex-col">
                           <span>{day}</span>
                           <span className="text-gray-500 font-normal">
-                            {date.toLocaleDateString("vi-VN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                            })}
+                            {formatDate(date)}
                           </span>
                         </div>
                       </th>
@@ -410,7 +413,7 @@ const TeacherTimetable = () => {
                           dayIndex +
                           1
                       );
-                      const formattedDate = dayDate.toLocaleDateString("vi-VN");
+                      const formattedDate = formatDate(dayDate);
                       const schedule = getScheduleForDayAndShift(day, shift);
                       const lesson = schedule
                         ? getLessonForDate(schedule, formattedDate)
@@ -477,22 +480,22 @@ const TeacherTimetable = () => {
                 <p className="flex items-center text-gray-700">
                   <Book className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Tiết học:</span>
-                  {selectedSchedule.lesson.name}
+                  {selectedSchedule.lesson?.name}
                 </p>
                 <p className="flex items-center text-gray-700">
                   <Info className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Nội dung:</span>
-                  {selectedSchedule.lesson.description}
+                  {selectedSchedule.lesson?.description}
                 </p>
                 <p className="flex items-center text-gray-700">
                   <Calendar className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Ngày:</span>
-                  {selectedSchedule.lesson.date}
+                  {selectedSchedule.lesson?.date}
                 </p>
                 <p className="flex items-center text-gray-700">
                   <Info className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Trạng thái:</span>
-                  {selectedSchedule.lesson.status}
+                  {selectedSchedule.lesson?.status}
                 </p>
               </div>
             </div>
@@ -512,3 +515,4 @@ const TeacherTimetable = () => {
 };
 
 export default TeacherTimetable;
+

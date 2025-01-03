@@ -533,6 +533,10 @@ const ScheduleList = () => {
                                                               }
                                                             </p>
                                                             <p>
+                                                              Ca học:{" "}
+                                                              {classroom.shift}
+                                                            </p>
+                                                            <p>
                                                               Phòng:{" "}
                                                               {classroom.room}
                                                             </p>

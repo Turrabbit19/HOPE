@@ -15,17 +15,24 @@ use Illuminate\Support\Facades\Log;
 class StatisticsController extends Controller
 {
 
-    public function getStudentStatistics()
+    public function getStudentStatistics(Request $request)
     {
         try {
-            $statistics = Student::whereIn('course_id', Course::pluck('id'))
-                ->select('course_id')
-                ->groupBy('course_id')
-                ->get();
+            $year = $request->input('year');
+
+            $query = Student::select('course_id')
+                ->groupBy('course_id');
+
+            if ($year) {
+                $query->whereHas('course', function ($query) use ($year) {
+                    $query->whereYear('start_date', $year);
+                });
+            }
+
+            $statistics = $query->get();
 
             $result = $statistics->mapWithKeys(function ($stat) {
                 $courseName = Course::find($stat->course_id)->name;
-
                 $studentCount = Student::where('course_id', $stat->course_id)->count();
 
                 return [$stat->course_id => ['course_name' => $courseName, 'student_count' => $studentCount]];
@@ -36,15 +43,48 @@ class StatisticsController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-    public function getStudentCountByMajorInCourse(string $id)
+
+
+    public function getStudentCountByMajorInCourse(Request $request, string $id)
     {
         try {
-            $majorsWithCounts = Major::whereHas('students', function ($query) use ($id) {
+            $year = $request->input('year');  // Lọc theo năm
+            $semesterId = $request->input('semester_id');  // Lọc theo kỳ học
+
+            $majorsWithCounts = Major::whereHas('students', function ($query) use ($id, $year, $semesterId) {
                 $query->where('course_id', $id);
+
+                // Lọc theo năm nếu có tham số year
+                if ($year) {
+                    $query->whereHas('course', function ($query) use ($year) {
+                        $query->whereYear('start_date', $year);
+                    });
+                }
+
+                // Lọc theo kỳ học nếu có tham số semester_id
+                if ($semesterId) {
+                    $query->whereHas('course', function ($query) use ($semesterId) {
+                        $query->where('semester_id', $semesterId);
+                    });
+                }
             })
                 ->withCount([
-                    'students' => function ($query) use ($id) {
+                    'students' => function ($query) use ($id, $year, $semesterId) {
                         $query->where('course_id', $id);
+
+                        // Lọc theo năm nếu có tham số year
+                        if ($year) {
+                            $query->whereHas('course', function ($query) use ($year) {
+                                $query->whereYear('start_date', $year);
+                            });
+                        }
+
+                        // Lọc theo kỳ học nếu có tham số semester_id
+                        if ($semesterId) {
+                            $query->whereHas('course', function ($query) use ($semesterId) {
+                                $query->where('semester_id', $semesterId);
+                            });
+                        }
                     }
                 ])
                 ->where('main', 1)
@@ -158,27 +198,28 @@ class StatisticsController extends Controller
         }
     }
 
-    public function getClassrooms()
+    public function getClassrooms(Request $request)
     {
         try {
-            $latestSemester = Semester::orderBy('start_date', 'desc')->first();
+            $semesterId = $request->input('semester_id');
 
-            if (!$latestSemester) {
-                return response()->json(['message' => 'Không tìm thấy kỳ học nào'], 404);
+            $query = Schedule::query();
+
+            if ($semesterId) {
+                $query->where('semester_id', $semesterId);
             }
 
-            $classroomCount = Schedule::where('semester_id', $latestSemester->id)
-                ->whereHas('students')
+            $classroomCount = $query->whereHas('students')
                 ->distinct('classroom_id')
                 ->count('classroom_id');
 
             return response()->json([
-                'latest_semester' => $latestSemester->name,
+                'semester' => $semesterId ? Semester::find($semesterId)->name : 'Tất cả các kỳ học',
                 'total_classrooms' => $classroomCount,
             ], 200);
         } catch (Exception $e) {
             Log::error('Error fetching classroom statistics: ' . $e->getMessage());
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Đã xảy ra lỗi: ' . $e->getMessage()], 500);
         }
     }
 }

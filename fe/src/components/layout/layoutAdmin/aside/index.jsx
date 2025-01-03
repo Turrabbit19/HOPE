@@ -54,7 +54,7 @@ const AsideAdmin = () => {
       icon: <ReadOutlined />,
     },
     {
-      name: "Quản lý khóa học",
+      name: "Quản lý khóa sinh viên",
       link: "/admin/list-course",
       icon: <DatabaseOutlined />,
     },

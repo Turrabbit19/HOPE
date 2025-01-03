@@ -509,54 +509,73 @@ const ListSubject = () => {
 
                         <div className="listCourse__item-body">
                           <div className="flex gap-8">
-                          <div className="listCourse__item-status_group">
-  {/* Hình thức và trạng thái */}
-  <div className="flex items-center gap-3 listCourse__item-status">
-    <span className="text-[#9E9E9E]">Hình thức:</span>
-    <div className="flex items-center gap-1 bg-[#44cc151a] px-2 py-1 rounded">
-      <img
-        className="fill-current svg-green"
-        src="/assets/svg/status.svg"
-        alt="status"
-      />
-      <span className="text-[#44CC15] text-[12px] font-semibold">
-        {subject.form}
-      </span>
-    </div>
-  </div>
+                            <div className="listCourse__item-status_group">
+                              {/* Hình thức và trạng thái */}
+                              <div className="flex items-center gap-3 listCourse__item-status">
+                                <span className="text-[#9E9E9E]">
+                                  Hình thức:
+                                </span>
+                                <div className="flex items-center gap-1 bg-[#44cc151a] px-2 py-1 rounded">
+                                  <img
+                                    className="fill-current svg-green"
+                                    src="/assets/svg/status.svg"
+                                    alt="status"
+                                  />
+                                  <span className="text-[#44CC15] text-[12px] font-semibold">
+                                    {subject.form}
+                                  </span>
+                                </div>
+                              </div>
 
-  {/* Mã môn học */}
-  <p className="text-[#9E9E9E] mt-2">
-    <strong className="text-black">Code:</strong>
-    <span className="text-black ml-2">{subject.code}</span>
-  </p>
+                              {/* Mã môn học */}
+                              <p className="text-[#9E9E9E] mt-2">
+                                <strong className="text-black">Code:</strong>
+                                <span className="text-black ml-2">
+                                  {subject.code}
+                                </span>
+                              </p>
 
-  {/* Tín chỉ và kỳ học */}
-  <div className="flex gap-4 mt-3">
-    <p className="text-[#9E9E9E] flex-1">
-      <strong className="text-black">Tín chỉ:</strong>
-      <span className="text-black ml-2">{subject.credit}</span>
-    </p>
+                              {/* Tín chỉ và kỳ học */}
+                              <div className="flex gap-4 mt-3">
+                                <p className="text-[#9E9E9E] flex-1">
+                                  <strong className="text-black">
+                                    Tín chỉ:
+                                  </strong>
+                                  <span className="text-black ml-2">
+                                    {subject.credit}
+                                  </span>
+                                </p>
 
-    <p className="text-[#9E9E9E] flex-1">
-      <strong className="text-black">Kỳ học:</strong>
-      <span className="text-black ml-2">{subject.order}</span>
-    </p>
-  </div>
+                                <p className="text-[#9E9E9E] flex-1">
+                                  <strong className="text-black">
+                                    Kỳ học:
+                                  </strong>
+                                  <span className="text-black ml-2">
+                                    {subject.order}
+                                  </span>
+                                </p>
+                              </div>
 
-  {/* Số lượng sinh viên */}
-  <p className="text-[#9E9E9E] mt-3">
-    <strong className="text-black">Số lượng sinh viên:</strong>
-    <span className="text-black ml-2">{subject.max_students}</span>
-  </p>
+                              {/* Số lượng sinh viên */}
+                              <p className="text-[#9E9E9E] mt-3">
+                                <strong className="text-black">
+                                  Số lượng sinh viên:
+                                </strong>
+                                <span className="text-black ml-2">
+                                  {subject.max_students}
+                                </span>
+                              </p>
 
-  {/* Mô tả */}
-  <div className="flex items-center gap-2 mt-3">
-    <span className="text-[#9E9E9E] flex-shrink-0">Mô tả:</span>
-    <span className="text-black ml-2 line-clamp-2">{subject.description}</span>
-  </div>
-</div>
-
+                              {/* Mô tả */}
+                              <div className="flex items-center gap-2 mt-3">
+                                <span className="text-[#9E9E9E] flex-shrink-0">
+                                  Mô tả:
+                                </span>
+                                <span className="text-black ml-2 line-clamp-2">
+                                  {subject.description}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
@@ -572,31 +591,39 @@ const ListSubject = () => {
                                 credit: subject.credit,
                               }}
                             >
-                              Chi Tiết
+                              Chi Tiết môn học
                             </Link>
                           </button>
 
-                          <Popconfirm
-                            title="Xóa môn học"
-                            description={`Bạn có chắc chắn muốn xóa môn học ${subject.name} không? `}
-                            onConfirm={() => onHandleDelete(subject.id)}
-                            onCancel={cancel}
-                            okText="Có"
-                            cancelText="Không"
-                          >
-                            <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                              <img src="/assets/svg/remove.svg" alt="" />
-                              Xóa khỏi Danh Sách
-                            </button>
-                          </Popconfirm>
+                          {subject.status === "Đang hoạt động" ? (
+                            ""
+                          ) : (
+                            <Popconfirm
+                              title="Xóa môn học"
+                              description={`Bạn có chắc chắn muốn xóa môn học ${subject.name} không? `}
+                              onConfirm={() => onHandleDelete(subject.id)}
+                              onCancel={cancel}
+                              okText="Có"
+                              cancelText="Không"
+                            >
+                              <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
+                                <img src="/assets/svg/remove.svg" alt="" />
+                                Xóa khỏi Danh Sách
+                              </button>
+                            </Popconfirm>
+                          )}
 
-                          <button
-                            className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                            onClick={() => openEditModal(subject)}
-                          >
-                            <EditOutlined />
-                            Sửa Thông Tin
-                          </button>
+                          {subject.status === "Đang hoạt động" ? (
+                            ""
+                          ) : (
+                            <button
+                              className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                              onClick={() => openEditModal(subject)}
+                            >
+                              <EditOutlined />
+                              Sửa Thông Tin
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

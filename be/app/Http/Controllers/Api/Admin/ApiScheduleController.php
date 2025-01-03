@@ -209,32 +209,50 @@ class ApiScheduleController extends Controller
         $teacherCode = $request->input('teacher_code');
 
         try {
+            // Lấy danh sách schedules có lessons đúng ngày từ bảng pivot
             $schedules = Schedule::with(['lessons' => function ($query) use ($date) {
-                $query->whereDate('study_date', $date);
-            }, 'shift', 'teacher'])
-                ->when($teacherCode, function ($query) use ($teacherCode) {
-                    $query->whereHas('teacher', function ($q) use ($teacherCode) {
-                        $q->where('teacher_code', 'like', "%$teacherCode%");
-                    });
-                })
-                ->get();
+                $query->wherePivot('study_date', $date); // Lọc lesson đúng ngày
+            }, 'shift', 'teacher', 'classroom', 'subject']);
 
+            // Nếu có teacher_code, thêm điều kiện
+            if ($teacherCode) {
+                $schedules->whereHas('teacher', function ($query) use ($teacherCode) {
+                    $query->where('teacher_code', 'like', "%$teacherCode%");
+                });
+            }
 
+            // Thực hiện truy vấn
+            $schedules = $schedules->get();
+
+            // Lọc các schedules có lessons đúng ngày
             $filteredSchedules = $schedules->filter(function ($schedule) {
                 return $schedule->lessons->isNotEmpty();
             });
 
+            // Lấy thời gian hiện tại để xác định trạng thái
             $now = Carbon::now();
 
-            $data = $filteredSchedules->map(function ($schedule) use ($now) {
+            // Xử lý dữ liệu trả về
+            $data = $filteredSchedules->map(function ($schedule) use ($now, $date) {
                 $shift = $schedule->shift;
+                $studyDates = $schedule->lessons->pluck('pivot.study_date'); // Lấy danh sách study_date
 
-                if ($now->lt($shift->start_time)) {
-                    $status = 'Chưa tới';
-                } elseif ($now->gte($shift->start_time) && $now->lte($shift->end_time)) {
-                    $status = 'Đang trong thời gian';
-                } else {
-                    $status = 'Đã xong';
+                $status = 'Chưa tới'; // Mặc định
+
+                // Xác định trạng thái dựa trên study_date và thời gian của shift
+                foreach ($studyDates as $studyDate) {
+                    $studyDate = Carbon::parse($studyDate);
+
+                    if ($now->isSameDay($studyDate)) {
+                        if ($now->lt($shift->start_time)) {
+                            $status = 'Chưa tới';
+                        } elseif ($now->gte($shift->start_time) && $now->lte($shift->end_time)) {
+                            $status = 'Đang trong thời gian';
+                        } else {
+                            $status = 'Đã xong';
+                        }
+                        break;
+                    }
                 }
 
                 return [
@@ -243,23 +261,22 @@ class ApiScheduleController extends Controller
                     'teacher' => $schedule->teacher->teacher_code,
                     'class' => $schedule->classroom->code,
                     'subject' => $schedule->subject->code,
-                    'status' => $status,
-                    'slots' => $schedule->lessons->map(function ($lesson) {
-                        return [
-                            'study_date' => Carbon::parse($lesson->study_date)->format('Y-m-d H:i:s'),
-                        ];
-                    }),
+
                 ];
             });
 
+
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
+            // Xử lý lỗi và trả về thông báo lỗi
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Schedules',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
+
+
 
     private function calculateEndDateLogic($startDate, $subjectId, $daysOfWeek)
     {
@@ -357,25 +374,21 @@ class ApiScheduleController extends Controller
         }
         return $scheduleDates;
     }
-    private function hasConflict(array $classroom, $start_date, $end_date, $days_of_week): bool
+    private function hasConflict(array $classroom, $start_date, $end_date, $days_of_week, $semesterId): bool
     {
-        $now = Carbon::now();
         $start_date = Carbon::parse($start_date);
         $end_date = Carbon::parse($end_date);
         $shift_id = $classroom['shift_id'];
         $room_id = $classroom['room_id'];
 
-        $conflictSchedules = Schedule::where(function ($query) use ($start_date, $end_date) {
-            $query->whereBetween('start_date', [$start_date, $end_date])
-                ->orWhereBetween('end_date', [$start_date, $end_date])
-                ->orWhere(function ($subQuery) use ($start_date, $end_date) {
-                    $subQuery->where('start_date', '<=', $start_date)
-                        ->where('end_date', '>=', $end_date);
-                });
-        })
-            ->where(function ($query) use ($now) {
-                $query->where('start_date', '<=', $now)
-                    ->where('end_date', '>=', $now);
+        $conflictSchedules = Schedule::where('semester_id', $semesterId)
+            ->where(function ($query) use ($start_date, $end_date) {
+                $query->whereBetween('start_date', [$start_date, $end_date])
+                    ->orWhereBetween('end_date', [$start_date, $end_date])
+                    ->orWhere(function ($subQuery) use ($start_date, $end_date) {
+                        $subQuery->where('start_date', '<=', $start_date)
+                            ->where('end_date', '>=', $end_date);
+                    });
             })
             ->whereHas('days', function ($query) use ($days_of_week) {
                 $query->whereIn('days.id', $days_of_week);
@@ -383,41 +396,46 @@ class ApiScheduleController extends Controller
             ->where('shift_id', $shift_id)
             ->where('room_id', $room_id)
             ->exists();
+
         return $conflictSchedules;
     }
     public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
     {
-        $validator = Validator::make($request->all(), [
-            'classrooms' => 'required|array',
-            'classrooms.*.id' => 'required|exists:classrooms,id',
-            'classrooms.*.shift_id' => 'required|exists:shifts,id',
-            'classrooms.*.room_id' => 'nullable|exists:rooms,id',
-            'classrooms.*.link' => 'nullable|sometimes|url',
-            'classrooms.*.start_date' => 'required|date',
-            'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
-            'classrooms.*.days_of_week' => 'required|array',
-            'classrooms.*.days_of_week.*' => 'integer'
-        ], [
-            'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
-            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
-            'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
-            'end_date.required' => 'Ngày kết thúc là bắt buộc.',
-            'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
-            'end_date.after_or_equal' => 'Ngày kết thúc phải sau ngày bắt đầu.',
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'classrooms' => 'required|array',
+                'classrooms.*.id' => 'required|exists:classrooms,id',
+                'classrooms.*.shift_id' => 'required|exists:shifts,id',
+                'classrooms.*.room_id' => 'nullable|exists:rooms,id',
+                'classrooms.*.link' => 'nullable|sometimes|url',
+                'classrooms.*.start_date' => 'required|date',
+                'classrooms.*.end_date' => 'required|date|after_or_equal:classrooms.*.start_date',
+                'classrooms.*.days_of_week' => 'required|array',
+                'classrooms.*.days_of_week.*' => 'integer'
+            ],
+            [
+                'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
+                'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
+                'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
+                'end_date.required' => 'Ngày kết thúc là bắt buộc.',
+                'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
+                'end_date.after_or_equal' => 'Ngày kết thúc phải sau ngày bắt đầu.',
 
-            'days_of_week.required' => 'Cần chọn ít nhất một ngày trong tuần.',
-            'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
-            'days_of_week.*.integer' => 'Các ngày trong tuần phải là kiểu số nguyên.',
+                'days_of_week.required' => 'Cần chọn ít nhất một ngày trong tuần.',
+                'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
+                'days_of_week.*.integer' => 'Các ngày trong tuần phải là kiểu số nguyên.',
 
-            'classrooms.required' => 'Lớp học là bắt buộc.',
-            'classrooms.array' => 'Lớp học phải là một mảng.',
-            'classrooms.*.id.required' => 'Mã lớp học là bắt buộc.',
-            'classrooms.*.id.exists' => 'Lớp học không tồn tại.',
-            'classrooms.*.shift_id.required' => 'ID ca học là bắt buộc.',
-            'classrooms.*.shift_id.exists' => 'Ca học không tồn tại trong hệ thống.',
-            'classrooms.*.room_id.exists' => 'Phòng học không tồn tại trong hệ thống.',
-            'classrooms.*.link.url' => 'Đường dẫn lớp học phải là một URL hợp lệ.',
-        ]);
+                'classrooms.required' => 'Lớp học là bắt buộc.',
+                'classrooms.array' => 'Lớp học phải là một mảng.',
+                'classrooms.*.id.required' => 'Mã lớp học là bắt buộc.',
+                'classrooms.*.id.exists' => 'Lớp học không tồn tại.',
+                'classrooms.*.shift_id.required' => 'ID ca học là bắt buộc.',
+                'classrooms.*.shift_id.exists' => 'Ca học không tồn tại trong hệ thống.',
+                'classrooms.*.room_id.exists' => 'Phòng học không tồn tại trong hệ thống.',
+                'classrooms.*.link.url' => 'Đường dẫn lớp học phải là một URL hợp lệ.',
+            ]
+        );
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -453,7 +471,7 @@ class ApiScheduleController extends Controller
                     }
                 }
 
-                if ($this->hasConflict($classroom, $startDate, $endDate, $daysOfWeek)) {
+                if ($this->hasConflict($classroom, $startDate, $endDate, $daysOfWeek, $semesterId)) {
                     $conflictClassrooms[] = $classroomCode;
                 }
 
@@ -478,7 +496,6 @@ class ApiScheduleController extends Controller
                     'semester_id' => $semesterId,
                     'major_id' => $majorId,
                     'subject_id' => $subjectId,
-
                     'classroom_id' => $classroom['id'],
                     'shift_id' => $classroom['shift_id'],
                     'room_id' => $classroom['room_id'],
@@ -517,6 +534,7 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     private function isDateOverlap($start1, $end1, $start2, $end2)
     {
@@ -646,95 +664,6 @@ class ApiScheduleController extends Controller
             return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới lịch học', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function updateByClassroomId(Request $request, string $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'start_date' => 'sometimes|date|after_or_equal:today',
-            'end_date' => 'sometimes|date|after_or_equal:start_date',
-            'days_of_week' => 'sometimes|array',
-            'days_of_week.*' => 'integer',
-            'shift_id' => 'sometimes|exists:shifts,id',
-            'room_id' => 'nullable|exists:rooms,id',
-            'link' => 'nullable|sometimes|url',
-        ], [
-            'start_date.date' => 'Ngày bắt đầu phải là định dạng ngày hợp lệ.',
-            'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
-            'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
-            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
-
-            'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
-            'days_of_week.*.integer' => 'Mỗi ngày trong tuần phải là kiểu số nguyên.',
-
-            'shift_id.exists' => 'Ca học không tồn tại trong hệ thống.',
-            'room_id.exists' => 'Phòng học không tồn tại trong hệ thống.',
-
-            'link.url' => 'Đường dẫn phải là một URL hợp lệ.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        try {
-            $data = $validator->validated();
-
-            $schedule = Schedule::findOrFail($id);
-
-            $startDate = $data['start_date'] ?? $schedule->start_date;
-            $endDate = $data['end_date'] ?? $schedule->end_date;
-            $daysOfWeek = $data['days_of_week'] ?? $schedule->days()->pluck('id')->toArray();
-            $subjectId = $schedule->subject_id;
-
-            $this->validateLessonDate($startDate, $endDate, $daysOfWeek, $subjectId);
-
-            $checkConflict = isset($data['start_date']) || isset($data['end_date']) ||
-                isset($data['days_of_week']) || isset($data['shift_id']) || isset($data['room_id']);
-
-            if (
-                $checkConflict && $this->hasConflict([
-                    'shift_id' => $data['shift_id'] ?? $schedule->shift_id,
-                    'room_id' => $data['room_id'] ?? $schedule->room_id,
-                ], $startDate, $endDate, $daysOfWeek)
-            ) {
-                return response()->json(['error' => "Lịch học có xung đột với các lịch hiện tại."], 409);
-            }
-
-            $resetLessonsDay = (
-                ($startDate !== $schedule->start_date) ||
-                ($endDate !== $schedule->end_date) ||
-                ($daysOfWeek !== $schedule->days()->pluck('id')->sort()->values()->toArray())
-            );
-
-            $schedule->update([
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'shift_id' => $data['shift_id'] ?? $schedule->shift_id,
-                'room_id' => $data['room_id'] ?? $schedule->room_id,
-                'link' => $data['link'] ?? $schedule->link,
-            ]);
-
-            if (isset($data['days_of_week'])) {
-                $days = collect($data['days_of_week'])->mapWithKeys(fn($day) => [$day => []]);
-                $schedule->days()->sync($days);
-            }
-
-            $scheduleDates = [];
-            if ($resetLessonsDay) {
-                $schedule->lessons()->detach();
-                $scheduleDates = $this->createLessonDate($schedule);
-            }
-
-            return response()->json([
-                'message' => 'Cập nhật lịch học thành công',
-                'scheduled_dates' => $scheduleDates,
-            ], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy lịch học với ID: ' . $id], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Cập nhật thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 

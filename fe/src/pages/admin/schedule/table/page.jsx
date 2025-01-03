@@ -53,7 +53,9 @@ export default function TestNew() {
         "http://localhost:8000/api/admin/all-schedules",
         { params }
       );
-      setSchedules(response.data.data || []);
+
+      const schedulesArray = Object.values(response.data.data || []);
+      setSchedules(schedulesArray);
     } catch (error) {
       console.error("Error fetching schedules:", error);
     }

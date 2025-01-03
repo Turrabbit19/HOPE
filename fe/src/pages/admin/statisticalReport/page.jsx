@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CountUp from "react-countup";
 import { Bar } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
-import { Modal, Button } from "antd";
+import { Modal, Button, Select } from "antd";
 
 import {
   Chart as ChartJS,
@@ -53,12 +53,74 @@ const StatisticalReport = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { Option } = Select;
+
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [years, setYears] = useState([]);
+
+  const fetchYears = async () => {
+    try {
+      const response = await instance.get("admin/courses");
+      const courses = response.data.data;
+
+      const currentDate = new Date();
+      const activeCourses = courses.filter((course) => {
+        const endDate = new Date(course.end_date);
+        return currentDate < endDate;
+      });
+
+      const activeYears = activeCourses.map((course) =>
+        new Date(course.start_date).getFullYear()
+      );
+      const uniqueYears = [...new Set(activeYears)];
+
+      setYears(uniqueYears);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu khóa học:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchYears();
+  }, []);
+
+  const [terms, setTerms] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState("all"); // Đặt mặc định là "all"
+
+  const fetchTerms = async () => {
+    try {
+      const response = await instance.get("admin/semesters");
+      const semesterData = response.data.data;
+
+      setTerms(semesterData);
+
+      // Giả sử bạn muốn chọn kỳ đầu tiên làm selectedTerm
+      setSelectedTerm(semesterData.length > 0 ? semesterData[0].id : "all");
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu kỳ học:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTerms();
+  }, []);
+
   useEffect(() => {
     const fetchClassroomStats = async () => {
       try {
-        const response = await instance.get("admin/statistics/classrooms");
+        const response = await instance.get("admin/statistics/classrooms", {
+          params: {
+            year: selectedYear !== "all" ? selectedYear : "",
+            semester_id: selectedTerm !== "all" ? selectedTerm : "",
+          },
+        });
+
         setClassroomStats({
-          latestSemester: response.data.latest_semester,
+          semester:
+            selectedTerm !== "all"
+              ? terms.find((term) => term.id === selectedTerm)?.name ||
+                "Kỳ học không xác định"
+              : "Tất cả các kỳ học",
           totalClassrooms: response.data.total_classrooms,
         });
       } catch (error) {
@@ -67,12 +129,22 @@ const StatisticalReport = () => {
     };
 
     fetchClassroomStats();
-  }, []);
+  }, [selectedYear, selectedTerm]);
 
   useEffect(() => {
     const fetchStudentByCourse = async () => {
       try {
-        const { data } = await instance.get(`admin/statistics/studentByCourse`);
+        const response = await instance.get(
+          "admin/statistics/studentByCourse",
+          {
+            params: {
+              year: selectedYear !== "all" ? selectedYear : "",
+              semester_id: selectedTerm !== "all" ? selectedTerm : "",
+            },
+          }
+        );
+
+        const data = response.data;
         const courses = Object.keys(data).map((courseId) => ({
           course_id: courseId,
           course_name: data[courseId].course_name,
@@ -80,11 +152,15 @@ const StatisticalReport = () => {
         }));
 
         const totalCourses = courses.length;
-        const maxStudentsCourse = courses.reduce((max, course) =>
-          course.student_count > max.student_count ? course : max
+        const maxStudentsCourse = courses.reduce(
+          (max, course) =>
+            course.student_count > max.student_count ? course : max,
+          { student_count: 0 }
         );
-        const minStudentsCourse = courses.reduce((min, course) =>
-          course.student_count < min.student_count ? course : min
+        const minStudentsCourse = courses.reduce(
+          (min, course) =>
+            course.student_count < min.student_count ? course : min,
+          { student_count: Infinity }
         );
 
         setCourseStats({ totalCourses, maxStudentsCourse, minStudentsCourse });
@@ -110,7 +186,7 @@ const StatisticalReport = () => {
     const fetchStudentTeacherByMajor = async () => {
       try {
         const { data } = await instance.get(
-          `admin/statistics/studentAndTeacherByMajor`
+          "admin/statistics/studentAndTeacherByMajor"
         );
 
         const totalStudents = data.reduce(
@@ -174,7 +250,7 @@ const StatisticalReport = () => {
 
     fetchStudentByCourse();
     fetchStudentTeacherByMajor();
-  }, []);
+  }, [selectedYear, selectedTerm]); // Lắng nghe sự thay đổi của selectedYear và selectedTerm
 
   const fetchMajorsByCourse = async (courseId) => {
     try {
@@ -269,7 +345,7 @@ const StatisticalReport = () => {
           {/* Tổng số lớp */}
           <div className="bg-red-100 shadow-md p-5 rounded-lg flex flex-col items-center">
             <h4 className="text-xl font-bold text-red-600 mb-2">
-              Tổng số lớp (Kì {classroomStats.latestSemester})
+              Tổng số lớp (Kì {classroomStats.semester})
             </h4>
             <p className="text-3xl font-semibold text-gray-800">
               <CountUp
@@ -279,6 +355,43 @@ const StatisticalReport = () => {
               />
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="col-span-12 flex justify-start items-center space-x-4 mb-4">
+        <div>
+          <label className="font-semibold text-gray-800 mr-2">Chọn Năm:</label>
+          <Select
+            value={selectedYear}
+            onChange={(value) => setSelectedYear(value)} // Lưu lại năm người dùng chọn
+            className="w-48 border-gray-300"
+            placeholder="Chọn năm"
+            allowClear
+          >
+            <Option value="all">Tất cả</Option> {/* Tùy chọn "Tất cả" */}
+            {years.map((year) => (
+              <Option key={year} value={year}>
+                {year}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="font-semibold text-gray-800 mr-2">Chọn Kỳ:</label>
+          <Select
+            value={selectedTerm}
+            onChange={(value) => setSelectedTerm(value)} // Khi người dùng chọn kỳ học
+            className="w-48 border-gray-300"
+            placeholder="Chọn kỳ"
+          >
+            <Option value="all">Tất cả</Option> {/* Tùy chọn "Tất cả" */}
+            {terms.map((term) => (
+              <Option key={term.id} value={term.id}>
+                {term.name}
+              </Option>
+            ))}
+          </Select>
         </div>
       </div>
 

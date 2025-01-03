@@ -39,6 +39,7 @@ class ApiSubjectController extends Controller
                     'order' => $subject->order,
                     'max_students' => $subject->max_students,
                     'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
+                    'status' => $subject->status ? 'Đang hoạt động' : 'Tạm dừng',
                 ];
             });
 

@@ -73,7 +73,6 @@ const ScheduleAdd = () => {
   const [classScheduleDays, setClassScheduleDays] = useState({});
 
   const [teachersByClass, setTeachersByClass] = useState({});
-  const [roomsByClass, setRoomsByClass] = useState({});
 
   const [error, setError] = useState(null);
 
@@ -438,51 +437,71 @@ const ScheduleAdd = () => {
     endDate,
   ]);
 
-  const handleRoomSelect = (classId, shiftId, roomId) => {
-    const room = roomId; // Đảm bảo rằng `roomId` là giá trị phòng học mới được chọn
+  // Cập nhật số lượng phòng trống cho ca học (shift)
+  const updateShiftRoomCount = (
+    prevShifts,
+    shiftId,
+    previousRoomId,
+    newRoomId
+  ) => {
+    return prevShifts.map((shift) => {
+      if (shift.id === shiftId) {
+        // Nếu có phòng trước đó, thêm lại số phòng trống
+        if (previousRoomId) shift.available_rooms_count += 1;
+        // Giảm số phòng trống khi chọn phòng mới
+        if (newRoomId) shift.available_rooms_count -= 1;
+      }
+      return shift;
+    });
+  };
 
-    if (!room) {
-      console.error("Phòng học không hợp lệ.");
+  // Hàm xử lý chọn phòng cho lớp học và ca học
+  const handleRoomSelect = (classId, shiftId, newRoomId) => {
+    if (!newRoomId || !shiftId) {
+      console.error("Phòng học hoặc ca học không hợp lệ.");
       return;
     }
 
     setSelectedRooms((prevSelected) => {
-      // Lấy phòng cũ trước khi cập nhật
+      // Kiểm tra xem phòng cũ đã chọn là gì
       const previousRoomId = prevSelected[shiftId]?.[classId]?.id;
 
-      // Cập nhật selectedRooms với phòng mới
-      const updatedShiftRooms = { ...(prevSelected[shiftId] || {}) };
-      updatedShiftRooms[classId] = { id: room };
+      // Nếu phòng cũ và phòng mới giống nhau, không cần thay đổi gì
+      if (previousRoomId === newRoomId) return prevSelected;
 
+      // Cập nhật dữ liệu phòng học
       const updatedSelectedRooms = {
         ...prevSelected,
-        [shiftId]: updatedShiftRooms,
+        [shiftId]: {
+          ...(prevSelected[shiftId] || {}),
+          [classId]: { id: newRoomId },
+        },
       };
 
-      // Cập nhật số lượng phòng trống và trả lại phòng cũ
+      // Cập nhật lại số lượng phòng trống cho ca học
       setShifts((prevShifts) => {
-        return prevShifts.map((shift) => {
-          if (shift.id === shiftId) {
-            if (previousRoomId) {
-              shift.available_rooms_count += 1; // Trả lại phòng cũ
-            }
-            shift.available_rooms_count -= 1; // Giảm đi phòng mới đã được chọn
-          }
-          return shift;
-        });
+        return updateShiftRoomCount(
+          prevShifts,
+          shiftId,
+          previousRoomId,
+          newRoomId
+        );
       });
 
       return updatedSelectedRooms;
     });
   };
 
+  // Hàm lấy các phòng học còn trống cho ca học của lớp
   const getAvailableRoomsForShift = (shiftId, classId) => {
-    // Lấy tất cả các phòng đã được chọn
-    const occupiedRooms = Object.values(selectedRooms)
-      .map((shiftRooms) => shiftRooms[classId]?.id) // Chỉ lấy phòng đã chọn cho lớp hiện tại
-      .filter(Boolean); // Loại bỏ null, undefined
+    if (!rooms || !shiftId || !selectedRooms[shiftId]) return rooms || [];
 
-    // Trả lại các phòng chưa được chọn
+    // Lấy danh sách phòng đã chọn
+    const occupiedRooms = Object.values(selectedRooms[shiftId])
+      .map((roomData) => roomData?.id)
+      .filter(Boolean);
+
+    // Trả về các phòng chưa được chọn (không bị chiếm dụng)
     return rooms.filter((room) => !occupiedRooms.includes(room.id));
   };
 
@@ -589,7 +608,7 @@ const ScheduleAdd = () => {
   const handleTeacherSelect = (classId, teacherId) => {
     const shiftId = classDetails[classId]?.session;
     if (!shiftId) {
-      message.error("Vui lòng chọn ca học trước!");
+      message.error("Vui lòng set lịch học trước!");
       return;
     }
 
@@ -604,10 +623,10 @@ const ScheduleAdd = () => {
       ...prev,
       [classId]: teacherId,
     }));
-    message.success("Phân công giáo viên thành công!");
   };
 
   const addSchedules = async (payload) => {
+    console.log("Add Schedules Payload:", payload); // Log payload
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -682,15 +701,13 @@ const ScheduleAdd = () => {
 
   // Xử lý khi submit cấu hình lớp học
   const handleFinish = async (values) => {
-    // Lưu các lớp đã chọn
     setSelectedClasses(values.classes);
-    // Lưu chi tiết lớp học (chỉ session và classRoom/classLink)
     const details = {};
     values.classes.forEach((classId) => {
       details[classId] = {
         session: values.classDetails?.[classId]?.session || null,
         classLink: values.classDetails?.[classId]?.classLink || "",
-        classRoom: values.classDetails?.[classId]?.classRoom || null,
+        classRoom: selectedRooms[classSessions[classId]]?.[classId]?.id || null,
       };
     });
     setClassDetails(details);
@@ -699,7 +716,7 @@ const ScheduleAdd = () => {
       classrooms: values.classes.map((classId) => ({
         id: classId,
         shift_id: details[classId].session,
-        room_id: details[classId].classRoom,
+        room_id: selectedRooms[classSessions[classId]]?.[classId]?.id,
         link:
           learningMethod === "Trực tuyến" ? details[classId].classLink : null,
         start_date: values.startDate
@@ -852,22 +869,51 @@ const ScheduleAdd = () => {
                     <Select
                       placeholder="Chọn phòng học"
                       value={
-                        selectedRooms[classSessions[classId]]?.[classId]?.id ||
-                        undefined
+                        classSessions[classId] &&
+                        selectedRooms[classSessions[classId]]?.[classId]?.id
+                          ? {
+                              value:
+                                selectedRooms[classSessions[classId]]?.[classId]
+                                  ?.id,
+                              label: rooms.find(
+                                (room) =>
+                                  room.id ===
+                                  selectedRooms[classSessions[classId]]?.[
+                                    classId
+                                  ]?.id
+                              )?.name,
+                            }
+                          : undefined
                       }
-                      onChange={(value) =>
-                        handleRoomSelect(classId, classSessions[classId], value)
-                      }
+                      onChange={(value) => {
+                        handleRoomSelect(
+                          classId,
+                          classSessions[classId],
+                          value.value
+                        );
+                        setSelectedRooms((prev) => ({
+                          ...prev,
+                          [classId]: value,
+                        }));
+                      }}
                       className="w-full rounded border"
+                      disabled={!classSessions[classId]}
+                      labelInValue
                     >
-                      {getAvailableRoomsForShift(
-                        classSessions[classId],
-                        classId
-                      ).map((room) => (
-                        <Option key={room.id} value={room.id}>
-                          {room.name}
-                        </Option>
-                      ))}
+                      {classSessions[classId] &&
+                      getAvailableRoomsForShift(classSessions[classId], classId)
+                        .length > 0 ? (
+                        getAvailableRoomsForShift(
+                          classSessions[classId],
+                          classId
+                        ).map((room) => (
+                          <Option key={room.id} value={room.id}>
+                            {room.name}
+                          </Option>
+                        ))
+                      ) : (
+                        <Option disabled>Không có phòng khả dụng</Option>
+                      )}
                     </Select>
                   </Form.Item>
                 </div>
@@ -932,23 +978,23 @@ const ScheduleAdd = () => {
         }}
       >
         {selectedClasses.map((classId) => {
+          // Lấy dữ liệu lớp từ classrooms
           const classData = classrooms.find((c) => c.id === Number(classId));
           const className = classData
             ? classData.name || classData.code
             : `ID ${classId}`;
 
-          // Get days selected for the class
+          // Lấy các ngày học
           const selectedDays = classScheduleDays[classId];
 
-          // Get the shiftId from classSessions
+          // Lấy shiftId từ classSessions và shift thông tin
           const shiftId = classSessions[classId];
           const shift = shifts.find((s) => s.id === shiftId);
 
-          // Get class details (including room)
-          const details = classDetails[classId];
-          const classRoom = details?.classRoom
-            ? rooms.find((room) => room.id === details.classRoom)?.name
-            : ""; // Room name
+          // Lấy selectedRoomId từ selectedRooms và tìm phòng tương ứng
+          const selectedRoomId =
+            selectedRooms[classSessions[classId]]?.[classId]?.id;
+          const room = rooms.find((r) => r.id === selectedRoomId);
 
           return (
             <Card
@@ -966,7 +1012,7 @@ const ScheduleAdd = () => {
 
               {/* Hiển thị các ngày học */}
               <div style={{ marginBottom: 8 }}>
-                <Text strong>Các Ngày Học:</Text>{" "}
+                <Text strong>Các Ngày Học:</Text>
                 {selectedDays && selectedDays.length > 0
                   ? selectedDays.map((day) => `Thứ ${day}`).join(", ")
                   : "Chưa chọn"}
@@ -978,17 +1024,17 @@ const ScheduleAdd = () => {
                 {learningMethod === "Online" ? "Online" : "Offline"}
               </div>
 
+              {/* Hiển thị link học online nếu hình thức học là Online */}
               {learningMethod === "Online" ? (
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Link Học Trực Tuyến:</Text>{" "}
                   {details?.classLink || "Chưa nhập"}
                 </div>
               ) : (
+                // Hiển thị phòng học offline
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Phòng Học Trực Tiếp:</Text>{" "}
-                  {selectedRooms[classSessions[classId]]?.[classId]?.id
-                    ? selectedRooms[classSessions[classId]]?.[classId]?.id
-                    : "Chưa chọn"}
+                  {room ? room.name : "Chưa chọn"}
                 </div>
               )}
 
@@ -1005,20 +1051,28 @@ const ScheduleAdd = () => {
               >
                 <Select
                   placeholder="Chọn giáo viên"
-                  value={teacherAssignments[classId]}
+                  value={teacherAssignments[classId] || undefined}
                   onChange={(value) => handleTeacherSelect(classId, value)}
                 >
-                  {teachers.map((teacher) => (
-                    <Option
-                      key={teacher.id}
-                      value={teacher.id}
-                      disabled={
-                        !isTeacherAvailable(teacher.id, shiftId, classId)
-                      }
-                    >
-                      {teacher.name}
-                    </Option>
-                  ))}
+                  {teachersByClass[classId]?.length ? (
+                    teachersByClass[classId].map((teacher) => (
+                      <Option
+                        key={teacher.id}
+                        value={teacher.id}
+                        disabled={
+                          !isTeacherAvailable(
+                            teacher.id,
+                            classSessions[classId],
+                            classId
+                          )
+                        }
+                      >
+                        {teacher.name}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option disabled>Không có giáo viên nào khả dụng</Option>
+                  )}
                 </Select>
               </Form.Item>
             </Card>

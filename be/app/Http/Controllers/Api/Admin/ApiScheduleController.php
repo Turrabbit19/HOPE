@@ -209,37 +209,30 @@ class ApiScheduleController extends Controller
         $teacherCode = $request->input('teacher_code');
 
         try {
-            // Lấy danh sách schedules có lessons đúng ngày từ bảng pivot
             $schedules = Schedule::with(['lessons' => function ($query) use ($date) {
-                $query->wherePivot('study_date', $date); // Lọc lesson đúng ngày
+                $query->wherePivot('study_date', $date);
             }, 'shift', 'teacher', 'classroom', 'subject']);
 
-            // Nếu có teacher_code, thêm điều kiện
             if ($teacherCode) {
                 $schedules->whereHas('teacher', function ($query) use ($teacherCode) {
                     $query->where('teacher_code', 'like', "%$teacherCode%");
                 });
             }
 
-            // Thực hiện truy vấn
             $schedules = $schedules->get();
 
-            // Lọc các schedules có lessons đúng ngày
             $filteredSchedules = $schedules->filter(function ($schedule) {
                 return $schedule->lessons->isNotEmpty();
             });
 
-            // Lấy thời gian hiện tại để xác định trạng thái
             $now = Carbon::now();
 
-            // Xử lý dữ liệu trả về
             $data = $filteredSchedules->map(function ($schedule) use ($now, $date) {
                 $shift = $schedule->shift;
-                $studyDates = $schedule->lessons->pluck('pivot.study_date'); // Lấy danh sách study_date
+                $studyDates = $schedule->lessons->pluck('pivot.study_date');
 
-                $status = 'Chưa tới'; // Mặc định
+                $status = 'Chưa tới';
 
-                // Xác định trạng thái dựa trên study_date và thời gian của shift
                 foreach ($studyDates as $studyDate) {
                     $studyDate = Carbon::parse($studyDate);
 
@@ -261,14 +254,13 @@ class ApiScheduleController extends Controller
                     'teacher' => $schedule->teacher->teacher_code,
                     'class' => $schedule->classroom->code,
                     'subject' => $schedule->subject->code,
-
+                    'status' => $status,
                 ];
             });
 
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
-            // Xử lý lỗi và trả về thông báo lỗi
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Schedules',
                 'message' => $e->getMessage(),

@@ -327,9 +327,13 @@ class   StudentController extends Controller
                 } else {
                     $status = null;
 
-                    $scheduleEndDate = Carbon::parse($schedule->schedule->end_date);
-                    if ($currentDateTime > $scheduleEndDate) {
-                        $status = "Đã kết thúc (Kết thúc vào: " . $scheduleEndDate->format('d/m/Y') . ")";
+                    $scheduleStartDate = Carbon::parse($schedule->start_date);
+                    $scheduleEndDate = Carbon::parse($schedule->end_date);
+
+                    if ($currentDateTime < $scheduleStartDate) {
+                        $status = "Chưa tới thời gian bắt đầu lịch";
+                    } elseif ($currentDateTime > $scheduleEndDate) {
+                        $status = "Đã kết thúc lịch";
                     } else {
                         $todayHasSchedule = $schedule->schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
 

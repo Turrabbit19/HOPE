@@ -79,9 +79,13 @@ class TeacherController extends Controller
                 if ($studentsCount < $minStudents) {
                     $status = "Đang chờ xếp lớp";
                 } else {
+                    $scheduleStartDate = Carbon::parse($schedule->start_date);
                     $scheduleEndDate = Carbon::parse($schedule->end_date);
-                    if ($currentDateTime > $scheduleEndDate) {
-                        $status = "Đã kết thúc (Kết thúc vào: " . $scheduleEndDate->format('d/m/Y') . ")";
+
+                    if ($currentDateTime < $scheduleStartDate) {
+                        $status = "Chưa tới thời gian bắt đầu lịch";
+                    } elseif ($currentDateTime > $scheduleEndDate) {
+                        $status = "Đã kết thúc lịch";
                     } else {
                         $todayHasSchedule = $schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
                         if ($todayHasSchedule) {
@@ -142,7 +146,7 @@ class TeacherController extends Controller
 
             $data = $timetable->map(function ($tt) {
 
-    
+
                 return [
                     'id' => $tt->id,
                     'classroom_code' => $tt->classroom->code,
@@ -182,8 +186,8 @@ class TeacherController extends Controller
                     })->filter(),
                 ];
             });
-    
-    
+
+
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);

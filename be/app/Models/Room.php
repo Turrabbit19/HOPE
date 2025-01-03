@@ -18,4 +18,9 @@ class Room extends Model
     protected $casts = [
         'status' => 'boolean'
     ];
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }

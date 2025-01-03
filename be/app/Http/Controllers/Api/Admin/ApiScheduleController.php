@@ -203,6 +203,64 @@ class ApiScheduleController extends Controller
         }
     }
 
+    public function getSchedules(Request $request)
+    {
+        $date = $request->input('date');
+        $teacherCode = $request->input('teacher_code');
+
+        try {
+            $schedules = Schedule::with(['lessons' => function ($query) use ($date) {
+                $query->whereDate('study_date', $date);
+            }, 'shift', 'teacher'])
+                ->when($teacherCode, function ($query) use ($teacherCode) {
+                    $query->whereHas('teacher', function ($q) use ($teacherCode) {
+                        $q->where('teacher_code', 'like', "%$teacherCode%");
+                    });
+                })
+                ->get();
+
+
+            $filteredSchedules = $schedules->filter(function ($schedule) {
+                return $schedule->lessons->isNotEmpty();
+            });
+
+            $now = Carbon::now();
+
+            $data = $filteredSchedules->map(function ($schedule) use ($now) {
+                $shift = $schedule->shift;
+
+                if ($now->lt($shift->start_time)) {
+                    $status = 'Chưa tới';
+                } elseif ($now->gte($shift->start_time) && $now->lte($shift->end_time)) {
+                    $status = 'Đang trong thời gian';
+                } else {
+                    $status = 'Đã xong';
+                }
+
+                return [
+                    'room_id' => $schedule->room_id,
+                    'shift_id' => $schedule->shift_id,
+                    'teacher' => $schedule->teacher->teacher_code,
+                    'class' => $schedule->classroom->code,
+                    'subject' => $schedule->subject->code,
+                    'status' => $status,
+                    'slots' => $schedule->lessons->map(function ($lesson) {
+                        return [
+                            'study_date' => Carbon::parse($lesson->study_date)->format('Y-m-d H:i:s'),
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Schedules',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function calculateEndDateLogic($startDate, $subjectId, $daysOfWeek)
     {
         $subject = Subject::findOrFail($subjectId);
@@ -301,6 +359,7 @@ class ApiScheduleController extends Controller
     }
     private function hasConflict(array $classroom, $start_date, $end_date, $days_of_week): bool
     {
+        $now = Carbon::now();
         $start_date = Carbon::parse($start_date);
         $end_date = Carbon::parse($end_date);
         $shift_id = $classroom['shift_id'];
@@ -314,13 +373,16 @@ class ApiScheduleController extends Controller
                         ->where('end_date', '>=', $end_date);
                 });
         })
+            ->where(function ($query) use ($now) {
+                $query->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now);
+            })
             ->whereHas('days', function ($query) use ($days_of_week) {
                 $query->whereIn('days.id', $days_of_week);
             })
             ->where('shift_id', $shift_id)
             ->where('room_id', $room_id)
             ->exists();
-
         return $conflictSchedules;
     }
     public function addSchedules(Request $request, string $semesterId, $courseId, $majorId, $subjectId)
@@ -469,11 +531,15 @@ class ApiScheduleController extends Controller
     private function hasTeacherConflict($teacherId, $scheduleId)
     {
         $newSchedule = Schedule::with('days', 'shift')->findOrFail($scheduleId);
-
         $newScheduleDays = $newSchedule->days->pluck('id')->toArray();
         $newScheduleShift = $newSchedule->shift_id;
 
-        $teacherSchedules = Schedule::where('teacher_id', $teacherId)->get();
+        $now = Carbon::now();
+
+        $teacherSchedules = Schedule::where('teacher_id', $teacherId)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->get();
 
         foreach ($teacherSchedules as $existingSchedule) {
             $existingDays = $existingSchedule->days->pluck('id')->toArray();
@@ -598,13 +664,13 @@ class ApiScheduleController extends Controller
             'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
             'end_date.date' => 'Ngày kết thúc phải là định dạng ngày hợp lệ.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
-        
+
             'days_of_week.array' => 'Danh sách ngày trong tuần phải là một mảng.',
             'days_of_week.*.integer' => 'Mỗi ngày trong tuần phải là kiểu số nguyên.',
-        
+
             'shift_id.exists' => 'Ca học không tồn tại trong hệ thống.',
             'room_id.exists' => 'Phòng học không tồn tại trong hệ thống.',
-        
+
             'link.url' => 'Đường dẫn phải là một URL hợp lệ.',
         ]);
 
@@ -944,13 +1010,13 @@ class ApiScheduleController extends Controller
                 ->where('major_id', $majorId)
                 ->where('subject_id', $subjectId)
                 ->get();
-    
+
             foreach ($schedules as $schedule) {
                 if ($schedule->students->count() == 0) {
                     $schedule->forceDelete();
                 }
             }
-    
+
             return response()->json(['message' => 'Đã xóa các lớp học không có sinh viên'], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -959,5 +1025,4 @@ class ApiScheduleController extends Controller
             ], 500);
         }
     }
-    
 }

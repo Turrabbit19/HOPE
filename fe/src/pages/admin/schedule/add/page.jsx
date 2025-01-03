@@ -15,6 +15,7 @@ import {
   message,
   Typography,
   Spin,
+  Progress,
 } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -34,7 +35,6 @@ const ScheduleAdd = () => {
 
   // Trích xuất các ID cần thiết từ state
   const { courseId, semesterId, majorId, subjectId } = state || {};
-  console.log("Received in ScheduleAdd - majorId:", majorId);
 
   // Các state để lưu trữ dữ liệu từ API
   const [shifts, setShifts] = useState([]);
@@ -43,6 +43,7 @@ const ScheduleAdd = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingShifts, setLoadingShifts] = useState(true);
+  const [classSessions, setClassSessions] = useState({});
 
   // State hiện tại của tab
   const [activeTab, setActiveTab] = useState("configure"); // Tab hiện tại
@@ -58,10 +59,22 @@ const ScheduleAdd = () => {
 
   // Giám sát các trường trong form
   const learningMethod = Form.useWatch("learningMethod", form);
+
   const startDate = Form.useWatch("startDate", form);
+  const endDate = Form.useWatch("endDate", form);
   const repeatDays = Form.useWatch("repeatDays", form);
+  const shiftID = Form.useWatch("session", form);
 
   const [semesterInfo, setSemesterInfo] = useState(null);
+
+  const [selectedRoomId, setSelectedRoomId] = useState({});
+  const [selectedRooms, setSelectedRooms] = useState({});
+
+  const [classScheduleDays, setClassScheduleDays] = useState({});
+
+  const [teachersByClass, setTeachersByClass] = useState({});
+  const [roomsByClass, setRoomsByClass] = useState({});
+
   const [error, setError] = useState(null);
 
   // Fetch dữ liệu khi component mount
@@ -71,58 +84,25 @@ const ScheduleAdd = () => {
       navigate("/schedule-list");
       return;
     }
-  
-    console.log("Major ID:", majorId);
-  
+
     // Hàm để lấy dữ liệu từ API
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-  
+
         // Gọi các API song song
-        const [shiftsRes, classroomsRes, teachersRes, roomsRes] =
-          await Promise.all([
-            axios.get("http://localhost:8000/api/admin/shifts", {
+        const [classroomsRes, teachersRes, roomsRes] = await Promise.all([
+          axios.get(
+            `http://localhost:8000/api/admin/${subjectId}/classrooms/without-schedule`,
+            {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }),
-            axios.get(
-              `http://localhost:8000/api/admin/${subjectId}/classrooms/without-schedule`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            ),
-            axios.get(
-              `http://localhost:8000/api/admin/major/${majorId}/teachers`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            ),
-            axios.get("http://localhost:8000/api/admin/rooms", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }),
-          ]);
-  
-        // Xử lý dữ liệu shifts
-        console.log("Shifts API response:", shiftsRes.data);
-        let shiftsData = shiftsRes.data;
-        if (Array.isArray(shiftsData)) {
-          setShifts(shiftsData);
-        } else if (Array.isArray(shiftsData.data)) {
-          setShifts(shiftsData.data);
-        } else {
-          throw new Error("Dữ liệu shifts không hợp lệ.");
-        }
-  
+            }
+          ),
+        ]);
+
         // Xử lý dữ liệu classrooms
-        console.log("Classrooms API response:", classroomsRes.data);
         let classroomsData = classroomsRes.data;
         if (Array.isArray(classroomsData)) {
           setClassrooms(classroomsData);
@@ -133,55 +113,30 @@ const ScheduleAdd = () => {
           navigate(`/list-subject/detail/${subjectId}`);
           return;
         }
-  
-        // Xử lý dữ liệu rooms
-        console.log("Rooms API response:", roomsRes.data.data);
-        let roomsData = roomsRes.data.data;
-        if (Array.isArray(roomsData)) {
-          setRooms(roomsData);
-        } else if (Array.isArray(roomsData.rooms)) {
-          setRooms(roomsData.rooms);
-        } else {
-          throw new Error("Dữ liệu rooms không hợp lệ.");
-        }
-  
-        // Xử lý dữ liệu teachers
-        console.log("Teachers API response:", teachersRes.data);
-        let teachersData = teachersRes.data.data;
-        if (Array.isArray(teachersData)) {
-          setTeachers(teachersData);
-        } else {
-          throw new Error("Dữ liệu teachers không hợp lệ.");
-        }
-  
+
         setLoading(false);
         setLoadingShifts(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
         message.error(`Không thể tải dữ liệu cần thiết: ${error.message}`);
         setLoading(false);
         setLoadingShifts(false);
       }
     };
-  
+
     fetchData();
   }, [courseId, semesterId, majorId, subjectId, navigate]);
-  
 
   useEffect(() => {
     if (semesterId) {
       setLoading(true);
-      console.log("Semester ID from list page:", semesterId);
 
       axios
         .get(`http://localhost:8000/api/admin/semesters/${semesterId}`)
         .then((response) => {
-          console.log("Semester data:", response.data);
           setSemesterInfo(response.data.data || {});
           setLoading(false);
         })
         .catch((error) => {
-          console.error("Error fetching semester:", error);
           setError("Có lỗi xảy ra khi tải thông tin kỳ học");
           setLoading(false);
         });
@@ -197,10 +152,8 @@ const ScheduleAdd = () => {
   }, [semesterInfo, form]);
 
   useEffect(() => {
-    // Hàm để tính toán ngày kết thúc
     const calculateEndDate = async () => {
       if (!startDate || !repeatDays || repeatDays.length === 0) {
-        // Không tính toán nếu thiếu trường cần thiết
         return;
       }
 
@@ -233,7 +186,7 @@ const ScheduleAdd = () => {
             params: {
               start_date: startDate.format("YYYY-MM-DD"), // Định dạng "YYYY-MM-DD"
               subject_id: subjectId,
-              days_of_week: daysOfWeek, // Gửi dưới dạng mảng
+              days_of_week: daysOfWeek,
             },
             paramsSerializer: (params) =>
               qs.stringify(params, { arrayFormat: "brackets" }), // Sử dụng arrayFormat 'brackets' để gửi mảng đúng cách
@@ -243,7 +196,6 @@ const ScheduleAdd = () => {
         if (response.data && response.data.end_date) {
           const endDate = moment(response.data.end_date, "YYYY-MM-DD");
           form.setFieldsValue({ endDate });
-          message.success("Ngày kết thúc đã được tính toán tự động!");
         } else {
           message.error("Không nhận được ngày kết thúc từ API.");
         }
@@ -271,18 +223,279 @@ const ScheduleAdd = () => {
     calculateEndDate();
   }, [startDate, repeatDays, subjectId, form]);
 
-  // Hàm kiểm tra xem giáo viên có sẵn sàng hay không
+  useEffect(() => {
+    const getFilteredShifts = async () => {
+      if (!startDate || !endDate || !repeatDays || repeatDays.length === 0) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+        const dayMapping = {
+          "Thứ 2": 2,
+          "Thứ 3": 3,
+          "Thứ 4": 4,
+          "Thứ 5": 5,
+          "Thứ 6": 6,
+          "Thứ 7": 7,
+        };
+
+        const daysOfWeek = repeatDays.map((day) => dayMapping[day]);
+
+        const response = await axios.get(
+          "http://localhost:8000/api/admin/filtered-shifts",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            params: {
+              start_date: startDate.format("YYYY-MM-DD"),
+              end_date: endDate.format("YYYY-MM-DD"),
+              days_of_week: daysOfWeek,
+            },
+            paramsSerializer: (params) =>
+              qs.stringify(params, { arrayFormat: "brackets" }),
+          }
+        );
+
+        if (response.data && response.data.data) {
+          const shiftsArray = Object.values(response.data.data);
+
+          setShifts(shiftsArray);
+        } else {
+          message.error("Không nhận được dữ liệu ca học từ API.");
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải ca học:", error);
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.errors
+        ) {
+          const apiErrors = error.response.data.errors;
+          Object.values(apiErrors).forEach((errArray) => {
+            errArray.forEach((errMsg) => {
+              message.error(errMsg);
+            });
+          });
+        } else {
+          message.error("Không thể tải dữ liệu ca học.");
+        }
+      }
+    };
+
+    getFilteredShifts();
+  }, [startDate, endDate, repeatDays]);
+
+  const getAvailableTeachers = async (classId) => {
+    if (
+      !semesterId ||
+      !repeatDays ||
+      repeatDays.length === 0 ||
+      !classSessions[classId]
+    ) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const dayMapping = {
+        "Thứ 2": 2,
+        "Thứ 3": 3,
+        "Thứ 4": 4,
+        "Thứ 5": 5,
+        "Thứ 6": 6,
+        "Thứ 7": 7,
+      };
+
+      const selectedDays = repeatDays.map((day) => dayMapping[day]);
+
+      const response = await axios.get(
+        `http://localhost:8000/api/admin/major/${majorId}/teachers`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            semesterId,
+            days: selectedDays,
+            shiftId: classSessions[classId],
+          },
+          paramsSerializer: (params) =>
+            qs.stringify(params, { arrayFormat: "brackets" }),
+        }
+      );
+
+      if (response.data && response.data.data) {
+        setTeachersByClass((prev) => ({
+          ...prev,
+          [classId]: response.data.data, // Cập nhật danh sách giáo viên riêng cho lớp
+        }));
+      } else {
+        message.error("Không nhận được danh sách giáo viên từ API.");
+      }
+    } catch (error) {
+      console.error(`Lỗi khi tải giáo viên cho lớp ${classId}:`, error);
+      message.error(`Không thể tải danh sách giáo viên cho lớp ${classId}.`);
+    }
+  };
+
+  const getAvailableRooms = async (classId) => {
+    if (
+      !startDate ||
+      !endDate ||
+      !repeatDays ||
+      repeatDays.length === 0 ||
+      !classSessions[classId]
+    ) {
+      message.warn(`Lớp ${classId}: Vui lòng điền đủ thông tin để lọc phòng.`);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const dayMapping = Object.freeze({
+        "Thứ 2": 2,
+        "Thứ 3": 3,
+        "Thứ 4": 4,
+        "Thứ 5": 5,
+        "Thứ 6": 6,
+        "Thứ 7": 7,
+      });
+
+      const daysOfWeek = repeatDays
+        .map((day) => dayMapping[day] || null)
+        .filter(Boolean);
+
+      const formattedStartDate = startDate.format("YYYY-MM-DD");
+      const formattedEndDate = endDate.format("YYYY-MM-DD");
+
+      const response = await axios.get(
+        "http://localhost:8000/api/admin/available-rooms",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            start_date: formattedStartDate,
+            end_date: formattedEndDate,
+            days_of_week: daysOfWeek,
+            shift_id: classSessions[classId],
+          },
+          paramsSerializer: (params) =>
+            qs.stringify(params, { arrayFormat: "brackets" }),
+        }
+      );
+
+      if (Array.isArray(response.data?.data)) {
+        setRooms(response.data.data);
+      } else {
+        message.error(
+          `Lớp ${classId}: Không có dữ liệu phòng học hợp lệ từ API.`
+        );
+      }
+    } catch (error) {
+      console.error(`Lớp ${classId}: Lỗi khi tải phòng học:`, error);
+      message.error(`Không thể tải dữ liệu phòng học cho lớp ${classId}.`);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !selectedClasses.length ||
+      !majorId ||
+      !semesterId ||
+      !repeatDays ||
+      !startDate ||
+      !endDate
+    ) {
+      return;
+    }
+
+    selectedClasses.forEach((classId) => {
+      if (classSessions[classId]) {
+        getAvailableTeachers(classId);
+
+        if (
+          startDate &&
+          endDate &&
+          repeatDays.length > 0 &&
+          classSessions[classId]
+        ) {
+          getAvailableRooms(classId);
+        }
+      }
+    });
+  }, [
+    majorId,
+    semesterId,
+    repeatDays,
+    selectedClasses,
+    classSessions,
+    startDate,
+    endDate,
+  ]);
+
+  const handleRoomSelect = (classId, shiftId, roomId) => {
+    const room = roomId; // Đảm bảo rằng `roomId` là giá trị phòng học mới được chọn
+
+    if (!room) {
+      console.error("Phòng học không hợp lệ.");
+      return;
+    }
+
+    setSelectedRooms((prevSelected) => {
+      // Lấy phòng cũ trước khi cập nhật
+      const previousRoomId = prevSelected[shiftId]?.[classId]?.id;
+
+      // Cập nhật selectedRooms với phòng mới
+      const updatedShiftRooms = { ...(prevSelected[shiftId] || {}) };
+      updatedShiftRooms[classId] = { id: room };
+
+      const updatedSelectedRooms = {
+        ...prevSelected,
+        [shiftId]: updatedShiftRooms,
+      };
+
+      // Cập nhật số lượng phòng trống và trả lại phòng cũ
+      setShifts((prevShifts) => {
+        return prevShifts.map((shift) => {
+          if (shift.id === shiftId) {
+            if (previousRoomId) {
+              shift.available_rooms_count += 1; // Trả lại phòng cũ
+            }
+            shift.available_rooms_count -= 1; // Giảm đi phòng mới đã được chọn
+          }
+          return shift;
+        });
+      });
+
+      return updatedSelectedRooms;
+    });
+  };
+
+  const getAvailableRoomsForShift = (shiftId, classId) => {
+    // Lấy tất cả các phòng đã được chọn
+    const occupiedRooms = Object.values(selectedRooms)
+      .map((shiftRooms) => shiftRooms[classId]?.id) // Chỉ lấy phòng đã chọn cho lớp hiện tại
+      .filter(Boolean); // Loại bỏ null, undefined
+
+    // Trả lại các phòng chưa được chọn
+    return rooms.filter((room) => !occupiedRooms.includes(room.id));
+  };
+
   const isTeacherAvailable = (teacherId, shiftId, currentClassId) => {
     return !Object.entries(teacherAssignments).some(
       ([classId, assignedTeacherId]) => {
-        if (classId === currentClassId) return false; // Bỏ qua lớp hiện tại
+        if (classId === currentClassId) return false;
         const assignedShiftId = classDetails[classId]?.session;
         return assignedTeacherId === teacherId && assignedShiftId === shiftId;
       }
     );
   };
 
-  // Xử lý khi chọn lớp học
   const handleClassChange = (values) => {
     setSelectedClasses(values);
     setClassDetails((prevDetails) => {
@@ -301,7 +514,6 @@ const ScheduleAdd = () => {
       return updatedDetails;
     });
 
-    // Nếu bạn đang thay đổi tab, hãy giữ lại các state cũ
     if (activeTab === "addTeacher") {
       setActiveTab("configure");
       setTeacherAssignments({});
@@ -326,7 +538,6 @@ const ScheduleAdd = () => {
   useEffect(() => {
     if (subjectId) {
       fetchSubjectById(subjectId).then((subject) => {
-        console.log(subject);
         if (subject && subject.data && subject.data.form !== undefined) {
           const method =
             subject.data.form === "Trực tuyến" ? "Online" : "Offline";
@@ -389,7 +600,6 @@ const ScheduleAdd = () => {
       return;
     }
 
-    // Cập nhật phân công giáo viên
     setTeacherAssignments((prev) => ({
       ...prev,
       [classId]: teacherId,
@@ -397,7 +607,6 @@ const ScheduleAdd = () => {
     message.success("Phân công giáo viên thành công!");
   };
 
-  // Hàm gọi API để thêm lịch học
   const addSchedules = async (payload) => {
     try {
       const token = localStorage.getItem("token");
@@ -411,18 +620,15 @@ const ScheduleAdd = () => {
         }
       );
 
-      console.log("Phản hồi từ Add Schedules:", response.data); // Log phản hồi
-
       if (response.status === 201 || response.status === 200) {
         message.success("Thêm lịch học thành công!");
-        // Extract classroom_id và schedule_id từ phản hồi
         const schedules = response.data.schedules;
         const scheduleMap = {};
         schedules.forEach((schedule) => {
           scheduleMap[String(schedule.data.classroom_id)] =
             schedule.data.schedule_id;
         });
-        console.log("Bản đồ Schedule:", scheduleMap); // Log scheduleMap
+        console.log("Bản đồ Schedule:", scheduleMap);
         setCreatedSchedules(scheduleMap);
         return scheduleMap;
       } else {
@@ -476,7 +682,6 @@ const ScheduleAdd = () => {
 
   // Xử lý khi submit cấu hình lớp học
   const handleFinish = async (values) => {
-    console.log("Form values: ", values);
     // Lưu các lớp đã chọn
     setSelectedClasses(values.classes);
     // Lưu chi tiết lớp học (chỉ session và classRoom/classLink)
@@ -490,7 +695,6 @@ const ScheduleAdd = () => {
     });
     setClassDetails(details);
 
-    // Chuẩn bị payload cho API addSchedules
     const payload = {
       classrooms: values.classes.map((classId) => ({
         id: classId,
@@ -528,7 +732,6 @@ const ScheduleAdd = () => {
     }
   };
 
-  // Hàm render các trường session và classRoom/classLink cho mỗi lớp
   const renderClassSessionFields = () => {
     if (loadingShifts) {
       return (
@@ -541,72 +744,164 @@ const ScheduleAdd = () => {
     return selectedClasses.map((classId) => {
       const classData = classrooms.find((c) => c.id === classId);
       const className = classData ? classData.code : `ID ${classId}`;
-      console.log(className);
 
       return (
         <TabPane tab={`Lớp ${className}`} key={classId}>
-          <Card title={`Ca Học Cho Lớp ${className}`}>
-            <Form.Item
-              label="Ca Học"
-              name={["classDetails", classId, "session"]}
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng chọn ca học!",
-                },
-              ]}
-            >
-              <Select
-                showSearch
-                placeholder="Chọn ca học"
-                optionFilterProp="children"
-              >
-                {shifts.map((shift) => (
-                  <Option key={shift.id} value={shift.id}>
-                    {`${shift.name}: ${shift.start_time} - ${shift.end_time}`}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+          <Card
+            title={`Ca Học Cho Lớp ${className}`}
+            className="mb-5 border shadow-sm rounded-lg"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Chọn ca học */}
+              <div>
+                <Form.Item
+                  label="Ca Học"
+                  name={["classDetails", classId, "session"]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng chọn ca học!",
+                    },
+                  ]}
+                >
+                  <Select
+                    value={classSessions[classId] || null}
+                    onChange={(value) => {
+                      setClassSessions((prev) => ({
+                        ...prev,
+                        [classId]: value,
+                      }));
+                    }}
+                    placeholder="Chọn ca học"
+                    optionFilterProp="children"
+                    className="w-full rounded border"
+                  >
+                    {shifts.map((shift) => {
+                      const availableRoomsPercentage =
+                        (shift.available_rooms_count /
+                          shift.total_rooms_count) *
+                        100;
 
-            {/* Hiển thị classRoom hoặc classLink dựa trên learningMethod */}
-            {form.getFieldValue("learningMethod") === "Online" ? (
-              <Form.Item
-                label="Link Học Trực Tuyến"
-                name={["classDetails", classId, "classLink"]}
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập link học trực tuyến!",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Link học trực tuyến"
-                  prefix={<LinkOutlined />}
-                />
-              </Form.Item>
-            ) : (
-              <Form.Item
-                label="Phòng Học Trực Tiếp"
-                name={["classDetails", classId, "classRoom"]}
-                rules={[
-                  { required: true, message: "Vui lòng chọn phòng học!" },
-                ]}
-              >
-                <Select placeholder="Chọn phòng học">
-                  {rooms.map((room) => (
-                    <Option key={room.id} value={room.id}>
-                      {room.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            )}
+                      const getRoomColor = (percentage) => {
+                        if (percentage > 80) return "bg-green-500";
+                        if (percentage > 40) return "bg-yellow-500";
+                        return "bg-red-500";
+                      };
+
+                      return (
+                        <Option key={shift.id} value={shift.id}>
+                          <div className="flex items-center">
+                            <span className="mr-2">
+                              {`${shift.name}: ${shift.start_time} - ${shift.end_time}`}
+                            </span>
+                            {/* Vòng tròn hiển thị số lượng phòng trống */}
+                            <div className="w-full flex items-center">
+                              <div className="flex-1">
+                                <div className="w-full h-2 bg-gray-200 rounded-full">
+                                  <div
+                                    className={`h-2 rounded-full ${getRoomColor(
+                                      availableRoomsPercentage
+                                    )}`}
+                                    style={{
+                                      width: `${availableRoomsPercentage}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                              <span className="ml-2 text-xl">
+                                {shift.available_rooms_count}
+                              </span>
+                            </div>
+                          </div>
+                        </Option>
+                      );
+                    })}
+                  </Select>
+                </Form.Item>
+              </div>
+
+              {/* Hiển thị nội dung dựa trên learningMethod */}
+              {form.getFieldValue("learningMethod") === "Online" ? (
+                <div>
+                  <Form.Item
+                    label="Link Học Trực Tuyến"
+                    name={["classDetails", classId, "classLink"]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Vui lòng nhập link học trực tuyến!",
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Link học trực tuyến"
+                      prefix={<LinkOutlined />}
+                      className="w-full rounded border"
+                    />
+                  </Form.Item>
+                </div>
+              ) : (
+                <div>
+                  <Form.Item
+                    label="Phòng Học Trực Tiếp"
+                    name={["classDetails", classId, "classRoom"]}
+                    rules={[
+                      { required: true, message: "Vui lòng chọn phòng học!" },
+                    ]}
+                  >
+                    <Select
+                      placeholder="Chọn phòng học"
+                      value={
+                        selectedRooms[classSessions[classId]]?.[classId]?.id ||
+                        undefined
+                      }
+                      onChange={(value) =>
+                        handleRoomSelect(classId, classSessions[classId], value)
+                      }
+                      className="w-full rounded border"
+                    >
+                      {getAvailableRoomsForShift(
+                        classSessions[classId],
+                        classId
+                      ).map((room) => (
+                        <Option key={room.id} value={room.id}>
+                          {room.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </div>
+              )}
+            </div>
           </Card>
         </TabPane>
       );
     });
+  };
+
+  const handleDaysSelect = (days) => {
+    const dayMapping = {
+      "Thứ 2": 2,
+      "Thứ 3": 3,
+      "Thứ 4": 4,
+      "Thứ 5": 5,
+      "Thứ 6": 6,
+      "Thứ 7": 7,
+    };
+
+    const dayNumbers = days
+      .map((day) => dayMapping[day] || null)
+      .filter(Boolean);
+
+    setClassScheduleDays((prev) => {
+      const updated = {};
+      selectedClasses.forEach((classId) => {
+        updated[classId] = dayNumbers;
+      });
+      return { ...prev, ...updated };
+    });
+
+    console.log("Selected Days for all classes:", dayNumbers);
   };
 
   const renderTeacherAssignment = () => {
@@ -618,7 +913,6 @@ const ScheduleAdd = () => {
       <Form
         layout="vertical"
         onFinish={async () => {
-          // Kiểm tra xem tất cả các lớp đã được phân công giáo viên chưa
           const allAssigned = selectedClasses.every(
             (classId) => teacherAssignments[classId]
           );
@@ -627,33 +921,34 @@ const ScheduleAdd = () => {
             return;
           }
 
-          // Chuẩn bị payload
           const payload = {
             schedules: selectedClasses.map((classId) => ({
               teacher_id: teacherAssignments[classId],
-              schedule_id: createdSchedules[String(classId)], // Đảm bảo classId là string và có schedule_id
+              schedule_id: createdSchedules[String(classId)],
             })),
           };
 
-          console.log("Assign Teachers Payload:", payload); // Log payload
-
-          // Gọi API để phân công giáo viên
           await assignTeachers(payload);
         }}
       >
         {selectedClasses.map((classId) => {
-          const classIdNumber = Number(classId);
-          const classData = classrooms.find((c) => c.id === classIdNumber);
+          const classData = classrooms.find((c) => c.id === Number(classId));
           const className = classData
             ? classData.name || classData.code
             : `ID ${classId}`;
-          const details = classDetails[classId];
-          const shiftId = details?.session;
+
+          // Get days selected for the class
+          const selectedDays = classScheduleDays[classId];
+
+          // Get the shiftId from classSessions
+          const shiftId = classSessions[classId];
           const shift = shifts.find((s) => s.id === shiftId);
-          const classLink = details?.classLink || "";
+
+          // Get class details (including room)
+          const details = classDetails[classId];
           const classRoom = details?.classRoom
             ? rooms.find((room) => room.id === details.classRoom)?.name
-            : "";
+            : ""; // Room name
 
           return (
             <Card
@@ -661,26 +956,39 @@ const ScheduleAdd = () => {
               title={`Phân Công Giáo Viên Cho Lớp ${className}`}
               style={{ marginBottom: 16 }}
             >
-              {/* Hiển thị chi tiết lớp học */}
-              <div style={{ marginBottom: 16 }}>
+              {/* Hiển thị ca học */}
+              <div style={{ marginBottom: 8 }}>
                 <Text strong>Ca Học:</Text>{" "}
                 {shift
-                  ? `${shift.name}: ${shift.start_time} - ${shift.end_time}`
+                  ? `${shift.name} (${shift.start_time} - ${shift.end_time})`
                   : "Chưa chọn"}
               </div>
+
+              {/* Hiển thị các ngày học */}
+              <div style={{ marginBottom: 8 }}>
+                <Text strong>Các Ngày Học:</Text>{" "}
+                {selectedDays && selectedDays.length > 0
+                  ? selectedDays.map((day) => `Thứ ${day}`).join(", ")
+                  : "Chưa chọn"}
+              </div>
+
+              {/* Hiển thị hình thức học */}
               <div style={{ marginBottom: 8 }}>
                 <Text strong>Hình Thức Học:</Text>{" "}
                 {learningMethod === "Online" ? "Online" : "Offline"}
               </div>
+
               {learningMethod === "Online" ? (
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Link Học Trực Tuyến:</Text>{" "}
-                  {classLink || "Chưa nhập"}
+                  {details?.classLink || "Chưa nhập"}
                 </div>
               ) : (
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Phòng Học Trực Tiếp:</Text>{" "}
-                  {classRoom || "Chưa chọn"}
+                  {selectedRooms[classSessions[classId]]?.[classId]?.id
+                    ? selectedRooms[classSessions[classId]]?.[classId]?.id
+                    : "Chưa chọn"}
                 </div>
               )}
 
@@ -797,7 +1105,7 @@ const ScheduleAdd = () => {
                     <DatePicker
                       format="DD-MM-YYYY"
                       style={{ width: "100%" }}
-                      disabled={activeTab === "addTeacher"} // Disable khi ở tab "addTeacher"
+                      disabled={activeTab === "addTeacher"}
                     />
                   </Form.Item>
                 </Col>
@@ -850,28 +1158,32 @@ const ScheduleAdd = () => {
               )}
 
               {/* Chọn thời gian lặp */}
-              <Form.Item
-                label="Thời Gian Lặp"
-                name="repeatDays"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng chọn ít nhất một ngày!",
-                  },
-                ]}
-              >
-                <Checkbox.Group style={{ width: "100%" }}>
-                  <Row>
+              {selectedClasses.length > 0 && (
+                <Form.Item
+                  label="Thời Gian Lặp"
+                  name="repeatDays"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng chọn ít nhất một ngày!",
+                    },
+                  ]}
+                >
+                  <Checkbox.Group
+                    style={{ width: "100%" }}
+                    value={classScheduleDays || []} // Áp dụng chung một bộ ngày cho tất cả các lớp
+                    onChange={handleDaysSelect} // Hàm xử lý cho các ngày học
+                  >
                     {["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"].map(
                       (day, index) => (
-                        <Col span={4} key={`${day}-${index}`}>
-                          <Checkbox value={day}>{day}</Checkbox>
-                        </Col>
+                        <Checkbox value={day} key={`${day}-${index}`}>
+                          {day}
+                        </Checkbox>
                       )
                     )}
-                  </Row>
-                </Checkbox.Group>
-              </Form.Item>
+                  </Checkbox.Group>
+                </Form.Item>
+              )}
 
               {/* Hình thức học */}
               <div style={{ marginBottom: 16 }}>

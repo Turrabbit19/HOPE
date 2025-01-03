@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Lesson;
 use App\Models\Major;
-use App\Models\MajorSubject;
 use App\Models\Subject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 // use Illuminate\Support\Facades\Redis;
 
@@ -508,14 +508,19 @@ class ApiSubjectController extends Controller
         }
 
         try {
-            $validatedData = $validator->validated();
+            $subject = Subject::findOrFail($id);
+
+            $classroomsData = $validator->validated();
             $classrooms = [];
 
-            foreach ($validatedData as $classroomData) {
-                $classroomData['subject_id'] = $id;
-                $classroom = Classroom::create($classroomData);
-                $classrooms[] = $classroom;
+            foreach ($classroomsData as $classroom) {
+                $classrooms[] = new Classroom([
+                    'name' => $classroom['code'],
+                    'description' => $classroom['max_students'],
+                ]);
             }
+
+            $subject->classrooms()->saveMany($classrooms);
 
             return response()->json(['data' => $classrooms, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {

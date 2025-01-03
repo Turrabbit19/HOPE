@@ -216,8 +216,14 @@ class   StudentController extends Controller
             $newScheduleDays = StudyDay::where('schedule_id', $id)->pluck('day_id')->toArray();
             $newScheduleShift = $newSchedule->shift_id;
 
+            $now = Carbon::now();
+
             $registeredSchedules = StudentSchedule::where('student_id', $student->id)
-                ->with(['schedule.days', 'schedule.shift'])
+                ->whereHas('schedule', function ($query) use ($now) {
+                    $query->where('start_date', '<=', $now)
+                        ->where('end_date', '>=', $now);
+                })
+                ->with(['schedule.days', 'schedule.shift', 'schedule.subject', 'schedule.course'])
                 ->get();
 
             foreach ($registeredSchedules as $rSchedule) {

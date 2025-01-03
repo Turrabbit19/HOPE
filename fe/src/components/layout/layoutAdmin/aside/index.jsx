@@ -17,6 +17,7 @@ import {
   FormOutlined,
   BarsOutlined,
   DatabaseOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 
 const AsideAdmin = () => {
@@ -147,14 +148,9 @@ const AsideAdmin = () => {
     },
     {
       key: "sub6",
-      icon: <BellOutlined />,
+      icon: <DollarOutlined />,
       label: <Link to="/admin/tuition-fee">Quản lý học phí</Link>,
     },
-    {
-      key: "sub7",
-      icon: <BellOutlined />,
-      label: <Link to="/admin/test-new">Test</Link>,
-    }
   ];
 
   const {

@@ -131,23 +131,23 @@ class ApiMajorController extends Controller
             'code.string' => 'Mã ngành phải là chuỗi ký tự.',
             'code.max' => 'Mã ngành không được vượt quá 19 ký tự.',
             'code.unique' => 'Mã ngành đã tồn tại.',
-            
+
             'name.required' => 'Tên ngành là bắt buộc.',
             'name.string' => 'Tên ngành phải là chuỗi ký tự.',
             'name.max' => 'Tên ngành không được vượt quá 50 ký tự.',
             'name.unique' => 'Tên ngành đã tồn tại.',
-            
+
             'description.required' => 'Mô tả là bắt buộc.',
             'description.string' => 'Mô tả phải là chuỗi ký tự.',
-            
+
             'status.boolean' => 'Trạng thái phải là giá trị boolean (true/false hoặc 0/1).',
-            
+
             'main.integer' => 'Chính ngành phải là số nguyên.',
-            
+
             'major_id.integer' => 'Mã ngành phải là số nguyên.',
             'major_id.exists' => 'Mã ngành không tồn tại.',
         ]);
-        
+
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -194,16 +194,16 @@ class ApiMajorController extends Controller
             'code.string' => 'Mã ngành phải là chuỗi ký tự.',
             'code.max' => 'Mã ngành không được vượt quá 19 ký tự.',
             'code.unique' => 'Mã ngành đã tồn tại.',
-            
+
             'name.string' => 'Tên ngành phải là chuỗi ký tự.',
             'name.max' => 'Tên ngành không được vượt quá 50 ký tự.',
             'name.unique' => 'Tên ngành đã tồn tại.',
-            
+
             'description.string' => 'Mô tả phải là chuỗi ký tự.',
-            
+
             'status.boolean' => 'Trạng thái phải là giá trị boolean (true/false hoặc 0/1).',
         ]);
-        
+
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -277,10 +277,35 @@ class ApiMajorController extends Controller
         }
     }
 
-    public function getTeachersByMajor(string $majorId)
+    public function getTeachersByMajor(string $majorId, Request $request)
     {
         try {
-            $teachers = Teacher::where('major_id', $majorId)->where('status', 1)->get();
+            $now = Carbon::now();
+
+            $semesterId = $request->input('semesterId');
+            $days = $request->input('days', []);
+            $shiftId = $request->input('shiftId');
+
+            if (empty($semesterId)) {
+                return response()->json(['error' => 'Vui lòng cung cấp thông tin kỳ học.'], 400);
+            }
+
+            $teachers = Teacher::where('major_id', $majorId)
+                ->where('status', 1)
+                ->whereDoesntHave('schedules', function ($query) use ($semesterId, $days, $shiftId) {
+                    $query->where('semester_id', $semesterId);
+
+                    if (!empty($shiftId)) {
+                        $query->where('shift_id', $shiftId);
+                    }
+
+                    if (!empty($days)) {
+                        $query->whereHas('days', function ($dayQuery) use ($days) {
+                            $dayQuery->whereIn('days.id', $days);
+                        });
+                    }
+                })
+                ->get();
 
             $data = $teachers->map(function ($teacher) {
                 return [
@@ -291,7 +316,10 @@ class ApiMajorController extends Controller
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn dữ liệu giáo viên', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy vấn dữ liệu giáo viên.',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

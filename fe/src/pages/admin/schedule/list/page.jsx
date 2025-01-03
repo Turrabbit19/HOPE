@@ -63,7 +63,7 @@ const ScheduleList = () => {
       const response = await instance.get(
         `admin/semester/${semesterId}/${courseId}/majors`
       );
-      console.log("Majors data:", response.data.majors); 
+      console.log("Majors data:", response.data.majors);
       setMajorsBySemester((prev) => ({
         ...prev,
         [`${semesterId}_${courseId}`]: response.data.majors || [],
@@ -135,7 +135,7 @@ const ScheduleList = () => {
       const newCourse = prev === courseId ? null : courseId;
 
       if (newCourse && !majorsBySemester[`${semesterId}_${courseId}`]) {
-        fetchMajorsForSemester(semesterId, newCourse); 
+        fetchMajorsForSemester(semesterId, newCourse);
       }
 
       return newCourse;
@@ -350,14 +350,22 @@ const ScheduleList = () => {
                   onClick={() => toggleSemester(semester.id)}
                   className="cursor-pointer space-y-2"
                 >
-                  <h3 className="text-4xl mb-3 font-bold text-blue-600 flex items-center justify-between">
-                    {semester.name}
-                    {expandedSemester === semester.id ? (
-                      <DownOutlined className="ml-2 text-2xl" />
-                    ) : (
-                      <RightOutlined className="ml-2 text-2xl" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-4xl font-bold text-blue-600 flex items-center">
+                      {semester.name}
+                    </h3>
+
+                    {new Date(semester.end_date) > now && (
+                      <Link
+                        to="table"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-semibold flex items-center gap-2 justify-center px-5 py-3 border-2 rounded-full text-white border-blue-500 bg-blue-500 transition-all hover:text-green-100 duration-300 ease-in-out"
+                      >
+                        Kiểm tra lịch học
+                      </Link>
                     )}
-                  </h3>
+                  </div>
+
                   <div className="text-xl text-gray-700">
                     <p className="mb-2">
                       <span className="font-semibold">Ngày bắt đầu:</span>{" "}
@@ -564,7 +572,8 @@ const ScheduleList = () => {
                                                                 <p
                                                                   className={`text-3xl font-semibold ${
                                                                     classroom.students >=
-                                                                    classroom.max_students * 0.7
+                                                                    classroom.max_students *
+                                                                      0.7
                                                                       ? "text-green-600"
                                                                       : classroom.students >=
                                                                         10

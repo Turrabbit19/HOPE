@@ -34,7 +34,7 @@ class ApiTeacherController extends Controller
                     "phone" => $teacher->user->phone,
 
                     'major_name' => $teacher->major->name,
-                    'status' => match($teacher->status) {
+                    'status' => match ($teacher->status) {
                         "0" => "Đang dạy",
                         "1" => "Tạm dừng",
                         "2" => "Kết thúc",
@@ -46,11 +46,11 @@ class ApiTeacherController extends Controller
             return response()->json([
                 'data' => $data,
                 'pagination' => [
-                        'total' => $teachers->total(),
-                        'per_page' => $teachers->perPage(),
-                        'current_page' => $teachers->currentPage(),
-                        'last_page' => $teachers->lastPage(),
-                    ],
+                    'total' => $teachers->total(),
+                    'per_page' => $teachers->perPage(),
+                    'current_page' => $teachers->currentPage(),
+                    'last_page' => $teachers->lastPage(),
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
@@ -60,34 +60,27 @@ class ApiTeacherController extends Controller
     public function getTeachers(Request $request)
     {
         try {
-            // Lấy dữ liệu từ request
             $majorId = $request->input('major_id');
             $status = $request->input('status');
-    
-            // Khởi tạo truy vấn với các quan hệ user và major
-            $query = Teacher::with(['user', 'major']); 
-    
-            // Lọc theo major_id nếu có
+
+            $query = Teacher::with(['user', 'major']);
+
             if (!empty($majorId)) {
                 $query->where('major_id', $majorId);
             }
-    
-            // Lọc theo status nếu có
+
             if (!empty($status)) {
                 $query->where('status', $status);
             }
-    
-            // Lấy danh sách giảng viên sau khi đã áp dụng bộ lọc
+
             $teachers = $query->get();
-    
-            // Kiểm tra nếu không có giảng viên nào phù hợp
+
             if ($teachers->isEmpty()) {
                 return response()->json([
                     'message' => 'Không tìm thấy giảng viên nào.',
                 ], 404);
             }
-    
-            // Xử lý dữ liệu trả về
+
             $data = $teachers->map(function ($teacher) {
                 return [
                     "id" => $teacher->id,
@@ -97,10 +90,9 @@ class ApiTeacherController extends Controller
                     "status" => $teacher->status == 0 ? 'Đang dạy' : 'Nghỉ'
                 ];
             });
-    
+
             // Trả về dữ liệu đã xử lý
             return response()->json(['teachers' => $data]);
-    
         } catch (\Exception $e) {
             // Trả về lỗi nếu có vấn đề trong quá trình truy vấn
             return response()->json([
@@ -110,25 +102,27 @@ class ApiTeacherController extends Controller
         }
     }
 
-    public function exportTeacher(){
+    public function exportTeacher()
+    {
         try {
             return Excel::download(new TeacherExport, 'teachers.xlsx');
-        
         } catch (\Exception $e) {
             return response()->json(['error' => 'Export thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    public function importTeacher(Request $request){
+    public function importTeacher(Request $request)
+    {
         try {
             Excel::import(new TeacherImport, $request->file('file'));
-        
+
             return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Import thất bại', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function filterTeachersByMajor(string $majorId) {
+    public function filterTeachersByMajor(string $majorId)
+    {
         try {
             $listTeachers = Teacher::with('user')->where('major_id', $majorId)->get();
 
@@ -150,7 +144,7 @@ class ApiTeacherController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'nullable|string', 
+            'avatar' => 'nullable|string',
             'name' => 'required|string|max:50',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:10|unique:users',
@@ -188,7 +182,7 @@ class ApiTeacherController extends Controller
                 'user_id' => $user->id,
                 'major_id' => $data['teacher_major_id'],
                 'teacher_code' => $data['teacher_code'],
-            ]);    
+            ]);
 
             $teacherData = [
                 'avatar' => $user->avatar,
@@ -214,7 +208,7 @@ class ApiTeacherController extends Controller
     {
         try {
             $teacher = Teacher::findOrFail($id);
-            
+
             $data = [
                 'id' => $teacher->id,
                 'avatar' => $teacher->user->avatar,
@@ -228,14 +222,14 @@ class ApiTeacherController extends Controller
 
                 'teacher_code' => $teacher->teacher_code,
                 'major_name' => $teacher->major->name,
-                'status' => match($teacher->status) {
+                'status' => match ($teacher->status) {
                     "0" => "Đang dạy",
                     "1" => "Tạm dừng",
                     "2" => "Kết thúc",
                     default => "Không xác định"
                 },
             ];
-    
+
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy giảng viên với ID: ' . $id], 404);
@@ -247,7 +241,7 @@ class ApiTeacherController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'avatar' => 'nullable|string', 
+            'avatar' => 'nullable|string',
             'name' => 'sometimes|string|max:50',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'phone' => 'sometimes|string|max:10|unique:users,phone,' . $id,
@@ -270,14 +264,14 @@ class ApiTeacherController extends Controller
 
             $teacher = Teacher::findOrFail($id);
             $user = $teacher->user;
-            
+
             $user->update(array_filter(array_merge($data)));
 
             $teacher->update(array_filter([
                 'major_id' => $data['teacher_major_id'] ?? $teacher->major_id,
                 'teacher_code' => $data['teacher_code'] ?? $teacher->teacher_code,
             ]));
-            
+
             $teacherData = [
                 'avatar' => $user->avatar,
                 'name' => $user->name,

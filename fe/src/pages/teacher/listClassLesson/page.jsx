@@ -35,7 +35,7 @@ export default function ScheduleTable() {
         });
         if (!response.ok) throw new Error('Không thể lấy dữ liệu lịch học');
         const result = await response.json();
-        console.log('API Response:', JSON.stringify(result, null, 2));
+        // console.log('API Response:', JSON.stringify(result, null, 2));
 
         let schedulesData;
         if (Array.isArray(result)) {

@@ -11,7 +11,7 @@ const AsideClient = () => {
           className="mr-2"
           width="200"
           height="40"
-          src="https://caodang.fpt.edu.vn/wp-content/uploads/logo-3.png"
+          src="https://drive.google.com/uc?export=view&id=17LiHsOY868-BgGUHNrR7O58CdveeJgsR"
         />
       </div>
 

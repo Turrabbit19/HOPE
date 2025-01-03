@@ -9,9 +9,9 @@ const AsideClient = () => {
         <img
           alt="Logo"
           className="mr-2"
-          width="200"
+          width="100"
           height="40"
-          src="https://drive.google.com/uc?export=view&id=17LiHsOY868-BgGUHNrR7O58CdveeJgsR"
+          src="/public/assets/img/download (10).jpg"
         />
       </div>
 

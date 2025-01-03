@@ -6,7 +6,7 @@ export default function Footer() {
           {/* Logo and description */}
           <div className="text-center sm:text-left">
             <img
-              src="https://caodang.fpt.edu.vn/wp-content/uploads/logo-3.png"
+              src="/public/assets/img/download (10).jpg"
               alt="Logo"
               className="w-24 sm:w-32 mx-auto sm:mx-0"
             />

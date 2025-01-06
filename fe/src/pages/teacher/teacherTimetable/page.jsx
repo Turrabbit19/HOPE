@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, Book, Info, AlertCircle } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Clock,
+  MapPin,
+  Book,
+  Info,
+  AlertCircle,
+} from "lucide-react";
 
 const TeacherTimetable = () => {
   const [currentWeek, setCurrentWeek] = useState(() => new Date());
@@ -144,8 +153,8 @@ const TeacherTimetable = () => {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -170,22 +179,20 @@ const TeacherTimetable = () => {
     );
     const formattedDate = formatDate(dayDate);
 
-    // console.log("Looking for schedule:", { day, shift, formattedDate });
-
-    const schedule = timetableData.find(item => {
+    const schedule = timetableData.find((item) => {
       return item.shift_name === shift;
     });
 
     if (schedule) {
       const hasLessonOnDate = schedule.schedule_lessons.some(
-        lesson => lesson.date === formattedDate
+        (lesson) => lesson.date === formattedDate
       );
       if (hasLessonOnDate) {
         return {
           ...schedule,
           subject_name: schedule.subject_name,
           room_name: schedule.room_name,
-          classroom_code: schedule.classroom_code
+          classroom_code: schedule.classroom_code,
         };
       }
     }
@@ -195,7 +202,7 @@ const TeacherTimetable = () => {
 
   const getLessonForDate = (schedule, date) => {
     if (!schedule || !schedule.schedule_lessons) return null;
-    return schedule.schedule_lessons.find(lesson => lesson.date === date);
+    return schedule.schedule_lessons.find((lesson) => lesson.date === date);
   };
 
   const openPopup = (schedule, lesson) => {
@@ -515,4 +522,3 @@ const TeacherTimetable = () => {
 };
 
 export default TeacherTimetable;
-

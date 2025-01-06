@@ -773,99 +773,145 @@ class ApiScheduleController extends Controller
             $conflictedStudents = [];
             $remainingStudents = $unregisteredStudents->count();
 
-            foreach ($schedules as $schedule) {
-                $maxCapacity = $schedule->classroom->max_students;
-                $minCapacity = ceil($maxCapacity * 0.7);
-                $currentCapacity = $schedule->students->count();
+            $subject = Subject::find($subjectId);
+            $maxStudentsPerClass = $subject->max_students;
+            $minCapacity = ceil($maxStudentsPerClass * 0.7);
 
-                if ($currentCapacity >= $minCapacity) {
-                    continue;
+            if ($remainingStudents % $maxStudentsPerClass === 0) {
+                // Trường hợp chia hết: Phân bổ đủ số lượng tối đa
+                foreach ($schedules as $schedule) {
+                    $currentCapacity = $schedule->students->count();
+                    $studentsToAssign = min($maxStudentsPerClass - $currentCapacity, $remainingStudents);
+
+                    for ($i = 0; $i < $studentsToAssign; $i++) {
+                        if ($unregisteredStudents->isEmpty()) {
+                            break;
+                        }
+
+                        $student = $unregisteredStudents->pop();
+
+                        $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                            return $existingSchedule->shift_id === $schedule->shift_id &&
+                                $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                        });
+
+                        if ($hasConflict) {
+                            $conflictedStudents[] = $student->id;
+                            continue;
+                        }
+
+                        DB::transaction(function () use ($student, $schedule) {
+                            StudentSchedule::create([
+                                'student_id' => $student->id,
+                                'schedule_id' => $schedule->id,
+                            ]);
+
+                            StudentClassroom::create([
+                                'student_id' => $student->id,
+                                'classroom_id' => $schedule->classroom_id,
+                                'study_start' => $schedule->start_date,
+                                'study_end' => $schedule->end_date,
+                            ]);
+                        });
+
+                        $schedule->students->push($student);
+                        $assignedStudents[] = $student->id;
+                    }
+
+                    $remainingStudents -= $studentsToAssign;
+
+                    if ($remainingStudents <= 0) {
+                        break;
+                    }
+                }
+            } else {
+                // Trường hợp không chia hết: Phân bổ trước theo min_capacity
+                foreach ($schedules as $schedule) {
+                    $currentCapacity = $schedule->students->count();
+                    $studentsToAssign = min($minCapacity - $currentCapacity, $remainingStudents);
+
+                    for ($i = 0; $i < $studentsToAssign; $i++) {
+                        if ($unregisteredStudents->isEmpty()) {
+                            break;
+                        }
+
+                        $student = $unregisteredStudents->pop();
+
+                        $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                            return $existingSchedule->shift_id === $schedule->shift_id &&
+                                $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                        });
+
+                        if ($hasConflict) {
+                            $conflictedStudents[] = $student->id;
+                            continue;
+                        }
+
+                        DB::transaction(function () use ($student, $schedule) {
+                            StudentSchedule::create([
+                                'student_id' => $student->id,
+                                'schedule_id' => $schedule->id,
+                            ]);
+
+                            StudentClassroom::create([
+                                'student_id' => $student->id,
+                                'classroom_id' => $schedule->classroom_id,
+                                'study_start' => $schedule->start_date,
+                                'study_end' => $schedule->end_date,
+                            ]);
+                        });
+
+                        $schedule->students->push($student);
+                        $assignedStudents[] = $student->id;
+                    }
+
+                    $remainingStudents -= $studentsToAssign;
+
+                    if ($remainingStudents <= 0) {
+                        break;
+                    }
                 }
 
-                $studentsToAssign = min($minCapacity - $currentCapacity, $remainingStudents, $maxCapacity - $currentCapacity);
-
-                for ($i = 0; $i < $studentsToAssign; $i++) {
-                    if ($unregisteredStudents->isEmpty()) {
+                // Phân bổ số còn lại đủ max_students mỗi lớp
+                foreach ($schedules as $schedule) {
+                    if ($remainingStudents <= 0) {
                         break;
                     }
 
-                    $student = $unregisteredStudents->pop();
+                    $currentCapacity = $schedule->students->count();
+                    while ($remainingStudents > 0 && $currentCapacity < $maxStudentsPerClass) {
+                        $student = $unregisteredStudents->pop();
 
-                    $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
-                        return $existingSchedule->shift_id === $schedule->shift_id &&
-                            $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
-                    });
+                        $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                            return $existingSchedule->shift_id === $schedule->shift_id &&
+                                $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                        });
 
-                    if ($hasConflict) {
-                        $conflictedStudents[] = $student->id;
-                        continue;
+                        if ($hasConflict) {
+                            $conflictedStudents[] = $student->id;
+                            continue;
+                        }
+
+                        DB::transaction(function () use ($student, $schedule) {
+                            StudentSchedule::create([
+                                'student_id' => $student->id,
+                                'schedule_id' => $schedule->id,
+                            ]);
+
+                            StudentClassroom::create([
+                                'student_id' => $student->id,
+                                'classroom_id' => $schedule->classroom_id,
+                                'study_start' => $schedule->start_date,
+                                'study_end' => $schedule->end_date,
+                            ]);
+                        });
+
+                        $schedule->students->push($student);
+                        $assignedStudents[] = $student->id;
+
+                        $currentCapacity++;
+                        $remainingStudents--;
                     }
-
-                    DB::transaction(function () use ($student, $schedule) {
-                        StudentSchedule::create([
-                            'student_id' => $student->id,
-                            'schedule_id' => $schedule->id,
-                        ]);
-
-                        StudentClassroom::create([
-                            'student_id' => $student->id,
-                            'classroom_id' => $schedule->classroom_id,
-                            'study_start' => $schedule->start_date,
-                            'study_end' => $schedule->end_date,
-                        ]);
-                    });
-
-                    $schedule->students->push($student);
-                    $assignedStudents[] = $student->id;
-                }
-
-                $remainingStudents -= $studentsToAssign;
-
-                if ($remainingStudents <= 0) {
-                    break;
-                }
-            }
-
-            foreach ($schedules as $schedule) {
-                $maxCapacity = $schedule->classroom->max_students;
-                $currentCapacity = $schedule->students->count();
-
-                while ($remainingStudents > 0 && $currentCapacity < $maxCapacity) {
-                    $student = $unregisteredStudents->pop();
-
-                    $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
-                        return $existingSchedule->shift_id === $schedule->shift_id &&
-                            $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
-                    });
-
-                    if ($hasConflict) {
-                        $conflictedStudents[] = $student->id;
-                        continue;
-                    }
-
-                    DB::transaction(function () use ($student, $schedule) {
-                        StudentSchedule::create([
-                            'student_id' => $student->id,
-                            'schedule_id' => $schedule->id,
-                        ]);
-
-                        StudentClassroom::create([
-                            'student_id' => $student->id,
-                            'classroom_id' => $schedule->classroom_id,
-                            'study_start' => $schedule->start_date,
-                            'study_end' => $schedule->end_date,
-                        ]);
-                    });
-
-                    $schedule->students->push($student);
-                    $assignedStudents[] = $student->id;
-
-                    $currentCapacity++;
-                    $remainingStudents--;
-                }
-
-                if ($remainingStudents <= 0) {
-                    break;
                 }
             }
 

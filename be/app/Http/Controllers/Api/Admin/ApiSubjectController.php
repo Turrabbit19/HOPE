@@ -516,8 +516,8 @@ class ApiSubjectController extends Controller
 
             foreach ($classroomsData as $classroom) {
                 $classrooms[] = new Classroom([
-                    'name' => $classroom['code'],
-                    'description' => $classroom['max_students'],
+                    'code' => $classroom['code'],
+                    'max_students' => $classroom['max_students'],
                 ]);
             }
 

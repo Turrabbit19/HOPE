@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
@@ -209,9 +210,15 @@ class ApiScheduleController extends Controller
         $teacherCode = $request->input('teacher_code');
 
         try {
-            $schedules = Schedule::with(['lessons' => function ($query) use ($date) {
-                $query->wherePivot('study_date', $date);
-            }, 'shift', 'teacher', 'classroom', 'subject']);
+            $schedules = Schedule::with([
+                'lessons' => function ($query) use ($date) {
+                    $query->wherePivot('study_date', $date);
+                },
+                'shift',
+                'teacher',
+                'classroom',
+                'subject'
+            ]);
 
             if ($teacherCode) {
                 $schedules->whereHas('teacher', function ($query) use ($teacherCode) {
@@ -944,6 +951,101 @@ class ApiScheduleController extends Controller
                 'error' => 'Không thể xử lý yêu cầu',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+    public function getChangeScheduleTeacher()
+    {
+        try {
+            $redisAdminChangeSchedule = "schedule_manage_change";
+            $length = Redis::llen($redisAdminChangeSchedule);
+            if ($length != 0) {
+                $list = Redis::lrange($redisAdminChangeSchedule, 0, -1);
+                $decodedList = array_map(function ($item) {
+                    return json_decode($item, true);
+                }, $list);
+
+                return response()->json([
+                    'length' => $length,
+                    'list' => $decodedList,
+                ], 200);
+            }
+            return response()->json([
+                'length' => 0,
+                'message' => 'Danh sách rỗng'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+    public function acceptHandleChangeSchedule(Request $request)
+    {
+        try {
+            $redisAdminChangeSchedule = "schedule_manage_change";
+
+            $index = $request->input('index');
+
+            if ($index === null) {
+                return response()->json(['message' => 'Index is required'], 400);
+            }
+
+            $item = Redis::lindex($redisAdminChangeSchedule, $index);
+
+            if (!$item) {
+                return response()->json(['message' => 'Item not found'], 404);
+            }
+
+            $decodedItem = json_decode($item, true);
+            if ($decodedItem['old_date'] !== null) {
+                $scheduleId = $decodedItem['schedule_id'] ?? null;
+                $old_date = $decodedItem['old_date'] ?? null;
+                $newDate = $decodedItem['new_date'] ?? null;
+                $newDateFormatted = Carbon::createFromFormat('d/m/Y', $newDate)->format('Y/m/d');
+                $oldDateFormatted = Carbon::createFromFormat('d/m/Y', $old_date)->format('Y/m/d');
+                DB::table('schedule_lessons')
+                    ->where('schedule_id', $scheduleId)
+                    ->where('study_date', $oldDateFormatted)
+                    ->update([
+                        'study_date' => $newDateFormatted,
+                        'updated_at' => now(),
+                    ]);
+                Redis::lrem($redisAdminChangeSchedule, 1, $item);
+                return $this->getChangeScheduleTeacher();
+            } else {
+                $scheduleId = $decodedItem['schedule_id'] ?? null;
+                $newTeacherId = $decodedItem['new_teacher_id'] ?? null;
+                $date = $decodedItem['date'] ?? null;
+                DB::table('schedule_lessons')
+                    ->where('schedule_id', $scheduleId)
+                    ->where('study_date', $date)
+                    ->update([
+                        'teacher_id' => $newTeacherId,
+                        'updated_at' => now(),
+                    ]);
+                Redis::lrem($redisAdminChangeSchedule, 1, $item);
+                return $this->getChangeScheduleTeacher();
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+    public function refuseHandleChangeSchedule(Request $request)
+    {
+        try {
+            $redisAdminChangeSchedule = "schedule_manage_change";
+
+            $index = $request->input('index');
+
+            if ($index === null) {
+                return response()->json(['message' => 'Index is required'], 400);
+            }
+
+            $item = Redis::lindex($redisAdminChangeSchedule, $index);
+
+            Redis::lrem($redisAdminChangeSchedule, 1, $item);
+
+            return $this->getChangeScheduleTeacher();
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }

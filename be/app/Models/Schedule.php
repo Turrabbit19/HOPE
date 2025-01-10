@@ -23,6 +23,7 @@ class Schedule extends Model
         'start_date',
         'end_date',
         'status',
+        'teacher_id'
     ];
 
     protected $casts = [
@@ -49,14 +50,20 @@ class Schedule extends Model
     public function days()
     {
         return $this->belongsToMany(Day::class, 'study_days')
-                    ->select('days.id'); 
+                    ->select('days.id');
     }
 
+    // public function lessons()
+    // {
+    //     return $this->belongsToMany(Lesson::class, 'schedule_lessons')
+    //                 ->withPivot('study_date');
+    // }
+
     public function lessons()
-    {
-        return $this->belongsToMany(Lesson::class, 'schedule_lessons')
-                    ->withPivot('study_date');
-    }
+{
+    return $this->belongsToMany(Lesson::class, 'schedule_lessons')
+                ->withPivot('study_date', 'teacher_id');
+}
 
     public function classroom()
     {

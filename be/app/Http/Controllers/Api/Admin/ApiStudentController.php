@@ -69,9 +69,9 @@ class ApiStudentController extends Controller
             $majorId = $request->input('major_id');
             $course_id = $request->input('course_id');
             $status = $request->input('status');
-    
-            $query = Student::with('majors', 'course'); 
-            
+
+            $query = Student::with('majors', 'course');
+
             $majors = StudentMajor::with('major')
             ->where('status', 1)
             ->get()
@@ -82,15 +82,15 @@ class ApiStudentController extends Controller
                     $q->where('majors.id', $majorId);
                 });
             }
-    
+
             if (!empty($course_id)) {
                 $query->where('course_id', $course_id);
             }
-    
+
             if (!empty($status)) {
                 $query->where('status', $status);
             }
-            
+
             $students = $query->get();
 
             if ($students->isEmpty()) {
@@ -121,7 +121,7 @@ class ApiStudentController extends Controller
                 ];
             });
 
-    
+
             return response()->json($data);
         }catch (\Exception $e){
             return response()->json([
@@ -129,7 +129,7 @@ class ApiStudentController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-    } 
+    }
 
     public function exportStudent()
     {
@@ -548,4 +548,5 @@ class ApiStudentController extends Controller
             ], 500);
         }
     }
+
 }

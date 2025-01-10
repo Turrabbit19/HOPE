@@ -8,17 +8,25 @@ use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiRoomController extends Controller
 {
     public function index(Request $request)
-    {
-        try {
-            $room = $request->input('room');
+{
+    try {
+        $room = $request->input('room', 'all');
+        $cacheKey = $room === "all" ? 'rooms_all' : "rooms_search_{$room}";
+        $cacheTTL = 10368000;
 
-            $rooms = Room::when($room && $room !== "all", function ($query) use ($room) {
-                $query->where('name', 'like', $room . '%');
+        $cachedData = Redis::get($cacheKey);
+
+        if ($cachedData) {
+            $data = json_decode($cachedData, true);
+        } else {
+            $rooms = Room::when($room !== "all", function ($query) use ($room) {
+                $query->where('name', 'like', "{$room}%");
             })->get();
 
             $data = $rooms->map(function ($room) {
@@ -29,11 +37,15 @@ class ApiRoomController extends Controller
                 ];
             });
 
-            return response()->json(['data' => $data], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
+            Redis::setex($cacheKey, $cacheTTL, json_encode($data));
         }
+
+        return response()->json(['data' => $data], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
     }
+}
+
 
     public function getAvailableRooms(Request $request)
     {
@@ -115,7 +127,7 @@ class ApiRoomController extends Controller
         try {
             $data = $validator->validated();
             $room = Room::create($data);
-
+            $this->updateRoomsCache();
             return response()->json(['data' => $room, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -162,7 +174,7 @@ class ApiRoomController extends Controller
 
             $data = $validator->validated();
             $room->update($data);
-
+            $this->updateRoomsCache();
             return response()->json(['data' => $room, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
@@ -176,6 +188,7 @@ class ApiRoomController extends Controller
         try {
             $room = Room::findOrFail($id);
             $room->delete();
+            $this->updateRoomsCache();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
@@ -183,4 +196,24 @@ class ApiRoomController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    private function updateRoomsCache()
+{
+    $cacheTTL = 10368000;
+
+    $allRoomsKey = 'rooms_all';
+    Redis::del($allRoomsKey);
+
+    $rooms = Room::all();
+
+    $data = $rooms->map(function ($room) {
+        return [
+            'id' => $room->id,
+            'name' => $room->name,
+            'status' => $room->status ? "Đang trống" : "Đang hoạt động",
+        ];
+    });
+
+    Redis::setex($allRoomsKey, $cacheTTL, json_encode($data));
+}
+
 }

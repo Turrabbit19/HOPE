@@ -9,6 +9,7 @@ use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiSemesterController extends Controller
@@ -62,26 +63,37 @@ class ApiSemesterController extends Controller
     public function getAll()
     {
         try {
-            $semesters = Semester::orderByDesc('start_date')->get();
-            $now = Carbon::now();
+            $cacheKey = 'semesters_all';
+            $cacheTTL = 10368000;
 
-            $data = $semesters->map(function ($semester) use ($now) {
-                if ($now->lt(Carbon::parse($semester->start_date))) {
-                    $status = "Chờ diễn ra";
-                } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
-                    $status = "Đang diễn ra";
-                } elseif ($now->gt(Carbon::parse($semester->end_date))) {
-                    $status = "Kết thúc";
-                }
+            $cachedData = Redis::get($cacheKey);
 
-                return [
-                    'id' => $semester->id,
-                    'name' => $semester->name,
-                    'start_date' => Carbon::parse($semester->start_date),
-                    'end_date' => Carbon::parse($semester->end_date),
-                    'status' => $status
-                ];
-            });
+            if ($cachedData) {
+                $data = json_decode($cachedData, true);
+            } else {
+                $semesters = Semester::orderByDesc('start_date')->get();
+                $now = Carbon::now();
+
+                $data = $semesters->map(function ($semester) use ($now) {
+                    if ($now->lt(Carbon::parse($semester->start_date))) {
+                        $status = "Chờ diễn ra";
+                    } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
+                        $status = "Đang diễn ra";
+                    } elseif ($now->gt(Carbon::parse($semester->end_date))) {
+                        $status = "Kết thúc";
+                    }
+
+                    return [
+                        'id' => $semester->id,
+                        'name' => $semester->name,
+                        'start_date' => Carbon::parse($semester->start_date),
+                        'end_date' => Carbon::parse($semester->end_date),
+                        'status' => $status
+                    ];
+                });
+
+                Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+            }
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
@@ -95,7 +107,7 @@ class ApiSemesterController extends Controller
             'year' => 'nullable|integer|min:1900|max:' . Carbon::now()->year
         ], [
             'year.integer' => 'Năm phải là một số nguyên.',
-            'year.min' => 'Năm không được nhỏ hơn 1900.',   
+            'year.min' => 'Năm không được nhỏ hơn 1900.',
             'year.max' => 'Năm không được lớn hơn ' . Carbon::now()->year . '.',
         ]);
 
@@ -207,7 +219,7 @@ class ApiSemesterController extends Controller
                     });
                 });
             }
-
+            $this->updateSemestersCache();
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -292,6 +304,7 @@ class ApiSemesterController extends Controller
 
                 $semester->courses()->sync($coursesWithOrder);
             }
+            $this->updateSemestersCache();
 
             return response()->json(['data' => $semester, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -306,6 +319,7 @@ class ApiSemesterController extends Controller
         try {
             $semester = Semester::findOrFail($id);
             $semester->delete();
+            $this->updateSemestersCache();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy kỳ học với ID: ' . $id], 404);
@@ -327,4 +341,33 @@ class ApiSemesterController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    private function updateSemestersCache()
+    {
+        $cacheKey = 'semesters_all';
+        $cacheTTL = 10368000;
+
+        $semesters = Semester::orderByDesc('start_date')->get();
+        $now = Carbon::now();
+
+        $data = $semesters->map(function ($semester) use ($now) {
+            if ($now->lt(Carbon::parse($semester->start_date))) {
+                $status = "Chờ diễn ra";
+            } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
+                $status = "Đang diễn ra";
+            } elseif ($now->gt(Carbon::parse($semester->end_date))) {
+                $status = "Kết thúc";
+            }
+
+            return [
+                'id' => $semester->id,
+                'name' => $semester->name,
+                'start_date' => Carbon::parse($semester->start_date),
+                'end_date' => Carbon::parse($semester->end_date),
+                'status' => $status
+            ];
+        });
+
+        Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+    }
+
 }

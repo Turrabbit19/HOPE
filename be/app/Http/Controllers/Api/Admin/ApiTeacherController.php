@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -21,6 +22,13 @@ class ApiTeacherController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 9);
+            $cacheKey = "teachers_per_page_{$perPage}";
+
+            $cachedData = Redis::get($cacheKey);
+
+            if ($cachedData) {
+                return response()->json(json_decode($cachedData, true), 200);
+            }
 
             $teachers = Teacher::paginate($perPage);
 
@@ -32,7 +40,6 @@ class ApiTeacherController extends Controller
                     "name" => $teacher->user->name,
                     "email" => $teacher->user->email,
                     "phone" => $teacher->user->phone,
-
                     'major_name' => $teacher->major->name,
                     'status' => match ($teacher->status) {
                         "0" => "Đang dạy",
@@ -43,6 +50,16 @@ class ApiTeacherController extends Controller
                 ];
             });
 
+            Redis::setex($cacheKey, now()->addMinutes(60)->diffInSeconds(now()), json_encode([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $teachers->total(),
+                    'per_page' => $teachers->perPage(),
+                    'current_page' => $teachers->currentPage(),
+                    'last_page' => $teachers->lastPage(),
+                ]
+            ]));
+
             return response()->json([
                 'data' => $data,
                 'pagination' => [
@@ -52,6 +69,7 @@ class ApiTeacherController extends Controller
                     'last_page' => $teachers->lastPage(),
                 ],
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
@@ -63,42 +81,46 @@ class ApiTeacherController extends Controller
             $majorId = $request->input('major_id');
             $status = $request->input('status');
 
+            $cacheKey = "teachers_major_{$majorId}_status_{$status}";
+
+            $cachedData = Redis::get($cacheKey);
+
+            if ($cachedData) {
+                return response()->json(json_decode($cachedData, true), 200);
+            }
+
             $query = Teacher::with(['user', 'major']);
 
-            if (!empty($majorId)) {
+            if ($majorId) {
                 $query->where('major_id', $majorId);
             }
 
-            if (!empty($status)) {
+            if ($status !== null) {
                 $query->where('status', $status);
             }
 
             $teachers = $query->get();
 
             if ($teachers->isEmpty()) {
-                return response()->json([
-                    'message' => 'Không tìm thấy giảng viên nào.',
-                ], 404);
+                return response()->json(['message' => 'Không tìm thấy giảng viên nào.'], 404);
             }
 
             $data = $teachers->map(function ($teacher) {
                 return [
                     "id" => $teacher->id,
-                    "name" => $teacher->user ? $teacher->user->name : 'null',
-                    "major" => $teacher->major ? $teacher->major->name : 'null',
+                    "name" => $teacher->user->name,
+                    "major" => $teacher->major->name,
                     "teacher_code" => $teacher->teacher_code,
                     "status" => $teacher->status == 0 ? 'Đang dạy' : 'Nghỉ'
                 ];
             });
 
-            // Trả về dữ liệu đã xử lý
+            Redis::setex($cacheKey, now()->addMinutes(60)->diffInSeconds(now()), json_encode(['teachers' => $data]));
+
             return response()->json(['teachers' => $data]);
+
         } catch (\Exception $e) {
-            // Trả về lỗi nếu có vấn đề trong quá trình truy vấn
-            return response()->json([
-                'error' => 'Không thể truy vấn tới bảng Teachers',
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -114,6 +136,7 @@ class ApiTeacherController extends Controller
     {
         try {
             Excel::import(new TeacherImport, $request->file('file'));
+            $this->clearTeacherCache();
 
             return response()->json(['message' => 'Dữ liệu được thêm thành công'], 200);
         } catch (\Exception $e) {
@@ -197,6 +220,7 @@ class ApiTeacherController extends Controller
                 'teacher_code' => $teacher->teacher_code,
                 'major_name' => $teacher->major->name,
             ];
+            $this->clearTeacherCache();
 
             return response()->json(['data' => $teacherData, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -285,6 +309,7 @@ class ApiTeacherController extends Controller
                 'teacher_code' => $teacher->teacher_code,
                 'major_name' => $teacher->major->name,
             ];
+            $this->clearTeacherCache();
 
             return response()->json(['data' => $teacherData, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -304,12 +329,19 @@ class ApiTeacherController extends Controller
                 Storage::disk('public')->delete($user->avatar);
             }
             $user->delete();
-
+            $this->clearTeacherCache();
             return response()->json(['message' => 'Xóa thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy giảng viên với ID: ' . $id], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+    private function clearTeacherCache()
+    {
+        $keys = Redis::keys('teachers_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
         }
     }
 }

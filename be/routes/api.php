@@ -137,6 +137,11 @@ Route::prefix('admin')
 
         Route::apiResource('paypal', PayPalController::class);
         Route::post('paypal/getTransactionsByCourse', [PayPalController::class, 'getTransactionsByCourse']);
+
+
+        Route::get('schedule/getChangeScheduleTeacher', [ApiScheduleController::class, 'getChangeScheduleTeacher']);
+        Route::post('schedule/acceptHandleChangeSchedule', [ApiScheduleController::class, 'acceptHandleChangeSchedule']);
+        Route::post('schedule/refuseHandleChangeSchedule', [ApiScheduleController::class, 'refuseHandleChangeSchedule']);
     });
 
 Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
@@ -180,6 +185,12 @@ Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
         Route::get('schedules', [TeacherController::class, 'getSchedules']);
 
         Route::get('timetable', [TeacherController::class, 'getTimetable']);
+        Route::post('getAbc', [TeacherController::class, 'getTeacher']);
+        Route::post('changeTeacher', [TeacherController::class, 'changeTeacher']);
+        Route::get('noti-change-schedule', [TeacherController::class, 'notificationChangeSchedule']);
+        Route::post('accept-change-schedule', [TeacherController::class, 'handleSubmit']);
+        Route::get('max-date-schedule', [TeacherController::class, 'getMaxDateSchedule']);
+        Route::post('handle-change-date', [TeacherController::class, 'handleChangeDate']);
 
         Route::get('semesters', [TeacherController::class, 'getSemesterForTeacher']);
         Route::get('{semesterId}/timetable', [TeacherController::class, 'getTimetableBySemesterForTeacher']);

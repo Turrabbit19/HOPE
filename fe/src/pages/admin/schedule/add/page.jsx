@@ -446,16 +446,21 @@ const ScheduleAdd = () => {
   ) => {
     return prevShifts.map((shift) => {
       if (shift.id === shiftId) {
-        // Nếu có phòng trước đó, thêm lại số phòng trống
-        if (previousRoomId) shift.available_rooms_count += 1;
-        // Giảm số phòng trống khi chọn phòng mới
-        if (newRoomId) shift.available_rooms_count -= 1;
+        if (previousRoomId)
+          shift.available_rooms_count = Math.max(
+            shift.available_rooms_count + 1,
+            0
+          );
+        if (newRoomId)
+          shift.available_rooms_count = Math.max(
+            shift.available_rooms_count - 1,
+            0
+          );
       }
       return shift;
     });
   };
 
-  // Hàm xử lý chọn phòng cho lớp học và ca học
   const handleRoomSelect = (classId, shiftId, newRoomId) => {
     if (!newRoomId || !shiftId) {
       console.error("Phòng học hoặc ca học không hợp lệ.");
@@ -463,13 +468,10 @@ const ScheduleAdd = () => {
     }
 
     setSelectedRooms((prevSelected) => {
-      // Kiểm tra xem phòng cũ đã chọn là gì
       const previousRoomId = prevSelected[shiftId]?.[classId]?.id;
 
-      // Nếu phòng cũ và phòng mới giống nhau, không cần thay đổi gì
       if (previousRoomId === newRoomId) return prevSelected;
 
-      // Cập nhật dữ liệu phòng học
       const updatedSelectedRooms = {
         ...prevSelected,
         [shiftId]: {
@@ -478,30 +480,21 @@ const ScheduleAdd = () => {
         },
       };
 
-      // Cập nhật lại số lượng phòng trống cho ca học
-      setShifts((prevShifts) => {
-        return updateShiftRoomCount(
-          prevShifts,
-          shiftId,
-          previousRoomId,
-          newRoomId
-        );
-      });
+      setShifts((prevShifts) =>
+        updateShiftRoomCount(prevShifts, shiftId, previousRoomId, newRoomId)
+      );
 
       return updatedSelectedRooms;
     });
   };
 
-  // Hàm lấy các phòng học còn trống cho ca học của lớp
   const getAvailableRoomsForShift = (shiftId, classId) => {
     if (!rooms || !shiftId || !selectedRooms[shiftId]) return rooms || [];
 
-    // Lấy danh sách phòng đã chọn
     const occupiedRooms = Object.values(selectedRooms[shiftId])
       .map((roomData) => roomData?.id)
       .filter(Boolean);
 
-    // Trả về các phòng chưa được chọn (không bị chiếm dụng)
     return rooms.filter((room) => !occupiedRooms.includes(room.id));
   };
 
@@ -885,17 +878,13 @@ const ScheduleAdd = () => {
                             }
                           : undefined
                       }
-                      onChange={(value) => {
+                      onChange={(value) =>
                         handleRoomSelect(
                           classId,
                           classSessions[classId],
                           value.value
-                        );
-                        setSelectedRooms((prev) => ({
-                          ...prev,
-                          [classId]: value,
-                        }));
-                      }}
+                        )
+                      }
                       className="w-full rounded border"
                       disabled={!classSessions[classId]}
                       labelInValue
@@ -1053,6 +1042,13 @@ const ScheduleAdd = () => {
                   placeholder="Chọn giáo viên"
                   value={teacherAssignments[classId] || undefined}
                   onChange={(value) => handleTeacherSelect(classId, value)}
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children || "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                 >
                   {teachersByClass[classId]?.length ? (
                     teachersByClass[classId].map((teacher) => (

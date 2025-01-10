@@ -17,7 +17,7 @@ class ApiSemesterController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('perPage', 9);
+            $perPage = $request->input('perPage', 10);
 
             $semesters = Semester::paginate($perPage);
             $now = Carbon::now();
@@ -60,46 +60,62 @@ class ApiSemesterController extends Controller
         }
     }
 
-    public function getAll()
+    public function getAll(Request $request)
     {
         try {
-            $cacheKey = 'semesters_all';
-            $cacheTTL = 10368000;
+            $year = $request->input('year');
+
+            $cacheKey = 'semesters_' . ($year ?: 'all');
 
             $cachedData = Redis::get($cacheKey);
 
             if ($cachedData) {
-                $data = json_decode($cachedData, true);
-            } else {
-                $semesters = Semester::orderByDesc('start_date')->get();
-                $now = Carbon::now();
-
-                $data = $semesters->map(function ($semester) use ($now) {
-                    if ($now->lt(Carbon::parse($semester->start_date))) {
-                        $status = "Chờ diễn ra";
-                    } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
-                        $status = "Đang diễn ra";
-                    } elseif ($now->gt(Carbon::parse($semester->end_date))) {
-                        $status = "Kết thúc";
-                    }
-
-                    return [
-                        'id' => $semester->id,
-                        'name' => $semester->name,
-                        'start_date' => Carbon::parse($semester->start_date),
-                        'end_date' => Carbon::parse($semester->end_date),
-                        'status' => $status
-                    ];
-                });
-
-                Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+                return response()->json(['data' => json_decode($cachedData, true)], 200);
             }
 
-            return response()->json(['data' => $data], 200);
+            $semestersQuery = Semester::orderByDesc('start_date');
+
+            if ($year) {
+                $semestersQuery->whereYear('start_date', $year);
+            }
+
+            $semesters = $semestersQuery->paginate(10);
+            $now = Carbon::now();
+
+            $data = $semesters->getCollection()->map(function ($semester) use ($now) {
+                $status = $now->lt($semester->start_date) ? "Chờ diễn ra" : ($now->between($semester->start_date, $semester->end_date) ? "Đang diễn ra" : "Kết thúc");
+
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'start_date' => $semester->start_date,
+                    'end_date' => $semester->end_date,
+                    'status' => $status,
+                ];
+            });
+
+            $semesters->setCollection($data);
+
+            Redis::setex($cacheKey, 3600, json_encode($data));
+
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $semesters->total(),
+                    'per_page' => $semesters->perPage(),
+                    'current_page' => $semesters->currentPage(),
+                    'last_page' => $semesters->lastPage(),
+                ]
+            ], 200);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Semesters', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Semesters',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
+
 
     public function filterByYear(Request $request)
     {
@@ -343,31 +359,12 @@ class ApiSemesterController extends Controller
     }
     private function updateSemestersCache()
     {
-        $cacheKey = 'semesters_all';
-        $cacheTTL = 10368000;
 
-        $semesters = Semester::orderByDesc('start_date')->get();
-        $now = Carbon::now();
-
-        $data = $semesters->map(function ($semester) use ($now) {
-            if ($now->lt(Carbon::parse($semester->start_date))) {
-                $status = "Chờ diễn ra";
-            } elseif ($now->between(Carbon::parse($semester->start_date), Carbon::parse($semester->end_date))) {
-                $status = "Đang diễn ra";
-            } elseif ($now->gt(Carbon::parse($semester->end_date))) {
-                $status = "Kết thúc";
-            }
-
-            return [
-                'id' => $semester->id,
-                'name' => $semester->name,
-                'start_date' => Carbon::parse($semester->start_date),
-                'end_date' => Carbon::parse($semester->end_date),
-                'status' => $status
-            ];
-        });
-
-        Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+        $keys = Redis::keys('semesters_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
+        }
     }
+
 
 }

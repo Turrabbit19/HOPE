@@ -182,7 +182,6 @@ const TeacherTimetable = () => {
     );
     const formattedDate = formatDate(dayDate);
 
-    // console.log("Looking for schedule:", { day, shift, formattedDate });
 
     const schedule = timetableData.find((item) => {
       return item.shift_name === shift;

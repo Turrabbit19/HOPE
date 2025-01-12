@@ -17,7 +17,7 @@ const ScheduleList = () => {
   const [classroomsBySubject, setClassroomsBySubject] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [classroomsCache, setClassroomsCache] = useState([]);
+  const [classroomsData, setClassroomsData] = useState([]);
   const navigate = useNavigate();
 
   const now = new Date(
@@ -101,6 +101,27 @@ const ScheduleList = () => {
       fetchSemesters();
     }
   }, [selectedYear]);
+
+  const fetchClassroomsBySubject = async (subjectId) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await instance.get(
+        `admin/${subjectId}/classrooms/without-schedule`
+      );
+
+      const classrooms = response.data.classrooms || [];
+
+      setClassroomsData((prev) => ({
+        ...prev,
+        [`${subjectId}`]: classrooms,
+      }));
+    } catch (err) {
+      setError("Đã xảy ra lỗi khi tải dữ liệu lớp học.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMajorsForSemester = async (semesterId, courseId) => {
     setError(null);
@@ -213,6 +234,7 @@ const ScheduleList = () => {
       const newSubject = prev === subjectId ? null : subjectId;
 
       if (newSubject && !classroomsBySubject[`${courseId}_${subjectId}`]) {
+        fetchClassroomsBySubject(subjectId);
         fetchClassroomsForSubject(courseId, newSubject);
       }
 
@@ -766,32 +788,40 @@ const ScheduleList = () => {
                                                             gap: "10px",
                                                           }}
                                                         >
-                                                          {/* Button Tạo lịch học mới (màu xanh dương) */}
-                                                          <Button
-                                                            className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
-                                                            onClick={() => {
-                                                              console.log(
-                                                                "Passing majorId::",
-                                                                major.id
-                                                              );
-                                                            }}
-                                                          >
-                                                            <Link
-                                                              to={`add`}
-                                                              state={{
-                                                                courseId:
-                                                                  course.id,
-                                                                semesterId:
-                                                                  semester.id,
-                                                                majorId:
-                                                                  major.id,
-                                                                subjectId:
-                                                                  subject.id,
+                                                          {classroomsData[
+                                                            `${subject.id}`
+                                                          ] &&
+                                                          classroomsData[
+                                                            `${subject.id}`
+                                                          ].length > 0 ? (
+                                                            <Button
+                                                              className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
+                                                              onClick={() => {
+                                                                console.log(
+                                                                  "Passing majorId::",
+                                                                  major.id
+                                                                );
                                                               }}
                                                             >
-                                                              Tạo lịch học mới
-                                                            </Link>
-                                                          </Button>
+                                                              <Link
+                                                                to={`add`}
+                                                                state={{
+                                                                  courseId:
+                                                                    course.id,
+                                                                  semesterId:
+                                                                    semester.id,
+                                                                  majorId:
+                                                                    major.id,
+                                                                  subjectId:
+                                                                    subject.id,
+                                                                }}
+                                                              >
+                                                                Tạo lịch học mới
+                                                              </Link>
+                                                            </Button>
+                                                          ) : (
+                                                            ""
+                                                          )}
 
                                                           {/* Button Phân bổ sinh viên tự động (màu xanh lá) */}
                                                           <Button

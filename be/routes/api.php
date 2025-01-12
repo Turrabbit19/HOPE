@@ -129,8 +129,9 @@ Route::prefix('admin')
         Route::get('getMajorAndSubMajor', [ApiSyllabusController::class, 'getMajorAndSubMajor']);
 
         Route::get('statistics/studentByCourse', [StatisticsController::class, "getStudentStatistics"]);
+        Route::get('statistics/countStatistics ', [StatisticsController::class, "countStatistics"]);
         Route::get('statistics/{id}/studentByMajor', [StatisticsController::class, "getStudentCountByMajorInCourse"]);
-        Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajorInCourse"]);
+        Route::get('statistics/studentAndTeacherByMajor', [StatisticsController::class, "getStudentandTeacherCountByMajor"]);
         Route::get('statistics/statisticSubMajors/{majorId}', [StatisticsController::class, "statisticSubMajors"]);
         Route::get('statistics/majorsByCourse/{courseId}', [StatisticsController::class, 'getMajorsByCourse']);
         Route::get('statistics/classrooms', [StatisticsController::class, 'getClassrooms']);

@@ -4,7 +4,6 @@ import { Card, Typography, Spin, Tag } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import instance from "../../../../config/axios";
 
-
 const { Title, Text } = Typography;
 
 const MajorSubject = () => {
@@ -39,10 +38,10 @@ const MajorSubject = () => {
   const renderStatusTag = (status) => {
     let color;
     switch (status) {
-      case "Bắt buộc":
+      case "Tạm dừng":
         color = "red";
         break;
-      case "Tự chọn":
+      case "Đang hoạt động":
         color = "green";
         break;
       default:
@@ -58,48 +57,51 @@ const MajorSubject = () => {
         {majorName}
       </Title>
 
-      {subjects.length > 0 ? (
-        subjects.map((subject) => (
-          <Link
-            to={`detail/${subject.id}`}
-            state={{ subjectName: subject.name, credit: subject.credits}}
-            key={subject.id}
-            style={{ textDecoration: "none" }}
-          >
-            <Card
-              style={{
-                marginBottom: "16px",
-                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                borderRadius: "8px",
-              }}
-              hoverable
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {subjects.length > 0 ? (
+          subjects.map((subject) => (
+            <Link
+              to={`detail/${subject.id}`}
+              state={{ subjectName: subject.name, credit: subject.credits }}
+              key={subject.id}
+              className="no-underline"
             >
-              <Title level={4}>{subject.name}</Title>
+              <div className="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition flex flex-col justify-between min-h-[200px]">
+                <div>
+                  <h4 className="text-3xl text-red-500 font-semibold mb-2">
+                    {subject.name}
+                  </h4>
 
-              <div style={{ marginBottom: "8px" }}>
-                <Text>
-                  Mã môn học: <strong>{subject.code}</strong>
-                </Text>
+                  <div className="mb-2 text-2xl">
+                    <p className="text-gray-600">
+                      Mã môn học:{" "}
+                      <span className="font-bold">{subject.code}</span>
+                    </p>
+                  </div>
+                  <div className="mb-2 text-2xl">
+                    <p className="text-gray-600">
+                      Số tín chỉ:{" "}
+                      <span className="font-bold">{subject.credit}</span>
+                    </p>
+                  </div>
+                  <div className="mb-2 text-2xl">
+                    <p className="text-gray-600">
+                      Trạng thái: {renderStatusTag(subject.status)}
+                    </p>
+                  </div>
+                  <p className="text-gray-600 text-2xl">
+                    Mô tả: {subject.description}
+                  </p>
+                </div>
               </div>
-              <div style={{ marginBottom: "8px" }}>
-                <Text>
-                  Số tín chỉ: <strong>{subject.credits}</strong>
-                </Text>
-              </div>
-              <div style={{ marginBottom: "8px" }}>
-                <Text>Trạng thái: {renderStatusTag(subject.status)}</Text>
-              </div>
-
-              <Text>Mô tả: {subject.description}</Text>
-            </Card>
-          </Link>
-        ))
-      ) : (
-        <Text type="warning">Không có môn học cho chuyên ngành này.</Text>
-      )}
+            </Link>
+          ))
+        ) : (
+          <Text type="warning">Không có môn học cho chuyên ngành này.</Text>
+        )}
+      </div>
     </div>
   );
-
 };
 
 export default MajorSubject;

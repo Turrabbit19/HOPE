@@ -8,6 +8,7 @@ use App\Models\Major;
 use App\Models\Schedule;
 use App\Models\Semester;
 use App\Models\Student;
+use App\Models\Teacher;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,9 +26,13 @@ class StatisticsController extends Controller
 
             if ($year) {
                 $query->whereHas('course', function ($query) use ($year) {
-                    $query->whereYear('start_date', $year);
+                    $query->where(function ($query) use ($year) {
+                        $query->whereYear('start_date', '<=', $year)
+                            ->whereYear('end_date', '>=', $year);
+                    });
                 });
             }
+
 
             $statistics = $query->get();
 
@@ -44,24 +49,68 @@ class StatisticsController extends Controller
         }
     }
 
+    public function countStatistics(Request $request)
+    {
+        try {
+            $year = $request->input('year');
+
+            $studentQuery = Student::query();
+
+            $courseCount = Course::count();
+
+            $majorCount = Major::where('main', 1)->where('status', 1)->count();
+
+            if ($year) {
+                $studentQuery->whereHas('course', function ($query) use ($year) {
+                    $query->where(function ($query) use ($year) {
+                        $query->whereYear('start_date', '<=', $year)
+                            ->whereYear('end_date', '>=', $year);
+                    });
+                });
+
+                $courseCount = Course::where(function ($query) use ($year) {
+                    $query->whereYear('start_date', '<=', $year)
+                        ->whereYear('end_date', '>=', $year);
+                })->count();
+
+                $majorCount = Major::where(function ($query) use ($year) {
+                    $query->whereYear('created_at', '<=', $year);
+                })->count();
+            }
+
+            $studentCount = $studentQuery->where('status', 1)->count();
+
+            $teacherCount = Teacher::where('status', 1)->count();
+
+            $semesterCount = Semester::count();
+
+            return response()->json([
+                'student_count' => $studentCount,
+                'teacher_count' => $teacherCount,
+                'course_count' => $courseCount,
+                'major_count' => $majorCount,
+                'semester_count' => $semesterCount,
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
 
     public function getStudentCountByMajorInCourse(Request $request, string $id)
     {
         try {
-            $year = $request->input('year');  // Lọc theo năm
-            $semesterId = $request->input('semester_id');  // Lọc theo kỳ học
+            $year = $request->input('year');
+            $semesterId = $request->input('semester_id');
 
             $majorsWithCounts = Major::whereHas('students', function ($query) use ($id, $year, $semesterId) {
                 $query->where('course_id', $id);
 
-                // Lọc theo năm nếu có tham số year
                 if ($year) {
                     $query->whereHas('course', function ($query) use ($year) {
                         $query->whereYear('start_date', $year);
                     });
                 }
 
-                // Lọc theo kỳ học nếu có tham số semester_id
                 if ($semesterId) {
                     $query->whereHas('course', function ($query) use ($semesterId) {
                         $query->where('semester_id', $semesterId);
@@ -72,14 +121,12 @@ class StatisticsController extends Controller
                     'students' => function ($query) use ($id, $year, $semesterId) {
                         $query->where('course_id', $id);
 
-                        // Lọc theo năm nếu có tham số year
                         if ($year) {
                             $query->whereHas('course', function ($query) use ($year) {
                                 $query->whereYear('start_date', $year);
                             });
                         }
 
-                        // Lọc theo kỳ học nếu có tham số semester_id
                         if ($semesterId) {
                             $query->whereHas('course', function ($query) use ($semesterId) {
                                 $query->where('semester_id', $semesterId);
@@ -104,26 +151,27 @@ class StatisticsController extends Controller
         }
     }
 
-    public function getStudentandTeacherCountByMajorInCourse()
+    public function getStudentandTeacherCountByMajor(Request $request)
     {
         try {
-            $currentDate = now();
+            $year = $request->input('year');
 
-            $majorsWithCounts = Major::whereHas('students', function ($query) use ($currentDate) {
-                $query->join('courses', 'courses.id', '=', 'students.course_id')
-                    ->whereDate('courses.start_date', '<=', $currentDate)
-                    ->whereDate('courses.end_date', '>=', $currentDate);
-            })
-                ->where('main', 1)
-                ->orWhere('id', 1)
-                ->withCount([
-                    'students' => function ($query) use ($currentDate) {
-                        $query->join('courses', 'courses.id', '=', 'students.course_id')
-                            ->whereDate('courses.start_date', '<=', $currentDate)
-                            ->whereDate('courses.end_date', '>=', $currentDate);
-                    },
-                    'teachers'
-                ])
+            $majorsWithCounts = Major::withCount([
+                'students' => function ($query) use ($year) {
+                    if ($year) {
+                        $query->whereHas('course', function ($query) use ($year) {
+                            $query->whereYear('start_date', '<=', $year)
+                                ->whereYear('end_date', '>=', $year);
+                        });
+                    }
+                },
+                'teachers'
+            ])
+                ->havingRaw('students_count > 0 OR teachers_count > 0')
+                ->where(function ($query) {
+                    $query->where('main', 1)
+                        ->orWhere('id', 1);
+                })
                 ->get();
 
             $result = $majorsWithCounts->map(function ($major) {
@@ -145,7 +193,7 @@ class StatisticsController extends Controller
     {
         try {
             $currentDate = now();
-            $majorsWithCounts = Major::where('major_id', $majorId) // Chắc chắn rằng majorId được tìm kiếm chính xác
+            $majorsWithCounts = Major::where('major_id', $majorId)
                 ->whereHas('students', function ($query) use ($currentDate) {
                     $query->join('courses', 'courses.id', '=', 'students.course_id')
                         ->whereDate('courses.start_date', '<=', $currentDate)
@@ -174,7 +222,6 @@ class StatisticsController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-
 
     public function getMajorsByCourse($courseId)
     {

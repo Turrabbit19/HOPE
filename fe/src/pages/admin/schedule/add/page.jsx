@@ -84,39 +84,39 @@ const ScheduleAdd = () => {
       return;
     }
 
-    // Hàm để lấy dữ liệu từ API
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
 
-        // Gọi các API song song
-        const [classroomsRes, teachersRes, roomsRes] = await Promise.all([
+        const [classroomsRes] = await Promise.all([
           axios.get(
             `http://localhost:8000/api/admin/${subjectId}/classrooms/without-schedule`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
+              timeout: 5000,
             }
           ),
         ]);
 
-        // Xử lý dữ liệu classrooms
         let classroomsData = classroomsRes.data;
         if (Array.isArray(classroomsData)) {
           setClassrooms(classroomsData);
-        } else if (Array.isArray(classroomsData.classrooms)) {
-          setClassrooms(classroomsData.classrooms);
         } else {
-          message.error("Không có lớp học nào để thêm. Vui lòng thêm lớp học.");
-          navigate(`/list-subject/detail/${subjectId}`);
-          return;
+          setClassrooms(classroomsData.classrooms);
         }
 
         setLoading(false);
         setLoadingShifts(false);
       } catch (error) {
-        message.error(`Không thể tải dữ liệu cần thiết: ${error.message}`);
+        if (axios.isCancel(error)) {
+          message.error("Thao tác đã bị hủy do vượt quá thời gian yêu cầu.");
+        } else {
+          message.error("Không có lớp học nào để thêm. Vui lòng thêm lớp học.");
+          window.location.href = `/admin/list-subject/detail/${subjectId}`;
+          return;
+        }
         setLoading(false);
         setLoadingShifts(false);
       }
@@ -182,13 +182,14 @@ const ScheduleAdd = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            timeout: 5000,
             params: {
               start_date: startDate.format("YYYY-MM-DD"), // Định dạng "YYYY-MM-DD"
               subject_id: subjectId,
               days_of_week: daysOfWeek,
             },
             paramsSerializer: (params) =>
-              qs.stringify(params, { arrayFormat: "brackets" }), // Sử dụng arrayFormat 'brackets' để gửi mảng đúng cách
+              qs.stringify(params, { arrayFormat: "brackets" }),
           }
         );
 
@@ -320,6 +321,8 @@ const ScheduleAdd = () => {
             semesterId,
             days: selectedDays,
             shiftId: classSessions[classId],
+            startDate: startDate.format("YYYY-MM-DD"),
+            endDate: endDate.format("YYYY-MM-DD"),
           },
           paramsSerializer: (params) =>
             qs.stringify(params, { arrayFormat: "brackets" }),
@@ -800,26 +803,19 @@ const ScheduleAdd = () => {
 
                       return (
                         <Option key={shift.id} value={shift.id}>
-                          <div className="flex items-center">
-                            <span className="mr-2">
-                              {`${shift.name}: ${shift.start_time} - ${shift.end_time}`}
-                            </span>
-                            {/* Vòng tròn hiển thị số lượng phòng trống */}
-                            <div className="w-full flex items-center">
-                              <div className="flex-1">
-                                <div className="w-full h-2 bg-gray-200 rounded-full">
-                                  <div
-                                    className={`h-2 rounded-full ${getRoomColor(
-                                      availableRoomsPercentage
-                                    )}`}
-                                    style={{
-                                      width: `${availableRoomsPercentage}%`,
-                                    }}
-                                  ></div>
-                                </div>
-                              </div>
-                              <span className="ml-2 text-xl">
-                                {shift.available_rooms_count}
+                          <div className="flex items-center p-2">
+                            <div className="flex-1">
+                              <span className=" font-semibold">
+                                {shift.name}
+                              </span>
+                              <span className="ml-3 text-2xl text-gray-500">
+                                Thời gian:{" "}
+                                {`${shift.start_time} - ${shift.end_time}`}
+                              </span>
+                            </div>
+                            <div className="flex items-center ml-4">
+                              <span className="ml-2 text-gray-700">
+                                Còn trống: {shift.available_rooms_count}
                               </span>
                             </div>
                           </div>
@@ -991,86 +987,97 @@ const ScheduleAdd = () => {
               title={`Phân Công Giáo Viên Cho Lớp ${className}`}
               style={{ marginBottom: 16 }}
             >
-              {/* Hiển thị ca học */}
-              <div style={{ marginBottom: 8 }}>
-                <Text strong>Ca Học:</Text>{" "}
-                {shift
-                  ? `${shift.name} (${shift.start_time} - ${shift.end_time})`
-                  : "Chưa chọn"}
-              </div>
+              <Row gutter={16}>
+                {/* Cột 1 */}
+                <Col span={12}>
+                  {/* Hiển thị ca học */}
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong>Ca Học:</Text>{" "}
+                    {shift
+                      ? `${shift.name} (${shift.start_time} - ${shift.end_time})`
+                      : "Chưa chọn"}
+                  </div>
 
-              {/* Hiển thị các ngày học */}
-              <div style={{ marginBottom: 8 }}>
-                <Text strong>Các Ngày Học:</Text>
-                {selectedDays && selectedDays.length > 0
-                  ? selectedDays.map((day) => `Thứ ${day}`).join(", ")
-                  : "Chưa chọn"}
-              </div>
+                  {/* Hiển thị các ngày học */}
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong>Các Ngày Học:</Text>{" "}
+                    {selectedDays && selectedDays.length > 0
+                      ? selectedDays.map((day) => `Thứ ${day}`).join(", ")
+                      : "Chưa chọn"}
+                  </div>
 
-              {/* Hiển thị hình thức học */}
-              <div style={{ marginBottom: 8 }}>
-                <Text strong>Hình Thức Học:</Text>{" "}
-                {learningMethod === "Online" ? "Online" : "Offline"}
-              </div>
+                  {/* Hiển thị hình thức học */}
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong>Hình Thức Học:</Text>{" "}
+                    {learningMethod === "Online" ? "Online" : "Offline"}
+                  </div>
+                </Col>
 
-              {/* Hiển thị link học online nếu hình thức học là Online */}
-              {learningMethod === "Online" ? (
-                <div style={{ marginBottom: 16 }}>
-                  <Text strong>Link Học Trực Tuyến:</Text>{" "}
-                  {details?.classLink || "Chưa nhập"}
-                </div>
-              ) : (
-                // Hiển thị phòng học offline
-                <div style={{ marginBottom: 16 }}>
-                  <Text strong>Phòng Học Trực Tiếp:</Text>{" "}
-                  {room ? room.name : "Chưa chọn"}
-                </div>
-              )}
-
-              {/* Chọn Giáo Viên */}
-              <Form.Item
-                label="Chọn Giáo Viên"
-                required
-                validateStatus={
-                  teacherAssignments[classId] ? "success" : "error"
-                }
-                help={
-                  teacherAssignments[classId] ? "" : "Vui lòng chọn giáo viên!"
-                }
-              >
-                <Select
-                  placeholder="Chọn giáo viên"
-                  value={teacherAssignments[classId] || undefined}
-                  onChange={(value) => handleTeacherSelect(classId, value)}
-                  showSearch
-                  optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.children || "")
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                >
-                  {teachersByClass[classId]?.length ? (
-                    teachersByClass[classId].map((teacher) => (
-                      <Option
-                        key={teacher.id}
-                        value={teacher.id}
-                        disabled={
-                          !isTeacherAvailable(
-                            teacher.id,
-                            classSessions[classId],
-                            classId
-                          )
-                        }
-                      >
-                        {teacher.name}
-                      </Option>
-                    ))
+                {/* Cột 2 */}
+                <Col span={12}>
+                  {/* Hiển thị link học online hoặc phòng học offline */}
+                  {learningMethod === "Online" ? (
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>Link Học Trực Tuyến:</Text>{" "}
+                      {details?.classLink || "Chưa nhập"}
+                    </div>
                   ) : (
-                    <Option disabled>Không có giáo viên nào khả dụng</Option>
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>Phòng Học Trực Tiếp:</Text>{" "}
+                      {room ? room.name : "Chưa chọn"}
+                    </div>
                   )}
-                </Select>
-              </Form.Item>
+
+                  {/* Chọn Giáo Viên */}
+                  <Form.Item
+                    label="Chọn Giáo Viên"
+                    required
+                    validateStatus={
+                      teacherAssignments[classId] ? "success" : "error"
+                    }
+                    help={
+                      teacherAssignments[classId]
+                        ? ""
+                        : "Vui lòng chọn giáo viên!"
+                    }
+                  >
+                    <Select
+                      placeholder="Chọn giáo viên"
+                      value={teacherAssignments[classId] || undefined}
+                      onChange={(value) => handleTeacherSelect(classId, value)}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.children || "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                    >
+                      {teachersByClass[classId]?.length ? (
+                        teachersByClass[classId].map((teacher) => (
+                          <Option
+                            key={teacher.id}
+                            value={teacher.id}
+                            disabled={
+                              !isTeacherAvailable(
+                                teacher.id,
+                                classSessions[classId],
+                                classId
+                              )
+                            }
+                          >
+                            {teacher.name}
+                          </Option>
+                        ))
+                      ) : (
+                        <Option disabled>
+                          Không có giáo viên nào khả dụng
+                        </Option>
+                      )}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
             </Card>
           );
         })}

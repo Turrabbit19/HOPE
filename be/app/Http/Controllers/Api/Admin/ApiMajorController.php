@@ -266,7 +266,8 @@ class ApiMajorController extends Controller
                     'name' => $major->subject->name,
                     'description' => $major->subject->description,
                     'credit' => $major->subject->credit,
-                    'order' => $major->subject->order,
+                    'code' => $major->subject->code,
+                    'status' => $major->subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
             return response()->json(['data' => $subjectsByMajor], 200);
@@ -280,39 +281,42 @@ class ApiMajorController extends Controller
     public function getTeachersByMajor(string $majorId, Request $request)
     {
         try {
-            $now = Carbon::now();
-
             $semesterId = $request->input('semesterId');
             $days = $request->input('days', []);
             $shiftId = $request->input('shiftId');
-
-            if (empty($semesterId)) {
-                return response()->json(['error' => 'Vui lòng cung cấp thông tin kỳ học.'], 400);
-            }
+            $startDate = $request->input('startDate') ? Carbon::parse($request->input('startDate'))->startOfDay() : null;
+            $endDate = $request->input('endDate') ? Carbon::parse($request->input('endDate'))->endOfDay() : null;
 
             $teachers = Teacher::where('major_id', $majorId)
                 ->where('status', 1)
-                ->whereDoesntHave('schedules', function ($query) use ($semesterId, $days, $shiftId) {
+                ->whereDoesntHave('schedules', function ($query) use ($semesterId, $days, $shiftId, $startDate, $endDate) {
                     $query->where('semester_id', $semesterId);
+
+                    // if ($startDate && $endDate) {
+                    //     $query->where(function ($dateQuery) use ($startDate, $endDate) {
+                    //         $dateQuery->whereBetween('start_date', [$startDate, $endDate])
+                    //             ->orWhereBetween('end_date', [$startDate, $endDate])
+                    //             ->orWhere(function ($nestedQuery) use ($startDate, $endDate) {
+                    //                 $nestedQuery->where('start_date', '<=', $startDate)
+                    //                     ->where('end_date', '>=', $endDate);
+                    //             });
+                    //     });
+                    // }
 
                     if (!empty($shiftId)) {
                         $query->where('shift_id', $shiftId);
                     }
 
                     if (!empty($days)) {
-                        $query->whereHas('days', function ($dayQuery) use ($days) {
-                            $dayQuery->whereIn('days.id', $days);
-                        });
+                        $query->whereHas('days', fn($dayQuery) => $dayQuery->whereIn('day_id', $days));
                     }
                 })
                 ->get();
 
-            $data = $teachers->map(function ($teacher) {
-                return [
-                    'id' => $teacher->id,
-                    'name' => $teacher->user->name,
-                ];
-            });
+            $data = $teachers->map(fn($teacher) => [
+                'id' => $teacher->id,
+                'name' => $teacher->user->name,
+            ]);
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {

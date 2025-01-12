@@ -97,12 +97,6 @@ class ApiClassroomController extends Controller
                 })
                 ->get();
 
-            if ($classrooms->isEmpty()) {
-                return response()->json([
-                    'message' => 'Không có lớp học nào thỏa điều kiện.',
-                ], 404);
-            }
-
             return response()->json([
                 'classrooms' => $classrooms
             ], 200);

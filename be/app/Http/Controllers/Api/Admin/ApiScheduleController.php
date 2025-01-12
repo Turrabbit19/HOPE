@@ -4,12 +4,10 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
-use App\Models\Course;
 use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Schedule;
-use App\Models\Semester;
 use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentSchedule;
@@ -544,11 +542,12 @@ class ApiScheduleController extends Controller
         $newScheduleDays = $newSchedule->days->pluck('id')->toArray();
         $newScheduleShift = $newSchedule->shift_id;
 
-        $now = Carbon::now();
+        $startDate = $newSchedule->start_date;
+        $endDate = $newSchedule->end_date;
 
         $teacherSchedules = Schedule::where('teacher_id', $teacherId)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
+            ->where('start_date', [$startDate, $endDate])
+            ->where('end_date', [$startDate, $endDate])
             ->get();
 
         foreach ($teacherSchedules as $existingSchedule) {
@@ -610,6 +609,13 @@ class ApiScheduleController extends Controller
                 $schedule = Schedule::findOrFail($scheduleId);
                 $schedule->teacher_id = $teacherId;
                 $schedule->save();
+
+                $lessons = $schedule->lessons;
+                foreach ($lessons as $lesson) {
+                    $schedule->lessons()->updateExistingPivot($lesson->id, [
+                        'teacher_id' => $teacherId,
+                    ]);
+                }
 
                 $assignedSchedules[] = [
                     'teacher_id' => $teacherId,

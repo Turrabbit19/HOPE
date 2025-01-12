@@ -9,6 +9,8 @@ import {
   Info,
   AlertCircle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { isBefore } from "date-fns";
 
 const TeacherTimetable = () => {
   const [currentWeek, setCurrentWeek] = useState(() => new Date());
@@ -21,6 +23,7 @@ const TeacherTimetable = () => {
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState(null);
 
+  const navigate = useNavigate();
   const daysOfWeek = [
     "Thứ 2",
     "Thứ 3",
@@ -179,6 +182,7 @@ const TeacherTimetable = () => {
     );
     const formattedDate = formatDate(dayDate);
 
+
     const schedule = timetableData.find((item) => {
       return item.shift_name === shift;
     });
@@ -220,6 +224,12 @@ const TeacherTimetable = () => {
     const semester = semesters.find((sem) => sem.id === parseInt(semesterId));
     setSelectedSemester(semester);
     setCurrentWeek(new Date(semester.start_date));
+  };
+
+  const handleEditSchedule = (selectedSchedule) => {
+    navigate("/teacher/edit-schedule", {
+      state: { schedule: selectedSchedule },
+    });
   };
 
   const getStatusColor = (status) => {
@@ -513,6 +523,16 @@ const TeacherTimetable = () => {
               >
                 Đóng
               </button>
+              {/* {isBefore(new Date(selectedSchedule.lesson?.date), new Date()) ? ( */}
+                <button
+                  onClick={() => handleEditSchedule(selectedSchedule)}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-200"
+                >
+                  Đổi lịch dạy
+                </button>
+              {/* ) : (
+                ""
+              )} */}
             </div>
           </div>
         </div>

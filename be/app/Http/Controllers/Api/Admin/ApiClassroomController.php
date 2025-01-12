@@ -9,78 +9,101 @@ use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiClassroomController extends Controller
 {
     public function index()
-    {
-        try {
-            $perPage = 10;
+{
+    try {
+        $perPage = 10;
+        $cacheTTL = 3600;
+        $cacheKey = 'classrooms_index_page_' . request()->get('page', 1);
 
-            $latestSemester = Semester::orderBy('end_date', 'desc')->first();
-            $schedules = [];
+        $cachedData = Redis::get($cacheKey);
 
-            if ($latestSemester) {
-                $schedules = Schedule::where('semester_id', $latestSemester->id)
-                    ->pluck('classroom_id')->toArray();
-            }
-
-            $classroomsQuery = Classroom::with('subject');
-
-            $classroomsQuery->orderByRaw("CASE WHEN id IN (" . implode(',', $schedules) . ") THEN 0 ELSE 1 END");
-
-            $classrooms = $classroomsQuery->paginate($perPage);
-
-            $classrooms->getCollection()->transform(function ($classroom) use ($schedules) {
-                $scheduleExists = in_array($classroom->id, $schedules);
-
-                return [
-                    'id' => $classroom->id,
-                    'subject_name' => $classroom->subject->name,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
-                    'status' => $scheduleExists ? "Đang có lịch học" : "Không có lịch học",
-                    'has_schedule' => $scheduleExists
-                ];
-            });
-
-            return response()->json([
-                'data' => $classrooms->items(),
-                'pagination' => [
-                    'total' => $classrooms->total(),
-                    'per_page' => $classrooms->perPage(),
-                    'current_page' => $classrooms->currentPage(),
-                    'last_page' => $classrooms->lastPage()
-                ]
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
+        if ($cachedData) {
+            return response()->json(json_decode($cachedData, true), 200);
         }
+
+        $latestSemester = Semester::orderBy('end_date', 'desc')->first();
+        $schedules = [];
+
+        if ($latestSemester) {
+            $schedules = Schedule::where('semester_id', $latestSemester->id)
+                ->pluck('classroom_id')->toArray();
+        }
+
+        $classroomsQuery = Classroom::with('subject');
+        $classroomsQuery->orderByRaw("CASE WHEN id IN (" . implode(',', $schedules) . ") THEN 0 ELSE 1 END");
+
+        $classrooms = $classroomsQuery->paginate($perPage);
+
+        $classrooms->getCollection()->transform(function ($classroom) use ($schedules) {
+            $scheduleExists = in_array($classroom->id, $schedules);
+
+            return [
+                'id' => $classroom->id,
+                'subject_name' => $classroom->subject->name,
+                'code' => $classroom->code,
+                'max_students' => $classroom->max_students,
+                'status' => $scheduleExists ? "Đang có lịch học" : "Không có lịch học",
+                'has_schedule' => $scheduleExists
+            ];
+        });
+
+        $responseData = [
+            'data' => $classrooms->items(),
+            'pagination' => [
+                'total' => $classrooms->total(),
+                'per_page' => $classrooms->perPage(),
+                'current_page' => $classrooms->currentPage(),
+                'last_page' => $classrooms->lastPage()
+            ]
+        ];
+
+        Redis::setex($cacheKey, $cacheTTL, json_encode($responseData));
+
+        return response()->json($responseData, 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
     }
+}
+
 
     public function getAll()
     {
         try {
-            $classrooms = Classroom::get();
+            $cacheKey = 'classrooms_all';
+            $cacheTTL = 10368000;
 
-            $data = $classrooms->map(function ($classroom) {
-                return [
-                    'id' => $classroom->id,
-                    'subject_name' => $classroom->subject->name,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->max_students,
-                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
+            $cachedData = Redis::get($cacheKey);
 
-            return response()->json([
-                'data' => $data
-            ], 200);
+            if ($cachedData) {
+                $data = json_decode($cachedData, true);
+            } else {
+                $classrooms = Classroom::with('subject')->get();
+
+                $data = $classrooms->map(function ($classroom) {
+                    return [
+                        'id' => $classroom->id,
+                        'subject_name' => $classroom->subject->name,
+                        'code' => $classroom->code,
+                        'max_students' => $classroom->max_students,
+                        'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                    ];
+                });
+
+                Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+            }
+
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function getClassroomsWithoutSchedule($subjectId)
     {
@@ -140,7 +163,8 @@ class ApiClassroomController extends Controller
                 'max_students' => $classroom->max_students,
                 'status' => $classroom->status,
             ];
-
+            $this->updateClassroomsCache();
+            $this->clearClassroomsCache();
             return response()->json(['data' => $data, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -195,7 +219,8 @@ class ApiClassroomController extends Controller
 
             $data = $validator->validated();
             $classroom->update($data);
-
+            $this->updateClassroomsCache();
+            $this->clearClassroomsCache();
             return response()->json(['data' => $classroom, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
@@ -209,7 +234,8 @@ class ApiClassroomController extends Controller
         try {
             $classroom = Classroom::findOrFail($id);
             $classroom->delete();
-
+            $this->updateClassroomsCache();
+            $this->clearClassroomsCache();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
@@ -217,4 +243,31 @@ class ApiClassroomController extends Controller
             return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    private function updateClassroomsCache()
+    {
+        $cacheKey = 'classrooms_all';
+        $cacheTTL = 10368000;
+
+        $classrooms = Classroom::with('subject')->get();
+
+        $data = $classrooms->map(function ($classroom) {
+            return [
+                'id' => $classroom->id,
+                'subject_name' => $classroom->subject->name,
+                'code' => $classroom->code,
+                'max_students' => $classroom->max_students,
+                'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+            ];
+        });
+
+        Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+    }
+    private function clearClassroomsCache()
+    {
+        $keys = Redis::keys('classrooms_index_page_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
+        }
+    }
+
 }

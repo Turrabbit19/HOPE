@@ -9,6 +9,7 @@ use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiSemesterController extends Controller
@@ -64,6 +65,14 @@ class ApiSemesterController extends Controller
         try {
             $year = $request->input('year');
 
+            $cacheKey = 'semesters_' . ($year ?: 'all');
+
+            $cachedData = Redis::get($cacheKey);
+
+            if ($cachedData) {
+                return response()->json(['data' => json_decode($cachedData, true)], 200);
+            }
+
             $semestersQuery = Semester::orderByDesc('start_date');
 
             if ($year) {
@@ -87,6 +96,8 @@ class ApiSemesterController extends Controller
 
             $semesters->setCollection($data);
 
+            Redis::setex($cacheKey, 3600, json_encode($data));
+
             return response()->json([
                 'data' => $data,
                 'pagination' => [
@@ -96,6 +107,7 @@ class ApiSemesterController extends Controller
                     'last_page' => $semesters->lastPage(),
                 ]
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Semesters',
@@ -103,6 +115,7 @@ class ApiSemesterController extends Controller
             ], 500);
         }
     }
+
 
     public function filterByYear(Request $request)
     {
@@ -222,7 +235,7 @@ class ApiSemesterController extends Controller
                     });
                 });
             }
-
+            $this->updateSemestersCache();
             return response()->json(['data' => $semester, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -307,6 +320,7 @@ class ApiSemesterController extends Controller
 
                 $semester->courses()->sync($coursesWithOrder);
             }
+            $this->updateSemestersCache();
 
             return response()->json(['data' => $semester, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -321,6 +335,7 @@ class ApiSemesterController extends Controller
         try {
             $semester = Semester::findOrFail($id);
             $semester->delete();
+            $this->updateSemestersCache();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy kỳ học với ID: ' . $id], 404);
@@ -342,4 +357,14 @@ class ApiSemesterController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    private function updateSemestersCache()
+    {
+
+        $keys = Redis::keys('semesters_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
+        }
+    }
+
+
 }

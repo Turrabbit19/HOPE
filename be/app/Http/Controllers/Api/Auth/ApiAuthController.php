@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers\Api\Auth;
 
@@ -8,6 +8,7 @@ use App\Models\Teacher;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -26,7 +27,7 @@ class ApiAuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $key = $request->ip(); 
+        $key = $request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
             return response()->json(['error' => 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau.'], 429);
         }
@@ -35,18 +36,31 @@ class ApiAuthController extends Controller
             $user = User::where('email', $request->email)->first();
 
             if (!$user || !Hash::check($request->password, $user->password)) {
-                RateLimiter::hit($key); 
+                RateLimiter::hit($key);
                 throw ValidationException::withMessages([
                     'email' => ['Thông tin đăng nhập không chính xác.'],
                 ]);
             }
 
+            $tokenKey = "user:token:{$user->id}";
+
+            $existingToken = Redis::get($tokenKey);
+            if ($existingToken) {
+                return response()->json([
+                    'token' => $existingToken,
+                    'user' => $this->formatUserData($user)
+                ]);
+            }
+
             $user->tokens()->delete();
 
-            $token = $user->createToken('token-name')->plainTextToken;
+            $newToken = $user->createToken('token-name')->plainTextToken;
+
+            Redis::set($tokenKey, $newToken);
+            Redis::expire($tokenKey, 604800);
 
             return response()->json([
-                'token' => $token, 
+                'token' => $newToken,
                 'user' => $this->formatUserData($user)
             ]);
         } catch (ValidationException $e) {
@@ -55,6 +69,7 @@ class ApiAuthController extends Controller
             return response()->json(['error' => 'Đã xảy ra lỗi trong quá trình đăng nhập', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function user(Request $request)
     {

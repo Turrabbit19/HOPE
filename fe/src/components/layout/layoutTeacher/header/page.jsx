@@ -25,9 +25,9 @@ export default function HeaderTeacher() {
     (n) => n.status !== "Đã xem"
   ).length;
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  // useEffect(() => {
+  //   fetchNotifications();
+  // }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -58,37 +58,37 @@ export default function HeaderTeacher() {
       document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Không tìm thấy token xác thực");
-      }
+  // const fetchNotifications = async () => {
+  //   setIsLoading(true);
+  //   setError(null);
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       throw new Error("Không tìm thấy token xác thực");
+  //     }
 
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/student/notifications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  //     const response = await fetch(
+  //       "http://127.0.0.1:8000/api/student/notifications",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
 
-      if (!response.ok) {
-        throw new Error("Không thể tải thông báo");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Không thể tải thông báo");
+  //     }
 
-      const data = await response.json();
-      setNotifications(data.data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     const data = await response.json();
+  //     setNotifications(data.data);
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);

@@ -12,18 +12,19 @@ import {
   isAfter,
   eachWeekOfInterval,
   getWeek,
+
 } from "date-fns";
 import { vi } from "date-fns/locale";
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, Book, MapPin, LinkIcon } from 'lucide-react';
+
 function LoadingSpinner() {
   return (
-    <div className="flex justify-center items-center h-64">
-      <svg className="animate-spin h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-40 w-40 border-t-2 border-b-2 border-blue-500"></div>
     </div>
   )
 }
+
 export default function DashboardActions() {
   const [currentWeek, setCurrentWeek] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState("");
@@ -104,7 +105,7 @@ export default function DashboardActions() {
           const today = new Date();
           return isBefore(today, endDate) && isAfter(today, startDate);
         });
-        
+
         if (currentSemester) {
           setSelectedSemester(currentSemester.id.toString());
           setSemesterStartDate(new Date(currentSemester.start_date.split('/').reverse().join('-')));
@@ -154,7 +155,6 @@ export default function DashboardActions() {
       }
 
       const data = await response.json();
-      // console.log("Dữ liệu trả về từ API:", data);
       if (data.data && Array.isArray(data.data)) {
         setSchedules(data.data);
       } else {
@@ -281,444 +281,301 @@ export default function DashboardActions() {
   const getStatusColor = (status) => {
     switch (status) {
       case "Có mặt":
-        return "bg-green-100";
+        return "bg-green-100 text-green-800";
       case "Vắng":
-        return "bg-red-100";
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   if (loading) return <LoadingSpinner />
 
   if (error) {
-    return <p className="text-center py-4 text-red-500">Lỗi: {error}</p>;
+    return <p className="text-center py-8 text-red-500 text-3xl font-semibold">Lỗi: {error}</p>;
   }
 
   return (
-    <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50 w-full">
-      {notification && (
-        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg">
-          {notification}
-        </div>
-      )}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-          <button
-            onClick={handleGoToCurrentWeek}
-            className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-800 transition duration-200"
-          >
-            Tuần hiện tại
-          </button>
-
-          <select
-            onChange={handleSemesterChange}
-            value={selectedSemester}
-            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
-          >
-            {semesters.map((semester) => (
-              <option key={semester.id} value={semester.id}>
-                {semester.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            onChange={handleWeekChange}
-            value={weeks.findIndex(week => week === selectedWeek)}
-            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
-          >
-            {weeks.map((week, index) => (
-              <option key={index} value={index}>
-                Tuần {index + 1}: {format(week, "dd/MM/yyyy")} - {format(addDays(week, 6), "dd/MM/yyyy")}
-              </option>
-            ))}
-          </select>
-
-          <select
-            onChange={handleDayChange}
-            value={selectedDay}
-            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
-          >
-            <option value="">Tất cả các ngày</option>
-            {daysOfWeek.map((day) => (
-              <option key={day} value={day}>
-                {day} {day === getCurrentDay() ? "(Hôm nay)" : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center justify-between mb-6 bg-white shadow-sm rounded-lg p-4 bg-blue-100">
-          <button
-            onClick={handlePreviousWeek}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200 text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            aria-label="Previous week"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <div className="flex flex-col items-center">
-            <span className="text-gray-500 mb-1">
-              {selectedSemester ? "Thời gian học kỳ" : "Tuần hiện tại"}
-            </span>
-            <div className="text-center font-bold text-gray-700">
-              {semesterStartDate && semesterEndDate
-                ? `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`
-                : `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`}
-            </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+        {notification && (
+          <div className="fixed top-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg text-xl font-medium animate-fade-in">
+            {notification}
           </div>
-          <button
-            onClick={handleNextWeek}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200 text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            aria-label="Next week"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-        {selectedDay ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            {shifts.map((shift) => {
-              const schedule = getScheduleForDayAndShift(selectedDay, shift);
-              const dayDate = format(
-                addDays(startOfCurrentWeek, daysOfWeek.indexOf(selectedDay)),
-                "dd/MM/yyyy"
-              );
-              const lesson = schedule
-                ? getLessonForDate(schedule, dayDate)
-                : null;
-              return (
-                <div
-                  key={shift}
-                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
-                    lesson ? getStatusColor(lesson.status) : "bg-white"
-                  }`}
+        )}
+        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+          <div className="p-8">
+            <div className="flex flex-col lg:flex-row justify-between items-center mb-8 space-y-4 lg:space-y-0 lg:space-x-4">
+              <button
+                onClick={handleGoToCurrentWeek}
+                className="w-full lg:w-auto px-6 py-3 bg-blue-600 text-white text-xl font-semibold rounded-lg hover:bg-blue-700 transition duration-300 shadow-md flex items-center justify-center"
+              >
+                <Calendar className="mr-2" size={24} />
+                Tuần hiện tại
+              </button>
+
+              <div className="flex flex-col lg:flex-row items-start space-y-4 lg:space-x-6 lg:space-y-0">
+                <select
+                  onChange={handleSemesterChange}
+                  value={selectedSemester}
+                  className="w-full lg:w-auto px-6 py-3 bg-white text-blue-600 text-xl font-semibold rounded-lg hover:bg-blue-50 transition duration-300 shadow-md border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
-                    {shift}
-                  </div>
-                  {schedule && lesson ? (
-                    <div
-                      onClick={() => openPopup(schedule, lesson)}
-                      className="border border-gray-300 rounded-lg p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-200"
-                    >
-                      <p>{schedule.room_name}</p>
-                      <p>{schedule.subject_name}</p>
-                      <p>{schedule.classroom_code}</p>
-                    </div>
-                  ) : (
-                    <div className="text-gray-400 text-center">
-                      {schedules.length === 0
-                        ? "Chưa có lịch học cho kỳ này"
-                        : "Không có lớp"}
-                    </div>
-                  )}
+                  {semesters.map((semester) => (
+                    <option key={semester.id} value={semester.id}>
+                      {semester.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  onChange={handleWeekChange}
+                  value={weeks.findIndex(week => week === selectedWeek)}
+                  className="w-full lg:w-auto px-6 py-3 bg-white text-blue-600 text-xl font-semibold rounded-lg hover:bg-blue-50 transition duration-300 shadow-md border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {weeks.map((week, index) => (
+                    <option key={index} value={index}>
+                      Tuần {index + 1}: {format(week, "dd/MM/yyyy")} - {format(addDays(week, 6), "dd/MM/yyyy")}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  onChange={handleDayChange}
+                  value={selectedDay}
+                  className="w-full lg:w-auto px-6 py-3 bg-white text-blue-600 text-xl font-semibold rounded-lg hover:bg-blue-50 transition duration-300 shadow-md border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Tất cả các ngày</option>
+                  {daysOfWeek.map((day) => (
+                    <option key={day} value={day}>
+                      {day} {day === getCurrentDay() ? "(Hôm nay)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+            </div>
+
+            <div className="flex items-center justify-between mb-8 bg-blue-50 rounded-xl p-6">
+              <button
+                onClick={handlePreviousWeek}
+                className="p-3 rounded-full bg-white hover:bg-gray-100 transition duration-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-md"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <div className="flex flex-col items-center">
+                <span className="text-gray-600 mb-2 text-xl font-medium">
+                  {selectedSemester ? "Thời gian học kỳ" : "Tuần hiện tại"}
+                </span>
+                <div className="text-center font-bold text-gray-800 text-2xl">
+                  {semesterStartDate && semesterEndDate
+                    ? `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`
+                    : `${format(startOfCurrentWeek, "dd/MM/yyyy", { locale: vi })} - ${format(endOfCurrentWeek, "dd/MM/yyyy", { locale: vi })}`}
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="overflow-x-auto mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
-            {schedules.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Chưa có lịch học cho kỳ này
+              </div>
+              <button
+                onClick={handleNextWeek}
+                className="p-3 rounded-full bg-white hover:bg-gray-100 transition duration-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-md"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+
+            {selectedDay ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+                {shifts.map((shift) => {
+                  const schedule = getScheduleForDayAndShift(selectedDay, shift);
+                  const dayDate = format(
+                    addDays(startOfCurrentWeek, daysOfWeek.indexOf(selectedDay)),
+                    "dd/MM/yyyy"
+                  );
+                  const lesson = schedule
+                    ? getLessonForDate(schedule, dayDate)
+                    : null;
+                  return (
+                    <div
+                      key={shift}
+                      className={`shadow-lg rounded-xl p-6 relative border-2 border-gray-200 ${lesson ? getStatusColor(lesson.status) : "bg-white"
+                        }`}
+                    >
+                      <div className="absolute top-0 left-0 bg-blue-600 text-white px-4 py-2 font-semibold rounded-br-xl rounded-tl-xl text-xl">
+                        {shift}
+                      </div>
+                      {schedule && lesson ? (
+                        <div
+                          onClick={() => openPopup(schedule, lesson)}
+                          className="border-2 border-gray-300 rounded-xl p-6 shadow-md cursor-pointer hover:bg-gray-50 transition duration-300 mt-8"
+                        >
+                          <p className="text-2xl font-semibold mb-2">{schedule.room_name}</p>
+                          <p className="text-xl">{schedule.subject_name}</p>
+                          <p className="text-xl">{schedule.classroom_code}</p>
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-center text-xl mt-12">
+                          {schedules.length === 0
+                            ? "Chưa có lịch học cho kỳ này"
+                            : "Không có lớp"}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <table className="w-full text-center">
-                <thead>
-                  <tr className="bg-blue-200">
-                    <th className="p-3 font-semibold text-gray-700 border border-gray-200 text-center sticky left-0 bg-blue-200 z-10">
-                      Ca học
-                    </th>
-                    {daysOfWeek.map((day, index) => (
-                      <th
-                        key={index}
-                        className="p-3 text-center font-semibold text-gray-700 border border-gray-200"
-                      >
-                        <div className="flex flex-col">
-                          <span>{day}</span>
-                          <span className="text-gray-500 font-normal">
-                            {format(
-                              addDays(startOfCurrentWeek, index),
-                              "dd/MM",
-                              {
-                                locale: vi,
-                              }
-                            )}
-                          </span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {shifts.map((shift) => (
-                    <tr
-                      key={shift}
-                      className="hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <td className="p-3 text-gray-700 font-medium border border-gray-200">
-                        {shift}
-                      </td>
-                      {daysOfWeek.map((day, dayIndex) => {
-                        const dayDate = format(
-                          addDays(startOfCurrentWeek, dayIndex),
-                          "dd/MM/yyyy"
-                        );
-                        const schedule = getScheduleForDayAndShift(day, shift);
-                        const lesson = schedule
-                          ? getLessonForDate(schedule, dayDate)
-                          : null;
-                        return (
-                          <td
-                            key={day}
-                            className={`p-3 text-center border border-gray-200 ${
-                              lesson ? getStatusColor(lesson.status) : ""
-                            }`}
+              <div className="overflow-x-auto mt-8 bg-white rounded-xl shadow-lg border-2 border-gray-200">
+                {schedules.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 text-3xl font-medium">
+                    Chưa có lịch học cho kỳ này
+                  </div>
+                ) : (
+                  <table className="w-full text-center">
+                    <thead>
+                      <tr className="bg-blue-50">
+                        <th className="p-4 font-semibold text-gray-700 border-2 border-gray-200 text-center sticky left-0 bg-blue-50 z-10 text-2xl">
+                          Ca học
+                        </th>
+                        {daysOfWeek.map((day, index) => (
+                          <th
+                            key={index}
+                            className="p-4 text-center font-semibold text-gray-700 border-2 border-gray-200 text-2xl"
                           >
-                            {schedule && lesson ? (
-                              <div
-                                onClick={() => openPopup(schedule, lesson)}
-                                className="border border-gray-300 rounded-lg p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-200"
-                              >
-                                <p>{schedule.room_name}</p>
-                                <p>{schedule.subject_name}</p>
-                                <p>{schedule.classroom_code}</p>
-                              </div>
-                            ) : (
-                              <div className="text-gray-400">Trống</div>
-                            )}
+                            <div className="flex flex-col">
+                              <span>{day}</span>
+                              <span className="text-gray-500 font-normal text-xl">
+                                {format(
+                                  addDays(startOfCurrentWeek, index),
+                                  "dd/MM",
+                                  {
+                                    locale: vi,
+                                  }
+                                )}
+                              </span>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shifts.map((shift) => (
+                        <tr
+                          key={shift}
+                          className="hover:bg-gray-50 transition-colors duration-300"
+                        >
+                          <td className="p-4 text-gray-700 font-medium border-2 border-gray-200 text-xl">
+                            {shift}
                           </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          {daysOfWeek.map((day, dayIndex) => {
+                            const dayDate = format(
+                              addDays(startOfCurrentWeek, dayIndex),
+                              "dd/MM/yyyy"
+                            );
+                            const schedule = getScheduleForDayAndShift(day, shift);
+                            const lesson = schedule
+                              ? getLessonForDate(schedule, dayDate)
+                              : null;
+                            return (
+                              <td
+                                key={day}
+                                className={`p-4 text-center border-2 border-gray-200 ${lesson ? getStatusColor(lesson.status) : ""
+                                  }`}
+                              >
+                                {schedule && lesson ? (
+                                  <div
+                                    onClick={() => openPopup(schedule, lesson)}
+                                    className="border-2 border-gray-300 rounded-xl p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-300"
+                                  >
+                                    <p className="text-lg font-semibold">{schedule.room_name}</p>
+                                    <p className="text-lg">{schedule.subject_name}</p>
+                                    <p className="text-lg">{schedule.classroom_code}</p>
+                                  </div>
+                                ) : (
+                                  <div className="text-gray-400 text-lg">Trống</div>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             )}
+          </div>
+        </div>
+
+        {showPopup && selectedSchedule && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+            <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl transform transition-all animate-scale-in">
+              <div className="p-8">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center">
+                  <Calendar className="h-8 w-8 mr-3 text-blue-500" size={24} />
+                  Chi tiết lịch học
+                </h2>
+                <div className="space-y-4 text-2xl">
+                  <p className="flex items-center text-gray-700">
+                    <User className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                    <span className="font-semibold mr-2">Giảng viên:</span>
+                    {selectedSchedule.teacher_name}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Book className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                    <span className="font-semibold mr-2">Môn học:</span>
+                    {selectedSchedule.subject_name}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Clock className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                    <span className="font-semibold mr-2">Ca học:</span>
+                    {selectedSchedule.shift_name}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Book className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                    <span className="font-semibold mr-2">Tiết học:</span>
+                    {selectedSchedule.lesson.name}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Book className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                    <span className="font-semibold mr-2">Nội dung:</span>
+                    {selectedSchedule.lesson.description}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Calendar className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                    <span className="font-semibold mr-2">Ngày:</span>
+                    {selectedSchedule.lesson.date}
+                  </p>
+                  <p className={`flex items-center ${getStatusColor(selectedSchedule.lesson.status)}`}>
+                    <Clock className="h-6 w-6 mr-3" size={24} />
+                    <span className="font-semibold mr-2">Trạng thái:</span>
+                    {selectedSchedule.lesson.status}
+                  </p>
+                  {selectedSchedule.link !== "NULL" && (
+                    <p className="flex items-center text-gray-700">
+                      <LinkIcon className="h-6 w-6 mr-3 text-gray-500" size={24} />
+                      <span className="font-semibold mr-2">Link:</span>
+                      <a
+                        href={selectedSchedule.link}
+                        className="text-blue-500 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {selectedSchedule.link}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 sm:px-8 sm:flex sm:flex-row-reverse rounded-b-xl">
+                <button
+                  onClick={closePopup}
+                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-md px-6 py-3 bg-blue-600 text-xl font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-xl transition duration-300"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {showPopup && selectedSchedule && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-lg max-w-3xl w-full shadow-xl transform transition-all animate-scale-in">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2 text-blue-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                Chi tiết lịch học
-              </h2>
-              <div className="space-y-3">
-                <p className="flex items-center text-gray-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Giảng viên:</span>{" "}
-                  {selectedSchedule.teacher_name}
-                </p>
-
-                <p className="flex items-center text-gray-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Môn học:</span>{" "}
-                  {selectedSchedule.subject_name}
-                </p>
-                <p className="flex items-center text-gray-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Ca học:</span>{" "}
-                  {selectedSchedule.shift_name}
-                </p>
-                <p className="flex items-center text-gray-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Tiết học:</span>{" "}
-                  {selectedSchedule.lesson.name}
-                </p>
-                <p className="flex items-center text-gray-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Nội dung:</span>{" "}
-                  {selectedSchedule.lesson.description}
-                </p>
-                <p className="flex items-center text-gray-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Ngày:</span>{" "}
-                  {selectedSchedule.lesson.date}
-                </p>
-                <p
-                  className={`flex items-center text-gray-700 ${getStatusColor(
-                    selectedSchedule.lesson.status
-                  )}`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="font-semibold mr-2">Trạng thái:</span>{" "}
-                  {selectedSchedule.lesson.status}
-                </p>
-
-                {selectedSchedule.link !== "NULL" && (
-                  <p className="flex items-center text-gray-700">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2 text-gray-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                      />
-                    </svg>
-                    <span className="font-semibold mr-2">Link:</span>
-                    <a
-                      href={selectedSchedule.link}
-                      className="text-blue-500 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {selectedSchedule.link}
-                    </a>
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-              <button
-                onClick={closePopup}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-200"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
+import { User } from 'lucide-react';
 // Utility Components
 function LoadingSpinner() {
   return (
@@ -85,27 +85,31 @@ function StudentProfile() {
   if (error) return <ErrorMessage error={error} />;
 
   return (
-    <div className="bg-indigo-900 text-white p-6 rounded-xl shadow-lg">
-      <div className="flex items-center space-x-6 mb-6">
-        <img
-          src={student.avatar || "/placeholder.svg?height=80&width=80"}
-          alt={student.name}
-          className="w-24 h-24 rounded-full border-4 border-indigo-700 shadow-sm"
-        />
+    <div className="bg-white text-gray-800 p-8 rounded-2xl shadow-xl max-w-4xl mx-auto font-sans">
+      <div className="flex items-center space-x-8 mb-8">
+        {/* Kiểm tra nếu có avatar, nếu không thì hiển thị biểu tượng người dùng */}
+        {student.avatar ? (
+          <img
+            src={student.avatar}
+            alt={student.name}
+            className="w-28 h-28 rounded-full border-4 border-gray-300 shadow-md"
+          />
+        ) : (
+          <User className="w-28 h-28 text-gray-300 border-4 border-gray-300 rounded-full p-2" />
+        )}
         <div>
-          <h2 className="text-2xl font-bold">{student.name}</h2>
-          <p className="text-indigo-300">Email: {student.email}</p>
+          <h2 className="text-4xl font-extrabold">{student.name}</h2>
+          <p className="text-gray-500 text-lg">Email: {student.email}</p>
         </div>
       </div>
 
-      <div className="bg-indigo-800 p-5 rounded-lg shadow-inner">
+      <div className="bg-gray-50 p-6 rounded-xl shadow-inner space-y-6 font-medium">
         {[
           {
             icon: "M4 6h16M4 10h16M4 14h16M4 18h16",
             label: "Kì",
-            value: `${student.current_semester || "N/A"} - ${
-              student.semester_name || "N/A"
-            }`,
+            value: `${student.current_semester || "N/A"} - ${student.semester_name || "N/A"
+              }`,
           },
           {
             icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4",
@@ -145,10 +149,10 @@ function StudentProfile() {
         ].map((item, index) => (
           <div
             key={index}
-            className="flex items-center mt-4 space-x-4 hover:bg-indigo-700 p-3 rounded-lg transition"
+            className="flex items-center space-x-6 p-5 rounded-lg bg-white shadow-sm hover:shadow-md transition"
           >
             <svg
-              className="w-6 h-6 text-indigo-300 flex-shrink-0"
+              className="w-8 h-8 text-gray-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -162,17 +166,19 @@ function StudentProfile() {
               ></path>
             </svg>
             <div className="grid grid-cols-2 gap-x-4 flex-grow">
-              <span className="text-indigo-200 font-semibold leading-none">
+              <span className="text-gray-700 font-semibold text-xl leading-none">
                 {item.label}:
               </span>
-              <span className="text-white break-words leading-none">
+              <span className="text-gray-900 text-lg break-words leading-none">
                 {item.value}
               </span>
             </div>
           </div>
         ))}
       </div>
+
     </div>
+
   );
 }
 
@@ -239,10 +245,10 @@ function TodayClasses() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-400 to-indigo-400 p-6 rounded-xl shadow-lg">
+    <div className=" p-6 rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-3xl font-bold text-white">Lớp Học Hôm Nay</h3>
-        <div className="flex items-center text-indigo-200">
+        <h3 className="text-3xl font-bold text-black">Lớp Học Hôm Nay</h3>
+        <div className="flex items-center text-black">
           <span className="mr-2 text-xl">
             {new Date().toLocaleDateString("en-GB")}
           </span>
@@ -304,7 +310,7 @@ function TodayClasses() {
             </li>
           ))
         ) : (
-          <li className="text-center text-white py-6 text-2xl">
+          <li className="text-center text-black py-6 text-2xl">
             Không có lớp học nào hôm nay
           </li>
         )}
@@ -354,22 +360,26 @@ function ClassroomList() {
   if (error) return <ErrorMessage error={error} />;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-  <h3 className="text-xl font-semibold mb-6 text-gray-800">Lớp Học Đang Tham Gia</h3>
-  <ul className="space-y-6">
-    {classroomsData.map((classroom) => (
-      <li key={classroom.id} className="bg-gray-100 p-5 rounded-lg shadow-sm hover:bg-gray-200 transition duration-300">
-        <h4 className="font-semibold text-lg text-gray-800">{classroom.subject_name}</h4>
-        <p className="text-xl text-gray-700">Lớp: {classroom.classroom}</p>
-        <p className="text-xl text-gray-700">Phòng: {classroom.room_name}</p>
-        <p className="text-xl text-gray-700">Thời gian: {classroom.shift_name}</p>
-        <p className="text-xl text-gray-700">Ngày học: {classroom.days_of_week.join(", ")}</p>
-        <p className="text-xl text-gray-700">Thời gian: {classroom.start_date} - {classroom.end_date}</p>
-        <p className="mt-2 text-xl text-gray-500">{classroom.schedule_status}</p>
-      </li>
-    ))}
-  </ul>
-</div>
+    <div className="bg-white p-8 rounded-lg shadow-lg">
+      <h3 className="text-3xl font-semibold mb-6 text-gray-800">Lớp Học Đang Tham Gia</h3>
+      <ul className="space-y-6">
+        {classroomsData.map((classroom) => (
+          <li
+            key={classroom.id}
+            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-103"
+          >
+            <h4 className="font-semibold text-2xl text-gray-800 mb-2">{classroom.subject_name}</h4>
+            <p className="text-xl text-gray-700">Lớp: <span className="text-gray-900 font-semibold">{classroom.classroom}</span></p>
+            <p className="text-xl text-gray-700">Phòng: <span className="text-gray-900 font-semibold">{classroom.room_name}</span></p>
+            <p className="text-xl text-gray-700">Thời gian: <span className="text-gray-900 font-semibold">{classroom.shift_name}</span></p>
+            <p className="text-xl text-gray-700">Ngày học: <span className="text-gray-900 font-semibold">{classroom.days_of_week.join(", ")}</span></p>
+            <p className="text-xl text-gray-700">Thời gian: <span className="text-gray-900 font-semibold">{classroom.start_date} - {classroom.end_date}</span></p>
+            <p className="mt-2 text-xl text-gray-600">{classroom.schedule_status}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+
 
   )
 }
@@ -378,46 +388,47 @@ export default function CombinedDashboard() {
   const [activeTab, setActiveTab] = useState("Thông tin");
 
   return (
-    <div className=" mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <nav className="flex border-b border-gray-300 mb-6">
-        {["Thông tin", "Hôm nay", "Các lớp hiện tại"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`py-2 px-6 flex items-center gap-2 rounded-t-lg text-center transition-all ${
-              activeTab === tab
-                ? "bg-indigo-50 border-b-4 border-indigo-500 font-medium text-indigo-600"
-                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            }`}
-          >
-            {/* Thêm icon cho các tab */}
-            {tab === "Thông tin" && <i className="fas fa-user"></i>}
-            {tab === "Hôm nay" && <i className="fas fa-calendar-day"></i>}
-            {tab === "Các lớp hiện tại" && (
-              <i className="fas fa-chalkboard-teacher"></i>
-            )}
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </nav>
-
-      <div className="p-6 bg-gray-50 rounded-lg shadow-inner">
-        {activeTab === "Thông tin" && (
-          <div className="fade-in">
+    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white">
+      <div className="mx-auto p-6">
+        <h1 className="text-4xl font-bold text-blue-800 mb-8"></h1>
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex">
+          {/* Thông tin sinh viên nằm bên trái */}
+          <div className="w-1/3 bg-blue-50 p-6 border-r">
             <StudentProfile />
           </div>
-        )}
-        {activeTab === "Hôm nay" && (
-          <div className="fade-in">
-            <TodayClasses />
+
+          {/* Menu và nội dung của menu sẽ nằm bên phải */}
+          <div className="w-2/3 p-6">
+            {/* Menu */}
+            <div className="bg-white rounded-xl shadow-lg mb-6">
+              <div className="flex space-x-4">
+                {["Hôm nay", "Các lớp hiện tại"].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-4 px-6 text-lg font-medium transition-colors duration-200 ${activeTab === tab
+                      ? "bg-gray-100 text-black"
+                      : "text-gray-600 hover:bg-gray-200"
+                      }`}
+                  >
+                    {tab === "Hôm nay" && <i className="fas fa-calendar-day mr-2"></i>}
+                    {tab === "Các lớp hiện tại" && <i className="fas fa-chalkboard-teacher mr-2"></i>}
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Nội dung của các tab */}
+            <div>
+              {activeTab === "Hôm nay" && <TodayClasses />}
+              {activeTab === "Các lớp hiện tại" && <ClassroomList />}
+            </div>
           </div>
-        )}
-        {activeTab === "Các lớp hiện tại" && (
-          <div className="fade-in">
-            <ClassroomList />
-          </div>
-        )}
+
+        </div>
       </div>
     </div>
+
   );
 }

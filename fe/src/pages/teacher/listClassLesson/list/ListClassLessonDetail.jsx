@@ -563,4 +563,3 @@ const ListClassLessonDetail = ({ scheduleData }) => {
 };
 
 export default ListClassLessonDetail;
-

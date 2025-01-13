@@ -7,14 +7,14 @@ const LayoutClient = () => {
   return (
     <div className="flex h-screen">
       {/* Thanh điều hướng bên trái */}
-      <AsideClient />
+      <AsideClient className="border-r-10 border-black-900" />
 
       {/* Phần nội dung chính của ứng dụng */}
       <div className="flex-1 flex flex-col min-h-0">
         <HeaderClient />
 
         <main className="flex-1 p-8 bg-white overflow-y-auto min-h-0">
-          <div className="max-w-[1470px] mx-auto">
+          <div className="max-w-[1470px] mx-auto min-h-[1080px]">
             {/* Nội dung từ route con sẽ được hiển thị tại đây */}
             <Outlet />
           </div>

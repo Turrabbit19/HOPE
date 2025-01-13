@@ -70,11 +70,13 @@ export default function CourseRegistration() {
   }, [timeLeft]);
 
   useEffect(() => {
+    if (selectedSubject?.id) {
+      fetchShifts(selectedSubject.id);
+    }
+  }, [selectedSubject]);
+
+  useEffect(() => {
     if (selectedSubject?.id && selectedShift?.id) {
-      console.log("Selected subject and shift:", {
-        subjectId: selectedSubject.id,
-        shiftId: selectedShift.id,
-      });
       fetchClassrooms(selectedSubject.id, selectedShift.id);
     }
   }, [selectedSubject, selectedShift]);
@@ -141,7 +143,7 @@ export default function CourseRegistration() {
     return `${days} ngày, ${hours} giờ, ${minutes} phút, ${seconds} giây`;
   };
 
-  const fetchShifts = async () => {
+  const fetchShifts = async (subjectId) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -150,12 +152,15 @@ export default function CourseRegistration() {
         throw new Error("Không tìm thấy token xác thực");
       }
 
-      const response = await fetch("http://127.0.0.1:8000/api/student/shifts", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/student/${subjectId}/shifts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Không thể tải danh sách ca học");
@@ -178,7 +183,6 @@ export default function CourseRegistration() {
   };
 
   const fetchClassrooms = async (subjectId, shiftId) => {
-    console.log("Fetching classrooms with:", { subjectId, shiftId });
     setIsLoading(true);
     setError(null);
     try {
@@ -188,7 +192,6 @@ export default function CourseRegistration() {
       }
 
       const url = `http://127.0.0.1:8000/api/student/subject/${subjectId}/shift/${shiftId}/classrooms`;
-      console.log("Fetching from URL:", url);
 
       const response = await fetch(url, {
         headers: {

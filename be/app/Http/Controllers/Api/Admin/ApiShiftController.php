@@ -41,7 +41,6 @@ class ApiShiftController extends Controller
 
             $totalRoomsCount = Room::count();
 
-            // Truy vấn trước các ca học để cải thiện hiệu năng
             $shifts = Shift::withCount(['schedules' => function ($query) use ($start_date, $end_date, $days) {
                 $query->where(function ($q) use ($start_date, $end_date) {
                     $q->whereBetween('start_date', [$start_date, $end_date])
@@ -52,14 +51,12 @@ class ApiShiftController extends Controller
                         });
                 });
 
-                // Lọc theo ngày nếu có ngày được chọn
                 if (!empty($days)) {
                     $query->whereHas('days', fn($q) => $q->whereIn('day_id', $days));
                 }
             }])
                 ->get(['id', 'name', 'start_time', 'end_time']);
 
-            // Xử lý dữ liệu ca học
             $filteredData = $shifts->map(function ($shift) use ($totalRoomsCount) {
                 $reservedRoomsCount = $shift->schedules_count;
                 $availableRoomsCount = $totalRoomsCount - $reservedRoomsCount;
@@ -84,10 +81,6 @@ class ApiShiftController extends Controller
         }
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

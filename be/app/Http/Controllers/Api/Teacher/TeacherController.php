@@ -606,83 +606,75 @@ class TeacherController extends Controller
     public function getTeacher(Request $request)
     {
         $user = Auth::user();
+
         try {
-            $shift_id = $request->shift_id;
-            $date = $request->date;
-            $majorAndId = Teacher::select('id', 'major_id')
+            $shiftId = $request->input('shift_id');
+            $date = $request->input('date');
+
+            $teacher = Teacher::select('id', 'major_id')
                 ->where('user_id', $user->id)
-                ->get();
-            $major_id = $majorAndId->pluck('major_id');
-            $id = $majorAndId->pluck('id');
-            $abc = Schedule::select('schedules.id', 'schedules.teacher_id')
-                ->join('schedule_lessons', 'schedules.id', '=', 'schedule_lessons.schedule_id')
-                ->whereIn('major_id', $major_id)
-                ->where('shift_id', '!=', $shift_id)
-                ->whereNotIn('schedules.teacher_id', $id)
-                ->get();
+                ->firstOrFail();
 
-            $def = Schedule::select('schedules.id', 'schedules.teacher_id')
-                ->join('schedule_lessons', 'schedules.id', '=', 'schedule_lessons.schedule_id')
-                ->whereIn('major_id', $major_id)
-                ->where('shift_id', '!=', $shift_id)
-                ->whereNotIn('schedules.teacher_id', $id)
+            $majorId = $teacher->major_id;
+            $teacherId = $teacher->id;
+
+            $conflictedTeacherIds = Schedule::join('schedule_lessons', 'schedules.id', '=', 'schedule_lessons.schedule_id')
+                ->where('schedules.major_id', $majorId)
+                ->where('shift_id', '!=', $shiftId)
                 ->where('schedule_lessons.study_date', '=', $date)
-                ->get();
+                ->pluck('schedules.teacher_id');
 
-
-            $abcFiltered = $abc->reject(function ($teacher) use ($def) {
-                return $def->contains('teacher_id', $teacher->teacher_id);
-            });
-            $teacherDetails = Teacher::select('teachers.teacher_code', 'users.name', 'teachers.id')
+            $availableTeachers = Teacher::select('teachers.teacher_code', 'users.name', 'teachers.id')
                 ->join('users', 'users.id', '=', 'teachers.user_id')
-                ->whereIn('teachers.id', $abcFiltered->pluck('teacher_id'))
+                ->where('teachers.major_id', $majorId)
+                ->where('teachers.id', '!=', $teacherId)
+                ->whereNotIn('teachers.id', $conflictedTeacherIds)
                 ->get();
-            return response()->json($teacherDetails, 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'error'], 500);
+
+            return response()->json($availableTeachers, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Đã xảy ra lỗi', 'error' => $e->getMessage()], 500);
         }
     }
+
     public function changeTeacher(Request $request)
     {
         try {
             $user = Auth::user();
-            $requester = Teacher::where('user_id', $user->id)->value('id');
-            $requester_name = User::join('teachers', 'users.id', '=', 'teachers.user_id')
-                ->where('teachers.id', $requester)
-                ->value('users.name');
-            $scheduleId = $request->schedule_id;
-            $subjectName = $request->subject_name;
-            $newTeacher = $request->new_teacher;
-            $shiftName = $request->shift_name;
-            $roomName = $request->room_name;
-            $date = $request->date;
+
+            $teacher = Teacher::select('id')
+                ->with('user:name')
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$teacher) {
+                return response()->json(['message' => 'Không tìm thấy giáo viên yêu cầu'], 404);
+            }
+
             $dataToStore = [
-                'schedule_id' => $scheduleId,
-                'new_teacher' => $newTeacher,
-                'room_name' => $roomName,
-                'shift_name' => $shiftName,
-                'subject_name' => $subjectName,
-                'date' => $date,
-                'requester' => $requester,
-                'requester_name' => $requester_name,
+                'schedule_id' => $request->input('schedule_id'),
+                'new_teacher' => $request->input('new_teacher'),
+                'room_name' => $request->input('room_name'),
+                'shift_name' => $request->input('shift_name'),
+                'subject_name' => $request->input('subject_name'),
+                'date' => $request->input('date'),
+                'requester' => $teacher->id,
+                'requester_name' => $teacher->user->name,
             ];
-            $redisKey = "schedule_change_{$newTeacher}";
+
+            $redisKey = "schedule_change_{$dataToStore['new_teacher']}";
             Redis::setex($redisKey, 86400, json_encode($dataToStore));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Dữ liệu được nhận thành công.',
-                'data' => [
-                    'schedule_id' => $scheduleId,
-                    'new_teacher' => $newTeacher,
-                    'subject_name' => $subjectName,
-                    'date' => $date,
-                ],
+                'data' => array_intersect_key($dataToStore, array_flip(['schedule_id', 'new_teacher', 'subject_name', 'date'])),
             ], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'error'], 500);
-
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Đã xảy ra lỗi', 'error' => $e->getMessage()], 500);
         }
     }
+
     public function notificationChangeSchedule()
     {
         try {

@@ -139,14 +139,20 @@ const EditScheduleComponent = () => {
     switch (view) {
       case "change-teacher":
         return (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-xl font-bold text-gray-800">
-              Vui lòng chọn giảng viên khác cần thay đổi
+          <div className="mt-6 p-6 bg-blue-50 rounded-lg shadow-lg">
+            <h3 className="text-xl text-center font-bold text-blue-800 mb-4">
+              Vui lòng chọn giảng viên cần thay đổi
             </h3>
             <Select
-              style={{ width: "100%" }}
+              showSearch
+              className="w-full mt-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all"
               placeholder="Chọn giảng viên"
+              optionFilterProp="children"
               onChange={(value) => setSelectedTeacher(value)}
+              filterOption={(input, option) => {
+                const childrenText = String(option?.children || "");
+                return childrenText.toLowerCase().includes(input.toLowerCase());
+              }}
             >
               {Array.isArray(teacherData) && teacherData.length > 0 ? (
                 teacherData.map((teacher) => (
@@ -161,7 +167,7 @@ const EditScheduleComponent = () => {
             <Button
               type="primary"
               onClick={handleSubmitRequest}
-              className="mt-4"
+              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 shadow-md transition-all"
             >
               Gửi yêu cầu
             </Button>
@@ -169,22 +175,20 @@ const EditScheduleComponent = () => {
         );
       case "change-schedule":
         return (
-          <div className="mt-6 p-4 bg-green-50 rounded-lg">
-            <h2 className="text-xxl font-bold text-gray-800 text-[34px]">
+          <div className="mt-6 p-6 bg-green-50 rounded-lg shadow-lg">
+            <h3 className="text-xl text-center font-bold text-green-800 mb-4">
               Đổi ngày dạy
-            </h2>
-            <h3 className="text-m font-medium text-gray-800">
-              lựa chọn ngày mong muốn
             </h3>
             <DatePicker
               placeholder="Lựa chọn ngày mong muốn"
+              className="w-full mt-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring focus:ring-green-200 transition-all"
               onChange={onChangeDatePicker}
               disabledDate={disabledDate}
             />
             <Button
               type="primary"
               onClick={handleSubmitRequestChangeDate}
-              className="mt-4"
+              className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-2 shadow-md transition-all"
             >
               Gửi yêu cầu
             </Button>
@@ -196,64 +200,59 @@ const EditScheduleComponent = () => {
   };
 
   return (
-    <>
-      <h2>Đổi lịch dạy</h2>
-      <div className="bg-white rounded-lg max-w-3xl w-full shadow-xl transform transition-all animate-scale-in">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-            <Info className="h-6 w-6 mr-2 text-blue-500" />
-            Chi tiết lịch dạy
-          </h2>
-          <div className="space-y-3">
-            <p className="flex items-center text-gray-700">
-              <Book className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Môn học:</span>
-              {schedule.subject_name}
+    <div className="p-6 bg-gradient-to-br from-green-200 via-blue-200 to-gray-300 min-h-screen flex flex-col items-center">
+      <h2 className="text-2xl font-extrabold text-gray-900 mb-8 tracking-wide">
+        Đổi lịch dạy
+      </h2>
+      <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-3xl">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <Info className="h-6 w-6 mr-2 text-blue-500" />
+          Chi tiết lịch dạy
+        </h2>
+        <div className="space-y-4">
+          {[
+            { icon: Book, label: "Môn học", value: schedule.subject_name },
+            { icon: Clock, label: "Ca học", value: schedule.shift_name },
+            { icon: MapPin, label: "Phòng học", value: schedule.room_name },
+            { icon: Book, label: "Tiết học", value: schedule.lesson?.name },
+            {
+              icon: Info,
+              label: "Nội dung",
+              value: schedule.lesson?.description,
+            },
+            { icon: Calendar, label: "Ngày", value: schedule.lesson?.date },
+            { icon: Info, label: "Trạng thái", value: schedule.lesson?.status },
+          ].map(({ icon: Icon, label, value }, index) => (
+            <p key={index} className="flex items-center text-gray-700">
+              <Icon className="h-5 w-5 mr-2 text-gray-500" />
+              <span className="font-medium">{label}:</span> {value || "N/A"}
             </p>
-            <p className="flex items-center text-gray-700">
-              <Clock className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Ca học:</span>
-              {schedule.shift_name}
-            </p>
-            <p className="flex items-center text-gray-700">
-              <MapPin className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Phòng học:</span>
-              {schedule.room_name}
-            </p>
-            <p className="flex items-center text-gray-700">
-              <Book className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Tiết học:</span>
-              {schedule.lesson?.name}
-            </p>
-            <p className="flex items-center text-gray-700">
-              <Info className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Nội dung:</span>
-              {schedule.lesson?.description}
-            </p>
-            <p className="flex items-center text-gray-700">
-              <Calendar className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Ngày:</span>
-              {schedule.lesson?.date}
-            </p>
-            <p className="flex items-center text-gray-700">
-              <Info className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-semibold mr-2">Trạng thái:</span>
-              {schedule.lesson?.status}
-            </p>
-          </div>
+          ))}
         </div>
       </div>
-      <h2 className="mt-6">Lựa chọn hình thức</h2>
-      <div className="flex gap-4 mt-4">
-        <Button type="primary" onClick={() => setView("change-teacher")}>
-          Thay đổi giảng viên
-        </Button>
-        <Button type="default" onClick={() => setView("change-schedule")}>
-          Thay đổi lịch dạy
-        </Button>
+      <div className="mt-8">
+        <h2 className="text-2xl text-center font-semibold text-gray-800 mb-4">
+          Lựa chọn hình thức
+        </h2>
+        <div className="flex gap-4">
+          <Button
+            type="primary"
+            onClick={() => setView("change-teacher")}
+            className="bg-blue-500 hover:bg-blue-700 text-white rounded-lg px-6 py-2 shadow-md transition-transform transform hover:scale-105"
+          >
+            Thay đổi giảng viên
+          </Button>
+          <Button
+            type="success"
+            onClick={() => setView("change-schedule")}
+            className="bg-green-300 text-gray-800 rounded-lg px-6 py-2 shadow-md transition-transform transform hover:scale-105"
+          >
+            Thay đổi lịch dạy
+          </Button>
+        </div>
       </div>
-      {renderContent()}
-    </>
+      <div className="mt-6 w-full max-w-3xl">{renderContent()}</div>
+    </div>
   );
 };
 

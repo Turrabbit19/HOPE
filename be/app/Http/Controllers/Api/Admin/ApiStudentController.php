@@ -64,8 +64,9 @@ class ApiStudentController extends Controller
         }
     }
 
-    public function filters(Request $request){
-        try{
+    public function filters(Request $request)
+    {
+        try {
             $majorId = $request->input('major_id');
             $course_id = $request->input('course_id');
             $status = $request->input('status');
@@ -73,9 +74,9 @@ class ApiStudentController extends Controller
             $query = Student::with('majors', 'course');
 
             $majors = StudentMajor::with('major')
-            ->where('status', 1)
-            ->get()
-            ->groupBy('student_id');
+                ->where('status', 1)
+                ->get()
+                ->groupBy('student_id');
 
             if (!empty($majorId)) {
                 $query->whereHas('majors', function ($q) use ($majorId) {
@@ -123,7 +124,7 @@ class ApiStudentController extends Controller
 
 
             return response()->json($data);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Students',
                 'message' => $e->getMessage(),
@@ -548,5 +549,4 @@ class ApiStudentController extends Controller
             ], 500);
         }
     }
-
 }

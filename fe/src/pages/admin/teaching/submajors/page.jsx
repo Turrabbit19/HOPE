@@ -79,6 +79,7 @@ const SubMajors = () => {
     try {
       const values = await form.validateFields();
       console.log(values);
+
       if (editingMajor) {
         const response = await instance.put(`/admin/majors/${idMajor}`, {
           ...values,
@@ -99,15 +100,36 @@ const SubMajors = () => {
         });
         setMajors([
           ...majors,
-          { id: majors.length + 1, ...response.data.data },
+          { id: response.data.data.id, ...response.data.data },
         ]);
         notification.success({
           message: "Thêm mới chuyên ngành thành công",
         });
       }
       handleModalCancel();
-    } catch (errorInfo) {
-      console.log("Validate Failed:", errorInfo);
+    } catch (error) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data.errors) {
+          Object.keys(data.errors).forEach((field) => {
+            notification.error({
+              message: `Lỗi ở trường  ${field}`,
+              description: data.errors[field].join(", "),
+            });
+          });
+        } else {
+          notification.error({
+            message: "Lỗi",
+            description: data.message || "Có lỗi xảy ra!",
+          });
+        }
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: "Không thể kết nối đến server, vui lòng thử lại sau!",
+        });
+      }
     }
   };
 
@@ -224,25 +246,34 @@ const SubMajors = () => {
                       Quản lý môn học
                     </Link>
 
-                    <Popconfirm
-                      title="Xóa chuyên ngành"
-                      onConfirm={() => confirmDelete(major.id)}
-                      okText="Có"
-                      cancelText="Không"
-                    >
-                      <button className="text-[#FF5252] font-bold flex items-center gap-1 justify-center">
-                        <img src="/assets/svg/remove.svg" alt="remove" />
-                        Xóa
-                      </button>
-                    </Popconfirm>
+                    {major.status === "Đang hoạt động" ? (
+                      ""
+                    ) : (
+                      <Popconfirm
+                        title="Xóa chuyên ngành"
+                        description={`Bạn có chắc chắn muốn xóa chuyên ngành ${major.name} không? `}
+                        onConfirm={() => confirmDelete(major.id)}
+                        okText="Có"
+                        cancelText="Không"
+                      >
+                        <button className="text-[#FF5252] font-bold flex items-center gap-1 justify-center">
+                          <img src="/assets/svg/remove.svg" alt="remove" />
+                          Xóa
+                        </button>
+                      </Popconfirm>
+                    )}
 
-                    <button
-                      className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                      onClick={() => showEditModal(major)}
-                    >
-                      <EditOutlined />
-                      Sửa Thông Tin
-                    </button>
+                    {major.status === "Đang hoạt động" ? (
+                      ""
+                    ) : (
+                      <button
+                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                        onClick={() => showEditModal(major)}
+                      >
+                        <EditOutlined />
+                        Sửa Thông Tin
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

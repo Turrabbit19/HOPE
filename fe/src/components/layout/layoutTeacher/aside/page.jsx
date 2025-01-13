@@ -1,65 +1,137 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Modal, Button, message } from "antd";
+import instance from "../../../../config/axios";
 
 const AsideTeacher = () => {
+  const [notifications, setNotifications] = useState({});
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await instance.get(`teacher/noti-change-schedule`);
+        setNotifications(data || {});
+        console.log(data);
+      } catch (error) {
+        console.error(error.message);
+      }
+    })();
+  }, []);
+
+  const handleOpenModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
+  const handleSubmit = async () => {
+    try {
+      const { data } = await instance.post(
+        `teacher/accept-change-schedule`,
+        notifications
+      );
+      setNotifications(data);
+      handleCloseModal();
+      message.success("Yêu cầu đã được gửi lên quản lý");
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const hasNotifications = Object.keys(notifications).length > 0;
+
   return (
-    <aside className="w-64 flex-shrink-0 h-screen overflow-y-auto bg-gradient-to-br from-teal-50 to-blue-50 shadow-lg">
-      <div className="p-6">
-        <div className="flex items-center mb-8">
-          <img
-            alt="Logo"
-            className="w-full max-w-[180px] h-auto"
-            src="https://caodang.fpt.edu.vn/wp-content/uploads/logo-3.png"
-          />
-        </div>
-        <div className="mb-6">
-          <h2 className="mb-3 text-xl font-bold text-gray-700">Trang chủ</h2>
-          <nav className="space-y-3">
-            <Link to="home" className="group flex items-center p-3 rounded-lg hover:bg-teal-100 transition duration-300">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 mr-3 text-teal-500 transition-transform transform group-hover:scale-110"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <rect width="7" height="9" x="3" y="3" rx="1"></rect>
-                <rect width="7" height="5" x="14" y="3" rx="1"></rect>
-                <rect width="7" height="9" x="14" y="12" rx="1"></rect>
-                <rect width="7" height="5" x="3" y="16" rx="1"></rect>
-              </svg>
-              <span className="text-gray-800 font-medium group-hover:text-teal-600">
-                Trang chủ
-              </span>
-            </Link>
-          </nav>
-        </div>
+    <aside className="p-4 bg-gray-100">
+      <div className="flex items-center mb-6">
+        <img
+          alt="Logo"
+          className="mr-2"
+          width="100"
+          height="40"
+          src="/public/assets/img/download (10).jpg"
+        />
+      </div>
+      <div className="mb-4">
+        <h2 className="mb-2 font-semibold">Trang chủ</h2>
+        <nav className="space-y-3">
+          <Link
+            to="home"
+            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6 mr-3 text-teal-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+              <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+              <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+              <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+            </svg>
+            <span className="text-gray-800 font-medium group-hover:text-teal-600">
+              Trang chủ
+            </span>
+          </Link>
+        </nav>
+      </div>
 
-        <div className="mb-6">
-          <h2 className="mb-3 text-xl font-bold text-gray-700">Danh sách lớp học & điểm danh</h2>
-          <nav className="space-y-3">
-            <Link to="listclasslesson" className="group flex items-center p-3 rounded-lg hover:bg-red-100 transition duration-300">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 mr-3 text-red-500 transition-transform transform group-hover:rotate-12"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                <path d="M10 4v4"></path>
-                <path d="M2 8h20"></path>
-                <path d="M6 4v4"></path>
-              </svg>
-              <span className="text-gray-800 font-medium group-hover:text-red-600">
-                Danh sách lớp học
-              </span>
-            </Link>
+      <div className="mb-6">
+        <h2 className="mb-2 font-semibold">Danh sách lớp học & điểm danh</h2>
+        <nav className="space-y-3">
+          <Link
+            to="listclasslesson"
+            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6 mr-3 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="M10 4v4"></path>
+              <path d="M2 8h20"></path>
+              <path d="M6 4v4"></path>
+            </svg>
+            <span className="text-gray-800 font-medium group-hover:text-red-600">
+              Danh sách lớp học
+            </span>
+          </Link>
 
-            <Link to="timetable" className="group flex items-center p-3 rounded-lg hover:bg-orange-100 transition duration-300">
+          <Link
+            to="timetable"
+            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6 mr-3 text-orange-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"></path>
+              <path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"></path>
+              <path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"></path>
+              <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
+            </svg>
+            <span className="text-gray-800 font-medium group-hover:text-orange-600">
+              Lịch dạy
+            </span>
+          </Link>
+
+          {hasNotifications && (
+            <button
+              onClick={handleOpenModal}
+              className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 mr-3 text-orange-500 transition-transform transform group-hover:translate-x-1"
+                className="w-6 h-6 mr-3 text-orange-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -70,16 +142,44 @@ const AsideTeacher = () => {
                 <path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"></path>
               </svg>
               <span className="text-gray-800 font-medium group-hover:text-orange-600">
-                Lịch dạy
+                Thông báo đổi lịch
               </span>
-            </Link>
-           
-          </nav>
-        </div>
+            </button>
+          )}
+        </nav>
       </div>
+
+      <Modal
+        title="Thông báo đổi lịch"
+        visible={isModalVisible}
+        onOk={handleSubmit}
+        okText="Chấp nhận"
+        onCancel={handleCloseModal}
+      >
+        {notifications ? (
+          <div>
+            <p>
+              <strong>Phòng:</strong> {notifications.room_name}
+            </p>
+            <p>
+              <strong>Ca học:</strong> {notifications.shift_name}
+            </p>
+            <p>
+              <strong>Môn học:</strong> {notifications.subject_name}
+            </p>
+            <p>
+              <strong>Ngày:</strong> {notifications.date}
+            </p>
+            <p>
+              <strong>Người yêu cầu:</strong> {notifications.requester_name}
+            </p>
+          </div>
+        ) : (
+          <p>Không có thông tin.</p>
+        )}
+      </Modal>
     </aside>
   );
 };
 
 export default AsideTeacher;
-

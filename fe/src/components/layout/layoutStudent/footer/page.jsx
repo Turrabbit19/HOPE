@@ -6,17 +6,17 @@ export default function Footer() {
           {/* Logo and description */}
           <div className="text-center sm:text-left">
             <img
-              src="https://caodang.fpt.edu.vn/wp-content/uploads/logo-3.png"
+              src="/public/assets/img/download (10).jpg"
               alt="Logo"
               className="w-24 sm:w-32 mx-auto sm:mx-0"
             />
-            <p className="text-gray-700 text-sm mt-2 text-xl">
+            <p className="text-gray-700  mt-2 text-xl">
               Providing quality education since 2000
             </p>
           </div>
 
           {/* Navigation */}
-          <nav className="flex flex-wrap justify-center gap-4 text-sm text-gray-700">
+          <nav className="flex flex-wrap justify-center gap-4 text-xl text-gray-700">
             <a href="#" className="hover:text-teal-600 transition duration-300 text-xl">
               Home
             </a>
@@ -34,7 +34,7 @@ export default function Footer() {
 
         {/* Copyright section */}
         <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-          <p className="text-gray-600 text-xs">
+          <p className="text-gray-600 text-2xl">
             © {new Date().getFullYear()} <span className="font-semibold text-xl">HOPE</span>. All rights reserved.
           </p>
         </div>

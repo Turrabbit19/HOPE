@@ -13,11 +13,17 @@ import {
   Checkbox,
   notification,
 } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import {
+  ArrowLeftOutlined,
+  EditOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../config/axios";
 
 const Teach = () => {
+  const navigate = useNavigate();
+
   const [majors, setMajors] = useState([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -42,18 +48,6 @@ const Teach = () => {
 
     fetchMajors();
   }, []);
-  // useEffect(() => {
-  //   const fetchMajors = async () => {
-  //       try {
-  //           const response = await instance.get('/admin/main/majors');
-  //           setMainMajors(response.data.data);
-  //       } catch (error) {
-  //           message.error("Không thể tải dữ liệu ngành");
-  //       }
-  //   };
-
-  //       fetchMajors();
-  //   }, []);
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
@@ -90,6 +84,7 @@ const Teach = () => {
     try {
       const values = await form.validateFields();
       console.log(values);
+
       if (editingMajor) {
         const response = await instance.put(`/admin/majors/${idMajor}`, values);
         setMajors(
@@ -107,15 +102,40 @@ const Teach = () => {
         });
         setMajors([
           ...majors,
-          { id: majors.length + 1, ...response.data.data },
+          { id: response.data.data.id, ...response.data.data },
         ]);
         notification.success({
           message: "Thêm mới ngành thành công",
         });
       }
       handleModalCancel();
-    } catch (errorInfo) {
-      console.log("Validate Failed:", errorInfo);
+    } catch (error) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data.errors) {
+          // Hiển thị lỗi từ từng trường (validation backend)
+          Object.keys(data.errors).forEach((field) => {
+            notification.error({
+              message: `Lỗi ở trường ${field}`,
+              description: data.errors[field].join(", "),
+            });
+          });
+        } else {
+          // Hiển thị lỗi chung từ backend
+          notification.error({
+            message: "Lỗi",
+            description: data.message || "Đã xảy ra lỗi, vui lòng thử lại.",
+          });
+        }
+      } else {
+        // Lỗi không có phản hồi từ server (network error)
+        notification.error({
+          message: "Lỗi",
+          description: "Không thể kết nối đến server, vui lòng thử lại sau!",
+        });
+      }
+      console.log("Error details:", error);
     }
   };
 
@@ -141,19 +161,43 @@ const Teach = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-
+  const handleBack = () => {
+    navigate("/admin");
+  };
   return (
-    <div className="row row-cols-2 g-3">
+    <div className="row row-cols-2">
       <div className="col-12">
-        <div className="col-12">
-          <div className="justify-between flex">
-            <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-              Quản lý Ngành học
-              <button>
-                <img src="/assets/svg/reload.svg" alt="reload..." />
-              </button>
-            </h1>
+        <div className="p-4 bg-white shadow-md rounded-lg">
+          <Space
+            align="center"
+            style={{ cursor: "pointer" }}
+            onClick={handleBack}
+          >
+            <div
+              style={{
+                border: "1.5px solid #1890ff",
+                borderRadius: "50%",
+                padding: "6px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ArrowLeftOutlined
+                style={{
+                  fontSize: "16px",
+                  color: "#1890ff",
+                }}
+              />
+            </div>
+          </Space>
+          {/* Tiêu đề quản lý ngành học */}
+          <h1 className="text-4xl font-bold text-center text-[#7017E2] mb-6">
+            Quản Lý Ngành Học
+          </h1>
 
+          <div className="flex justify-between items-center">
+            {/* Input tìm kiếm */}
             <div>
               <Input.Search
                 placeholder="Tìm kiếm ngành..."
@@ -165,6 +209,7 @@ const Teach = () => {
             </div>
           </div>
 
+          {/* Bố trí nút tạo mới và hiển thị số lượng */}
           <div className="flex justify-between items-center mt-6">
             <Button
               onClick={showAddModal}
@@ -175,10 +220,11 @@ const Teach = () => {
             </Button>
 
             <span className="font-bold text-[14px] text-[#000]">
-              {majors.length} items
+              {majors.length} ngành
             </span>
           </div>
         </div>
+
         <div className="row row-cols-2 g-3">
           {filteredMajors.length > 0 ? (
             filteredMajors.map((major) => (
@@ -237,25 +283,34 @@ const Teach = () => {
                       Quản lý Chuyên ngành
                     </Link>
 
-                    <Popconfirm
-                      title="Xóa ngành"
-                      onConfirm={() => confirmDelete(major.id)}
-                      okText="Có"
-                      cancelText="Không"
-                    >
-                      <button className="text-[#FF5252] font-bold flex items-center gap-1 justify-center">
-                        <img src="/assets/svg/remove.svg" alt="remove" />
-                        Xóa
-                      </button>
-                    </Popconfirm>
+                    {major.status === "Đang hoạt động" ? (
+                      ""
+                    ) : (
+                      <Popconfirm
+                        title="Xóa ngành học"
+                        description={`Bạn có chắc chắn muốn xóa ngành ${major.name} không? `}
+                        onConfirm={() => confirmDelete(major.id)}
+                        okText="Có"
+                        cancelText="Không"
+                      >
+                        <button className="text-[#FF5252] font-bold flex items-center gap-1 justify-center">
+                          <img src="/assets/svg/remove.svg" alt="remove" />
+                          Xóa
+                        </button>
+                      </Popconfirm>
+                    )}
 
-                    <button
-                      className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
-                      onClick={() => showEditModal(major)}
-                    >
-                      <EditOutlined />
-                      Sửa Thông Tin
-                    </button>
+                    {major.status === "Đang hoạt động" ? (
+                      ""
+                    ) : (
+                      <button
+                        className="text-[#1167B4] font-bold flex items-center gap-2 justify-center"
+                        onClick={() => showEditModal(major)}
+                      >
+                        <EditOutlined />
+                        Sửa Thông Tin
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

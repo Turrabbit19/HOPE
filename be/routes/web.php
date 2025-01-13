@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,4 +20,9 @@ Route::get('/', function () {
 
 Route::get('users', function () {
     return view('user');
+});
+
+Route::get('/test-redis', function () {
+    Redis::set('test_key', 'Redis đang hoạt động');
+    return Redis::get('test_key');
 });

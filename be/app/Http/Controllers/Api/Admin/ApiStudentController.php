@@ -6,6 +6,7 @@ use App\Excel\Export\StudentExport;
 use App\Excel\Import\StudentImport;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseSemester;
 use App\Models\Student;
 use App\Models\StudentMajor;
 use App\Models\User;
@@ -31,6 +32,7 @@ class ApiStudentController extends Controller
 
             $data = $students->map(function ($student) use ($majors) {
                 $studentMajor = $majors[$student->id]->first() ?? null;
+
                 return [
                     "id" => $student->id,
                     "avatar" => $student->user->avatar ?? null,
@@ -62,33 +64,34 @@ class ApiStudentController extends Controller
         }
     }
 
-    public function filters(Request $request){
-        try{
+    public function filters(Request $request)
+    {
+        try {
             $majorId = $request->input('major_id');
             $course_id = $request->input('course_id');
             $status = $request->input('status');
-    
-            $query = Student::with('majors', 'course'); 
-            
+
+            $query = Student::with('majors', 'course');
+
             $majors = StudentMajor::with('major')
-            ->where('status', 1)
-            ->get()
-            ->groupBy('student_id');
+                ->where('status', 1)
+                ->get()
+                ->groupBy('student_id');
 
             if (!empty($majorId)) {
                 $query->whereHas('majors', function ($q) use ($majorId) {
                     $q->where('majors.id', $majorId);
                 });
             }
-    
+
             if (!empty($course_id)) {
                 $query->where('course_id', $course_id);
             }
-    
+
             if (!empty($status)) {
                 $query->where('status', $status);
             }
-            
+
             $students = $query->get();
 
             if ($students->isEmpty()) {
@@ -119,15 +122,15 @@ class ApiStudentController extends Controller
                 ];
             });
 
-    
+
             return response()->json($data);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Students',
                 'message' => $e->getMessage(),
             ], 500);
         }
-    } 
+    }
 
     public function exportStudent()
     {

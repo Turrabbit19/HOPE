@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, User, Book, Info, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Clock,
+  MapPin,
+  Book,
+  Info,
+  AlertCircle,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { isBefore } from "date-fns";
 
 const TeacherTimetable = () => {
   const [currentWeek, setCurrentWeek] = useState(() => new Date());
-  const [selectedDay, setSelectedDay] = useState('');
+  const [selectedDay, setSelectedDay] = useState("");
   const [timetableData, setTimetableData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,8 +23,17 @@ const TeacherTimetable = () => {
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState(null);
 
-  const daysOfWeek = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
-  const shifts = ['Ca 1', 'Ca 2', 'Ca 3', 'Ca 4', 'Ca 5', 'Ca 6'];
+  const navigate = useNavigate();
+  const daysOfWeek = [
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+    "Chủ Nhật",
+  ];
+  const shifts = ["Ca 1", "Ca 2", "Ca 3", "Ca 4", "Ca 5", "Ca 6"];
 
   useEffect(() => {
     setSelectedDay(getCurrentDay());
@@ -30,29 +50,34 @@ const TeacherTimetable = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error('Không tìm thấy token xác thực');
+        throw new Error("Không tìm thấy token xác thực");
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/teacher/semesters', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/teacher/semesters",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Không thể tải danh sách kỳ học');
+        throw new Error("Không thể tải danh sách kỳ học");
       }
 
       const data = await response.json();
+      console.log("Fetched semesters:", data);
       setSemesters(data.data || []);
       if (data.data && data.data.length > 0) {
         setSelectedSemester(data.data[0]);
       }
     } catch (err) {
-      setError(err.message || 'Đã xảy ra lỗi khi tải danh sách kỳ học');
+      console.error("Error fetching semesters:", err);
+      setError(err.message || "Đã xảy ra lỗi khi tải danh sách kỳ học");
     } finally {
       setIsLoading(false);
     }
@@ -62,26 +87,37 @@ const TeacherTimetable = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Không tìm thấy token xác thực');
+      if (!semesterId) {
+        setError("Không có kỳ học được chọn");
+        setIsLoading(false);
+        return;
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/teacher/${semesterId}/timetable`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/teacher/${semesterId}/timetable`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Không thể tải lịch dạy');
+        throw new Error("Không thể tải lịch dạy");
       }
 
       const data = await response.json();
+      console.log("Fetched timetable data:", data);
       setTimetableData(data.data || []);
     } catch (err) {
-      setError(err.message || 'Đã xảy ra lỗi khi tải lịch dạy');
+      console.error("Error fetching timetable data:", err);
+      setError(err.message || "Đã xảy ra lỗi khi tải lịch dạy");
     } finally {
       setIsLoading(false);
     }
@@ -100,10 +136,7 @@ const TeacherTimetable = () => {
     setCurrentWeek((prevWeek) => {
       const nextWeek = new Date(prevWeek);
       nextWeek.setDate(prevWeek.getDate() + 7);
-      if (selectedSemester && nextWeek <= new Date(selectedSemester.end_date)) {
-        return nextWeek;
-      }
-      return prevWeek;
+      return nextWeek;
     });
   };
 
@@ -111,21 +144,22 @@ const TeacherTimetable = () => {
     setCurrentWeek((prevWeek) => {
       const previousWeek = new Date(prevWeek);
       previousWeek.setDate(prevWeek.getDate() - 7);
-      if (selectedSemester && previousWeek >= new Date(selectedSemester.start_date)) {
-        return previousWeek;
-      }
-      return prevWeek;
+      return previousWeek;
     });
   };
 
   const handleGoToCurrentWeek = () => {
     const today = new Date();
-    if (selectedSemester &&
-        today >= new Date(selectedSemester.start_date) &&
-        today <= new Date(selectedSemester.end_date)) {
-      setCurrentWeek(today);
-      setSelectedDay(getCurrentDay());
-    }
+    setCurrentWeek(today);
+    setSelectedDay(getCurrentDay());
+  };
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const getWeekDates = () => {
@@ -133,21 +167,44 @@ const TeacherTimetable = () => {
     startOfWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    return `${startOfWeek.toLocaleDateString('vi-VN')} - ${endOfWeek.toLocaleDateString('vi-VN')}`;
+    return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
   };
 
   const getScheduleForDayAndShift = (day, shift) => {
+    if (!Array.isArray(timetableData)) {
+      console.error("timetableData is not an array:", timetableData);
+      return undefined;
+    }
+
     const dayDate = new Date(currentWeek);
-    dayDate.setDate(currentWeek.getDate() - currentWeek.getDay() + daysOfWeek.indexOf(day) + 1);
-    const formattedDate = dayDate.toLocaleDateString('vi-VN');
-    return timetableData.find(
-      (schedule) =>
-        schedule.shift_name === shift &&
-        schedule.schedule_lessons.some((lesson) => lesson.date === formattedDate)
+    dayDate.setDate(
+      currentWeek.getDate() - currentWeek.getDay() + daysOfWeek.indexOf(day) + 1
     );
+    const formattedDate = formatDate(dayDate);
+
+    const schedule = timetableData.find((item) => {
+      return item.shift_name === shift;
+    });
+
+    if (schedule) {
+      const hasLessonOnDate = schedule.schedule_lessons.some(
+        (lesson) => lesson.date === formattedDate
+      );
+      if (hasLessonOnDate) {
+        return {
+          ...schedule,
+          subject_name: schedule.subject_name,
+          room_name: schedule.room_name,
+          classroom_code: schedule.classroom_code,
+        };
+      }
+    }
+
+    return undefined;
   };
 
   const getLessonForDate = (schedule, date) => {
+    if (!schedule || !schedule.schedule_lessons) return null;
     return schedule.schedule_lessons.find((lesson) => lesson.date === date);
   };
 
@@ -163,9 +220,26 @@ const TeacherTimetable = () => {
 
   const handleSemesterChange = (event) => {
     const semesterId = event.target.value;
-    const semester = semesters.find(sem => sem.id === parseInt(semesterId));
+    const semester = semesters.find((sem) => sem.id === parseInt(semesterId));
     setSelectedSemester(semester);
     setCurrentWeek(new Date(semester.start_date));
+  };
+
+  const handleEditSchedule = (selectedSchedule) => {
+    navigate("/teacher/edit-schedule", {
+      state: { schedule: selectedSchedule },
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Đã kết thúc":
+        return "bg-green-100";
+      case "Đang dạy":
+        return "bg-red-100";
+      default:
+        return "bg-gray-100";
+    }
   };
 
   if (isLoading) {
@@ -179,7 +253,10 @@ const TeacherTimetable = () => {
   if (error) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Lỗi!</strong>
           <span className="block sm:inline"> {error}</span>
         </div>
@@ -202,7 +279,7 @@ const TeacherTimetable = () => {
 
           <select
             onChange={handleSemesterChange}
-            value={selectedSemester ? selectedSemester.id : ''}
+            value={selectedSemester ? selectedSemester.id : ""}
             className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-gray-700"
           >
             {semesters.map((semester) => (
@@ -249,26 +326,39 @@ const TeacherTimetable = () => {
           </button>
         </div>
 
-        {timetableData.length === 0 ? (
+        {Array.isArray(timetableData) && timetableData.length === 0 ? (
           <div className="text-center py-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 text-yellow-500 mb-4">
               <AlertCircle className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có dữ liệu lịch dạy</h3>
-            <p className="text-gray-500">Không có lịch dạy nào được tìm thấy cho kỳ học này.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Không có dữ liệu lịch dạy
+            </h3>
+            <p className="text-gray-500">
+              Không có lịch dạy nào được tìm thấy cho kỳ học này.
+            </p>
           </div>
         ) : selectedDay ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
             {shifts.map((shift) => {
               const schedule = getScheduleForDayAndShift(selectedDay, shift);
               const dayDate = new Date(currentWeek);
-              dayDate.setDate(currentWeek.getDate() - currentWeek.getDay() + daysOfWeek.indexOf(selectedDay) + 1);
-              const formattedDate = dayDate.toLocaleDateString('vi-VN');
-              const lesson = schedule ? getLessonForDate(schedule, formattedDate) : null;
+              dayDate.setDate(
+                currentWeek.getDate() -
+                  currentWeek.getDay() +
+                  daysOfWeek.indexOf(selectedDay) +
+                  1
+              );
+              const formattedDate = formatDate(dayDate);
+              const lesson = schedule
+                ? getLessonForDate(schedule, formattedDate)
+                : null;
               return (
                 <div
                   key={shift}
-                  className="bg-white shadow-sm rounded-lg p-6 relative border border-gray-200"
+                  className={`shadow-sm rounded-lg p-6 relative border border-gray-200 ${
+                    lesson ? getStatusColor(lesson.status) : "bg-white"
+                  }`}
                 >
                   <div className="absolute top-0 left-0 bg-blue-700 text-white px-3 py-1 font-semibold rounded-br-lg rounded-tl-lg">
                     {shift}
@@ -303,7 +393,9 @@ const TeacherTimetable = () => {
                   </th>
                   {daysOfWeek.map((day, index) => {
                     const date = new Date(currentWeek);
-                    date.setDate(currentWeek.getDate() - currentWeek.getDay() + index + 1);
+                    date.setDate(
+                      currentWeek.getDate() - currentWeek.getDay() + index + 1
+                    );
                     return (
                       <th
                         key={index}
@@ -312,7 +404,7 @@ const TeacherTimetable = () => {
                         <div className="flex flex-col">
                           <span>{day}</span>
                           <span className="text-gray-500 font-normal">
-                            {date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                            {formatDate(date)}
                           </span>
                         </div>
                       </th>
@@ -331,14 +423,23 @@ const TeacherTimetable = () => {
                     </td>
                     {daysOfWeek.map((day, dayIndex) => {
                       const dayDate = new Date(currentWeek);
-                      dayDate.setDate(currentWeek.getDate() - currentWeek.getDay() + dayIndex + 1);
-                      const formattedDate = dayDate.toLocaleDateString('vi-VN');
+                      dayDate.setDate(
+                        currentWeek.getDate() -
+                          currentWeek.getDay() +
+                          dayIndex +
+                          1
+                      );
+                      const formattedDate = formatDate(dayDate);
                       const schedule = getScheduleForDayAndShift(day, shift);
-                      const lesson = schedule ? getLessonForDate(schedule, formattedDate) : null;
+                      const lesson = schedule
+                        ? getLessonForDate(schedule, formattedDate)
+                        : null;
                       return (
                         <td
                           key={day}
-                          className="p-3 text-center border border-gray-200"
+                          className={`p-3 text-center border border-gray-200 ${
+                            lesson ? getStatusColor(lesson.status) : ""
+                          }`}
                         >
                           {schedule && lesson ? (
                             <div>
@@ -395,22 +496,22 @@ const TeacherTimetable = () => {
                 <p className="flex items-center text-gray-700">
                   <Book className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Tiết học:</span>
-                  {selectedSchedule.lesson.name}
+                  {selectedSchedule.lesson?.name}
                 </p>
                 <p className="flex items-center text-gray-700">
                   <Info className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Nội dung:</span>
-                  {selectedSchedule.lesson.description}
+                  {selectedSchedule.lesson?.description}
                 </p>
                 <p className="flex items-center text-gray-700">
                   <Calendar className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Ngày:</span>
-                  {selectedSchedule.lesson.date}
+                  {selectedSchedule.lesson?.date}
                 </p>
                 <p className="flex items-center text-gray-700">
                   <Info className="h-5 w-5 mr-2 text-gray-500" />
                   <span className="font-semibold mr-2">Trạng thái:</span>
-                  {selectedSchedule.lesson.status}
+                  {selectedSchedule.lesson?.status}
                 </p>
               </div>
             </div>
@@ -421,6 +522,16 @@ const TeacherTimetable = () => {
               >
                 Đóng
               </button>
+              {selectedSchedule.lesson?.status === "Chưa tới" ? (
+                <button
+                  onClick={() => handleEditSchedule(selectedSchedule)}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-200"
+                >
+                  Đổi lịch dạy
+                </button>
+              ) : (
+                ""
+              )}
             </div>
           </div>
         </div>
@@ -430,4 +541,3 @@ const TeacherTimetable = () => {
 };
 
 export default TeacherTimetable;
-

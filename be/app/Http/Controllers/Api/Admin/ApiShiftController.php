@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Http\Controllers\Controller;
+use App\Models\Room;
 use Carbon\Carbon;
 
 class ApiShiftController extends Controller
@@ -15,15 +16,15 @@ class ApiShiftController extends Controller
     {
         try {
             $shifts = Shift::get();
-            
+
             $data = $shifts->map(function ($shift) {
                 return [
                     'id' => $shift->id,
                     'name' => $shift->name,
-                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'), 
-                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),     
+                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'),
+                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),
                 ];
-            });            
+            });
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
@@ -31,15 +32,61 @@ class ApiShiftController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function getFilteredShifts(Request $request)
+    {
+        try {
+            $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+            $end_date = Carbon::parse($request->input('end_date'))->endOfDay();
+            $days = $request->input('days_of_week', []);
+
+            $totalRoomsCount = Room::count();
+
+            $shifts = Shift::withCount(['schedules' => function ($query) use ($start_date, $end_date, $days) {
+                $query->where(function ($q) use ($start_date, $end_date) {
+                    $q->whereBetween('start_date', [$start_date, $end_date])
+                        ->orWhereBetween('end_date', [$start_date, $end_date])
+                        ->orWhere(function ($nested) use ($start_date, $end_date) {
+                            $nested->where('start_date', '<=', $start_date)
+                                ->where('end_date', '>=', $end_date);
+                        });
+                });
+
+                if (!empty($days)) {
+                    $query->whereHas('days', fn($q) => $q->whereIn('day_id', $days));
+                }
+            }])
+                ->get(['id', 'name', 'start_time', 'end_time']);
+
+            $filteredData = $shifts->map(function ($shift) use ($totalRoomsCount) {
+                $reservedRoomsCount = $shift->schedules_count;
+                $availableRoomsCount = $totalRoomsCount - $reservedRoomsCount;
+
+                if ($availableRoomsCount <= 0) {
+                    return null;
+                }
+
+                return [
+                    'id' => $shift->id,
+                    'name' => $shift->name,
+                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'),
+                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),
+                    'total_rooms_count' => $totalRoomsCount,
+                    'available_rooms_count' => $availableRoomsCount,
+                ];
+            })->filter();
+
+            return response()->json(['data' => $filteredData->values()], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể lọc dữ liệu', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:shifts', 
+            'name' => 'required|string|max:100|unique:shifts',
             'start_time' => 'required|date_format:H:i:s',
-            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time', 
+            'end_time' =>  'required|date_format:H:i:s|after_or_equal:start_time',
         ], [
             'name.required' => 'Tên ca làm việc là bắt buộc.',
             'name.string' => 'Tên ca làm việc phải là chuỗi ký tự.',
@@ -59,7 +106,7 @@ class ApiShiftController extends Controller
         try {
             $data = $validator->validated();
             $shift = Shift::create($data);
-            
+
             return response()->json(['data' => $shift, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -74,11 +121,11 @@ class ApiShiftController extends Controller
         try {
             $shift = Shift::findOrFail($id);
             $data = [
-                    'id' => $shift->id,
-                    'name' => $shift->name,
-                    'start_time' => Carbon::parse($shift->start_time)->format('H:i'), 
-                    'end_time' => Carbon::parse($shift->end_time)->format('H:i'),     
-                ];  
+                'id' => $shift->id,
+                'name' => $shift->name,
+                'start_time' => Carbon::parse($shift->start_time)->format('H:i'),
+                'end_time' => Carbon::parse($shift->end_time)->format('H:i'),
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -96,7 +143,7 @@ class ApiShiftController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:100|unique:shifts,name,' . $id,
             'start_time' => 'sometimes|date_format:H:i:s',
-            'end_time' =>  'sometimes|date_format:H:i:s|after_or_equal:start_time', 
+            'end_time' =>  'sometimes|date_format:H:i:s|after_or_equal:start_time',
         ], [
             'name.sometimes' => 'Tên ca làm việc không bắt buộc nhưng nếu có thì phải là chuỗi.',
             'name.string' => 'Tên ca làm việc phải là chuỗi ký tự.',
@@ -115,7 +162,7 @@ class ApiShiftController extends Controller
 
         try {
             $shift = Shift::findOrFail($id);
-            
+
             $data = $validator->validated();
             $shift->update($data);
 

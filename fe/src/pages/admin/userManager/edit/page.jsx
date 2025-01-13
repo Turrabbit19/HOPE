@@ -241,35 +241,6 @@ const UserEdit = () => {
             return;
           });
       }
-
-      // if (roleNumber === 3) {
-      //   editStudents(params.id, {
-      //     ...data,
-      //     user_id: user.id,
-      //     major_id: values.major,
-      //     course_id: values.course,
-      //     student_code: values.student_code,
-      //     student_current_semester: 1,
-      //     student_status: 1,
-
-      //   })
-      //   navigate("/admin/all-student");
-      // } else if (roleNumber === 4) {
-      //   editTeachers(params.id, {
-      //     ...data,
-      //     user_id: user.id,
-      //     major_id: values.major,
-      //     teacher_code: values.teacher_code,
-      //     teacher_status: 1,
-      //   })
-      //   navigate("/admin/teacher-manager");
-      // } else if (roleNumber === 2 || roleNumber === 1) {
-      //   console.log("Dô đây kh");
-
-      //   editAdmin(params.id, data)
-      //   navigate("/admin/admin-manager");
-      // }
-
       message.success(`Đã sửa khoản thành công`);
     } catch (error) {
       for (const key of Object.keys(error?.response?.data?.errors)) {

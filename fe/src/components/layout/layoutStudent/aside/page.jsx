@@ -9,9 +9,9 @@ const AsideClient = () => {
         <img
           alt="Logo"
           className="mr-2"
-          width="200"
+          width="100"
           height="40"
-          src="https://caodang.fpt.edu.vn/wp-content/uploads/logo-3.png"
+          src="/public/assets/img/download (10).jpg"
         />
       </div>
 

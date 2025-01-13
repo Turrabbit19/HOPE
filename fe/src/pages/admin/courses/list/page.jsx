@@ -11,8 +11,12 @@ import {
   Pagination,
   notification,
 } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import {
+  ArrowLeftOutlined,
+  EditOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
 import moment from "moment";
 import Loading from "../../../../components/loading";
 import instance from "../../../../config/axios";
@@ -29,20 +33,27 @@ const ListCourse = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [id, setId] = useState();
+
+  const navigate = useNavigate();
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const [courses, plans] = await Promise.all([
+        const [coursesResponse] = await Promise.all([
           instance.get("admin/courses"),
           // instance.get("admin/plans"),
         ]);
-        console.log(courses.data.data);
-        setCourses(courses.data.data);
+        console.log(coursesResponse.data.data);
+        setCourses(coursesResponse.data.data);
         // setPlans(plans.data.data);
       } catch (error) {
         console.log(error.message);
-        notification.success({
+        notification.error({
           message: "Lỗi lấy dữ liệu",
         });
       } finally {
@@ -53,10 +64,17 @@ const ListCourse = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value.toLowerCase());
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const filteredCourses = courses.filter((course) =>
     course.name.toLowerCase().includes(searchTerm)
+  );
+
+  // Calculate the courses to display on the current page
+  const paginatedCourses = filteredCourses.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   const showEditModal = (course) => {
@@ -109,7 +127,10 @@ const ListCourse = () => {
     };
     try {
       setLoading(true);
-      const response = instance.put(`admin/courses/${id}`, formattedValues);
+      const response = await instance.put(
+        `admin/courses/${id}`,
+        formattedValues
+      );
       notification.success({
         message: "Cập nhật khóa học thành công",
       });
@@ -171,10 +192,19 @@ const ListCourse = () => {
       setCourses((prev) => [...prev, restoredCourse]);
     } catch (error) {
       console.log(error.message);
-      message.error("Khôi phục thất bại thất bại");
+      notification.error({
+        message: "Khôi phục thất bại",
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+  const handleBack = () => {
+    navigate("/admin");
   };
 
   if (loading) {
@@ -183,52 +213,77 @@ const ListCourse = () => {
   return (
     <div className="row row-cols-2 g-3">
       <div className="col-12">
-        <div className="col-12">
-          <div className="justify-between flex">
-            <h1 className="flex gap-2 items-center text-[#7017E2] text-[18px] font-semibold">
-              Quản Lý Khóa Học
-              <button>
-                <img src="/assets/svg/reload.svg" alt="reload..." />
-              </button>
-            </h1>
-
-            <div>
+        <div className="p-6 bg-white shadow-md rounded-lg">
+          <Space
+            align="center"
+            style={{ cursor: "pointer" }}
+            onClick={handleBack}
+          >
+            <div
+              style={{
+                border: "1.5px solid #1890ff",
+                borderRadius: "50%",
+                padding: "6px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ArrowLeftOutlined
+                style={{
+                  fontSize: "16px",
+                  color: "#1890ff",
+                }}
+              />
+            </div>
+          </Space>
+          {/* Tiêu đề quản lý khóa học */}
+          <h1 className="text-4xl font-bold text-center text-[#7017E2] mb-6">
+            Quản Lý Khóa Sinh Viên
+          </h1>
+          <div className="flex justify-end items-center mb-6">
+            {/* Input tìm kiếm */}
+            <div className="flex-1 max-w-sm">
               <Input.Search
                 placeholder="Tìm kiếm khóa học..."
                 onSearch={handleSearch}
                 onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 300 }}
                 allowClear
+                className="rounded-lg"
+                style={{ width: "100%" }}
               />
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-6">
+          <div className="flex justify-between items-center">
+            {/* Button tạo mới */}
             <Button
               onClick={showAddModal}
-              className="btn btn--outline text-[#7017E2]"
+              className="btn btn--outline text-[#7017E2] flex items-center gap-2"
             >
               <PlusOutlined />
               Tạo mới
             </Button>
 
-            <span className="font-bold text-[14px] text-[#000]">
-              {filteredCourses.length} items
+            {/* Hiển thị số lượng khóa học */}
+            <span className="font-semibold text-lg text-gray-700">
+              {filteredCourses.length} khóa học
             </span>
           </div>
         </div>
-        <div className="row row-cols-2 g-3">
-          {courses.length > 0 ? (
-            courses.map((course, index) => (
-              <div className="col" key={index}>
+
+        <div className="row row-cols-2 g-3 mt-4">
+          {paginatedCourses.length > 0 ? (
+            paginatedCourses.map((course, index) => (
+              <div className="col" key={course.id}>
                 <div className="teaching__card">
-                  <div className="teaching__card-top">
+                  <div className="teaching__card-top flex justify-between items-center">
                     <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
                       <img src="/assets/svg/share.svg" alt="" />
                       Khóa sinh viên:{" "}
-                      <p className="text-red-300 uppercase ml-2 font-bold">
+                      <span className="text-red-300 uppercase ml-2 font-bold">
                         {course.name}
-                      </p>
+                      </span>
                     </h2>
                     <button>
                       <img src="/assets/svg/more_detail.svg" alt="" />
@@ -239,7 +294,7 @@ const ListCourse = () => {
                     <div className="mt-6 flex flex-col gap-8 pb-6">
                       <div className="flex gap-6">
                         <p className="text-[#9E9E9E]">Trạng thái:</p>
-                        <div className="teaching__card-status">
+                        <div className="teaching__card-status flex items-center gap-1">
                           <img
                             className="svg-green"
                             src="/assets/svg/status.svg"
@@ -273,7 +328,7 @@ const ListCourse = () => {
                     </div>
                   </div>
 
-                  <div className="teaching__card-bottom">
+                  <div className="teaching__card-bottom flex justify-between">
                     <Link
                       to={`${course.id}/detail`}
                       className="flex items-center gap-3 text-[#1167B4] font-bold"
@@ -285,7 +340,7 @@ const ListCourse = () => {
                     course.status === "Kết thúc" ? (
                       ""
                     ) : (
-                      <>
+                      <div className="flex gap-2">
                         <Popconfirm
                           title="Xóa khóa học"
                           onConfirm={() => confirmDelete(course.id)}
@@ -305,7 +360,7 @@ const ListCourse = () => {
                           <EditOutlined />
                           Sửa Thông Tin
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -320,11 +375,19 @@ const ListCourse = () => {
           )}
         </div>
 
+        {/* Pagination */}
         <Pagination
           className="mt-12"
-          align="center"
-          defaultCurrent={1}
-          total={50}
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredCourses.length}
+          onChange={handlePageChange}
+          showSizeChanger={false}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
         />
       </div>
 

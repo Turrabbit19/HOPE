@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CountUp from "react-countup";
 import { Bar } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
-import { Modal, Button } from "antd";
+import { Modal, Button, Select } from "antd";
 
 import {
   Chart as ChartJS,
@@ -43,7 +43,14 @@ const StatisticalReport = () => {
     totalClassrooms: 0,
   });
 
-  const [extendedStudentCount, setExtendedStudentCount] = useState(0);
+  const [statistics, setStatistics] = useState({
+    studentCount: 0,
+    teacherCount: 0,
+    courseCount: 0,
+    majorCount: 0,
+    semesterCount: 0,
+  });
+
   const [minStudentMajors, setMinStudentMajors] = useState(0);
   const [maxStudentMajors, setMaxStudentMajors] = useState(0);
   const [subMajorStats, setSubMajorStats] = useState([]);
@@ -53,12 +60,97 @@ const StatisticalReport = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { Option } = Select;
+
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [years, setYears] = useState([]);
+
+  const [terms, setTerms] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState("all");
+
+  const cacheData = (key, data) => {
+    localStorage.setItem(key, JSON.stringify(data));
+  };
+
+  const getCacheData = (key) => {
+    const cache = localStorage.getItem(key);
+    return cache ? JSON.parse(cache) : null;
+  };
+
+  const fetchTerms = async () => {
+    const cacheSemesters = getCacheData("semesters");
+    if (cacheSemesters) {
+      setTerms(cacheSemesters);
+      return;
+    }
+    try {
+      const response = await instance.get("admin/semesters");
+      const semesterData = response.data.data;
+      cacheData("semesters", semesterData);
+      setTerms(semesterData);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu kỳ học:", error);
+    }
+  };
+
+  const fetchYears = async () => {
+    const cacheCourses = getCacheData("courses");
+    if (cacheCourses) {
+      const currentDate = new Date();
+      const activeCourses = cacheCourses.filter((course) => {
+        const endDate = new Date(course.end_date);
+        return currentDate < endDate;
+      });
+
+      const activeYears = activeCourses.map((course) =>
+        new Date(course.start_date).getFullYear()
+      );
+      const uniqueYears = [...new Set(activeYears)];
+      setYears(uniqueYears);
+      return;
+    }
+    try {
+      const response = await instance.get("admin/courses");
+      const courses = response.data.data;
+      cacheData("courses", courses);
+
+      const currentDate = new Date();
+      const activeCourses = courses.filter((course) => {
+        const endDate = new Date(course.end_date);
+        return currentDate < endDate;
+      });
+
+      const activeYears = activeCourses.map((course) =>
+        new Date(course.start_date).getFullYear()
+      );
+      const uniqueYears = [...new Set(activeYears)];
+      setYears(uniqueYears);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu khóa học:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTerms();
+    fetchYears();
+  }, []);
+
   useEffect(() => {
     const fetchClassroomStats = async () => {
       try {
-        const response = await instance.get("admin/statistics/classrooms");
+        const response = await instance.get("admin/statistics/classrooms", {
+          params: {
+            year: selectedYear !== "all" ? selectedYear : "",
+            semester_id: selectedTerm !== "all" ? selectedTerm : "",
+          },
+        });
+
         setClassroomStats({
-          latestSemester: response.data.latest_semester,
+          semester:
+            selectedTerm !== "all"
+              ? terms.find((term) => term.id === selectedTerm)?.name ||
+                "Kỳ học không xác định"
+              : "Tất cả các kỳ học",
           totalClassrooms: response.data.total_classrooms,
         });
       } catch (error) {
@@ -67,27 +159,25 @@ const StatisticalReport = () => {
     };
 
     fetchClassroomStats();
-  }, []);
+  }, [selectedYear, selectedTerm]);
 
   useEffect(() => {
     const fetchStudentByCourse = async () => {
       try {
-        const { data } = await instance.get(`admin/statistics/studentByCourse`);
-        const courses = Object.keys(data).map((courseId) => ({
+        const { data } = await instance.get(
+          "admin/statistics/studentByCourse",
+          {
+            params: {
+              year: selectedYear !== "all" ? selectedYear : "",
+            },
+          }
+        );
+
+        const courses = Object.entries(data).map(([courseId, courseData]) => ({
           course_id: courseId,
-          course_name: data[courseId].course_name,
-          student_count: data[courseId].student_count,
+          course_name: courseData.course_name,
+          student_count: courseData.student_count,
         }));
-
-        const totalCourses = courses.length;
-        const maxStudentsCourse = courses.reduce((max, course) =>
-          course.student_count > max.student_count ? course : max
-        );
-        const minStudentsCourse = courses.reduce((min, course) =>
-          course.student_count < min.student_count ? course : min
-        );
-
-        setCourseStats({ totalCourses, maxStudentsCourse, minStudentsCourse });
 
         setStudentByCourseData({
           labels: courses.map((course) => course.course_name),
@@ -98,33 +188,53 @@ const StatisticalReport = () => {
               backgroundColor: "rgba(54, 162, 235, 0.6)",
               borderColor: "rgba(54, 162, 235, 1)",
               borderWidth: 1,
+              course_ids: courses.map((course) => course.course_id),
             },
           ],
-          course_ids: courses.map((course) => course.course_id),
+        });
+
+        console.log("Student By Course Data:", {
+          labels: courses.map((course) => course.course_name),
+          datasets: [
+            {
+              data: courses.map((course) => course.student_count),
+              course_ids: courses.map((course) => course.course_id),
+            },
+          ],
         });
       } catch (error) {
-        console.error("Lỗi khi lấy data khóa học:", error.message);
+        console.error("Lỗi khi lấy dữ liệu khóa học:", error.message);
       }
     };
 
     const fetchStudentTeacherByMajor = async () => {
       try {
         const { data } = await instance.get(
-          `admin/statistics/studentAndTeacherByMajor`
+          "admin/statistics/studentAndTeacherByMajor",
+          {
+            params: {
+              year: selectedYear !== "all" ? selectedYear : "",
+            },
+          }
         );
 
-        const totalStudents = data.reduce(
-          (total, item) => total + item.student_count,
-          0
-        );
+        // Tính tổng số sinh viên và giảng viên
+        const totalStudents = data
+          .slice(1)
+          .reduce((total, item) => total + item.student_count, 0);
+
         const totalTeachers = data.reduce(
           (total, item) => total + item.teacher_count,
           0
         );
 
+        setTotalStats({
+          totalStudents,
+          totalTeachers,
+        });
+
         const basicMajor = data[0];
 
-        const basicMajorStudentCount = basicMajor.student_count;
         const remainingMajors = data.filter(
           (item) => item.major_name !== basicMajor.major_name
         );
@@ -138,13 +248,6 @@ const StatisticalReport = () => {
 
         const extendedStudentCount = maxMajor.student_count;
 
-        setTotalStats({
-          totalStudents,
-          totalTeachers,
-          basicMajorStudentCount: basicMajor.student_count,
-        });
-
-        setExtendedStudentCount(extendedStudentCount);
         setMinStudentMajors(minMajor);
         setMaxStudentMajors(maxMajor);
         setStudentTeacherByMajorData({
@@ -174,7 +277,42 @@ const StatisticalReport = () => {
 
     fetchStudentByCourse();
     fetchStudentTeacherByMajor();
-  }, []);
+  }, [selectedYear, selectedTerm]);
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const { data } = await instance.get(
+          "admin/statistics/countStatistics",
+          {
+            params: {
+              year: selectedYear !== "all" ? selectedYear : "",
+            },
+          }
+        );
+
+        const {
+          student_count,
+          teacher_count,
+          course_count,
+          major_count,
+          semester_count,
+        } = data;
+
+        setStatistics({
+          studentCount: student_count,
+          teacherCount: teacher_count,
+          courseCount: course_count,
+          majorCount: major_count,
+          semesterCount: semester_count,
+        });
+      } catch (error) {
+        console.error("Lỗi khi lấy thống kê:", error.message);
+      }
+    };
+
+    fetchStatistics();
+  }, [selectedYear]);
 
   const fetchMajorsByCourse = async (courseId) => {
     try {
@@ -208,77 +346,160 @@ const StatisticalReport = () => {
     ],
   };
 
-  const handleChartClick = async (event, elements) => {
-    if (!elements.length) return;
+  const handleChartClick = async (elements) => {
+    if (!elements.length) {
+      console.error("Không có phần tử nào được chọn.");
+      return;
+    }
+
     const { index } = elements[0];
-    const courseId = studentByCourseData.course_ids[index];
+    const courseIds = studentByCourseData?.datasets[0]?.course_ids;
+
+    if (!courseIds || !courseIds[index]) {
+      console.error("Không tìm thấy course_id tại index:", index);
+      return;
+    }
+
+    const courseId = courseIds[index];
+    console.log("Selected Course ID:", courseId);
+
     setSelectedCourseId(courseId);
-
     await fetchMajorsByCourse(courseId);
-
     setIsModalOpen(true);
   };
 
   return (
     <div className=" mx-auto py-8 px-6 bg-gray-50">
       <div className="grid grid-cols-12 gap-6 mb-10">
-        {/* 4 Ô Thống kê tổng quan */}
-        <div className="col-span-12 grid grid-cols-4 gap-6">
-          {/* Tổng số Sinh Viên */}
+        <div className="col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          {/* 1. Tổng số Sinh viên */}
           <div className="bg-blue-100 shadow-md p-5 rounded-lg flex flex-col items-center">
             <h4 className="text-xl font-bold text-blue-600 mb-2">
-              Tổng số Sinh Viên
+              Tổng số Sinh viên
             </h4>
             <p className="text-3xl font-semibold text-gray-800">
-              <CountUp
-                end={totalStats.basicMajorStudentCount || 0}
-                duration={2}
-                separator=","
-              />
+              {isLoading ? (
+                <span className="animate-pulse text-gray-400">Loading...</span>
+              ) : (
+                <CountUp
+                  end={statistics.studentCount || 0}
+                  duration={2}
+                  separator=","
+                />
+              )}
             </p>
           </div>
 
-          {/* Tổng số Khóa */}
+          {/* 2. Tổng số Giảng viên */}
+          <div className="bg-orange-100 shadow-md p-5 rounded-lg flex flex-col items-center">
+            <h4 className="text-xl font-bold text-orange-600 mb-2">
+              Tổng số Giảng viên
+            </h4>
+            <p className="text-3xl font-semibold text-gray-800">
+              {isLoading ? (
+                <span className="animate-pulse text-gray-400">Loading...</span>
+              ) : (
+                <CountUp
+                  end={statistics.teacherCount || 0}
+                  duration={2}
+                  separator=","
+                />
+              )}
+            </p>
+          </div>
+
+          {/* 3. Tổng số Khóa */}
           <div className="bg-green-100 shadow-md p-5 rounded-lg flex flex-col items-center">
             <h4 className="text-xl font-bold text-green-600 mb-2">
-              Tổng số Khóa
+              Tổng số Khóa sinh viên
             </h4>
             <p className="text-3xl font-semibold text-gray-800">
-              <CountUp
-                end={courseStats.totalCourses || 0}
-                duration={2}
-                separator=","
-              />
+              {isLoading ? (
+                <span className="animate-pulse text-gray-400">Loading...</span>
+              ) : (
+                <CountUp
+                  end={statistics.courseCount || 0}
+                  duration={2}
+                  separator=","
+                />
+              )}
             </p>
           </div>
 
-          {/* Tổng số Ngành */}
+          {/* 4. Tổng số Ngành */}
           <div className="bg-yellow-100 shadow-md p-5 rounded-lg flex flex-col items-center">
             <h4 className="text-xl font-bold text-yellow-600 mb-2">
-              Tổng số Ngành
+              Tổng số Ngành học
             </h4>
             <p className="text-3xl font-semibold text-gray-800">
-              <CountUp
-                end={studentTeacherByMajorData?.labels.length || 0}
-                duration={2}
-                separator=","
-              />
+              {isLoading ? (
+                <span className="animate-pulse text-gray-400">Loading...</span>
+              ) : (
+                <CountUp
+                  end={statistics.majorCount || 0}
+                  duration={2}
+                  separator=","
+                />
+              )}
             </p>
           </div>
 
-          {/* Tổng số lớp */}
+          {/* 5. Tổng số Lớp */}
           <div className="bg-red-100 shadow-md p-5 rounded-lg flex flex-col items-center">
             <h4 className="text-xl font-bold text-red-600 mb-2">
-              Tổng số lớp (Kì {classroomStats.latestSemester})
+              {classroomStats.semester === "Tất cả các kỳ học"
+                ? "Tổng số lớp"
+                : `Tổng số lớp (Kì ${classroomStats.semester})`}
             </h4>
             <p className="text-3xl font-semibold text-gray-800">
-              <CountUp
-                end={classroomStats.totalClassrooms || 0}
-                duration={2}
-                separator=","
-              />
+              {isLoading ? (
+                <span className="animate-pulse text-gray-400">Loading...</span>
+              ) : (
+                <CountUp
+                  end={classroomStats.totalClassrooms || 0}
+                  duration={2}
+                  separator=","
+                />
+              )}
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="col-span-12 flex justify-start items-center space-x-4 mb-4">
+        <div>
+          <label className="font-semibold text-gray-800 mr-2">Chọn Năm:</label>
+          <Select
+            value={selectedYear}
+            onChange={(value) => setSelectedYear(value)} // Lưu lại năm người dùng chọn
+            className="w-48 border-gray-300"
+            placeholder="Chọn năm"
+            allowClear
+          >
+            <Option value="all">Tất cả</Option> {/* Tùy chọn "Tất cả" */}
+            {years.map((year) => (
+              <Option key={year} value={year}>
+                {year}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="font-semibold text-gray-800 mr-2">Chọn Kỳ:</label>
+          <Select
+            value={selectedTerm}
+            onChange={(value) => setSelectedTerm(value)}
+            className="w-48 border-gray-300"
+            placeholder="Chọn kỳ"
+          >
+            <Option value="all">Tất cả</Option>
+            {terms.map((term) => (
+              <Option key={term.id} value={term.id}>
+                {term.name}
+              </Option>
+            ))}
+          </Select>
         </div>
       </div>
 
@@ -292,7 +513,7 @@ const StatisticalReport = () => {
           {studentByCourseData ? (
             <div className="w-full p-2 bg-gray-50 rounded-lg shadow-sm">
               <Bar
-                data={studentByCourseData} // Dữ liệu biểu đồ
+                data={studentByCourseData}
                 options={{
                   responsive: true,
                   plugins: {
@@ -324,7 +545,7 @@ const StatisticalReport = () => {
                       beginAtZero: true,
                     },
                   },
-                  onClick: handleChartClick, // Gọi hàm khi click vào biểu đồ
+                  onClick: handleChartClick,
                 }}
               />
             </div>
@@ -450,7 +671,7 @@ const StatisticalReport = () => {
             </span>
             <p>
               <strong className="text-blue-700">Tổng số Sinh Viên:</strong>{" "}
-              {totalStats.basicMajorStudentCount}
+              {totalStats.totalStudents}
             </p>
           </div>
           <div className="flex items-center space-x-4 mb-3">

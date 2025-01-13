@@ -229,18 +229,9 @@ export default function HeaderClient() {
 
       <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
         <div className="flex items-center w-1/3">
-          <div className="relative w-full">
-            <input
-              type="search"
-              placeholder="Search"
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          </div>
+         
         </div>
-        <div className="flex items-center justify-center w-1/3">
-          <span className="text font-medium">Academic Year: 2024 / 2025</span>
-        </div>
+        
         <div className="flex items-center justify-end w-1/3 space-x-4">
           <button className="p-2 hover:bg-gray-100 rounded-full">
             <img

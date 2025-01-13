@@ -404,6 +404,7 @@ const TeacherManager = () => {
                                 setPanigation((pre) => ({
                                     ...pre,
                                     current_page: 1,
+                                    total: dataSearch?.length || 12
                                 }));
                             }
                         }}

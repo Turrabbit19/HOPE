@@ -7,58 +7,86 @@ use App\Models\Lesson;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 class ApiLessonController extends Controller
 {
     public function index()
     {
         try {
+            $cacheKey = 'lessons_index_' . request('page', 1);
+            $cacheTTL = 3600;
+
+            $cachedData = Redis::get($cacheKey);
+
+            if ($cachedData) {
+                return response()->json(json_decode($cachedData, true), 200);
+            }
+
             $lessons = Lesson::with('subject')->paginate(9);
 
-            $data = collect($lessons->items())->map(function ($lesson){
+            $data = collect($lessons->items())->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'subject_code' => $lesson->subject->code,
                     'subject_name' => $lesson->subject->name,
                     'name' => $lesson->name,
-                    'description' =>$lesson->description,
+                    'description' => $lesson->description,
                 ];
-            }); 
+            });
 
-            return response()->json([
+            $response = [
                 'data' => $data,
                 'pagination' => [
                     'total' => $lessons->total(),
                     'per_page' => $lessons->perPage(),
                     'current_page' => $lessons->currentPage(),
                     'last_page' => $lessons->lastPage(),
-                ]
-            ], 200);
+                ],
+            ];
+
+            Redis::setex($cacheKey, $cacheTTL, json_encode($response));
+
+            return response()->json($response, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
 
+
     public function getAll()
     {
         try {
+            $cacheKey = 'lessons_all';
+            $cacheTTL = 3600;
+
+            $cachedData = Redis::get($cacheKey);
+
+            if ($cachedData) {
+                return response()->json(json_decode($cachedData, true), 200);
+            }
+
             $lessons = Lesson::with('subject')->get();
 
-            $data = $lessons->map(function ($lesson){
+            $data = $lessons->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'subject_code' => $lesson->subject->code,
                     'subject_name' => $lesson->subject->name,
                     'name' => $lesson->name,
-                    'description' =>$lesson->description,
+                    'description' => $lesson->description,
                 ];
             });
 
-            return response()->json(['data' =>$data], 200);
+            $response = ['data' => $data];
+            Redis::setex($cacheKey, $cacheTTL, json_encode($response));
+
+            return response()->json($response, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function store(Request $request)
     {
@@ -69,14 +97,14 @@ class ApiLessonController extends Controller
         ], [
             'subject_id.required' => 'Mã môn học là bắt buộc.',
             'subject_id.exists' => 'Mã môn học không tồn tại.',
-            
+
             'name.required' => 'Tên là bắt buộc.',
             'name.string' => 'Tên phải là chuỗi ký tự.',
             'name.max' => 'Tên không được vượt quá 50 ký tự.',
-            
+
             'description.required' => 'Mô tả là bắt buộc.',
         ]);
-        
+
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -85,7 +113,8 @@ class ApiLessonController extends Controller
         try {
             $data = $validator->validated();
             $lesson = Lesson::create($data);
-            
+            $this->clearLessonsCache();
+
             return response()->json(['data' => $lesson, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
@@ -97,12 +126,12 @@ class ApiLessonController extends Controller
         try {
             $lesson = Lesson::with('subject')->findOrFail($id);
             $data = [
-                    'id' => $lesson->id,
-                    'subject_code' => $lesson->subject->code,
-                    'subject_name' => $lesson->subject->name,
-                    'name' => $lesson->name,
-                    'description' =>$lesson->description,
-                ];
+                'id' => $lesson->id,
+                'subject_code' => $lesson->subject->code,
+                'subject_name' => $lesson->subject->name,
+                'name' => $lesson->name,
+                'description' => $lesson->description,
+            ];
 
             return response()->json(['data' => $data], 200);
         } catch (ModelNotFoundException $e) {
@@ -120,13 +149,13 @@ class ApiLessonController extends Controller
             'description' => 'sometimes',
         ], [
             'subject_id.exists' => 'Mã môn học không tồn tại.',
-            
+
             'name.string' => 'Tên phải là chuỗi ký tự.',
             'name.max' => 'Tên không được vượt quá 50 ký tự.',
-            
+
             'description.sometimes' => 'Mô tả không được để trống nếu có.',
         ]);
-        
+
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -134,10 +163,11 @@ class ApiLessonController extends Controller
 
         try {
             $lesson = Lesson::findOrFail($id);
-            
+
             $data = $validator->validated();
             $lesson->update($data);
-            
+            $this->clearLessonsCache();
+
             return response()->json(['data' => $lesson, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
@@ -151,6 +181,7 @@ class ApiLessonController extends Controller
         try {
             $lesson = Lesson::findOrFail($id);
             $lesson->delete();
+            $this->clearLessonsCache();
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy tiết học với ID: ' . $id], 404);
@@ -158,4 +189,12 @@ class ApiLessonController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    private function clearLessonsCache()
+    {
+        $keys = Redis::keys('lessons_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
+        }
+    }
+
 }

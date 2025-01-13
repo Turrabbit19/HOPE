@@ -25,9 +25,9 @@ export default function HeaderTeacher() {
     (n) => n.status !== "Đã xem"
   ).length;
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  // useEffect(() => {
+  //   fetchNotifications();
+  // }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -58,37 +58,37 @@ export default function HeaderTeacher() {
       document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Không tìm thấy token xác thực");
-      }
+  // const fetchNotifications = async () => {
+  //   setIsLoading(true);
+  //   setError(null);
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       throw new Error("Không tìm thấy token xác thực");
+  //     }
 
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/student/notifications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  //     const response = await fetch(
+  //       "http://127.0.0.1:8000/api/student/notifications",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
 
-      if (!response.ok) {
-        throw new Error("Không thể tải thông báo");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Không thể tải thông báo");
+  //     }
 
-      const data = await response.json();
-      setNotifications(data.data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     const data = await response.json();
+  //     setNotifications(data.data);
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
@@ -163,18 +163,9 @@ export default function HeaderTeacher() {
   return (
     <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
       <div className="flex items-center w-1/3">
-        <div className="relative w-full">
-          <input
-            type="search"
-            placeholder="Search"
-            className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-        </div>
+        
       </div>
-      <div className="flex items-center justify-center w-1/3">
-        <span className="text font-medium">Academic Year: 2024 / 2025</span>
-      </div>
+      
       <div className="flex items-center justify-end w-1/3 space-x-4">
         <button className="p-2 hover:bg-gray-100 rounded-full">
           <img

@@ -78,6 +78,9 @@ import SubMajorsList from "../pages/student/sub-majorRegistration/page";
 import Syllabus from "../pages/student/syllabus/page";
 import StatisticSemester from "../pages/student/statistics-semester/page";
 import TuitionFee from "../pages/admin/tuition-fee/page";
+import Guard from "./guard";
+import TestNew from "../pages/admin/schedule/table/page";
+import EditScheduleComponent from "../pages/teacher/editSchedule/page";
 
 const Router = createBrowserRouter([
   {
@@ -91,10 +94,12 @@ const Router = createBrowserRouter([
   {
     path: "admin",
     element: (
-      <Suspense fallback={<Loading />}>
-        <LayoutAdmin />
-        <ScrollToTopButton />
-      </Suspense>
+      <Guard allowedRoles={["Quản trị viên"]}>
+        <Suspense fallback={<Loading />}>
+          <LayoutAdmin />
+          <ScrollToTopButton />
+        </Suspense>
+      </Guard>
     ),
     children: [
       {
@@ -112,6 +117,10 @@ const Router = createBrowserRouter([
       {
         path: "tuition-fee",
         element: <TuitionFee />,
+      },
+      {
+        path: "list-schedule/table",
+        element: <TestNew />,
       },
       {
         path: "list-syllabus",
@@ -482,7 +491,11 @@ const Router = createBrowserRouter([
   },
   {
     path: "teacher",
-    element: <LayoutTeacher />,
+    element: (
+      <Guard allowedRoles={["Giảng viên"]}>
+        <LayoutTeacher />
+      </Guard>
+    ),
     children: [
       {
         path: "home",
@@ -496,11 +509,19 @@ const Router = createBrowserRouter([
         path: "timetable",
         element: <TeacherTimetable />,
       },
+      {
+        path: "edit-schedule",
+        element: <EditScheduleComponent />,
+      },
     ],
   },
   {
     path: "student",
-    element: <LayoutClient />,
+    element: (
+      <Guard allowedRoles={["Sinh viên"]}>
+        <LayoutClient />
+      </Guard>
+    ),
     children: [
       {
         path: "schedule",

@@ -24,7 +24,7 @@ class Course extends Model
     public function semesters()
     {
         return $this->belongsToMany(Semester::class, 'course_semesters')
-                    ->withPivot('order') 
-                    ->withTimestamps();
+            ->withPivot('order')
+            ->withTimestamps();
     }
 }

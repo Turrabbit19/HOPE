@@ -22,7 +22,7 @@ Route::get('users', function () {
     return view('user');
 });
 
-Route::get('redis-test', function () {
-    $ping = Redis::ping();
-    return response()->json(['ping' => $ping]);
+Route::get('/test-redis', function () {
+    Redis::set('test_key', 'Redis đang hoạt động');
+    return Redis::get('test_key');
 });

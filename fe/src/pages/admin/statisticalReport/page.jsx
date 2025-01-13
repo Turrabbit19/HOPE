@@ -173,37 +173,12 @@ const StatisticalReport = () => {
           }
         );
 
-        // Chuyển đổi dữ liệu nhận được thành danh sách khóa học
         const courses = Object.entries(data).map(([courseId, courseData]) => ({
           course_id: courseId,
           course_name: courseData.course_name,
           student_count: courseData.student_count,
         }));
 
-        // Tổng số khóa học
-        const totalCourses = courses.length;
-
-        // Tìm khóa học có ít và nhiều sinh viên nhất
-        const maxStudentsCourse = courses.reduce(
-          (max, course) =>
-            course.student_count > max.student_count ? course : max,
-          { student_count: 0 }
-        );
-
-        const minStudentsCourse = courses.reduce(
-          (min, course) =>
-            course.student_count < min.student_count ? course : min,
-          { student_count: Infinity }
-        );
-
-        // Cập nhật state cho dữ liệu thống kê khóa học
-        setCourseStats({
-          totalCourses,
-          maxStudentsCourse,
-          minStudentsCourse,
-        });
-
-        // Cập nhật state cho dữ liệu biểu đồ
         setStudentByCourseData({
           labels: courses.map((course) => course.course_name),
           datasets: [
@@ -213,6 +188,17 @@ const StatisticalReport = () => {
               backgroundColor: "rgba(54, 162, 235, 0.6)",
               borderColor: "rgba(54, 162, 235, 1)",
               borderWidth: 1,
+              course_ids: courses.map((course) => course.course_id),
+            },
+          ],
+        });
+
+        console.log("Student By Course Data:", {
+          labels: courses.map((course) => course.course_name),
+          datasets: [
+            {
+              data: courses.map((course) => course.student_count),
+              course_ids: courses.map((course) => course.course_id),
             },
           ],
         });
@@ -360,14 +346,25 @@ const StatisticalReport = () => {
     ],
   };
 
-  const handleChartClick = async (event, elements) => {
-    if (!elements.length) return;
+  const handleChartClick = async (elements) => {
+    if (!elements.length) {
+      console.error("Không có phần tử nào được chọn.");
+      return;
+    }
+
     const { index } = elements[0];
-    const courseId = studentByCourseData.course_ids[index];
+    const courseIds = studentByCourseData?.datasets[0]?.course_ids;
+
+    if (!courseIds || !courseIds[index]) {
+      console.error("Không tìm thấy course_id tại index:", index);
+      return;
+    }
+
+    const courseId = courseIds[index];
+    console.log("Selected Course ID:", courseId);
+
     setSelectedCourseId(courseId);
-
     await fetchMajorsByCourse(courseId);
-
     setIsModalOpen(true);
   };
 
@@ -492,11 +489,11 @@ const StatisticalReport = () => {
           <label className="font-semibold text-gray-800 mr-2">Chọn Kỳ:</label>
           <Select
             value={selectedTerm}
-            onChange={(value) => setSelectedTerm(value)} // Khi người dùng chọn kỳ học
+            onChange={(value) => setSelectedTerm(value)}
             className="w-48 border-gray-300"
             placeholder="Chọn kỳ"
           >
-            <Option value="all">Tất cả</Option> {/* Tùy chọn "Tất cả" */}
+            <Option value="all">Tất cả</Option>
             {terms.map((term) => (
               <Option key={term.id} value={term.id}>
                 {term.name}
@@ -548,7 +545,7 @@ const StatisticalReport = () => {
                       beginAtZero: true,
                     },
                   },
-                  onClick: handleChartClick, // Gọi hàm khi click vào biểu đồ
+                  onClick: handleChartClick,
                 }}
               />
             </div>

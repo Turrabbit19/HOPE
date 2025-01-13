@@ -8,6 +8,7 @@ use App\Models\CourseSemester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiCourseController extends Controller
@@ -15,12 +16,20 @@ class ApiCourseController extends Controller
     public function index()
     {
         try {
+            $cacheTTL = 3600;
+            $cacheKey = 'courses_index';
+
+            $cachedData = Redis::get($cacheKey);
+
+            if ($cachedData) {
+                return response()->json(json_decode($cachedData, true), 200);
+            }
+
             $now = Carbon::now();
-            $courses = Course::all();
+            $courses = Course::with('semesters')->get();
 
             $data = $courses->map(function ($course) use ($now) {
                 $currentSemester = $course->semesters()->orderByDesc('start_date')->first();
-
                 $semesterOrder = $currentSemester ? $currentSemester->pivot->order : null;
 
                 $startDate = Carbon::parse($course->start_date);
@@ -42,11 +51,16 @@ class ApiCourseController extends Controller
                 ];
             });
 
-            return response()->json(['data' => $data], 200);
+            $responseData = ['data' => $data];
+
+            Redis::setex($cacheKey, $cacheTTL, json_encode($responseData));
+
+            return response()->json($responseData, 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses'], 500);
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Courses', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function getSemestersByCourse($courseId)
     {
@@ -101,6 +115,7 @@ class ApiCourseController extends Controller
         try {
             $data = $validator->validated();
             $course = Course::create($data);
+            $this->clearCoursesCache();
 
             return response()->json(['data' => $course, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -164,6 +179,7 @@ class ApiCourseController extends Controller
             $data = $validator->validated();
 
             $course->update($data);
+            $this->clearCoursesCache();
 
             return response()->json(['data' => $course, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -178,6 +194,7 @@ class ApiCourseController extends Controller
         try {
             $course = Course::findOrFail($id);
             $course->delete();
+            $this->clearCoursesCache();
 
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -197,6 +214,7 @@ class ApiCourseController extends Controller
             }
 
             $course->restore();
+            $this->clearCoursesCache();
 
             return response()->json(['data' => $course, 'message' => 'Khôi phục thành công.'], 200);
         } catch (ModelNotFoundException $e) {
@@ -205,4 +223,10 @@ class ApiCourseController extends Controller
             return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    private function clearCoursesCache()
+    {
+        $cacheKey = 'courses_index';
+        Redis::del($cacheKey);
+    }
+
 }

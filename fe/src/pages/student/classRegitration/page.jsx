@@ -1,16 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BookOpen, Users, Clock, AlertCircle, LinkIcon, CheckCircle } from 'lucide-react';
+import {
+  BookOpen,
+  Users,
+  Clock,
+  AlertCircle,
+  LinkIcon,
+  CheckCircle,
+} from "lucide-react";
 function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center h-64">
-      <svg className="animate-spin h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <svg
+        className="animate-spin h-12 w-12 text-indigo-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
       </svg>
     </div>
-  )
+  );
 }
 export default function CourseRegistration() {
   const [subjects, setSubjects] = useState([]);
@@ -245,190 +268,192 @@ export default function CourseRegistration() {
   return (
     <div className="flex flex-col bg-gradient-to-br from-blue-100 to-white min-h-screen w-full">
       <div className="flex flex-col flex-grow py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto">
-          <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
-              Đăng ký lớp học
-            </span>
-          </h1>
-          {message && (
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto mb-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                  <AlertCircle className="w-6 h-6 text-green-500" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Thông báo</h2>
-                <p className="text-gray-600">{message}</p>
+        <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-8">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
+            Đăng ký lớp học
+          </span>
+        </h1>
+        {message && (
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-xl mx-auto mb-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6 text-green-500" />
               </div>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                Thông báo
+              </h2>
+              <p className="text-gray-600">{message}</p>
+            </div>
+          </div>
+        )}
+        {isLoading && <LoadingSpinner />}
+
+        {error && (
+          <div className="flex items-center justify-center  bg-gradient-to-br from-green-100 to-pink-100">
+            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full text-center">
+              <div className="w-16 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <AlertCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4 text-green-600 items-center justify-center">
+                Thông báo
+              </h2>
+              <p className="text-xl mb-6 text-gray-700">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {!isLoading &&
+          !error &&
+          subjects.length === 0 &&
+          shifts.length === 0 &&
+          classrooms.length === 0 && (
+            <div className="flex-grow flex items-center justify-center">
+              <p className="text-xl text-gray-600">
+                Không có dữ liệu để hiển thị.
+              </p>
             </div>
           )}
-          {isLoading && (
-            <LoadingSpinner />
-          )}
 
-          {error && (
-            <div className="flex items-center justify-center  bg-gradient-to-br from-green-100 to-pink-100">
-              <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full text-center">
-                <div className="w-16 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                  <AlertCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                </div>
-                <h2 className="text-3xl font-bold mb-4 text-green-600 items-center justify-center">Thông báo</h2>
-                <p className="text-xl mb-6 text-gray-700">{error}</p>
-              </div>
-            </div>
-
-          )}
-
-          {!isLoading &&
-            !error &&
-            subjects.length === 0 &&
-            shifts.length === 0 &&
-            classrooms.length === 0 && (
-              <div className="flex-grow flex items-center justify-center">
-                <p className="text-xl text-gray-600">
-                  Không có dữ liệu để hiển thị.
-                </p>
-              </div>
-            )}
-
-          {!isLoading &&
-            !error &&
-            (subjects.length > 0 ||
-              shifts.length > 0 ||
-              classrooms.length > 0) && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {subjects.map((subject) => (
-                    <button
-                      key={subject.id}
-                      onClick={() => {
-                        console.log("Setting selected subject:", subject);
-                        setSelectedSubject(subject);
-                        setSelectedShift(null);
-                        setClassrooms([]);
-                      }}
-                      className={`p-4 rounded-lg transition-all duration-200 relative ${selectedSubject?.id === subject.id
-                          ? "bg-blue-500 text-white shadow-lg"
-                          : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                        }`}
-                    >
-                      <h3 className="font-bold text">{subject.name}</h3>
-                      <p
-                        className={`mt-2 ${selectedSubject?.id === subject.id
-                            ? "text-blue-100"
-                            : "text-gray-600"
-                          }`}
-                      >
-                        <span className="inline-flex items-center mr-4">
-                          <BookOpen size={16} className="mr-1" /> Mã môn:{" "}
-                          {subject.code}
-                        </span>
-                      </p>
-                      {selectedSubject?.id === subject.id && (
-                        <div className="absolute top-2 right-2">
-                          <CheckCircle className="w-6 h-6 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                {selectedSubject && (
-                  <div className="mt-8">
-                    <h2 className="text font-bold mb-4">Chọn ca học</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {shifts.map((shift) => (
-                        <button
-                          key={shift.id}
-                          onClick={() => {
-                            console.log("Setting selected shift:", shift);
-                            setSelectedShift(shift);
-                            setClassrooms([]);
-                          }}
-                          className={`p-4 rounded-lg transition-all duration-200 ${selectedShift?.id === shift.id
-                              ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
-                              : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                            }`}
-                        >
-                          <h3 className="font-bold text">{shift.name}</h3>
-                          <p className=" text-gray-600 mt-2">
-                            <Clock size={17} className="inline text-center" />{" "}
-                            {shift.start_time} - {shift.end_time}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {classrooms.length > 0 && (
-                  <div className="mt-8">
-                    <h2 className="text font-bold mb-4">Chọn lớp học</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {classrooms.map((classroom) => (
-                        <button
-                          key={classroom.id}
-                          onClick={() => setSelectedClassroom(classroom)}
-                          className={`p-4 rounded-lg transition-all duration-200 ${selectedClassroom?.id === classroom.id
-                              ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
-                              : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
-                            }`}
-                        >
-                          <h3 className="font-bold text">
-                            {classroom.classroom}
-                          </h3>
-                          <p className="text-gray-600 mt-2">
-                            <Users size={16} className="inline mr-1" /> Sĩ số:{" "}
-                            {classroom.students}/{classroom.max_students}
-                          </p>
-                          <p className="text-red-600 mt-2">
-                            <Users size={16} className="inline mr-1" /> Sĩ số
-                            tối thiểu: {classroom.min_students}
-                          </p>
-                          <p className="text-gray-600 mt-2">
-                            <Clock size={16} className="inline mr-1" /> Bắt đầu:{" "}
-                            {classroom.start_date}
-                          </p>
-                          <p className="text-gray-600 mt-2">
-                            Phòng: {classroom.room}
-                          </p>
-                          {classroom.link !== "NULL" && (
-                            <p className="text-blue-600 mt-2">
-                              <LinkIcon size={16} className="inline mr-1" />
-                              <a
-                                href={classroom.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:underline"
-                              >
-                                Link lớp học
-                              </a>
-                            </p>
-                          )}
-                          <p className="text-gray-600 mt-2">
-                            Ngày học:{" "}
-                            {classroom.days_of_week
-                              .map((day) => `Thứ ${Object.values(day)[0]}`)
-                              .join(", ")}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-10 text-center">
+        {!isLoading &&
+          !error &&
+          (subjects.length > 0 ||
+            shifts.length > 0 ||
+            classrooms.length > 0) && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {subjects.map((subject) => (
                   <button
-                    onClick={handleRegister}
-                    className="bg-blue-500 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!selectedClassroom}
+                    key={subject.id}
+                    onClick={() => {
+                      setSelectedSubject(subject);
+                      setSelectedShift(null);
+                      setClassrooms([]);
+                    }}
+                    className={`p-4 rounded-lg transition-all duration-200 relative ${
+                      selectedSubject?.id === subject.id
+                        ? "bg-blue-500 text-white shadow-lg"
+                        : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
+                    }`}
                   >
-                    Đăng ký
+                    <h3 className="font-bold text">{subject.name}</h3>
+                    <p
+                      className={`mt-2 ${
+                        selectedSubject?.id === subject.id
+                          ? "text-blue-100"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      <span className="inline-flex items-center mr-4">
+                        <BookOpen size={16} className="mr-3" /> Mã môn:{" "}
+                        {subject.code}
+                      </span>
+                    </p>
+                    {selectedSubject?.id === subject.id && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle className="w-6 h-6 text-white" />
+                      </div>
+                    )}
                   </button>
+                ))}
+              </div>
+
+              {selectedSubject && (
+                <div className="mt-8">
+                  <h2 className="text-center font-bold mb-4">Chọn ca học</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {shifts.map((shift) => (
+                      <button
+                        key={shift.id}
+                        onClick={() => {
+                          console.log("Setting selected shift:", shift);
+                          setSelectedShift(shift);
+                          setClassrooms([]);
+                        }}
+                        className={`p-4 rounded-lg transition-all duration-200 ${
+                          selectedShift?.id === shift.id
+                            ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
+                            : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
+                        }`}
+                      >
+                        <h3 className="font-bold text">{shift.name}</h3>
+                        <p className=" text-gray-600 mt-2">
+                          <Clock size={17} className="inline text-center" />{" "}
+                          {shift.start_time} - {shift.end_time}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </>
-            )}
-        </div>
+              )}
+
+              {classrooms.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text font-bold mb-4">Chọn lớp học</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {classrooms.map((classroom) => (
+                      <button
+                        key={classroom.id}
+                        onClick={() => setSelectedClassroom(classroom)}
+                        className={`p-4 rounded-lg transition-all duration-200 ${
+                          selectedClassroom?.id === classroom.id
+                            ? "bg-blue-100 text-blue-800 ring-2 ring-blue-500"
+                            : "bg-white text-gray-800 hover:bg-gray-100 hover:shadow"
+                        }`}
+                      >
+                        <h3 className="font-bold text">
+                          {classroom.classroom}
+                        </h3>
+                        <p className="text-gray-600 mt-2">
+                          <Users size={16} className="inline mr-1" /> Sĩ số:{" "}
+                          {classroom.students}/{classroom.max_students}
+                        </p>
+                        <p className="text-red-600 mt-2">
+                          <Users size={16} className="inline mr-1" /> Sĩ số tối
+                          thiểu: {classroom.min_students}
+                        </p>
+                        <p className="text-gray-600 mt-2">
+                          <Clock size={16} className="inline mr-1" /> Bắt đầu:{" "}
+                          {classroom.start_date}
+                        </p>
+                        <p className="text-gray-600 mt-2">
+                          Phòng: {classroom.room}
+                        </p>
+                        {classroom.link !== "NULL" && (
+                          <p className="text-blue-600 mt-2">
+                            <LinkIcon size={16} className="inline mr-1" />
+                            <a
+                              href={classroom.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              Link lớp học
+                            </a>
+                          </p>
+                        )}
+                        <p className="text-gray-600 mt-2">
+                          Ngày học:{" "}
+                          {classroom.days_of_week
+                            .map((day) => `Thứ ${Object.values(day)[0]}`)
+                            .join(", ")}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-10 text-center">
+                <button
+                  onClick={handleRegister}
+                  className="bg-blue-500 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!selectedClassroom}
+                >
+                  Đăng ký
+                </button>
+              </div>
+            </>
+          )}
       </div>
 
       {/* Debug Information */}
@@ -467,4 +492,3 @@ export default function CourseRegistration() {
     </div>
   );
 }
-

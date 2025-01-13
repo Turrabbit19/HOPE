@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Spin, notification } from "antd";
+import { Button, Spin, notification, Select } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../../../../config/axios";
 import moment from "moment";
@@ -17,41 +17,107 @@ const ScheduleList = () => {
   const [classroomsBySubject, setClassroomsBySubject] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [classroomsCache, setClassroomsCache] = useState([]);
+  const [classroomsData, setClassroomsData] = useState([]);
   const navigate = useNavigate();
 
   const now = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
-  useEffect(() => {
-    const fetchSemesters = async () => {
-      setError(null);
-      try {
-        const response = await instance.get("admin/all/semesters");
-        setSemesters(response.data.data);
-        console.log("Semesters data:", response.data.data);
-      } catch (err) {
-        setError("Không thể lấy dữ liệu kỳ học.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSemesters();
-  }, []);
+
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [years, setYears] = useState([]);
+
+  const fetchYears = async () => {
+    setError(null);
+    try {
+      const response = await instance.get("admin/courses");
+      const courses = response.data.data;
+
+      const currentDate = new Date();
+      const uniqueYears = [
+        ...new Set(
+          courses
+            .filter((course) => new Date(course.end_date) > currentDate)
+            .map((course) => new Date(course.start_date).getFullYear())
+        ),
+      ];
+
+      setYears(uniqueYears);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu khóa học:", error.message);
+      setError("Không thể tải dữ liệu năm học.");
+    }
+  };
+
+  const fetchSemesters = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const params = selectedYear !== "all" ? { year: selectedYear } : {};
+      const response = await instance.get("admin/all/semesters", { params });
+
+      setSemesters(response.data.data);
+      console.log("Semesters data:", response.data.data);
+    } catch (err) {
+      console.error("Lỗi khi lấy dữ liệu kỳ học:", err.message);
+      setError("Không thể lấy dữ liệu kỳ học.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchCoursesForSemester = async (semesterId) => {
+    if (coursesBySemester[semesterId]) return; // Không gọi lại nếu đã có dữ liệu
+
     setError(null);
+    setLoading(true);
     try {
       const response = await instance.get(
         `admin/semester/${semesterId}/courses`
       );
       console.log(`Courses for semester ${semesterId}:`, response.data.courses);
+
       setCoursesBySemester((prev) => ({
         ...prev,
         [semesterId]: response.data.courses || [],
       }));
     } catch (err) {
+      console.error(
+        `Lỗi khi lấy dữ liệu khóa học cho kỳ học ${semesterId}:`,
+        err.message
+      );
       setError("Không thể lấy dữ liệu khóa học cho kỳ học này.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchYears();
+  }, []);
+
+  useEffect(() => {
+    if (selectedYear !== null) {
+      fetchSemesters();
+    }
+  }, [selectedYear]);
+
+  const fetchClassroomsBySubject = async (subjectId) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await instance.get(
+        `admin/${subjectId}/classrooms/without-schedule`
+      );
+
+      const classrooms = response.data.classrooms || [];
+
+      setClassroomsData((prev) => ({
+        ...prev,
+        [`${subjectId}`]: classrooms,
+      }));
+    } catch (err) {
+      setError("Đã xảy ra lỗi khi tải dữ liệu lớp học.");
     } finally {
       setLoading(false);
     }
@@ -168,6 +234,7 @@ const ScheduleList = () => {
       const newSubject = prev === subjectId ? null : subjectId;
 
       if (newSubject && !classroomsBySubject[`${courseId}_${subjectId}`]) {
+        fetchClassroomsBySubject(subjectId);
         fetchClassroomsForSubject(courseId, newSubject);
       }
 
@@ -316,6 +383,26 @@ const ScheduleList = () => {
         Quản lý lịch học
       </h2>
 
+      <div className="col-span-12 flex justify-start items-center space-x-4 mb-4">
+        <div>
+          <label className="font-semibold text-gray-800 mr-2">Chọn Năm:</label>
+          <Select
+            value={selectedYear}
+            onChange={(value) => setSelectedYear(value)} // Lưu lại năm người dùng chọn
+            className="w-48 border-gray-300"
+            placeholder="Chọn năm"
+            allowClear
+          >
+            <Option value="all">Tất cả</Option> {/* Tùy chọn "Tất cả" */}
+            {years.map((year) => (
+              <Option key={year} value={year}>
+                {year}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
       {loading && <p>Đang tải dữ liệu...</p>}
       {/* Hiển thị thông báo lỗi nếu có */}
       {error && <p className="text-red-600">{error}</p>}
@@ -343,15 +430,15 @@ const ScheduleList = () => {
             return (
               <div
                 key={semester.id}
-                className="p-8 bg-white rounded-lg shadow-lg space-y-6"
+                className="p-8 bg-white rounded-lg shadow-lg space-y-6 hover:shadow-xl transition-shadow duration-300"
               >
                 {/* Tiêu đề khóa học với khả năng mở rộng */}
                 <div
                   onClick={() => toggleSemester(semester.id)}
-                  className="cursor-pointer space-y-2"
+                  className="cursor-pointer space-y-4"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-4xl font-bold text-blue-600 flex items-center">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-4xl font-bold text-blue-700 group-hover:text-blue-500 transition-colors duration-300">
                       {semester.name}
                     </h3>
 
@@ -359,25 +446,41 @@ const ScheduleList = () => {
                       <Link
                         to="table"
                         onClick={(e) => e.stopPropagation()}
-                        className="font-semibold flex items-center gap-2 justify-center px-5 py-3 border-2 rounded-full text-white border-blue-500 bg-blue-500 transition-all hover:text-green-100 duration-300 ease-in-out"
+                        className="font-semibold flex items-center gap-2 justify-center px-5 py-3 border-2 rounded-full text-white bg-blue-500 hover:bg-blue-600 transition-colors duration-300"
                       >
                         Kiểm tra lịch học
                       </Link>
                     )}
                   </div>
 
-                  <div className="text-xl text-gray-700">
-                    <p className="mb-2">
-                      <span className="font-semibold">Ngày bắt đầu:</span>{" "}
-                      {moment(semester.start_date).format("DD/MM/YYYY")}
+                  <div className="text-gray-600 space-y-2">
+                    <p className="flex items-center text-xl">
+                      <span className="font-semibold w-36 inline-block">
+                        Ngày bắt đầu:
+                      </span>
+                      <span>
+                        {moment(semester.start_date).format("DD/MM/YYYY")}
+                      </span>
                     </p>
-                    <p className="mb-2">
-                      <span className="font-semibold">Ngày kết thúc:</span>{" "}
-                      {moment(semester.end_date).format("DD/MM/YYYY")}
+                    <p className="flex items-center text-xl">
+                      <span className="font-semibold w-36 inline-block">
+                        Ngày kết thúc:
+                      </span>
+                      <span>
+                        {moment(semester.end_date).format("DD/MM/YYYY")}
+                      </span>
                     </p>
-                    <p className={`text-xl text-gray-700`}>
+                    <p className={`text-3xl font-bold`}>
                       Trạng thái:{" "}
-                      <span className={`text-xl ${statusColor}`}>
+                      <span
+                        className={`${
+                          semester.status === "Đang diễn ra"
+                            ? "text-green-600"
+                            : semester.status === "Chờ diễn ra"
+                            ? "text-blue-600"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {semester.status}
                       </span>
                     </p>
@@ -685,32 +788,40 @@ const ScheduleList = () => {
                                                             gap: "10px",
                                                           }}
                                                         >
-                                                          {/* Button Tạo lịch học mới (màu xanh dương) */}
-                                                          <Button
-                                                            className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
-                                                            onClick={() => {
-                                                              console.log(
-                                                                "Passing majorId::",
-                                                                major.id
-                                                              );
-                                                            }}
-                                                          >
-                                                            <Link
-                                                              to={`add`}
-                                                              state={{
-                                                                courseId:
-                                                                  course.id,
-                                                                semesterId:
-                                                                  semester.id,
-                                                                majorId:
-                                                                  major.id,
-                                                                subjectId:
-                                                                  subject.id,
+                                                          {classroomsData[
+                                                            `${subject.id}`
+                                                          ] &&
+                                                          classroomsData[
+                                                            `${subject.id}`
+                                                          ].length > 0 ? (
+                                                            <Button
+                                                              className="font-bold flex items-center gap-2 justify-center px-4 py-2 border rounded-md text-[#1167B4] border-[#1167B4] hover:bg-[#1167B4] hover:text-white transition duration-300"
+                                                              onClick={() => {
+                                                                console.log(
+                                                                  "Passing majorId::",
+                                                                  major.id
+                                                                );
                                                               }}
                                                             >
-                                                              Tạo lịch học mới
-                                                            </Link>
-                                                          </Button>
+                                                              <Link
+                                                                to={`add`}
+                                                                state={{
+                                                                  courseId:
+                                                                    course.id,
+                                                                  semesterId:
+                                                                    semester.id,
+                                                                  majorId:
+                                                                    major.id,
+                                                                  subjectId:
+                                                                    subject.id,
+                                                                }}
+                                                              >
+                                                                Tạo lịch học mới
+                                                              </Link>
+                                                            </Button>
+                                                          ) : (
+                                                            ""
+                                                          )}
 
                                                           {/* Button Phân bổ sinh viên tự động (màu xanh lá) */}
                                                           <Button

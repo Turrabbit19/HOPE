@@ -11,6 +11,7 @@ use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ApiMajorController extends Controller
@@ -18,29 +19,47 @@ class ApiMajorController extends Controller
     public function index()
     {
         try {
-            $majors = Major::get();
+            $cacheKey = 'majors_all';
+            $majorsData = Redis::get($cacheKey);
 
-            $data = $majors->map(function ($major) {
-                return [
-                    'id' => $major->id,
-                    'code' => $major->code,
-                    'name' => $major->name,
-                    'description' => $major->description,
-                    'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
+            if (!$majorsData) {
+                $majors = Major::get();
+
+                $data = $majors->map(function ($major) {
+                    return [
+                        'id' => $major->id,
+                        'code' => $major->code,
+                        'name' => $major->name,
+                        'description' => $major->description,
+                        'status' => $major->status ? "Đang hoạt động" : "Tạm dừng",
+                    ];
+                });
+
+                Redis::setex($cacheKey, 3600, json_encode($data));
+
+                return response()->json(['data' => $data], 200);
+            }
+
+            $data = json_decode($majorsData, true);
 
             return response()->json(['data' => $data], 200);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
         }
     }
 
+
     public function getMainMajors()
     {
         try {
-            $mainMajors = Major::where('main', 1)->get();
+            $cacheKey = 'majors_main_majors';
+            $mainMajorsData = Redis::get($cacheKey);
 
+            if ($mainMajorsData) {
+                return response()->json(['data' => json_decode($mainMajorsData, true)], 200);
+            }
+            $mainMajors = Major::where('main', 1)->get();
             $currentDate = Carbon::now();
 
             $data = $mainMajors->map(function ($mm) use ($currentDate) {
@@ -69,53 +88,81 @@ class ApiMajorController extends Controller
                 ];
             });
 
+            Redis::setex($cacheKey, 3600, json_encode($data));
+
             return response()->json(['data' => $data], 200);
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Majors hoặc Courses', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function getAllSubMajors()
-    {
-        try {
-            $mainMajors = Major::whereNotNull('major_id')->orWhere('id', 1)->get();
 
-            $data = $mainMajors->map(function ($mm) {
-                return [
-                    'id' => $mm->id,
-                    'code' => $mm->code,
-                    'name' => $mm->name,
-                    'description' => $mm->description,
-                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
-            return response()->json(['data' => $data], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+    public function getAllSubMajors()
+{
+    try {
+        $cacheKey = "majors_all_sub_majors";
+        $allSubMajorsData = Redis::get($cacheKey);
+
+        if ($allSubMajorsData) {
+            return response()->json(['data' => json_decode($allSubMajorsData, true)], 200);
         }
+
+        $mainMajors = Major::whereNotNull('major_id')->orWhere('id', 1)->get();
+
+        $data = $mainMajors->map(function ($mm) {
+            return [
+                'id' => $mm->id,
+                'code' => $mm->code,
+                'name' => $mm->name,
+                'description' => $mm->description,
+                'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+            ];
+        });
+
+        Redis::setex($cacheKey, 3600, json_encode($data));
+
+        return response()->json(['data' => $data], 200);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
     }
+}
+
 
     public function getSubMajors(string $majorId)
-    {
-        try {
-            $mainMajors = Major::where('major_id', $majorId)->get();
+{
+    try {
+        $cacheKey = "majors_sub_majors_{$majorId}";
+        $subMajorsData = Redis::get($cacheKey);
 
-            $data = $mainMajors->map(function ($mm) {
-                return [
-                    'id' => $mm->id,
-                    'code' => $mm->code,
-                    'name' => $mm->name,
-                    'description' => $mm->description,
-                    'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
-                ];
-            });
-            return response()->json(['data' => $data], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
+        if ($subMajorsData) {
+            return response()->json(['data' => json_decode($subMajorsData, true)], 200);
         }
+
+        $mainMajors = Major::where('major_id', $majorId)->get();
+
+        $data = $mainMajors->map(function ($mm) {
+            return [
+                'id' => $mm->id,
+                'code' => $mm->code,
+                'name' => $mm->name,
+                'description' => $mm->description,
+                'status' => $mm->status ? "Đang hoạt động" : "Tạm dừng",
+            ];
+        });
+
+        Redis::setex($cacheKey, 3600, json_encode($data));
+
+        return response()->json(['data' => $data], 200);
+
+    } catch (ModelNotFoundException $e) {
+        return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $majorId], 404);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Không thể truy vấn tới bảng Majors', 'message' => $e->getMessage()], 500);
     }
+}
+
 
     public function store(Request $request)
     {
@@ -156,6 +203,7 @@ class ApiMajorController extends Controller
         try {
             $data = $validator->validated();
             $major = Major::create($data);
+            $this->clearMajorsCache();
 
             return response()->json(['data' => $major, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -214,6 +262,7 @@ class ApiMajorController extends Controller
 
             $data = $validator->validated();
             $major->update($data);
+            $this->clearMajorsCache();
 
             return response()->json(['data' => $major, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -228,6 +277,8 @@ class ApiMajorController extends Controller
         try {
             $major = Major::findOrFail($id);
             $major->delete();
+            $this->clearMajorsCache();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
@@ -246,7 +297,7 @@ class ApiMajorController extends Controller
             }
 
             $major->restore();
-
+            $this->clearMajorsCache();
             return response()->json(['data' => $major, 'message' => 'Khôi phục thành công.'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy ngành học với ID: ' . $id], 404);
@@ -266,7 +317,8 @@ class ApiMajorController extends Controller
                     'name' => $major->subject->name,
                     'description' => $major->subject->description,
                     'credit' => $major->subject->credit,
-                    'order' => $major->subject->order,
+                    'code' => $major->subject->code,
+                    'status' => $major->subject->status ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
             return response()->json(['data' => $subjectsByMajor], 200);
@@ -280,39 +332,42 @@ class ApiMajorController extends Controller
     public function getTeachersByMajor(string $majorId, Request $request)
     {
         try {
-            $now = Carbon::now();
-
             $semesterId = $request->input('semesterId');
             $days = $request->input('days', []);
             $shiftId = $request->input('shiftId');
-
-            if (empty($semesterId)) {
-                return response()->json(['error' => 'Vui lòng cung cấp thông tin kỳ học.'], 400);
-            }
+            $startDate = $request->input('startDate') ? Carbon::parse($request->input('startDate'))->startOfDay() : null;
+            $endDate = $request->input('endDate') ? Carbon::parse($request->input('endDate'))->endOfDay() : null;
 
             $teachers = Teacher::where('major_id', $majorId)
                 ->where('status', 1)
-                ->whereDoesntHave('schedules', function ($query) use ($semesterId, $days, $shiftId) {
+                ->whereDoesntHave('schedules', function ($query) use ($semesterId, $days, $shiftId, $startDate, $endDate) {
                     $query->where('semester_id', $semesterId);
+
+                    // if ($startDate && $endDate) {
+                    //     $query->where(function ($dateQuery) use ($startDate, $endDate) {
+                    //         $dateQuery->whereBetween('start_date', [$startDate, $endDate])
+                    //             ->orWhereBetween('end_date', [$startDate, $endDate])
+                    //             ->orWhere(function ($nestedQuery) use ($startDate, $endDate) {
+                    //                 $nestedQuery->where('start_date', '<=', $startDate)
+                    //                     ->where('end_date', '>=', $endDate);
+                    //             });
+                    //     });
+                    // }
 
                     if (!empty($shiftId)) {
                         $query->where('shift_id', $shiftId);
                     }
 
                     if (!empty($days)) {
-                        $query->whereHas('days', function ($dayQuery) use ($days) {
-                            $dayQuery->whereIn('days.id', $days);
-                        });
+                        $query->whereHas('days', fn($dayQuery) => $dayQuery->whereIn('day_id', $days));
                     }
                 })
                 ->get();
 
-            $data = $teachers->map(function ($teacher) {
-                return [
-                    'id' => $teacher->id,
-                    'name' => $teacher->user->name,
-                ];
-            });
+            $data = $teachers->map(fn($teacher) => [
+                'id' => $teacher->id,
+                'name' => $teacher->user->name,
+            ]);
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
@@ -320,6 +375,13 @@ class ApiMajorController extends Controller
                 'error' => 'Không thể truy vấn dữ liệu giáo viên.',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+    private function clearMajorsCache()
+    {
+        $keys = Redis::keys('majors_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
         }
     }
 }

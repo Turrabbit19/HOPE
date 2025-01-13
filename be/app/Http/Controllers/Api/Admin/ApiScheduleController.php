@@ -4,12 +4,10 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
-use App\Models\Course;
 use App\Models\CourseSemester;
 use App\Models\Major;
 use App\Models\MajorSubject;
 use App\Models\Schedule;
-use App\Models\Semester;
 use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentSchedule;
@@ -18,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
@@ -209,9 +208,15 @@ class ApiScheduleController extends Controller
         $teacherCode = $request->input('teacher_code');
 
         try {
-            $schedules = Schedule::with(['lessons' => function ($query) use ($date) {
-                $query->wherePivot('study_date', $date);
-            }, 'shift', 'teacher', 'classroom', 'subject']);
+            $schedules = Schedule::with([
+                'lessons' => function ($query) use ($date) {
+                    $query->wherePivot('study_date', $date);
+                },
+                'shift',
+                'teacher',
+                'classroom',
+                'subject'
+            ]);
 
             if ($teacherCode) {
                 $schedules->whereHas('teacher', function ($query) use ($teacherCode) {
@@ -544,11 +549,12 @@ class ApiScheduleController extends Controller
         $newScheduleDays = $newSchedule->days->pluck('id')->toArray();
         $newScheduleShift = $newSchedule->shift_id;
 
-        $now = Carbon::now();
+        $startDate = $newSchedule->start_date;
+        $endDate = $newSchedule->end_date;
 
         $teacherSchedules = Schedule::where('teacher_id', $teacherId)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
+            ->where('start_date', [$startDate, $endDate])
+            ->where('end_date', [$startDate, $endDate])
             ->get();
 
         foreach ($teacherSchedules as $existingSchedule) {
@@ -610,6 +616,13 @@ class ApiScheduleController extends Controller
                 $schedule = Schedule::findOrFail($scheduleId);
                 $schedule->teacher_id = $teacherId;
                 $schedule->save();
+
+                $lessons = $schedule->lessons;
+                foreach ($lessons as $lesson) {
+                    $schedule->lessons()->updateExistingPivot($lesson->id, [
+                        'teacher_id' => $teacherId,
+                    ]);
+                }
 
                 $assignedSchedules[] = [
                     'teacher_id' => $teacherId,
@@ -773,99 +786,145 @@ class ApiScheduleController extends Controller
             $conflictedStudents = [];
             $remainingStudents = $unregisteredStudents->count();
 
-            foreach ($schedules as $schedule) {
-                $maxCapacity = $schedule->classroom->max_students;
-                $minCapacity = ceil($maxCapacity * 0.7);
-                $currentCapacity = $schedule->students->count();
+            $subject = Subject::find($subjectId);
+            $maxStudentsPerClass = $subject->max_students;
+            $minCapacity = ceil($maxStudentsPerClass * 0.7);
 
-                if ($currentCapacity >= $minCapacity) {
-                    continue;
+            if ($remainingStudents % $maxStudentsPerClass === 0) {
+                // Trường hợp chia hết: Phân bổ đủ số lượng tối đa
+                foreach ($schedules as $schedule) {
+                    $currentCapacity = $schedule->students->count();
+                    $studentsToAssign = min($maxStudentsPerClass - $currentCapacity, $remainingStudents);
+
+                    for ($i = 0; $i < $studentsToAssign; $i++) {
+                        if ($unregisteredStudents->isEmpty()) {
+                            break;
+                        }
+
+                        $student = $unregisteredStudents->pop();
+
+                        $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                            return $existingSchedule->shift_id === $schedule->shift_id &&
+                                $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                        });
+
+                        if ($hasConflict) {
+                            $conflictedStudents[] = $student->id;
+                            continue;
+                        }
+
+                        DB::transaction(function () use ($student, $schedule) {
+                            StudentSchedule::create([
+                                'student_id' => $student->id,
+                                'schedule_id' => $schedule->id,
+                            ]);
+
+                            StudentClassroom::create([
+                                'student_id' => $student->id,
+                                'classroom_id' => $schedule->classroom_id,
+                                'study_start' => $schedule->start_date,
+                                'study_end' => $schedule->end_date,
+                            ]);
+                        });
+
+                        $schedule->students->push($student);
+                        $assignedStudents[] = $student->id;
+                    }
+
+                    $remainingStudents -= $studentsToAssign;
+
+                    if ($remainingStudents <= 0) {
+                        break;
+                    }
+                }
+            } else {
+                // Trường hợp không chia hết: Phân bổ trước theo min_capacity
+                foreach ($schedules as $schedule) {
+                    $currentCapacity = $schedule->students->count();
+                    $studentsToAssign = min($minCapacity - $currentCapacity, $remainingStudents);
+
+                    for ($i = 0; $i < $studentsToAssign; $i++) {
+                        if ($unregisteredStudents->isEmpty()) {
+                            break;
+                        }
+
+                        $student = $unregisteredStudents->pop();
+
+                        $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                            return $existingSchedule->shift_id === $schedule->shift_id &&
+                                $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                        });
+
+                        if ($hasConflict) {
+                            $conflictedStudents[] = $student->id;
+                            continue;
+                        }
+
+                        DB::transaction(function () use ($student, $schedule) {
+                            StudentSchedule::create([
+                                'student_id' => $student->id,
+                                'schedule_id' => $schedule->id,
+                            ]);
+
+                            StudentClassroom::create([
+                                'student_id' => $student->id,
+                                'classroom_id' => $schedule->classroom_id,
+                                'study_start' => $schedule->start_date,
+                                'study_end' => $schedule->end_date,
+                            ]);
+                        });
+
+                        $schedule->students->push($student);
+                        $assignedStudents[] = $student->id;
+                    }
+
+                    $remainingStudents -= $studentsToAssign;
+
+                    if ($remainingStudents <= 0) {
+                        break;
+                    }
                 }
 
-                $studentsToAssign = min($minCapacity - $currentCapacity, $remainingStudents, $maxCapacity - $currentCapacity);
-
-                for ($i = 0; $i < $studentsToAssign; $i++) {
-                    if ($unregisteredStudents->isEmpty()) {
+                // Phân bổ số còn lại đủ max_students mỗi lớp
+                foreach ($schedules as $schedule) {
+                    if ($remainingStudents <= 0) {
                         break;
                     }
 
-                    $student = $unregisteredStudents->pop();
+                    $currentCapacity = $schedule->students->count();
+                    while ($remainingStudents > 0 && $currentCapacity < $maxStudentsPerClass) {
+                        $student = $unregisteredStudents->pop();
 
-                    $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
-                        return $existingSchedule->shift_id === $schedule->shift_id &&
-                            $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
-                    });
+                        $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
+                            return $existingSchedule->shift_id === $schedule->shift_id &&
+                                $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
+                        });
 
-                    if ($hasConflict) {
-                        $conflictedStudents[] = $student->id;
-                        continue;
+                        if ($hasConflict) {
+                            $conflictedStudents[] = $student->id;
+                            continue;
+                        }
+
+                        DB::transaction(function () use ($student, $schedule) {
+                            StudentSchedule::create([
+                                'student_id' => $student->id,
+                                'schedule_id' => $schedule->id,
+                            ]);
+
+                            StudentClassroom::create([
+                                'student_id' => $student->id,
+                                'classroom_id' => $schedule->classroom_id,
+                                'study_start' => $schedule->start_date,
+                                'study_end' => $schedule->end_date,
+                            ]);
+                        });
+
+                        $schedule->students->push($student);
+                        $assignedStudents[] = $student->id;
+
+                        $currentCapacity++;
+                        $remainingStudents--;
                     }
-
-                    DB::transaction(function () use ($student, $schedule) {
-                        StudentSchedule::create([
-                            'student_id' => $student->id,
-                            'schedule_id' => $schedule->id,
-                        ]);
-
-                        StudentClassroom::create([
-                            'student_id' => $student->id,
-                            'classroom_id' => $schedule->classroom_id,
-                            'study_start' => $schedule->start_date,
-                            'study_end' => $schedule->end_date,
-                        ]);
-                    });
-
-                    $schedule->students->push($student);
-                    $assignedStudents[] = $student->id;
-                }
-
-                $remainingStudents -= $studentsToAssign;
-
-                if ($remainingStudents <= 0) {
-                    break;
-                }
-            }
-
-            foreach ($schedules as $schedule) {
-                $maxCapacity = $schedule->classroom->max_students;
-                $currentCapacity = $schedule->students->count();
-
-                while ($remainingStudents > 0 && $currentCapacity < $maxCapacity) {
-                    $student = $unregisteredStudents->pop();
-
-                    $hasConflict = $student->schedules->contains(function ($existingSchedule) use ($schedule) {
-                        return $existingSchedule->shift_id === $schedule->shift_id &&
-                            $existingSchedule->days->pluck('id')->intersect($schedule->days->pluck('id'))->isNotEmpty();
-                    });
-
-                    if ($hasConflict) {
-                        $conflictedStudents[] = $student->id;
-                        continue;
-                    }
-
-                    DB::transaction(function () use ($student, $schedule) {
-                        StudentSchedule::create([
-                            'student_id' => $student->id,
-                            'schedule_id' => $schedule->id,
-                        ]);
-
-                        StudentClassroom::create([
-                            'student_id' => $student->id,
-                            'classroom_id' => $schedule->classroom_id,
-                            'study_start' => $schedule->start_date,
-                            'study_end' => $schedule->end_date,
-                        ]);
-                    });
-
-                    $schedule->students->push($student);
-                    $assignedStudents[] = $student->id;
-
-                    $currentCapacity++;
-                    $remainingStudents--;
-                }
-
-                if ($remainingStudents <= 0) {
-                    break;
                 }
             }
 
@@ -944,6 +1003,101 @@ class ApiScheduleController extends Controller
                 'error' => 'Không thể xử lý yêu cầu',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+    public function getChangeScheduleTeacher()
+    {
+        try {
+            $redisAdminChangeSchedule = "schedule_manage_change";
+            $length = Redis::llen($redisAdminChangeSchedule);
+            if ($length != 0) {
+                $list = Redis::lrange($redisAdminChangeSchedule, 0, -1);
+                $decodedList = array_map(function ($item) {
+                    return json_decode($item, true);
+                }, $list);
+
+                return response()->json([
+                    'length' => $length,
+                    'list' => $decodedList,
+                ], 200);
+            }
+            return response()->json([
+                'length' => 0,
+                'message' => 'Danh sách rỗng'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+    public function acceptHandleChangeSchedule(Request $request)
+    {
+        try {
+            $redisAdminChangeSchedule = "schedule_manage_change";
+
+            $index = $request->input('index');
+
+            if ($index === null) {
+                return response()->json(['message' => 'Index is required'], 400);
+            }
+
+            $item = Redis::lindex($redisAdminChangeSchedule, $index);
+
+            if (!$item) {
+                return response()->json(['message' => 'Item not found'], 404);
+            }
+
+            $decodedItem = json_decode($item, true);
+            if ($decodedItem['old_date'] !== null) {
+                $scheduleId = $decodedItem['schedule_id'] ?? null;
+                $old_date = $decodedItem['old_date'] ?? null;
+                $newDate = $decodedItem['new_date'] ?? null;
+                $newDateFormatted = Carbon::createFromFormat('d/m/Y', $newDate)->format('Y/m/d');
+                $oldDateFormatted = Carbon::createFromFormat('d/m/Y', $old_date)->format('Y/m/d');
+                DB::table('schedule_lessons')
+                    ->where('schedule_id', $scheduleId)
+                    ->where('study_date', $oldDateFormatted)
+                    ->update([
+                        'study_date' => $newDateFormatted,
+                        'updated_at' => now(),
+                    ]);
+                Redis::lrem($redisAdminChangeSchedule, 1, $item);
+                return $this->getChangeScheduleTeacher();
+            } else {
+                $scheduleId = $decodedItem['schedule_id'] ?? null;
+                $newTeacherId = $decodedItem['new_teacher_id'] ?? null;
+                $date = $decodedItem['date'] ?? null;
+                DB::table('schedule_lessons')
+                    ->where('schedule_id', $scheduleId)
+                    ->where('study_date', $date)
+                    ->update([
+                        'teacher_id' => $newTeacherId,
+                        'updated_at' => now(),
+                    ]);
+                Redis::lrem($redisAdminChangeSchedule, 1, $item);
+                return $this->getChangeScheduleTeacher();
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+    public function refuseHandleChangeSchedule(Request $request)
+    {
+        try {
+            $redisAdminChangeSchedule = "schedule_manage_change";
+
+            $index = $request->input('index');
+
+            if ($index === null) {
+                return response()->json(['message' => 'Index is required'], 400);
+            }
+
+            $item = Redis::lindex($redisAdminChangeSchedule, $index);
+
+            Redis::lrem($redisAdminChangeSchedule, 1, $item);
+
+            return $this->getChangeScheduleTeacher();
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }

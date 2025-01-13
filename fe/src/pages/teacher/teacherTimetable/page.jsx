@@ -12,6 +12,7 @@ const TeacherTimetable = () => {
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState(null);
 
+  const navigate = useNavigate();
   const daysOfWeek = [
     "Thứ 2",
     "Thứ 3",
@@ -144,8 +145,8 @@ const TeacherTimetable = () => {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -170,22 +171,20 @@ const TeacherTimetable = () => {
     );
     const formattedDate = formatDate(dayDate);
 
-    // console.log("Looking for schedule:", { day, shift, formattedDate });
-
-    const schedule = timetableData.find(item => {
+    const schedule = timetableData.find((item) => {
       return item.shift_name === shift;
     });
 
     if (schedule) {
       const hasLessonOnDate = schedule.schedule_lessons.some(
-        lesson => lesson.date === formattedDate
+        (lesson) => lesson.date === formattedDate
       );
       if (hasLessonOnDate) {
         return {
           ...schedule,
           subject_name: schedule.subject_name,
           room_name: schedule.room_name,
-          classroom_code: schedule.classroom_code
+          classroom_code: schedule.classroom_code,
         };
       }
     }
@@ -195,7 +194,7 @@ const TeacherTimetable = () => {
 
   const getLessonForDate = (schedule, date) => {
     if (!schedule || !schedule.schedule_lessons) return null;
-    return schedule.schedule_lessons.find(lesson => lesson.date === date);
+    return schedule.schedule_lessons.find((lesson) => lesson.date === date);
   };
 
   const openPopup = (schedule, lesson) => {
@@ -213,6 +212,12 @@ const TeacherTimetable = () => {
     const semester = semesters.find((sem) => sem.id === parseInt(semesterId));
     setSelectedSemester(semester);
     setCurrentWeek(new Date(semester.start_date));
+  };
+
+  const handleEditSchedule = (selectedSchedule) => {
+    navigate("/teacher/edit-schedule", {
+      state: { schedule: selectedSchedule },
+    });
   };
 
   const getStatusColor = (status) => {
@@ -539,6 +544,16 @@ const TeacherTimetable = () => {
               >
                 Đóng
               </button>
+              {selectedSchedule.lesson?.status === "Chưa tới" ? (
+                <button
+                  onClick={() => handleEditSchedule(selectedSchedule)}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-200"
+                >
+                  Đổi lịch dạy
+                </button>
+              ) : (
+                ""
+              )}
             </div>
           </div>
         </div>
@@ -548,4 +563,3 @@ const TeacherTimetable = () => {
 };
 
 export default TeacherTimetable;
-

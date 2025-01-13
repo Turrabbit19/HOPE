@@ -36,6 +36,11 @@ class Subject extends Model
         return $this->hasMany(Lesson::class);
     }
 
+    public function classrooms()
+    {
+        return $this->hasMany(Classroom::class);
+    }
+
     public function schedules()
     {
         return $this->hasMany(Schedule::class);

@@ -9,11 +9,13 @@ use App\Models\Semester;
 use App\Models\StudentClassroom;
 use App\Models\StudentLesson;
 use App\Models\Teacher;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class TeacherController extends Controller
@@ -73,7 +75,7 @@ class TeacherController extends Controller
             $data = $schedules->map(function ($schedule) use ($currentDateTime, $currentDayOfWeek) {
                 $studentsCount = $schedule->classroom->students->count();
                 $maxStudents = $schedule->classroom->max_students;
-                $minStudents = (int)($maxStudents * 0.7);
+                $minStudents = (int) ($maxStudents * 0.7);
 
                 $status = null;
                 if ($studentsCount < $minStudents) {
@@ -231,7 +233,7 @@ class TeacherController extends Controller
                 ->where('teacher_id', $teacher->id)
                 ->with(['classroom.students', 'subject', 'shift', 'room', 'lessons'])
                 ->get();
-
+            // return response()->json(['data' => $schedules], 200);
             $data = $schedules->map(function ($tt) {
                 $classroom = $tt->classroom;
 
@@ -252,6 +254,7 @@ class TeacherController extends Controller
                     'subject_name' => $tt->subject->name,
                     'classroom_code' => $tt->classroom->code,
                     'shift_name' => $tt->shift->name,
+                    'shift_id' => $tt->shift->id,
                     'room_name' => $tt->room->name ?? "Null",
                     'link' => $tt->link ?? "Null",
                     'start_date' => Carbon::parse($tt->start_date)->format('d/m/Y'),
@@ -259,7 +262,8 @@ class TeacherController extends Controller
                     'schedule_lessons' => $tt->lessons->map(function ($lesson) use ($tt) {
                         if (!isset($lesson->pivot) || !isset($lesson->pivot->study_date)) {
                             return null;
-                        }
+                        };
+                        // return response()->json(['data' => $lesson], 200);
 
                         $lessonDate = Carbon::parse($lesson->pivot->study_date);
                         $shiftStartTime = Carbon::parse($tt->shift->start_time);
@@ -282,6 +286,7 @@ class TeacherController extends Controller
                             'description' => $lesson->description ?? "Không có mô tả",
                             'date' => $lessonDate->format('d/m/Y'),
                             'status' => $status,
+                            'teacher_id' => $lesson->pivot->teacher_id,
                         ];
                     })->filter(),
                 ];
@@ -595,6 +600,160 @@ class TeacherController extends Controller
                 'error' => 'Lỗi khi điểm danh.',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function getTeacher(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            $shiftId = $request->input('shift_id');
+            $date = $request->input('date');
+
+            $teacher = Teacher::select('id', 'major_id')
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            $majorId = $teacher->major_id;
+            $teacherId = $teacher->id;
+
+            $conflictedTeacherIds = Schedule::join('schedule_lessons', 'schedules.id', '=', 'schedule_lessons.schedule_id')
+                ->where('schedules.major_id', $majorId)
+                ->where('shift_id', '!=', $shiftId)
+                ->where('schedule_lessons.study_date', '=', $date)
+                ->pluck('schedules.teacher_id');
+
+            $availableTeachers = Teacher::select('teachers.teacher_code', 'users.name', 'teachers.id')
+                ->join('users', 'users.id', '=', 'teachers.user_id')
+                ->where('teachers.major_id', $majorId)
+                ->where('teachers.id', '!=', $teacherId)
+                ->whereNotIn('teachers.id', $conflictedTeacherIds)
+                ->get();
+
+            return response()->json($availableTeachers, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Đã xảy ra lỗi', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function changeTeacher(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $teacher = Teacher::select('id')
+                ->with('user:name')
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$teacher) {
+                return response()->json(['message' => 'Không tìm thấy giáo viên yêu cầu'], 404);
+            }
+
+            $dataToStore = [
+                'schedule_id' => $request->input('schedule_id'),
+                'new_teacher' => $request->input('new_teacher'),
+                'room_name' => $request->input('room_name'),
+                'shift_name' => $request->input('shift_name'),
+                'subject_name' => $request->input('subject_name'),
+                'date' => $request->input('date'),
+                'requester' => $teacher->id,
+                'requester_name' => $teacher->user->name,
+            ];
+
+            $redisKey = "schedule_change_{$dataToStore['new_teacher']}";
+            Redis::setex($redisKey, 86400, json_encode($dataToStore));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dữ liệu được nhận thành công.',
+                'data' => array_intersect_key($dataToStore, array_flip(['schedule_id', 'new_teacher', 'subject_name', 'date'])),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Đã xảy ra lỗi', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function notificationChangeSchedule()
+    {
+        try {
+            $user = Auth::user();
+            $teacher_id = Teacher::where('user_id', $user->id)->value('id');
+            $redisKey = "schedule_change_{$teacher_id}";
+            $abc = json_decode(Redis::get($redisKey));
+            return response()->json($abc, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'error'], 500);
+        }
+    }
+    public function handleSubmit(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $teacher_id = Teacher::where('user_id', $user->id)->value('id');
+            $teacher_name = DB::table('teachers')
+                ->join('users', 'users.id', '=', 'teachers.user_id')
+                ->where('users.id', $user->id)
+                ->value('users.name');
+            $currentTime = now()->format('Y-m-d H:i');
+            $redisKey = "schedule_change_{$teacher_id}";
+
+            Redis::del($redisKey);
+            $redisAdminChangeSchedule = "schedule_manage_change";
+            $scheduleData = [
+                'schedule_id' => $request->input('schedule_id'),
+                'new_teacher_id' => $teacher_id,
+                'new_teacher_name' => $teacher_name,
+                'room_name' => $request->input('room_name'),
+                'shift_name' => $request->input('shift_name'),
+                'subject_name' => $request->input('subject_name'),
+                'date' => $request->input('date'),
+                'requester' => $request->requester,
+                'time_request' => $currentTime,
+                'requester_name' => $request->requester_name,
+            ];
+            Redis::rpush($redisAdminChangeSchedule, json_encode($scheduleData));
+            return response()->json(['message' => 'Request pushed successfully']);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'error'], 500);
+        }
+    }
+    public function getMaxDateSchedule()
+    {
+        try {
+            $maxEndDate = Schedule::join('semesters', 'schedules.semester_id', '=', 'semesters.id')
+                ->whereRaw('NOW() BETWEEN semesters.start_date AND semesters.end_date')
+                ->max('schedules.end_date');
+            return response()->json($maxEndDate, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'error'], 500);
+        }
+    }
+    public function handleChangeDate(Request $request)
+    {
+        $user = Auth::user();
+        try {
+
+            $currentTime = now()->format('Y-m-d H:i');
+            $teacher_id = Teacher::where('user_id', $user->id)->value('id');
+            $teacher_name = DB::table('teachers')
+                ->join('users', 'users.id', '=', 'teachers.user_id')
+                ->where('users.id', $user->id)
+                ->value('users.name');
+            $scheduleData = [
+                'schedule_id' => $request->input('schedule_id'),
+                'old_date' => $request->input('old_date'),
+                'new_date' => $request->input('new_date'),
+                'time_request' => $currentTime,
+                'subject_name' => $request->input('subject_name'),
+                'requester_name' => $teacher_name,
+            ];
+            $redisAdminChangeSchedule = "schedule_manage_change";
+            Redis::rpush($redisAdminChangeSchedule, json_encode($scheduleData));
+            return response()->json($teacher_name, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'error'], 500);
         }
     }
 }

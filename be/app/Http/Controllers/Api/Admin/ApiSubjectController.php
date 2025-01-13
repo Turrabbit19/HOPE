@@ -10,11 +10,14 @@ use App\Models\Subject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 // use Illuminate\Support\Facades\Redis;
 
 class ApiSubjectController extends Controller
 {
+
+
     public function index(Request $request)
     {
         try {
@@ -57,31 +60,41 @@ class ApiSubjectController extends Controller
         }
     }
 
+
     public function getAll()
     {
         try {
-            $subjects = Subject::get();
+            $cacheKey = "subjects_all";
 
-            $data = $subjects->map(function ($subject) {
+            $subjects = Redis::get($cacheKey);
+
+            if (!$subjects) {
+                $subjects = Subject::all();
+
+                Redis::set($cacheKey, json_encode($subjects), 'EX', 1800);
+            } else {
+                $subjects = json_decode($subjects, true);
+            }
+
+            $data = collect($subjects)->map(function ($subject) {
                 return [
-                    'id' => $subject->id,
-                    'code' => $subject->code,
-                    'name' => $subject->name,
-                    'description' => $subject->description,
-                    'credit' => $subject->credit,
-                    'order' => $subject->order,
-                    'max_students' => $subject->max_students,
-                    'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
+                    'id' => $subject['id'],
+                    'code' => $subject['code'],
+                    'name' => $subject['name'],
+                    'description' => $subject['description'],
+                    'credit' => $subject['credit'],
+                    'order' => $subject['order'],
+                    'max_students' => $subject['max_students'],
+                    'form' => $subject['form'] ? "Trực tuyến" : "Trực tiếp",
                 ];
             });
 
-            return response()->json([
-                'data' => $data
-            ], 200);
+            return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
+
 
     public function filterSubjectsByMajor(string $majorId, Request $request)
     {
@@ -237,6 +250,7 @@ class ApiSubjectController extends Controller
                 $subject->majors()->sync([$data['sub_major']]);
             }
             // Redis::del('syllabus');
+            $this->clearSubjectsCache();
 
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
@@ -368,6 +382,7 @@ class ApiSubjectController extends Controller
             if (isset($data['sub_major'])) {
                 $subject->majors()->sync([$data['sub_major']]);
             }
+            $this->clearSubjectsCache();
 
             return response()->json(['data' => $subject, 'message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -382,6 +397,8 @@ class ApiSubjectController extends Controller
         try {
             $subject = Subject::findOrFail($id);
             $subject->delete();
+            $this->clearSubjectsCache();
+
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
@@ -395,6 +412,7 @@ class ApiSubjectController extends Controller
         try {
             $subject = Subject::withTrashed()->findOrFail($id);
             $subject->restore();
+            $this->clearSubjectsCache();
             return response()->json(['message' => 'Khôi phục thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy môn học với ID: ' . $id], 404);
@@ -455,6 +473,7 @@ class ApiSubjectController extends Controller
             }
 
             $subject->lessons()->saveMany($lessons);
+            $this->clearLessonsCache();
 
             return response()->json(['message' => 'Thêm bài học thành công.', 'data' => $lessons], 201);
         } catch (ModelNotFoundException $e) {
@@ -516,16 +535,39 @@ class ApiSubjectController extends Controller
 
             foreach ($classroomsData as $classroom) {
                 $classrooms[] = new Classroom([
-                    'name' => $classroom['code'],
-                    'description' => $classroom['max_students'],
+                    'code' => $classroom['code'],
+                    'max_students' => $classroom['max_students'],
                 ]);
             }
 
             $subject->classrooms()->saveMany($classrooms);
+            $this->clearClassroomsCache();
 
             return response()->json(['data' => $classrooms, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+    private function clearLessonsCache()
+    {
+        $keys = Redis::keys('lessons_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
+        }
+    }
+
+    private function clearClassroomsCache()
+    {
+        $keys = Redis::keys('classrooms_index_page_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
+        }
+    }
+    private function clearSubjectsCache()
+    {
+        $keys = Redis::keys('subjects_*');
+        foreach ($keys as $key) {
+            Redis::del($key);
         }
     }
 }

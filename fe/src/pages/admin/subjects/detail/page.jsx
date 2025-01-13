@@ -632,7 +632,7 @@ const DetailSubject = () => {
                       code: `${code}-R${(index + 1)
                         .toString()
                         .padStart(2, "0")}`,
-                      max_students: max_students, 
+                      max_students: max_students,
                     })
                   ),
                 }}
@@ -646,7 +646,7 @@ const DetailSubject = () => {
                           `${code}-R${(index + 1).toString().padStart(2, "0")}`,
                         max_students:
                           allValues.classrooms?.[index]?.max_students ||
-                          `${max_students}`, 
+                          `${max_students}`,
                       })
                     );
                     form.setFieldsValue({ classrooms: newClassrooms });

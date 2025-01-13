@@ -80,6 +80,7 @@ import StatisticSemester from "../pages/student/statistics-semester/page";
 import TuitionFee from "../pages/admin/tuition-fee/page";
 import Guard from "./guard";
 import TestNew from "../pages/admin/schedule/table/page";
+import EditScheduleComponent from "../pages/teacher/editSchedule/page";
 
 const Router = createBrowserRouter([
   {
@@ -507,6 +508,10 @@ const Router = createBrowserRouter([
       {
         path: "timetable",
         element: <TeacherTimetable />,
+      },
+      {
+        path: "edit-schedule",
+        element: <EditScheduleComponent />,
       },
     ],
   },

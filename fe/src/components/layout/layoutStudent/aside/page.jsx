@@ -1,213 +1,118 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const AsideClient = () => {
   return (
-    <aside className="p-4 bg-gray-100">
+    <aside className="p-6 bg-white shadow-lg h-screen transition-all duration-300 ease-in-out hover:shadow-xl border-r border-black">
       {/* Logo */}
-      <div className="flex items-center mb-6">
+      <div className="flex items-center mb-8">
         <img
           alt="Logo"
-          className="mr-2"
-          width="100"
-          height="40"
+          className="mr-2 transition-transform duration-300 ease-in-out hover:scale-105"
+          width="120"
+          height="48"
           src="/public/assets/img/download (10).jpg"
         />
       </div>
 
       {/* Trang chủ */}
-      <div className="mb-4">
-        <h2 className="mb-2 font-semibold">Trang chủ</h2>
+      <div className="mb-6">
+        <h2 className="mb-3 font-semibold text-gray-800 text-lg">Trang chủ</h2>
         <nav className="space-y-2">
-          <Link
-            to="home"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#34D399"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <rect width="7" height="9" x="3" y="3" rx="1"></rect>
-              <rect width="7" height="5" x="14" y="3" rx="1"></rect>
-              <rect width="7" height="9" x="14" y="12" rx="1"></rect>
-              <rect width="7" height="5" x="3" y="16" rx="1"></rect>
-            </svg>
+          <NavLink to="home" icon="dashboard" color="#34D399">
             Trang chủ
-          </Link>
-          <Link
-            to="statistics-semester"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#F59E0B"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-              <path d="M9 4v16"></path>
-              <path d="M15 4v16"></path>
-            </svg>
+          </NavLink>
+          <NavLink to="statistics-semester" icon="calendar" color="#F59E0B">
             Thống kê điểm danh
-          </Link>
-          <Link
-            to="notification"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#FFCC00"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
-              <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
-              <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
-              <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
-            </svg>
+          </NavLink>
+          <NavLink to="notification" icon="bell" color="#FFCC00">
             Thông báo
-          </Link>
+          </NavLink>
         </nav>
       </div>
 
       {/* Lịch học */}
-      <div className="mb-4">
-        <h2 className="mb-2 font-semibold">Góc học tập</h2>
+      <div className="mb-6">
+        <h2 className="mb-3 font-semibold text-gray-800 text-lg">Góc học tập</h2>
         <nav className="space-y-2">
-          <Link
-            to="schedule"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#FF3B30"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-              <path d="M10 4v4"></path>
-              <path d="M2 8h20"></path>
-              <path d="M6 4v4"></path>
-            </svg>
+          <NavLink to="schedule" icon="calendar" color="#FF3B30">
             Lịch học
-          </Link>
-          <Link
-            to="class-registration"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#1D4ED8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <path d="M3 12h18"></path>
-              <path d="M12 3v18"></path>
-            </svg>
+          </NavLink>
+          <NavLink to="class-registration" icon="plus" color="#1D4ED8">
             Đăng kí lịch học
-          </Link>
-          <Link
-            to="sub-majors"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#10B981"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="15" y1="9" x2="9" y2="15"></line>
-              <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
+          </NavLink>
+          <NavLink to="sub-majors" icon="book-open" color="#10B981">
             Đăng kí chuyên nghành hẹp
-          </Link>
-          <Link
-            to="syllabus"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#F59E0B"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-              <path d="M9 4v16"></path>
-              <path d="M15 4v16"></path>
-            </svg>
+          </NavLink>
+          <NavLink to="syllabus" icon="book" color="#F59E0B">
             Giáo trình
-          </Link>
-
-          <Link
-            to="tuition-fee"
-            className="flex items-center p-2 text-gray-700 hover:bg-gray-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#0EA5E9"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 mr-3"
-            >
-              <path d="M3 12h18"></path>
-              <path d="M12 3v18"></path>
-            </svg>
+          </NavLink>
+          <NavLink to="tuition-fee" icon="credit-card" color="#0EA5E9">
             Học phí
-          </Link>
+          </NavLink>
         </nav>
       </div>
     </aside>
   );
 };
 
+const NavLink = ({ to, icon, children, color }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
+  return (
+    <Link
+      to={to}
+      className={`flex items-center p-2 text-gray-700 rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 group ${
+        isActive ? 'bg-gray-100 text-gray-900' : ''
+      }`}
+      aria-current={isActive ? 'page' : undefined}
+    >
+      <span className={`p-2 rounded-md bg-white shadow-sm group-hover:shadow-md transition-all duration-200 ease-in-out mr-3 ${
+        isActive ? 'shadow-md' : ''
+      }`}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`transition-transform duration-200 ease-in-out ${
+            isActive ? 'scale-110' : 'group-hover:scale-110'
+          }`}
+        >
+          {getIcon(icon)}
+        </svg>
+      </span>
+      <span className={`font-medium ${isActive ? 'font-semibold' : ''}`}>{children}</span>
+    </Link>
+  );
+};
+
+const getIcon = (icon) => {
+  switch (icon) {
+    case "dashboard":
+      return <><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></>;
+    case "calendar":
+      return <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></>;
+    case "bell":
+      return <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></>;
+    case "plus":
+      return <><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></>;
+    case "book-open":
+      return <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></>;
+    case "book":
+      return <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></>;
+    case "credit-card":
+      return <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></>;
+    default:
+      return null;
+  }
+};
+
 export default AsideClient;
+

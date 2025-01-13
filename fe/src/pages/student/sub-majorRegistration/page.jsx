@@ -139,7 +139,7 @@ export default function SubMajorsList() {
 
     if (error && error !== 'Bạn đã đăng kí chuyên nghành hẹp rồi') {
         return (
-            <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-100 to-pink-100">
+            <div className="flex justify-center items-start h-screen bg-gradient-to-br from-green-100 to-pink-100 mb-10">
                 <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full text-center">
                     <AlertCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
                     <h2 className="text-3xl font-bold mb-4 text-green-600">Thông báo</h2>

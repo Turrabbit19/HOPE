@@ -149,7 +149,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
         Route::get('/', [StudentController::class, 'getStudentDetail']);
         Route::get('subjects', [StudentController::class, 'getSubjects']);
-        Route::get('shifts', [StudentController::class, 'getShifts']);
+        Route::get('subjects/{subjectid}/shifts', [StudentController::class, 'getShifts']);
         Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 

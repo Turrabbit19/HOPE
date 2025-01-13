@@ -143,10 +143,13 @@ class   StudentController extends Controller
         }
     }
 
-    public function getShifts()
+    public function getShifts(string $subjectid)
     {
         try {
-            $shifts = Shift::all();
+            $shiftsID = Schedule::where('subject_id', $subjectid)
+            ->pluck('shift_id');
+
+            $shifts = Shift::whereIn('id', $shiftsID)->get();
 
             $listShifts = $shifts->map(function ($shift) {
                 return [

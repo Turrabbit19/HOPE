@@ -35,7 +35,8 @@ Route::post('login', [ApiAuthController::class, 'login']);
 Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
-Route::prefix('admin')
+Route::prefix('admin')->middleware(['throttle:100,1'])
+    ->middleware(['auth:sanctum', 'role:Quản trị viên'])
     ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
 
@@ -47,7 +48,6 @@ Route::prefix('admin')
         Route::get('{courseId}/{majorId}/students', [ApiStudentController::class, 'getStudentsByMajorAndCourse']);
         Route::post('decrement-semester', [ApiStudentController::class, 'decrementStudentsSemester']);
         Route::post('students/filter', [ApiStudentController::class, 'filters']);
-
 
         Route::apiResource('teachers', ApiTeacherController::class);
         Route::get('teachersfilter', [ApiTeacherController::class, 'getTeachers']);
@@ -145,11 +145,11 @@ Route::prefix('admin')
         Route::post('schedule/refuseHandleChangeSchedule', [ApiScheduleController::class, 'refuseHandleChangeSchedule']);
     });
 
-Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
+Route::middleware(['throttle:100,1'])->middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
     ->group(function () {
         Route::get('/', [StudentController::class, 'getStudentDetail']);
         Route::get('subjects', [StudentController::class, 'getSubjects']);
-        Route::get('subjects/{subjectid}/shifts', [StudentController::class, 'getShifts']);
+        Route::get('{subjectId}/shifts', [StudentController::class, 'getShifts']);
         Route::get('subject/{subjectid}/shift/{shiftId}/classrooms', [StudentController::class, 'getClassrooms']);
         Route::post('schedule/{id}/register', [StudentController::class, 'registerSchedule']);
 
@@ -180,7 +180,7 @@ Route::middleware(['auth:sanctum', 'role:Sinh viên'])->prefix('student')
         Route::get('notification/read/{id}', [StudentNoticeController::class, 'detailNotification']);
     });
 
-Route::middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
+Route::middleware(['throttle:100,1'])->middleware(['auth:sanctum', 'role:Giảng viên'])->prefix('teacher')
     ->group(function () {
         Route::get('/', [TeacherController::class, 'getTeacherDetail']);
         Route::get('schedules', [TeacherController::class, 'getSchedules']);

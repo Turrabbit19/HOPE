@@ -147,7 +147,8 @@ class   StudentController extends Controller
     {
         try {
             $shiftsID = Schedule::where('subject_id', $subjectid)
-            ->pluck('shift_id');
+                ->where('end_date', '>=', Carbon::now())
+                ->pluck('shift_id');
 
             $shifts = Shift::whereIn('id', $shiftsID)->get();
 

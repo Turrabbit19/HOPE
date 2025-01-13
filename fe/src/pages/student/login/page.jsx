@@ -17,7 +17,7 @@ export default function SchoolLogin() {
     const role = localStorage.getItem("role");
 
     if (token && role) {
-      console.log("Token found in storage:", token);
+      // console.log("Token found in storage:", token);
       redirectToRolePage(role);
     }
 
@@ -60,7 +60,7 @@ export default function SchoolLogin() {
         setShowErrorPopup(true);
         return;
       } else {
-        console.log("Login successful, received token:", data.token);
+        // console.log("Login successful, received token:", data.token);
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.user.role);
         localStorage.setItem("user_id", data.user.id);

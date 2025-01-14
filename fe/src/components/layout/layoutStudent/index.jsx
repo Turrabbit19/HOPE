@@ -4,26 +4,29 @@ import { Outlet } from "react-router-dom";
 import Footer from "./footer/page";
 
 const LayoutClient = () => {
-  return (
-    <div className="flex h-screen">
-      {/* Thanh điều hướng bên trái */}
-      <AsideClient className="border-r-10 border-black-900" />
+    return (
+        <div className="flex bg-gray-100 min-h-screen">
+            {/* Thanh điều hướng bên trái */}
+            <AsideClient />
 
-      {/* Phần nội dung chính của ứng dụng */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <HeaderClient />
+            {/* Phần nội dung chính của ứng dụng */}
+            <div className="flex-1 flex flex-col">
+                {/* Header */}
+                <HeaderClient />
 
-        <main className="flex-1 p-8 bg-white overflow-y-auto min-h-0">
-          <div className="max-w-[1470px] mx-auto min-h-[1080px]">
-            {/* Nội dung từ route con sẽ được hiển thị tại đây */}
-            <Outlet />
-          </div>
-        </main>
+                {/* Nội dung chính */}
+                <main className="flex-1 p-6 md:p-8 bg-white">
+                    <div className="mx-auto">
+                        {/* Nội dung từ route con sẽ được hiển thị tại đây */}
+                        <Outlet />
+                    </div>
+                </main>
 
-        <Footer />
-      </div>
-    </div>
-  );
+                {/* Footer */}
+                <Footer />
+            </div>
+        </div>
+    );
 };
 
 export default LayoutClient;

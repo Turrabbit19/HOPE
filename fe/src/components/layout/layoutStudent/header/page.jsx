@@ -8,6 +8,7 @@ import {
     Maximize,
     Minimize,
     X,
+    LogOut,
 } from "lucide-react";
 
 export default function HeaderClient() {
@@ -246,14 +247,6 @@ export default function HeaderClient() {
                 <div className="flex items-center w-1/3"></div>
 
                 <div className="flex items-center justify-end w-1/3 space-x-4">
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                        <img
-                            src="https://flagcdn.com/w20/vn.png"
-                            width="20"
-                            alt="vn flag"
-                            className="rounded"
-                        />
-                    </button>
                     <div className="relative">
                         <button
                             ref={buttonRef}
@@ -270,16 +263,32 @@ export default function HeaderClient() {
                         {showNotifications && (
                             <div
                                 ref={notificationRef}
-                                className="absolute right-0 mt-2 w-96 bg-white border rounded-md shadow-lg z-10"
+                                className="absolute right-0 mt-2 w-[600px] bg-white border rounded-md shadow-lg z-10"
                             >
-                                <div className="p-4 border-b">
-                                    <h3 className="text-lg font-semibold">
-                                        Thông báo
-                                    </h3>
-                                    <p className="text text-gray-500">
-                                        Bạn có {unreadNotificationsCount} thông
-                                        báo chưa đọc
-                                    </p>
+                                <div className="p-4 border-b bg-blue-50 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-2xl font-semibold text-blue-800">
+                                            Thông báo
+                                        </h3>
+                                        <p className="text-lg text-blue-600">
+                                            Bạn có {unreadNotificationsCount}{" "}
+                                            thông báo chưa đọc
+                                        </p>
+                                    </div>
+                                    {unreadNotificationsCount > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                notifications.forEach((n) => {
+                                                    if (n.status !== "Đã xem") {
+                                                        markAsRead(n.id);
+                                                    }
+                                                });
+                                            }}
+                                            className="text-xs text-blue-600 hover:underline focus:outline-none"
+                                        >
+                                            Đánh dấu tất cả đã đọc
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="p-4 space-y-4 max-h-80 overflow-y-auto">
                                     {isLoading ? (
@@ -297,11 +306,11 @@ export default function HeaderClient() {
                                     ) : selectedNotification ? (
                                         <div>
                                             <div className="flex justify-between items-center mb-2">
-                                                <h4 className="font-semibold">
+                                                <h3 className="font-semibold">
                                                     {
                                                         selectedNotification.notification
                                                     }
-                                                </h4>
+                                                </h3>
                                                 <button
                                                     onClick={() =>
                                                         setSelectedNotification(
@@ -313,11 +322,11 @@ export default function HeaderClient() {
                                                     <X className="h-5 w-5" />
                                                 </button>
                                             </div>
-                                            <p className="text mb-2">
+                                            <h4 className=" mb-2">
                                                 {
                                                     selectedNotification.description
                                                 }
-                                            </p>
+                                            </h4>
                                             {selectedNotification.status !==
                                                 "Đã xem" && (
                                                 <button
@@ -379,12 +388,7 @@ export default function HeaderClient() {
                             </div>
                         )}
                     </div>
-                    <button className="p-2 hover:bg-gray-100 rounded-full border">
-                        <MessageCircle className="h-5 w-5 text-gray-600" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full border">
-                        <BarChart2 className="h-5 w-5 text-gray-600" />
-                    </button>
+
                     <button
                         className="p-2 hover:bg-gray-100 rounded-full border"
                         onClick={toggleFullscreen}
@@ -397,9 +401,10 @@ export default function HeaderClient() {
                     </button>
                     <button
                         onClick={handleLogout}
-                        className="p-2 hover:bg-gray-100 rounded-full border flex items-center"
+                        className="flex items-center space-x-2 px-3 py-1.5 rounded-full transition duration-300 ease-in-out bg-red-500 hover:bg-red-600 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
-                        <span className="mr-2 text-gray-600">Đăng xuất</span>
+                        <LogOut className="h-5 w-5" />
+                        <span className="text-sm font-medium">Đăng xuất</span>
                     </button>
                 </div>
             </header>

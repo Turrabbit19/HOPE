@@ -598,7 +598,7 @@ const TeacherTimetable = () => {
                                 </span>
                             </div>
 
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
+                            <div className="flex items-center  text-2xl space-x-3">
                                 <Info className="w-6 h-6 text-blue-500" />
                                 <span>
                                     <span className="font-semibold">
@@ -610,7 +610,7 @@ const TeacherTimetable = () => {
                         </div>
 
                         {/* Footer */}
-                        <div className="flex justify-end px-6 py-4 border-t border-gray-200 space-x-4">
+                        <div className="flex justify-end mb-5 px-6 py-4 border-t border-gray-200 space-x-4">
                             {selectedSchedule.lesson?.status === "Chưa tới" && (
                                 <button
                                     onClick={() =>

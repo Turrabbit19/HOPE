@@ -87,6 +87,7 @@ Route::prefix('admin')->middleware(['throttle:100,1'])
         Route::post('subject/{id}/classrooms/add', [ApiSubjectController::class, 'addClassrooms']);
 
         Route::apiResource('rooms', ApiRoomController::class);
+        Route::post('rooms/restore/{id}', [ApiRoomController::class, 'restore']);
         Route::get('available-rooms', [ApiRoomController::class, 'getAvailableRooms']);
 
         Route::apiResource('lessons', ApiLessonController::class);

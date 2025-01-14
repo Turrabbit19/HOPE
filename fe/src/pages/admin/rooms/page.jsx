@@ -39,7 +39,7 @@ const ListRooms = () => {
   const navigate = useNavigate();
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -217,6 +217,15 @@ const ListRooms = () => {
     navigate("/admin");
   };
 
+  const groupedRooms = paginatedRooms.reduce((acc, room) => {
+    const firstLetter = room.name.charAt(0).toUpperCase(); // Lấy chữ cái đầu tiên
+    if (!acc[firstLetter]) {
+      acc[firstLetter] = [];
+    }
+    acc[firstLetter].push(room);
+    return acc;
+  }, {});
+
   return (
     <div className="test__list">
       <div className="col-12">
@@ -277,71 +286,94 @@ const ListRooms = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mt-8">
-          {paginatedRooms.length > 0 ? (
-            paginatedRooms.map((room) => (
-              <div className="col" key={room.id}>
-                <div className="teaching__card bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-2xl shadow-md hover:shadow-2xl transition-shadow duration-300 ease-in-out border-2 border-transparent hover:border-blue-300">
-                  {/* Card Top */}
-                  <div className="teaching__card-top mb-4">
-                    <h2 className="teaching_card-title flex items-center justify-center gap-2 text-blue-800 font-extrabold text-xl tracking-tight">
-                      <img
-                        src="/assets/svg/share.svg"
-                        alt="Icon"
-                        className="h-6 w-6 text-blue-700"
-                      />
-                      <span className="bg-clip-text text-2xl text-transparent bg-gradient-to-r from-blue-600 to-blue-500">
-                        Tên phòng học:
-                      </span>
-                      <p className="text-red-500 uppercase font-semibold text-2xl">
-                        {room.name}
-                      </p>
-                    </h2>
-                  </div>
+        <div className="mt-8 overflow-x-auto">
+          {/* Table for grouping rooms */}
+          <table className="table-auto w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="text-center p-4 border-b">Chữ cái</th>
+                <th className="text-center p-4 border-b">Phòng học</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(groupedRooms).map((letter) => (
+                <tr key={letter} className="border-b">
+                  {/* Chữ cái */}
+                  <td className="p-4 text-3xl font-semibold text-blue-800 flex justify-center items-center">
+                    {letter}
+                  </td>
 
-                  {/* Card Body */}
-                  <div className="teaching__card-body mb-4">
-                    <div className="text-2xl text-center text-gray-700">
-                      <span
-                        className={`${
-                          room.status === "Đang sử dụng"
-                            ? "text-green-600 font-semibold"
-                            : "text-red-600 font-semibold"
-                        }`}
-                      >
-                        {room.status}
-                      </span>
-                    </div>
-                  </div>
+                  {/* Các phòng học theo nhóm chữ cái */}
+                  <td>
+                    <div className="grid grid-cols-5 gap-8 mt-5">
+                      {groupedRooms[letter].length > 0 ? (
+                        groupedRooms[letter].map((room) => (
+                          <div className="col" key={room.id}>
+                            <div className="teaching__card bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-2xl shadow-md hover:shadow-2xl transition-shadow duration-300 ease-in-out border-2 border-transparent hover:border-blue-300">
+                              {/* Card Top */}
+                              <div className="teaching__card-top mb-4">
+                                <h2 className="teaching_card-title flex items-center justify-center gap-2 text-blue-800 font-extrabold text-xl tracking-tight">
+                                  <img
+                                    src="/assets/svg/share.svg"
+                                    alt="Icon"
+                                    className="h-6 w-6 text-blue-700"
+                                  />
+                                  <span className="bg-clip-text text-2xl text-transparent bg-gradient-to-r from-blue-600 to-blue-500">
+                                    Tên phòng học:
+                                  </span>
+                                  <p className="text-red-500 uppercase font-semibold text-2xl">
+                                    {room.name}
+                                  </p>
+                                </h2>
+                              </div>
 
-                  {/* Card Bottom (Delete Button) */}
-                  {room.status !== "Đang sử dụng" ? (
-                    <div className="teaching__card-bottom flex justify-center mt-4">
-                      <Popconfirm
-                        title={`Bạn có chắc muốn xóa phòng ${room.name} này không?`}
-                        onConfirm={() => onHandleDelete(room.id)}
-                        okText="Có"
-                        cancelText="Không"
-                        placement="bottom"
-                      >
-                        <button className="text-red-500 font-bold flex items-center gap-2 justify-center hover:text-red-600 hover:scale-105 transition-all duration-200">
-                          <span>Xóa khỏi Danh Sách</span>
-                        </button>
-                      </Popconfirm>
+                              {/* Card Body */}
+                              <div className="teaching__card-body mb-4">
+                                <div className="text-2xl text-center text-gray-700">
+                                  <span
+                                    className={`${
+                                      room.status === "Đang sử dụng"
+                                        ? "text-green-600 font-semibold"
+                                        : "text-red-600 font-semibold"
+                                    }`}
+                                  >
+                                    {room.status}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Card Bottom (Delete Button) */}
+                              {room.status !== "Đang sử dụng" ? (
+                                <div className="teaching__card-bottom flex justify-center mt-4">
+                                  <Popconfirm
+                                    title={`Bạn có chắc muốn xóa phòng ${room.name} này không?`}
+                                    onConfirm={() => onHandleDelete(room.id)}
+                                    okText="Có"
+                                    cancelText="Không"
+                                    placement="bottom"
+                                  >
+                                    <button className="text-red-500 font-bold flex items-center gap-2 justify-center hover:text-red-600 hover:scale-105 transition-all duration-200">
+                                      <span>Xóa khỏi Danh Sách</span>
+                                    </button>
+                                  </Popconfirm>
+                                </div>
+                              ) : (
+                                ""
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-12 text-center text-xl font-semibold text-gray-500">
+                          Không tìm thấy phòng học nào!
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    ""
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-12">
-              <div className="text-center text-xl font-semibold text-gray-500">
-                Không tìm thấy phòng học nào!
-              </div>
-            </div>
-          )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

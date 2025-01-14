@@ -27,6 +27,7 @@ import {
   DatabaseOutlined,
   DollarOutlined,
   AlertOutlined,
+  BarcodeOutlined,
 } from "@ant-design/icons";
 import instance from "../../../../config/axios";
 import moment from "moment";
@@ -146,6 +147,11 @@ const AsideAdmin = () => {
       name: "Quản lý lịch học",
       link: "/admin/list-schedule",
       icon: <ReadOutlined />,
+    },
+    {
+      name: "Lịch học tổng quan",
+      link: "/admin/list-schedule/table",
+      icon: <BarcodeOutlined />,
     },
   ];
 

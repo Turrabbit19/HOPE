@@ -233,7 +233,6 @@ class TeacherController extends Controller
                 ->where('teacher_id', $teacher->id)
                 ->with(['classroom.students', 'subject', 'shift', 'room', 'lessons'])
                 ->get();
-            // return response()->json(['data' => $schedules], 200);
             $data = $schedules->map(function ($tt) {
                 $classroom = $tt->classroom;
 
@@ -263,7 +262,6 @@ class TeacherController extends Controller
                         if (!isset($lesson->pivot) || !isset($lesson->pivot->study_date)) {
                             return null;
                         };
-                        // return response()->json(['data' => $lesson], 200);
 
                         $lessonDate = Carbon::parse($lesson->pivot->study_date);
                         $shiftStartTime = Carbon::parse($tt->shift->start_time);

@@ -441,16 +441,6 @@ const ScheduleList = () => {
                     <h3 className="text-4xl font-bold text-blue-700 group-hover:text-blue-500 transition-colors duration-300">
                       {semester.name}
                     </h3>
-
-                    {new Date(semester.end_date) > now && (
-                      <Link
-                        to="table"
-                        onClick={(e) => e.stopPropagation()}
-                        className="font-semibold flex items-center gap-2 justify-center px-5 py-3 border-2 rounded-full text-white bg-blue-500 hover:bg-blue-600 transition-colors duration-300"
-                      >
-                        Kiểm tra lịch học
-                      </Link>
-                    )}
                   </div>
 
                   <div className="text-gray-600 space-y-2">

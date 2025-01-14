@@ -12,6 +12,205 @@ import {
     Book,
 } from "lucide-react";
 
+const NotificationDropdown = ({
+    showNotifications,
+    toggleNotifications,
+    notifications,
+    isLoading,
+    error,
+    selectedNotification,
+    setSelectedNotification,
+    markAsRead,
+}) => {
+    const notificationRef = useRef(null);
+    const buttonRef = useRef(null);
+
+    const unreadNotificationsCount = notifications.filter(
+        (n) => n.status !== "Đã xem"
+    ).length;
+
+    // Đóng dropdown khi click ngoài
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (
+                notificationRef.current &&
+                !notificationRef.current.contains(event.target) &&
+                buttonRef.current &&
+                !buttonRef.current.contains(event.target)
+            ) {
+                toggleNotifications(false);
+                setSelectedNotification(null);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [toggleNotifications, setSelectedNotification]);
+
+    return (
+        <div className="relative">
+            <button
+                ref={buttonRef}
+                className="p-2 rounded-full transition duration-300 ease-in-out relative hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() => toggleNotifications(!showNotifications)}
+                aria-haspopup="true"
+                aria-expanded={showNotifications}
+                aria-label="Thông báo"
+            >
+                <Bell className="h-6 w-6 text-gray-600" />
+                {unreadNotificationsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {unreadNotificationsCount}
+                    </span>
+                )}
+            </button>
+            {showNotifications && (
+                <div
+                    ref={notificationRef}
+                    className="absolute right-0 mt-2 w-[500px] bg-white text-gray-800 border rounded-md shadow-lg z-20 animate-fade-in"
+                    role="menu"
+                    aria-label="Thông báo"
+                >
+                    <div className="p-4 border-b bg-blue-50 flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-semibold text-blue-800">
+                                Thông báo
+                            </h3>
+                            <p className="text-sm text-blue-600">
+                                Bạn có {unreadNotificationsCount} thông báo chưa
+                                đọc
+                            </p>
+                        </div>
+                        {unreadNotificationsCount > 0 && (
+                            <button
+                                onClick={() => {
+                                    notifications.forEach((n) => {
+                                        if (n.status !== "Đã xem") {
+                                            markAsRead(n.id);
+                                        }
+                                    });
+                                }}
+                                className="text-xs text-blue-600 hover:underline focus:outline-none"
+                            >
+                                Đánh dấu tất cả đã đọc
+                            </button>
+                        )}
+                    </div>
+                    <div className="p-4 space-y-4 max-h-80 overflow-y-auto">
+                        {isLoading ? (
+                            <p className="text-center text-gray-500">
+                                Đang tải thông báo...
+                            </p>
+                        ) : error ? (
+                            <p className="text-center text-red-500">{error}</p>
+                        ) : notifications.length === 0 ? (
+                            <p className="text-center text-gray-500">
+                                Không có thông báo mới
+                            </p>
+                        ) : selectedNotification ? (
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h4 className="font-semibold text-blue-800">
+                                        {selectedNotification.notification}
+                                    </h4>
+                                    <button
+                                        onClick={() =>
+                                            setSelectedNotification(null)
+                                        }
+                                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                                        aria-label="Đóng thông báo chi tiết"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+                                <p className="text-sm mb-2 text-gray-600">
+                                    {selectedNotification.description}
+                                </p>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    {new Date(
+                                        selectedNotification.timestamp
+                                    ).toLocaleString()}
+                                </p>
+                                {selectedNotification.status !== "Đã xem" && (
+                                    <button
+                                        onClick={() =>
+                                            markAsRead(selectedNotification.id)
+                                        }
+                                        className="text-sm text-blue-600 hover:text-blue-800 focus:outline-none"
+                                    >
+                                        Đánh dấu đã đọc
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            notifications.map((notification) => (
+                                <div
+                                    key={notification.id}
+                                    className={`flex items-start space-x-4 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition duration-300 ease-in-out ${
+                                        notification.status !== "Đã xem"
+                                            ? "bg-blue-50"
+                                            : ""
+                                    }`}
+                                    onClick={() =>
+                                        handleNotificationClick(notification)
+                                    }
+                                    role="menuitem"
+                                    tabIndex={0}
+                                    onKeyPress={(e) => {
+                                        if (e.key === "Enter")
+                                            handleNotificationClick(
+                                                notification
+                                            );
+                                    }}
+                                >
+                                    <div
+                                        className={`w-3 h-3 mt-2 rounded-full ${
+                                            notification.status === "Đã xem"
+                                                ? "bg-gray-300"
+                                                : "bg-blue-500"
+                                        }`}
+                                        aria-hidden="true"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-center">
+                                            <p
+                                                className={`text-sm font-medium ${
+                                                    notification.status ===
+                                                    "Đã xem"
+                                                        ? "text-gray-600"
+                                                        : "text-blue-800"
+                                                }`}
+                                            >
+                                                {notification.notification}
+                                            </p>
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(
+                                                    notification.timestamp
+                                                ).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500">
+                                            {notification.description.length >
+                                            50
+                                                ? `${notification.description.substring(
+                                                      0,
+                                                      50
+                                                  )}...`
+                                                : notification.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export default function HeaderTeacher() {
     const [showNotifications, setShowNotifications] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -19,8 +218,6 @@ export default function HeaderTeacher() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
-    const notificationRef = useRef(null);
-    const buttonRef = useRef(null);
     const navigate = useNavigate();
 
     const unreadNotificationsCount = notifications.filter(
@@ -30,25 +227,6 @@ export default function HeaderTeacher() {
     // useEffect(() => {
     //   fetchNotifications();
     // }, []);
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (
-                notificationRef.current &&
-                !notificationRef.current.contains(event.target) &&
-                buttonRef.current &&
-                !buttonRef.current.contains(event.target)
-            ) {
-                setShowNotifications(false);
-                setSelectedNotification(null);
-            }
-        }
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
 
     useEffect(() => {
         function onFullscreenChange() {
@@ -94,11 +272,6 @@ export default function HeaderTeacher() {
     //     setIsLoading(false);
     //   }
     // };
-
-    const toggleNotifications = () => {
-        setShowNotifications(!showNotifications);
-        setSelectedNotification(null);
-    };
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -166,11 +339,14 @@ export default function HeaderTeacher() {
     };
 
     return (
-        <header className="flex items-center justify-between px-6 py-4  shadow-lg">
+        <header className="flex items-center justify-between px-6 py-4 shadow-lg bg-white">
             <div className="flex items-center space-x-4"></div>
 
             <div className="flex items-center space-x-6">
-                <button className=" p-2 rounded-full transition duration-300 ease-in-out">
+                <button
+                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Ngôn ngữ"
+                >
                     <img
                         src="https://flagcdn.com/w20/vn.png"
                         width="20"
@@ -178,146 +354,46 @@ export default function HeaderTeacher() {
                         className="rounded"
                     />
                 </button>
-                <div className="relative">
-                    <button
-                        ref={buttonRef}
-                        className=" p-2 rounded-full transition duration-300 ease-in-out relative"
-                        onClick={toggleNotifications}
-                    >
-                        <Bell className="h-6 w-6" />
-                        {unreadNotificationsCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                                {unreadNotificationsCount}
-                            </span>
-                        )}
-                    </button>
-                    {showNotifications && (
-                        <div
-                            ref={notificationRef}
-                            className="absolute right-0 mt-2 w-96 bg-white text-gray-800 border rounded-md shadow-lg z-10"
-                        >
-                            <div className="p-4 border-b bg-blue-50">
-                                <h3 className="text-lg font-semibold text-blue-800">
-                                    Thông báo
-                                </h3>
-                                <p className="text-sm text-blue-600">
-                                    Bạn có {unreadNotificationsCount} thông báo
-                                    chưa đọc
-                                </p>
-                            </div>
-                            <div className="p-4 space-y-4 max-h-80 overflow-y-auto">
-                                {isLoading ? (
-                                    <p className="text-center text-gray-500">
-                                        Đang tải thông báo...
-                                    </p>
-                                ) : error ? (
-                                    <p className="text-center text-red-500">
-                                        {error}
-                                    </p>
-                                ) : notifications.length === 0 ? (
-                                    <p className="text-center text-gray-500">
-                                        Không có thông báo mới
-                                    </p>
-                                ) : selectedNotification ? (
-                                    <div className="bg-blue-50 p-4 rounded-lg">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-semibold text-blue-800">
-                                                {
-                                                    selectedNotification.notification
-                                                }
-                                            </h4>
-                                            <button
-                                                onClick={() =>
-                                                    setSelectedNotification(
-                                                        null
-                                                    )
-                                                }
-                                                className="text-gray-500 hover:text-gray-700"
-                                            >
-                                                <X className="h-5 w-5" />
-                                            </button>
-                                        </div>
-                                        <p className="text-sm mb-2 text-gray-600">
-                                            {selectedNotification.description}
-                                        </p>
-                                        {selectedNotification.status !==
-                                            "Đã xem" && (
-                                            <button
-                                                onClick={() =>
-                                                    markAsRead(
-                                                        selectedNotification.id
-                                                    )
-                                                }
-                                                className="text-sm text-blue-600 hover:text-blue-800"
-                                            >
-                                                Đánh dấu đã đọc
-                                            </button>
-                                        )}
-                                    </div>
-                                ) : (
-                                    notifications.map((notification) => (
-                                        <div
-                                            key={notification.id}
-                                            className="flex items-start space-x-4 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition duration-300 ease-in-out"
-                                            onClick={() =>
-                                                handleNotificationClick(
-                                                    notification
-                                                )
-                                            }
-                                        >
-                                            <div
-                                                className={`w-2 h-2 mt-2 rounded-full ${
-                                                    notification.status ===
-                                                    "Đã xem"
-                                                        ? "bg-gray-300"
-                                                        : "bg-blue-500"
-                                                }`}
-                                            />
-                                            <div className="flex-1">
-                                                <p
-                                                    className={`text-sm font-medium ${
-                                                        notification.status ===
-                                                        "Đã xem"
-                                                            ? "text-gray-600"
-                                                            : "text-blue-800"
-                                                    }`}
-                                                >
-                                                    {notification.notification}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {notification.description.substring(
-                                                        0,
-                                                        50
-                                                    )}
-                                                    ...
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <button className=" p-2 rounded-full transition duration-300 ease-in-out">
-                    <MessageCircle className="h-6 w-6" />
-                </button>
-                <button className=" p-2 rounded-full transition duration-300 ease-in-out">
-                    <BarChart2 className="h-6 w-6" />
+                <NotificationDropdown
+                    showNotifications={showNotifications}
+                    toggleNotifications={setShowNotifications}
+                    notifications={notifications}
+                    isLoading={isLoading}
+                    error={error}
+                    selectedNotification={selectedNotification}
+                    setSelectedNotification={setSelectedNotification}
+                    markAsRead={markAsRead}
+                />
+                <button
+                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Tin nhắn"
+                >
+                    <MessageCircle className="h-6 w-6 text-gray-600" />
                 </button>
                 <button
-                    className=" p-2 rounded-full transition duration-300 ease-in-out"
+                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Thống kê"
+                >
+                    <BarChart2 className="h-6 w-6 text-gray-600" />
+                </button>
+                <button
+                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onClick={toggleFullscreen}
+                    aria-label={
+                        isFullscreen
+                            ? "Thoát chế độ toàn màn hình"
+                            : "Toàn màn hình"
+                    }
                 >
                     {isFullscreen ? (
-                        <Minimize className="h-6 w-6" />
+                        <Minimize className="h-6 w-6 text-gray-600" />
                     ) : (
-                        <Maximize className="h-6 w-6" />
+                        <Maximize className="h-6 w-6 text-gray-600" />
                     )}
                 </button>
                 <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-full transition duration-300 ease-in-out"
+                    className="flex items-center space-x-2 px-4 py-2 rounded-full transition duration-300 ease-in-out bg-red-500 hover:bg-red-600 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                     <LogOut className="h-5 w-5" />
                     <span className="text-sm font-medium">Đăng xuất</span>

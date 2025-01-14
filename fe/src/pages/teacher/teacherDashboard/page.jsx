@@ -137,7 +137,6 @@ export default function TeacherInfo() {
         <div className="min-h-screen ">
             <div className="mx-auto p-6">
                 <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex">
-                    {/* Thông tin giảng viên cố định bên trái (giống StudentProfile) */}
                     <div className="w-1/3 bg-blue-50 p-6 border-r">
                         <div className="bg-white text-gray-800 p-8 rounded-2xl shadow-xl max-w-full mx-auto font-sans">
                             <div className="flex items-center space-x-8 mb-8">

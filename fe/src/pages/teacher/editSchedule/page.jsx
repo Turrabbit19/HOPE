@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
     Select,
     Button,
-    message,
+    notification, // Dùng notification thay cho message
     DatePicker,
     Row,
     Col,
@@ -11,7 +11,7 @@ import {
     Space,
     Descriptions,
 } from "antd";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // Thêm useNavigate để chuyển trang
 import instance from "../../../config/axios";
 import { Book, Calendar, Clock, Info, MapPin } from "lucide-react";
 import moment from "moment";
@@ -22,6 +22,7 @@ const { Title } = Typography;
 
 const EditScheduleComponent = () => {
     const location = useLocation();
+    const navigate = useNavigate(); // Khai báo hook để chuyển hướng
     const { schedule } = location.state;
     const [view, setView] = useState(null);
     const [teacherData, setTeacherData] = useState([]);
@@ -58,9 +59,16 @@ const EditScheduleComponent = () => {
         }
     };
 
+    // =======================
+    // Thay đổi giảng viên
+    // =======================
     const handleSubmitRequest = async () => {
         if (!selectedTeacher) {
-            message.error("Vui lòng chọn giảng viên trước khi gửi yêu cầu.");
+            // Thay message.error bằng notification.error
+            notification.error({
+                message: "Lỗi",
+                description: "Vui lòng chọn giảng viên trước khi gửi yêu cầu.",
+            });
             return;
         }
         try {
@@ -76,18 +84,31 @@ const EditScheduleComponent = () => {
                 }
             );
             if (response.data.success) {
-                message.success("Yêu cầu thay đổi giảng viên đã được gửi.");
+                notification.success({
+                    message: "Thành công",
+                    description: "Yêu cầu thay đổi giảng viên đã được gửi.",
+                });
+                navigate("/teacher/timetable");
             } else {
-                message.error("Có lỗi xảy ra khi gửi yêu cầu.");
+                notification.error({
+                    message: "Lỗi",
+                    description: "Có lỗi xảy ra khi gửi yêu cầu.",
+                });
             }
         } catch (error) {
-            message.error("Có lỗi xảy ra khi gửi yêu cầu.");
+            notification.error({
+                message: "Lỗi",
+                description: "Có lỗi xảy ra khi gửi yêu cầu.",
+            });
         }
     };
 
     const handleSubmitRequestChangeDate = async () => {
         if (!selectedDate) {
-            message.error("Vui lòng chọn ngày trước khi gửi yêu cầu.");
+            notification.error({
+                message: "Lỗi",
+                description: "Vui lòng chọn ngày trước khi gửi yêu cầu.",
+            });
             return;
         }
         try {
@@ -97,9 +118,15 @@ const EditScheduleComponent = () => {
                 new_date: selectedDate.format("YYYY/MM/DD"),
                 subject_name: schedule.subject_name,
             });
-            message.success("Yêu cầu thay đổi lịch dạy đã được gửi.");
+            notification.success({
+                message: "Thành công",
+                description: "Yêu cầu thay đổi lịch dạy đã được gửi.",
+            });
         } catch (error) {
-            message.error("Có lỗi xảy ra khi gửi yêu cầu.");
+            notification.error({
+                message: "Lỗi",
+                description: "Có lỗi xảy ra khi gửi yêu cầu.",
+            });
         }
     };
 
@@ -237,6 +264,9 @@ const EditScheduleComponent = () => {
                             >
                                 Thay đổi giảng viên
                             </Button>
+                            {/* Nếu cần hiển thị chức năng đổi lịch dạy
+                                thì bỏ comment đoạn dưới:
+                            
                             <Button
                                 type={
                                     view === "change-schedule"
@@ -246,7 +276,9 @@ const EditScheduleComponent = () => {
                                 onClick={() => setView("change-schedule")}
                             >
                                 Thay đổi lịch dạy
-                            </Button>
+                            </Button> 
+                            
+                            */}
                         </Space>
                         {renderContent()}
                     </Card>

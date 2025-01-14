@@ -218,7 +218,7 @@ const TeacherTimetable = () => {
     switch (status) {
       case "Đã kết thúc":
         return "bg-green-100 border-green-200 text-green-700";
-      case "Đang giảng dạy":
+      case "Đang dạy":
         return "bg-yellow-100 border-red-200 text-red-700";
       case "Chưa tới":
         return "bg-gray-200 border-yellow-200 text-yellow-700";

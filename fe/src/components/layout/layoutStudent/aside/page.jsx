@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const AsideClient = () => {
+  const [activeLink, setActiveLink] = useState("");
+
   return (
     <aside className="p-6 bg-white shadow-lg h-screen transition-all duration-300 ease-in-out hover:shadow-xl border-r border-black">
       {/* Logo */}
@@ -9,8 +11,8 @@ const AsideClient = () => {
         <img
           alt="Logo"
           className="mr-2 transition-transform duration-300 ease-in-out hover:scale-105"
-          width="120"
-          height="48"
+          width="50"
+          height="40"
           src="/public/assets/img/download (10).jpg"
         />
       </div>
@@ -19,35 +21,68 @@ const AsideClient = () => {
       <div className="mb-6">
         <h2 className="mb-3 font-semibold text-gray-800 text-lg">Trang chủ</h2>
         <nav className="space-y-2">
-          <NavLink to="home" icon="dashboard" color="#34D399">
+          <NavLink
+            to="home"
+            icon="dashboard"
+            color="#34D399"
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+          >
             Trang chủ
           </NavLink>
-          <NavLink to="statistics-semester" icon="calendar" color="#F59E0B">
+          <NavLink
+            to="statistics-semester"
+            icon="calendar"
+            color="#F59E0B"
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+          >
             Thống kê điểm danh
           </NavLink>
-          <NavLink to="notification" icon="bell" color="#FFCC00">
+          <NavLink
+            to="notification"
+            icon="bell"
+            color="#FFCC00"
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+          >
             Thông báo
           </NavLink>
         </nav>
       </div>
 
-      {/* Lịch học */}
+      {/* Góc học tập */}
       <div className="mb-6">
         <h2 className="mb-3 font-semibold text-gray-800 text-lg">Góc học tập</h2>
         <nav className="space-y-2">
-          <NavLink to="schedule" icon="calendar" color="#FF3B30">
+          <NavLink
+            to="schedule"
+            icon="calendar"
+            color="#FF3B30"
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+          >
             Lịch học
           </NavLink>
-          <NavLink to="class-registration" icon="plus" color="#1D4ED8">
+          <NavLink
+            to="class-registration"
+            icon="plus"
+            color="#1D4ED8"
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+          >
             Đăng kí lịch học
           </NavLink>
-          <NavLink to="sub-majors" icon="book-open" color="#10B981">
+          <NavLink to="sub-majors" icon="book-open" color="#10B981" activeLink={activeLink}
+            setActiveLink={setActiveLink}>
             Đăng kí chuyên nghành hẹp
           </NavLink>
-          <NavLink to="syllabus" icon="book" color="#F59E0B">
+          <NavLink to="syllabus" icon="book" color="#F59E0B" activeLink={activeLink}
+            setActiveLink={setActiveLink}>
             Giáo trình
           </NavLink>
-          <NavLink to="tuition-fee" icon="credit-card" color="#0EA5E9">
+          <NavLink to="tuition-fee" icon="credit-card" color="#0EA5E9" activeLink={activeLink}
+            setActiveLink={setActiveLink}>
             Học phí
           </NavLink>
         </nav>
@@ -56,21 +91,29 @@ const AsideClient = () => {
   );
 };
 
-const NavLink = ({ to, icon, children, color }) => {
+const NavLink = ({ to, icon, children, color, activeLink, setActiveLink }) => {
   const location = useLocation();
-  const isActive = location.pathname === to;
+
+  const handleClick = () => {
+    setActiveLink(to);
+  };
+
+  const isActive = activeLink === to;
 
   return (
     <Link
       to={to}
-      className={`flex items-center p-2 text-gray-700 rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 group ${
-        isActive ? 'bg-gray-100 text-gray-900' : ''
-      }`}
+      onClick={handleClick}
+      className={`flex items-center p-2 text-gray-700 rounded-lg transition-all duration-200 ease-in-out ${isActive
+          ? 'bg-gray-100 text-gray-300 shadow-md'
+          : 'hover:bg-gray-100 hover:text-gray-500 hover:shadow-sm'
+        } group relative overflow-hidden`}
       aria-current={isActive ? 'page' : undefined}
     >
-      <span className={`p-2 rounded-md bg-white shadow-sm group-hover:shadow-md transition-all duration-200 ease-in-out mr-3 ${
-        isActive ? 'shadow-md' : ''
-      }`}>
+      <span
+        className={`p-2 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out mr-3 ${isActive ? 'bg-gray-300 shadow-md' : 'group-hover:shadow-md'
+          }`}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -81,9 +124,8 @@ const NavLink = ({ to, icon, children, color }) => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`transition-transform duration-200 ease-in-out ${
-            isActive ? 'scale-110' : 'group-hover:scale-110'
-          }`}
+          className={`transition-transform duration-200 ease-in-out ${isActive ? 'scale-110' : 'group-hover:scale-110'
+            }`}
         >
           {getIcon(icon)}
         </svg>
@@ -115,4 +157,3 @@ const getIcon = (icon) => {
 };
 
 export default AsideClient;
-

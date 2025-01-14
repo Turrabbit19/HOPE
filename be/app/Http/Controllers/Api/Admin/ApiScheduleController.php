@@ -1025,6 +1025,7 @@ class ApiScheduleController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
     public function acceptHandleChangeSchedule(Request $request)
     {
         try {
@@ -1043,12 +1044,25 @@ class ApiScheduleController extends Controller
             }
 
             $decodedItem = json_decode($item, true);
-            if ($decodedItem['old_date'] !== null) {
+
+            if (!$decodedItem) {
+                return response()->json(['message' => 'Invalid JSON data'], 400);
+            }
+
+            Log::info('Decoded Item:', $decodedItem);
+
+            if (isset($decodedItem['old_date']) && $decodedItem['old_date'] !== null) {
                 $scheduleId = $decodedItem['schedule_id'] ?? null;
                 $old_date = $decodedItem['old_date'] ?? null;
                 $newDate = $decodedItem['new_date'] ?? null;
-                $newDateFormatted = Carbon::createFromFormat('d/m/Y', $newDate)->format('Y/m/d');
-                $oldDateFormatted = Carbon::createFromFormat('d/m/Y', $old_date)->format('Y/m/d');
+
+                if (!$old_date || !$newDate) {
+                    return response()->json(['message' => 'Invalid date fields'], 400);
+                }
+
+                $newDateFormatted = Carbon::createFromFormat('d/m/Y', $newDate)->format('Y-m-d');
+                $oldDateFormatted = Carbon::createFromFormat('d/m/Y', $old_date)->format('Y-m-d');
+
                 DB::table('schedule_lessons')
                     ->where('schedule_id', $scheduleId)
                     ->where('study_date', $oldDateFormatted)
@@ -1056,26 +1070,39 @@ class ApiScheduleController extends Controller
                         'study_date' => $newDateFormatted,
                         'updated_at' => now(),
                     ]);
+
                 Redis::lrem($redisAdminChangeSchedule, 1, $item);
+
                 return $this->getChangeScheduleTeacher();
             } else {
                 $scheduleId = $decodedItem['schedule_id'] ?? null;
                 $newTeacherId = $decodedItem['new_teacher_id'] ?? null;
                 $date = $decodedItem['date'] ?? null;
+
+                if (!$scheduleId || !$newTeacherId || !$date) {
+                    return response()->json(['message' => 'Missing required fields'], 400);
+                }
+
+                $dateFormatted = Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d');
+
                 DB::table('schedule_lessons')
                     ->where('schedule_id', $scheduleId)
-                    ->where('study_date', $date)
+                    ->where('study_date', $dateFormatted)
                     ->update([
                         'teacher_id' => $newTeacherId,
                         'updated_at' => now(),
                     ]);
+
                 Redis::lrem($redisAdminChangeSchedule, 1, $item);
+
                 return $this->getChangeScheduleTeacher();
             }
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
     public function refuseHandleChangeSchedule(Request $request)
     {
         try {
@@ -1096,4 +1123,10 @@ class ApiScheduleController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+
+
+
+
+    public function generateSchedules() {}
 }

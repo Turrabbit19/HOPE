@@ -14,16 +14,7 @@ import {
     getWeek,
 } from "date-fns";
 import { vi } from "date-fns/locale";
-import {
-    ChevronLeft,
-    ChevronRight,
-    Calendar,
-    Clock,
-    User,
-    Book,
-    MapPin,
-    LinkIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, Book, MapPin, LinkIcon } from 'lucide-react';
 
 function LoadingSpinner() {
     return (
@@ -457,23 +448,23 @@ export default function DashboardActions() {
                                 <div className="text-center font-bold text-gray-800 text-2xl">
                                     {semesterStartDate && semesterEndDate
                                         ? `${format(
-                                              startOfCurrentWeek,
-                                              "dd/MM/yyyy",
-                                              { locale: vi }
-                                          )} - ${format(
-                                              endOfCurrentWeek,
-                                              "dd/MM/yyyy",
-                                              { locale: vi }
-                                          )}`
+                                            startOfCurrentWeek,
+                                            "dd/MM/yyyy",
+                                            { locale: vi }
+                                        )} - ${format(
+                                            endOfCurrentWeek,
+                                            "dd/MM/yyyy",
+                                            { locale: vi }
+                                        )}`
                                         : `${format(
-                                              startOfCurrentWeek,
-                                              "dd/MM/yyyy",
-                                              { locale: vi }
-                                          )} - ${format(
-                                              endOfCurrentWeek,
-                                              "dd/MM/yyyy",
-                                              { locale: vi }
-                                          )}`}
+                                            startOfCurrentWeek,
+                                            "dd/MM/yyyy",
+                                            { locale: vi }
+                                        )} - ${format(
+                                            endOfCurrentWeek,
+                                            "dd/MM/yyyy",
+                                            { locale: vi }
+                                        )}`}
                                 </div>
                             </div>
                             <button
@@ -504,13 +495,12 @@ export default function DashboardActions() {
                                     return (
                                         <div
                                             key={shift}
-                                            className={`shadow-lg rounded-xl p-6 relative border-2 border-gray-200 ${
-                                                lesson
+                                            className={`shadow-lg rounded-xl p-6 relative ${lesson
                                                     ? getStatusColor(
-                                                          lesson.status
-                                                      )
+                                                        lesson.status
+                                                    )
                                                     : "bg-white"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="absolute top-0 left-0 bg-blue-600 text-white px-4 py-2 font-semibold rounded-br-xl rounded-tl-xl text-xl">
                                                 {shift}
@@ -523,7 +513,7 @@ export default function DashboardActions() {
                                                             lesson
                                                         )
                                                     }
-                                                    className="border-2 border-gray-300 rounded-xl p-6 shadow-md cursor-pointer hover:bg-gray-50 transition duration-300 mt-8"
+                                                    className="p-6  cursor-pointer hover:bg-gray-50 transition duration-300 mt-8"
                                                 >
                                                     <p className="text-2xl font-semibold mb-2">
                                                         {schedule.room_name}
@@ -549,7 +539,7 @@ export default function DashboardActions() {
                                 })}
                             </div>
                         ) : (
-                            <div className="overflow-x-auto mt-8 bg-white rounded-xl shadow-lg border-2 border-gray-200">
+                            <div className="overflow-x-auto mt-8 bg-white rounded-xl shadow-lg">
                                 {schedules.length === 0 ? (
                                     <div className="text-center py-12 text-gray-500 text-3xl font-medium">
                                         Chưa có lịch học cho kỳ này
@@ -558,14 +548,14 @@ export default function DashboardActions() {
                                     <table className="w-full text-center">
                                         <thead>
                                             <tr className="bg-blue-50">
-                                                <th className="p-4 font-semibold text-gray-700 border-2 border-gray-200 text-center sticky left-0 bg-blue-50 z-10 text-2xl">
+                                                <th className="p-4 font-semibold text-gray-700 text-center sticky left-0 bg-blue-50 z-10 text-2xl">
                                                     Ca học
                                                 </th>
                                                 {daysOfWeek.map(
                                                     (day, index) => (
                                                         <th
                                                             key={index}
-                                                            className="p-4 text-center font-semibold text-gray-700 border-2 border-gray-200 text-2xl"
+                                                            className="p-4 text-center font-semibold text-gray-700 text-2xl"
                                                         >
                                                             <div className="flex flex-col">
                                                                 <span>
@@ -595,7 +585,7 @@ export default function DashboardActions() {
                                                     key={shift}
                                                     className="hover:bg-gray-50 transition-colors duration-300"
                                                 >
-                                                    <td className="p-4 text-gray-700 font-medium border-2 border-gray-200 text-xl">
+                                                    <td className="p-4 text-gray-700 font-medium text-xl">
                                                         {shift}
                                                     </td>
                                                     {daysOfWeek.map(
@@ -616,23 +606,22 @@ export default function DashboardActions() {
                                                             const lesson =
                                                                 schedule
                                                                     ? getLessonForDate(
-                                                                          schedule,
-                                                                          dayDate
-                                                                      )
+                                                                        schedule,
+                                                                        dayDate
+                                                                    )
                                                                     : null;
                                                             return (
                                                                 <td
                                                                     key={day}
-                                                                    className={`p-4 text-center border-2 border-gray-200 ${
-                                                                        lesson
+                                                                    className={`${lesson
                                                                             ? getStatusColor(
-                                                                                  lesson.status
-                                                                              )
+                                                                                lesson.status
+                                                                            )
                                                                             : ""
-                                                                    }`}
+                                                                        }`}
                                                                 >
                                                                     {schedule &&
-                                                                    lesson ? (
+                                                                        lesson ? (
                                                                         <div
                                                                             onClick={() =>
                                                                                 openPopup(
@@ -640,7 +629,7 @@ export default function DashboardActions() {
                                                                                     lesson
                                                                                 )
                                                                             }
-                                                                            className="border-2 border-gray-300 rounded-xl p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-300"
+                                                                            className=" p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-300"
                                                                         >
                                                                             <p className="text-lg font-semibold">
                                                                                 {
@@ -799,3 +788,4 @@ export default function DashboardActions() {
         </div>
     );
 }
+

@@ -107,6 +107,22 @@ const ListRooms = () => {
     }
   };
 
+  const undoRooms = async (id) => {
+    try {
+      const response = await instance.post(`admin/rooms/restore/${id}`);
+      const newRoom = response.data.data;
+
+      setRooms((prevRooms) => [...prevRooms, newRoom]);
+      notification.success({
+        message: "Thành công",
+        description: "Khôi phục thành công!",
+        duration: 3,
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const onHandleSubmit = async (values) => {
     console.log(values);
     try {
@@ -148,6 +164,8 @@ const ListRooms = () => {
           duration: 3,
         });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -297,19 +315,23 @@ const ListRooms = () => {
                   </div>
 
                   {/* Card Bottom (Delete Button) */}
-                  <div className="teaching__card-bottom flex justify-center mt-4">
-                    <Popconfirm
-                      title={`Bạn có chắc muốn xóa phòng ${room.name} này không?`}
-                      onConfirm={() => onHandleDelete(room.id)}
-                      okText="Có"
-                      cancelText="Không"
-                      placement="bottom"
-                    >
-                      <button className="text-red-500 font-bold flex items-center gap-2 justify-center hover:text-red-600 hover:scale-105 transition-all duration-200">
-                        <span>Xóa khỏi Danh Sách</span>
-                      </button>
-                    </Popconfirm>
-                  </div>
+                  {room.status !== "Đang sử dụng" ? (
+                    <div className="teaching__card-bottom flex justify-center mt-4">
+                      <Popconfirm
+                        title={`Bạn có chắc muốn xóa phòng ${room.name} này không?`}
+                        onConfirm={() => onHandleDelete(room.id)}
+                        okText="Có"
+                        cancelText="Không"
+                        placement="bottom"
+                      >
+                        <button className="text-red-500 font-bold flex items-center gap-2 justify-center hover:text-red-600 hover:scale-105 transition-all duration-200">
+                          <span>Xóa khỏi Danh Sách</span>
+                        </button>
+                      </Popconfirm>
+                    </div>
+                  ) : (
+                    ""
+                  )}
                 </div>
               </div>
             ))

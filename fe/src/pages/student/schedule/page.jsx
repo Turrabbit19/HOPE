@@ -24,6 +24,7 @@ import {
   MapPin,
   LinkIcon,
 } from "lucide-react";
+import { Alert, Descriptions } from "antd";
 
 function LoadingSpinner() {
   return (

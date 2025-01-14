@@ -231,6 +231,31 @@ class ApiRoomController extends Controller
             return response()->json(['error' => 'Xóa mềm thất bại', 'message' => $e->getMessage()], 500);
         }
     }
+    public function restore(string $id)
+    {
+        try {
+            $room = Room::withTrashed()->findOrFail($id);
+
+            if (!$room->trashed()) {
+                return response()->json(['message' => 'Phòng học này chưa bị xóa mềm'], 400);
+            }
+
+            $room->restore();
+            $data = [
+                'id' => $room->id,
+                'name' => $room->name,
+                'status' => $room->status ? "Đang trống" : "Đang hoạt động",
+            ];
+            $this->updateRoomsCache();
+
+            return response()->json(['message' => 'Khôi phục thành công', 'data' => $data], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Không tìm thấy phòng học với ID: ' . $id], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Khôi phục thất bại', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     private function updateRoomsCache()
     {
         Redis::del('rooms_all');

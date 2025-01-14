@@ -377,16 +377,18 @@ export default function DashboardActions() {
                         {notification}
                     </div>
                 )}
-                <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+                <div className="bg-gray-100 shadow-xl rounded-2xl overflow-hidden">
                     <div className="p-8">
                         <div className="flex flex-col lg:flex-row justify-between items-center mb-8 space-y-4 lg:space-y-0 lg:space-x-4">
-                            <button
-                                onClick={handleGoToCurrentWeek}
-                                className="w-full lg:w-auto px-6 py-3 bg-blue-600 text-white text-xl font-semibold rounded-lg hover:bg-blue-700 transition duration-300 shadow-md flex items-center justify-center"
-                            >
-                                <Calendar className="mr-2" size={24} />
-                                Tuần hiện tại
-                            </button>
+                            <div className="flex items-center space-x-4">
+                                <button
+                                    onClick={handleGoToCurrentWeek}
+                                    className="inline-flex items-center text-lg px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                >
+                                    <Calendar className="h-6 w-6 mr-2" />
+                                    Tuần hiện tại
+                                </button>
+                            </div>
 
                             <div className="flex flex-col lg:flex-row items-start space-y-4 lg:space-x-6 lg:space-y-0">
                                 <select
@@ -441,12 +443,13 @@ export default function DashboardActions() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between mb-8 bg-blue-50 rounded-xl p-6">
+                        <div className="flex items-center justify-between p-5 bg-white rounded-md border border-gray-200 mb-8">
                             <button
                                 onClick={handlePreviousWeek}
-                                className="p-3 rounded-full bg-white hover:bg-gray-100 transition duration-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-md"
+                                className="p-3 rounded-md bg-gray-100 hover:bg-gray-200"
+                                aria-label="Previous week"
                             >
-                                <ChevronLeft size={24} />
+                                <ChevronLeft className="h-6 w-6 text-gray-600" />
                             </button>
                             <div className="flex flex-col items-center">
                                 <span className="text-gray-600 mb-2 text-xl font-medium">
@@ -486,9 +489,10 @@ export default function DashboardActions() {
                             </div>
                             <button
                                 onClick={handleNextWeek}
-                                className="p-3 rounded-full bg-white hover:bg-gray-100 transition duration-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-md"
+                                className="p-3 rounded-md bg-gray-100 hover:bg-gray-200"
+                                aria-label="Next week"
                             >
-                                <ChevronRight size={24} />
+                                <ChevronRight className="h-6 w-6 text-gray-600" />
                             </button>
                         </div>
 
@@ -512,44 +516,40 @@ export default function DashboardActions() {
                                     return (
                                         <div
                                             key={shift}
-                                            className={`shadow-lg rounded-xl p-6 relative ${
+                                            className={`relative p-6 rounded-md border ${
                                                 lesson
                                                     ? getStatusColor(
                                                           lesson.status
                                                       )
-                                                    : "bg-white"
+                                                    : "bg-gray-50"
                                             }`}
                                         >
-                                            <div className="absolute top-0 left-0 bg-blue-600 text-white px-4 py-2 font-semibold rounded-br-xl rounded-tl-xl text-xl">
+                                            <div className="absolute top-0 left-0 rounded-br-md bg-blue-600 text-white px-4 py-1 text-base font-semibold">
                                                 {shift}
                                             </div>
                                             {schedule && lesson ? (
-                                                <div
-                                                    onClick={() =>
-                                                        openPopup(
-                                                            schedule,
-                                                            lesson
-                                                        )
-                                                    }
-                                                    className="p-6  cursor-pointer hover:bg-gray-50 transition duration-300 mt-8"
-                                                >
-                                                    <p className="text-2xl font-semibold mb-2">
+                                                <div className="mt-10">
+                                                    <h4 className="text-xl font-medium text-gray-800">
+                                                        {schedule.subject_name}
+                                                    </h4>
+                                                    <p className="text-lg text-gray-600 mt-1">
                                                         {schedule.room_name}
                                                     </p>
-                                                    <p className="text-xl">
-                                                        {schedule.subject_name}
-                                                    </p>
-                                                    <p className="text-xl">
-                                                        {
-                                                            schedule.classroom_code
+                                                    <button
+                                                        onClick={() =>
+                                                            openPopup(
+                                                                schedule,
+                                                                lesson
+                                                            )
                                                         }
-                                                    </p>
+                                                        className="mt-4 inline-flex items-center justify-center text-base px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
+                                                    >
+                                                        Chi tiết
+                                                    </button>
                                                 </div>
                                             ) : (
-                                                <div className="text-gray-400 text-center text-xl mt-12">
-                                                    {schedules.length === 0
-                                                        ? "Chưa có lịch học cho kỳ này"
-                                                        : "Không có lớp"}
+                                                <div className="flex items-center justify-center h-24 text-gray-400 text-lg">
+                                                    Không có lớp
                                                 </div>
                                             )}
                                         </div>
@@ -557,129 +557,131 @@ export default function DashboardActions() {
                                 })}
                             </div>
                         ) : (
-                            <div className="overflow-x-auto mt-8 bg-white rounded-xl shadow-lg">
-                                {schedules.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500 text-3xl font-medium">
-                                        Chưa có lịch học cho kỳ này
-                                    </div>
-                                ) : (
-                                    <table className="w-full text-center">
-                                        <thead>
-                                            <tr className="bg-blue-50">
-                                                <th className="p-4 font-semibold text-gray-700 text-center sticky left-0 bg-blue-50 z-10 text-2xl">
-                                                    Ca học
-                                                </th>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-base border-separate border-spacing-0">
+                                    <thead>
+                                        <tr>
+                                            <th className="sticky left-0 z-10 bg-blue-100 px-6 py-4 text-left text-lg font-bold text-gray-600 uppercase border-b border-gray-200">
+                                                Ca học
+                                            </th>
+                                            {daysOfWeek.map((day, index) => {
+                                                const date = new Date(
+                                                    currentWeek
+                                                );
+                                                date.setDate(
+                                                    currentWeek.getDate() -
+                                                        currentWeek.getDay() +
+                                                        index +
+                                                        1
+                                                );
+                                                return (
+                                                    <th
+                                                        key={index}
+                                                        className="bg-blue-100 px-6 py-4 text-center text-lg font-bold text-gray-600 uppercase border-b border-gray-200"
+                                                    >
+                                                        <div>
+                                                            <span>{day}</span>
+                                                            <br />
+                                                            <span className="text-base text-gray-500">
+                                                                {formatDate(
+                                                                    date
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </th>
+                                                );
+                                            })}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {shifts.map((shift) => (
+                                            <tr
+                                                key={shift}
+                                                className="border-b border-gray-100"
+                                            >
+                                                <td className="sticky left-0 bg-white border-r border-gray-200 px-6 py-4 font-semibold text-gray-700">
+                                                    {shift}
+                                                </td>
                                                 {daysOfWeek.map(
-                                                    (day, index) => (
-                                                        <th
-                                                            key={index}
-                                                            className="p-4 text-center font-semibold text-gray-700 text-2xl"
-                                                        >
-                                                            <div className="flex flex-col">
-                                                                <span>
-                                                                    {day}
-                                                                </span>
-                                                                <span className="text-gray-500 font-normal text-xl">
-                                                                    {format(
-                                                                        addDays(
-                                                                            startOfCurrentWeek,
-                                                                            index
-                                                                        ),
-                                                                        "dd/MM",
-                                                                        {
-                                                                            locale: vi,
-                                                                        }
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                        </th>
-                                                    )
-                                                )}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {shifts.map((shift) => (
-                                                <tr
-                                                    key={shift}
-                                                    className="hover:bg-gray-50 transition-colors duration-300"
-                                                >
-                                                    <td className="p-4 text-gray-700 font-medium text-xl">
-                                                        {shift}
-                                                    </td>
-                                                    {daysOfWeek.map(
-                                                        (day, dayIndex) => {
-                                                            const dayDate =
-                                                                format(
-                                                                    addDays(
-                                                                        startOfCurrentWeek,
-                                                                        dayIndex
-                                                                    ),
-                                                                    "dd/MM/yyyy"
-                                                                );
-                                                            const schedule =
-                                                                getScheduleForDayAndShift(
-                                                                    day,
-                                                                    shift
-                                                                );
-                                                            const lesson =
-                                                                schedule
-                                                                    ? getLessonForDate(
-                                                                          schedule,
-                                                                          dayDate
-                                                                      )
-                                                                    : null;
-                                                            return (
-                                                                <td
-                                                                    key={day}
-                                                                    className={`${
-                                                                        lesson
-                                                                            ? getStatusColor(
-                                                                                  lesson.status
-                                                                              )
-                                                                            : ""
-                                                                    }`}
-                                                                >
-                                                                    {schedule &&
-                                                                    lesson ? (
-                                                                        <div
+                                                    (day, dayIndex) => {
+                                                        const dayDate =
+                                                            new Date(
+                                                                currentWeek
+                                                            );
+                                                        dayDate.setDate(
+                                                            currentWeek.getDate() -
+                                                                currentWeek.getDay() +
+                                                                dayIndex +
+                                                                1
+                                                        );
+                                                        const formattedDate =
+                                                            formatDate(dayDate);
+                                                        const schedule =
+                                                            getScheduleForDayAndShift(
+                                                                day,
+                                                                shift
+                                                            );
+                                                        const lesson = schedule
+                                                            ? getLessonForDate(
+                                                                  schedule,
+                                                                  formattedDate
+                                                              )
+                                                            : null;
+                                                        return (
+                                                            <td
+                                                                key={day}
+                                                                className={`px-6 py-4 text-center align-top border-r border-gray-100 ${
+                                                                    lesson
+                                                                        ? getStatusColor(
+                                                                              lesson.status
+                                                                          )
+                                                                        : "bg-gray-50"
+                                                                }`}
+                                                            >
+                                                                {schedule &&
+                                                                lesson ? (
+                                                                    <div className="space-y-2">
+                                                                        <p className="font-semibold text-gray-800">
+                                                                            {
+                                                                                schedule.subject_name
+                                                                            }
+                                                                        </p>
+                                                                        <p className="text-gray-600">
+                                                                            {
+                                                                                schedule.room_name
+                                                                            }
+                                                                        </p>
+                                                                        <p className="text-base text-gray-500">
+                                                                            {
+                                                                                schedule.classroom_code
+                                                                            }
+                                                                        </p>
+                                                                        <button
                                                                             onClick={() =>
                                                                                 openPopup(
                                                                                     schedule,
                                                                                     lesson
                                                                                 )
                                                                             }
-                                                                            className=" p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-300"
+                                                                            className="text-base bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
                                                                         >
-                                                                            <p className="text-lg font-semibold">
-                                                                                {
-                                                                                    schedule.room_name
-                                                                                }
-                                                                            </p>
-                                                                            <p className="text-lg">
-                                                                                {
-                                                                                    schedule.subject_name
-                                                                                }
-                                                                            </p>
-                                                                            <p className="text-lg">
-                                                                                {
-                                                                                    schedule.classroom_code
-                                                                                }
-                                                                            </p>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="text-gray-400 text-lg">
-                                                                            Trống
-                                                                        </div>
-                                                                    )}
-                                                                </td>
-                                                            );
-                                                        }
-                                                    )}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                )}
+                                                                            Chi
+                                                                            tiết
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-400">
+                                                                        Trống
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    }
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>

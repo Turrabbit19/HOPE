@@ -509,6 +509,9 @@ export default function DashboardActions() {
                                         ),
                                         "dd/MM/yyyy"
                                     );
+                                    {
+                                        /* ok oke oke */
+                                    }
                                     const lesson = schedule
                                         ? getLessonForDate(schedule, dayDate)
                                         : null;

@@ -48,7 +48,7 @@ const AsideTeacher = () => {
     const hasNotifications = Object.keys(notifications).length > 0;
 
     return (
-        <aside className="bg-gradient-to-br from-teal-50 to-blue-50 shadow-lg min-h-screen p-6 border-r border-black transition-all duration-300 ease-in-out hover:shadow-xl">
+        <aside className="bg-gradient-to-br from-teal-50 to-blue-50 shadow-lg min-h-screen p-6 border-r border-black transition-all duration-300 ease-in-out ">
             {/* Logo */}
             <div className="flex items-center mb-8">
                 <img

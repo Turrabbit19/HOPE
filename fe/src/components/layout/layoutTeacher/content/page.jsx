@@ -11,9 +11,9 @@ const ContentTeacher = () => {
         <Content
             className=""
             style={{
-                padding: 24,
+                padding: 12,
                 margin: 0,
-                minHeight: "100vh",
+                minHeight: "60vh",
                 background: colorBgContainer,
                 borderRadius: borderRadiusLG,
             }}

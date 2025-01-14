@@ -134,7 +134,8 @@ export default function TeacherInfo() {
         );
 
     return (
-        <div className="min-h-screen ">
+        <div className="">
+            {" "}
             <div className="mx-auto p-6">
                 <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex">
                     <div className="w-1/3 bg-blue-50 p-6 border-r">

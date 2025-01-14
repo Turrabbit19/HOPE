@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    Search,
     Bell,
     MessageCircle,
     BarChart2,
@@ -10,6 +9,7 @@ import {
     X,
     LogOut,
     Book,
+    Search,
 } from "lucide-react";
 
 const NotificationDropdown = ({
@@ -53,7 +53,7 @@ const NotificationDropdown = ({
         <div className="relative">
             <button
                 ref={buttonRef}
-                className="p-2 rounded-full transition duration-300 ease-in-out relative hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="relative p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onClick={() => toggleNotifications(!showNotifications)}
                 aria-haspopup="true"
                 aria-expanded={showNotifications}
@@ -69,16 +69,16 @@ const NotificationDropdown = ({
             {showNotifications && (
                 <div
                     ref={notificationRef}
-                    className="absolute right-0 mt-2 w-[500px] bg-white text-gray-800 border rounded-md shadow-lg z-20 animate-fade-in"
+                    className="absolute right-0 mt-2 w-[500px] bg-white text-gray-800 border border-gray-200 rounded-md shadow-lg z-20 animate-fade-in transition transform duration-200 ease-out origin-top-right"
                     role="menu"
                     aria-label="Thông báo"
                 >
                     <div className="p-4 border-b bg-blue-50 flex justify-between items-center">
                         <div>
-                            <h3 className="text-lg font-semibold text-blue-800">
+                            <h3 className="text-2xl font-semibold text-blue-800">
                                 Thông báo
                             </h3>
-                            <p className="text-sm text-blue-600">
+                            <p className="text-lg text-blue-600">
                                 Bạn có {unreadNotificationsCount} thông báo chưa
                                 đọc
                             </p>
@@ -224,10 +224,6 @@ export default function HeaderTeacher() {
         (n) => n.status !== "Đã xem"
     ).length;
 
-    // useEffect(() => {
-    //   fetchNotifications();
-    // }, []);
-
     useEffect(() => {
         function onFullscreenChange() {
             setIsFullscreen(Boolean(document.fullscreenElement));
@@ -240,38 +236,6 @@ export default function HeaderTeacher() {
                 onFullscreenChange
             );
     }, []);
-
-    // const fetchNotifications = async () => {
-    //   setIsLoading(true);
-    //   setError(null);
-    //   try {
-    //     const token = localStorage.getItem("token");
-    //     if (!token) {
-    //       throw new Error("Không tìm thấy token xác thực");
-    //     }
-
-    //     const response = await fetch(
-    //       "http://127.0.0.1:8000/api/student/notifications",
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer ${token}`,
-    //           "Content-Type": "application/json",
-    //         },
-    //       }
-    //     );
-
-    //     if (!response.ok) {
-    //       throw new Error("Không thể tải thông báo");
-    //     }
-
-    //     const data = await response.json();
-    //     setNotifications(data.data);
-    //   } catch (err) {
-    //     setError(err.message);
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // };
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -339,21 +303,23 @@ export default function HeaderTeacher() {
     };
 
     return (
-        <header className="flex items-center justify-between px-6 py-4 shadow-lg bg-white">
-            <div className="flex items-center space-x-4"></div>
+        <header className="flex items-center justify-between px-6 py-4 shadow-2xl bg-white">
+            <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2"></div>
+            </div>
 
-            <div className="flex items-center space-x-6">
-                <button
-                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div className="flex items-center space-x-4">
+                {/* <button
+                    className="relative p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     aria-label="Ngôn ngữ"
                 >
                     <img
                         src="https://flagcdn.com/w20/vn.png"
                         width="20"
                         alt="vn flag"
-                        className="rounded"
+                        className="rounded-full"
                     />
-                </button>
+                </button> */}
                 <NotificationDropdown
                     showNotifications={showNotifications}
                     toggleNotifications={setShowNotifications}
@@ -364,20 +330,20 @@ export default function HeaderTeacher() {
                     setSelectedNotification={setSelectedNotification}
                     markAsRead={markAsRead}
                 />
-                <button
-                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {/* <button
+                    className="relative p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     aria-label="Tin nhắn"
                 >
                     <MessageCircle className="h-6 w-6 text-gray-600" />
                 </button>
                 <button
-                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="relative p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     aria-label="Thống kê"
                 >
                     <BarChart2 className="h-6 w-6 text-gray-600" />
-                </button>
+                </button> */}
                 <button
-                    className="p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="relative p-2 rounded-full transition duration-300 ease-in-out hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onClick={toggleFullscreen}
                     aria-label={
                         isFullscreen
@@ -393,7 +359,7 @@ export default function HeaderTeacher() {
                 </button>
                 <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-full transition duration-300 ease-in-out bg-red-500 hover:bg-red-600 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full transition duration-300 ease-in-out bg-red-500 hover:bg-red-600 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                     <LogOut className="h-5 w-5" />
                     <span className="text-sm font-medium">Đăng xuất</span>

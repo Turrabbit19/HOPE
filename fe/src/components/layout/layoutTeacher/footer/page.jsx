@@ -16,7 +16,7 @@ export default function Footer() {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex flex-wrap justify-center gap-4 text-xl text-gray-700">
+                    {/* <nav className="flex flex-wrap justify-center gap-4 text-xl text-gray-700">
                         <a
                             href="#"
                             className="hover:text-teal-600 transition duration-300"
@@ -41,7 +41,7 @@ export default function Footer() {
                         >
                             Contact
                         </a>
-                    </nav>
+                    </nav> */}
                 </div>
 
                 {/* Copyright section */}

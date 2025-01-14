@@ -380,15 +380,13 @@ export default function DashboardActions() {
                 <div className="bg-gray-100 shadow-xl rounded-2xl overflow-hidden">
                     <div className="p-8">
                         <div className="flex flex-col lg:flex-row justify-between items-center mb-8 space-y-4 lg:space-y-0 lg:space-x-4">
-                            <div className="flex items-center space-x-4">
-                                <button
-                                    onClick={handleGoToCurrentWeek}
-                                    className="inline-flex items-center text-lg px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-                                >
-                                    <Calendar className="h-6 w-6 mr-2" />
-                                    Tuần hiện tại
-                                </button>
-                            </div>
+                            <button
+                                onClick={handleGoToCurrentWeek}
+                                className="inline-flex items-center text-lg px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                                <Calendar className="h-6 w-6 mr-2" />
+                                Tuần hiện tại
+                            </button>
 
                             <div className="flex flex-col lg:flex-row items-start space-y-4 lg:space-x-6 lg:space-y-0">
                                 <select
@@ -497,7 +495,7 @@ export default function DashboardActions() {
                         </div>
 
                         {selectedDay ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {shifts.map((shift) => {
                                     const schedule = getScheduleForDayAndShift(
                                         selectedDay,
@@ -557,131 +555,129 @@ export default function DashboardActions() {
                                 })}
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-base border-separate border-spacing-0">
-                                    <thead>
-                                        <tr>
-                                            <th className="sticky left-0 z-10 bg-blue-100 px-6 py-4 text-left text-lg font-bold text-gray-600 uppercase border-b border-gray-200">
-                                                Ca học
-                                            </th>
-                                            {daysOfWeek.map((day, index) => {
-                                                const date = new Date(
-                                                    currentWeek
-                                                );
-                                                date.setDate(
-                                                    currentWeek.getDate() -
-                                                        currentWeek.getDay() +
-                                                        index +
-                                                        1
-                                                );
-                                                return (
-                                                    <th
-                                                        key={index}
-                                                        className="bg-blue-100 px-6 py-4 text-center text-lg font-bold text-gray-600 uppercase border-b border-gray-200"
-                                                    >
-                                                        <div>
-                                                            <span>{day}</span>
-                                                            <br />
-                                                            <span className="text-base text-gray-500">
-                                                                {formatDate(
-                                                                    date
-                                                                )}
-                                                            </span>
-                                                        </div>
-                                                    </th>
-                                                );
-                                            })}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {shifts.map((shift) => (
-                                            <tr
-                                                key={shift}
-                                                className="border-b border-gray-100"
-                                            >
-                                                <td className="sticky left-0 bg-white border-r border-gray-200 px-6 py-4 font-semibold text-gray-700">
-                                                    {shift}
-                                                </td>
+                            <div className="overflow-x-auto mt-8 bg-white rounded-xl shadow-lg">
+                                {schedules.length === 0 ? (
+                                    <div className="text-center py-12 text-gray-500 text-3xl font-medium">
+                                        Chưa có lịch học cho kỳ này
+                                    </div>
+                                ) : (
+                                    <table className="w-full text-center">
+                                        <thead>
+                                            <tr className="bg-blue-50">
+                                                <th className="p-4 font-semibold text-gray-700 text-center sticky left-0 bg-blue-50 z-10 text-2xl">
+                                                    Ca học
+                                                </th>
                                                 {daysOfWeek.map(
-                                                    (day, dayIndex) => {
-                                                        const dayDate =
-                                                            new Date(
-                                                                currentWeek
-                                                            );
-                                                        dayDate.setDate(
-                                                            currentWeek.getDate() -
-                                                                currentWeek.getDay() +
-                                                                dayIndex +
-                                                                1
-                                                        );
-                                                        const formattedDate =
-                                                            formatDate(dayDate);
-                                                        const schedule =
-                                                            getScheduleForDayAndShift(
-                                                                day,
-                                                                shift
-                                                            );
-                                                        const lesson = schedule
-                                                            ? getLessonForDate(
-                                                                  schedule,
-                                                                  formattedDate
-                                                              )
-                                                            : null;
-                                                        return (
-                                                            <td
-                                                                key={day}
-                                                                className={`px-6 py-4 text-center align-top border-r border-gray-100 ${
-                                                                    lesson
-                                                                        ? getStatusColor(
-                                                                              lesson.status
-                                                                          )
-                                                                        : "bg-gray-50"
-                                                                }`}
-                                                            >
-                                                                {schedule &&
-                                                                lesson ? (
-                                                                    <div className="space-y-2">
-                                                                        <p className="font-semibold text-gray-800">
-                                                                            {
-                                                                                schedule.subject_name
-                                                                            }
-                                                                        </p>
-                                                                        <p className="text-gray-600">
-                                                                            {
-                                                                                schedule.room_name
-                                                                            }
-                                                                        </p>
-                                                                        <p className="text-base text-gray-500">
-                                                                            {
-                                                                                schedule.classroom_code
-                                                                            }
-                                                                        </p>
-                                                                        <button
+                                                    (day, index) => (
+                                                        <th
+                                                            key={index}
+                                                            className="p-4 text-center font-semibold text-gray-700 text-2xl"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span>
+                                                                    {day}
+                                                                </span>
+                                                                <span className="text-gray-500 font-normal text-xl">
+                                                                    {format(
+                                                                        addDays(
+                                                                            startOfCurrentWeek,
+                                                                            index
+                                                                        ),
+                                                                        "dd/MM",
+                                                                        {
+                                                                            locale: vi,
+                                                                        }
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </th>
+                                                    )
+                                                )}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {shifts.map((shift) => (
+                                                <tr
+                                                    key={shift}
+                                                    className="hover:bg-gray-50 transition-colors duration-300"
+                                                >
+                                                    <td className="p-4 text-gray-700 font-medium text-xl">
+                                                        {shift}
+                                                    </td>
+                                                    {daysOfWeek.map(
+                                                        (day, dayIndex) => {
+                                                            const dayDate =
+                                                                format(
+                                                                    addDays(
+                                                                        startOfCurrentWeek,
+                                                                        dayIndex
+                                                                    ),
+                                                                    "dd/MM/yyyy"
+                                                                );
+                                                            const schedule =
+                                                                getScheduleForDayAndShift(
+                                                                    day,
+                                                                    shift
+                                                                );
+                                                            const lesson =
+                                                                schedule
+                                                                    ? getLessonForDate(
+                                                                          schedule,
+                                                                          dayDate
+                                                                      )
+                                                                    : null;
+                                                            return (
+                                                                <td
+                                                                    key={day}
+                                                                    className={`${
+                                                                        lesson
+                                                                            ? getStatusColor(
+                                                                                  lesson.status
+                                                                              )
+                                                                            : ""
+                                                                    }`}
+                                                                >
+                                                                    {schedule &&
+                                                                    lesson ? (
+                                                                        <div
                                                                             onClick={() =>
                                                                                 openPopup(
                                                                                     schedule,
                                                                                     lesson
                                                                                 )
                                                                             }
-                                                                            className="text-base bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
+                                                                            className=" p-4 shadow-md cursor-pointer hover:bg-gray-100 transition duration-300"
                                                                         >
-                                                                            Chi
-                                                                            tiết
-                                                                        </button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-gray-400">
-                                                                        Trống
-                                                                    </span>
-                                                                )}
-                                                            </td>
-                                                        );
-                                                    }
-                                                )}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                                            <p className="text-lg font-semibold">
+                                                                                {
+                                                                                    schedule.room_name
+                                                                                }
+                                                                            </p>
+                                                                            <p className="text-lg">
+                                                                                {
+                                                                                    schedule.subject_name
+                                                                                }
+                                                                            </p>
+                                                                            <p className="text-lg">
+                                                                                {
+                                                                                    schedule.classroom_code
+                                                                                }
+                                                                            </p>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-gray-400 text-lg">
+                                                                            Trống
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                            );
+                                                        }
+                                                    )}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
                         )}
                     </div>

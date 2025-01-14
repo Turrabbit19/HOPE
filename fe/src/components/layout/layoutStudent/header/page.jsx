@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, MessageCircle, BarChart2, Maximize, Minimize, X } from 'lucide-react';
+import { Search, Bell, MessageCircle, BarChart2, Maximize, Minimize, X, Book, LogOut } from 'lucide-react';
 
 export default function HeaderClient() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -183,12 +183,11 @@ export default function HeaderClient() {
         <div
           className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center"
           style={{ transform: showSuccessNotification ? 'translateY(0)' : 'translateY(-100%)' }}
-          transition="transform 0.3s ease-in-out"
         >
-          <div className="bg-white text-emerald-500 px-8 py-6 rounded-lg shadow-lg flex items-center space-x-6 max-w-lg w-full">
-            <div className="flex items-center justify-center bg-emerald-100 p-4 rounded-full">
+          <div className="bg-white text-emerald-500 px-16 py-14 rounded-xl shadow-xl flex items-center space-x-8 max-w-3xl w-full transition-transform duration-300 ease-in-out">
+            <div className="flex items-center justify-center bg-emerald-100 p-6 rounded-full">
               <svg
-                className="w-8 h-8 text-emerald-500 animate-pulse"
+                className="w-12 h-12 text-emerald-500 animate-pulse"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -202,13 +201,13 @@ export default function HeaderClient() {
                 />
               </svg>
             </div>
-            <p className="text-lg font-medium">{successMessage}</p>
+            <p className="text-2xl font-medium flex-grow">{successMessage}</p>
             <button
               onClick={() => setShowSuccessNotification(false)}
-              className="text-emerald-500 hover:text-emerald-700 focus:outline-none"
+              className="text-emerald-500 hover:text-emerald-700 focus:outline-none transition-colors duration-200"
             >
               <svg
-                className="w-4 h-4"
+                className="w-8 h-8"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -218,7 +217,7 @@ export default function HeaderClient() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M6 18L18 6"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
@@ -227,13 +226,16 @@ export default function HeaderClient() {
       )}
 
 
-      <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
-        <div className="flex items-center w-1/3">
-         
+
+
+      <header className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-300 to-blue-500 text-white shadow-lg">
+        <div className="flex items-center space-x-4">
+          <Book className="h-8 w-8" />
+          <h1 className="text-2xl font-bold">EduPortal</h1>
         </div>
-        
-        <div className="flex items-center justify-end w-1/3 space-x-4">
-          <button className="p-2 hover:bg-gray-100 rounded-full">
+
+        <div className="flex items-center space-x-6">
+          <button className="hover:bg-blue-700 p-2 rounded-full transition duration-300 ease-in-out">
             <img
               src="https://flagcdn.com/w20/vn.png"
               width="20"
@@ -244,10 +246,10 @@ export default function HeaderClient() {
           <div className="relative">
             <button
               ref={buttonRef}
-              className="p-2 hover:bg-gray-100 rounded-full border relative"
+              className="hover:bg-blue-700 p-2 rounded-full transition duration-300 ease-in-out relative"
               onClick={toggleNotifications}
             >
-              <Bell className="h-5 w-5 text-gray-600" />
+              <Bell className="h-6 w-6" />
               {unreadNotificationsCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadNotificationsCount}
@@ -257,31 +259,25 @@ export default function HeaderClient() {
             {showNotifications && (
               <div
                 ref={notificationRef}
-                className="absolute right-0 mt-2 w-96 bg-white border rounded-md shadow-lg z-10"
+                className="absolute right-0 mt-2 w-[480px] min-w-[400px] bg-white text-gray-800 border rounded-md shadow-lg z-10"
               >
-                <div className="p-4 border-b">
-                  <h3 className="text-lg font-semibold">Thông báo</h3>
-                  <p className="text text-gray-500">
+                <div className="p-4 border-b bg-blue-50">
+                  <h3 className="text-xl font-semibold text-blue-800">Thông báo</h3>
+                  <p className="text-base text-blue-600">
                     Bạn có {unreadNotificationsCount} thông báo chưa đọc
                   </p>
                 </div>
-                <div className="p-4 space-y-4 max-h-80 overflow-y-auto">
+                <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
                   {isLoading ? (
-                    <p className="text-center text-gray-500">
-                      Đang tải thông báo...
-                    </p>
+                    <p className="text-center text-gray-500">Đang tải thông báo...</p>
                   ) : error ? (
                     <p className="text-center text-red-500">{error}</p>
                   ) : notifications.length === 0 ? (
-                    <p className="text-center text-gray-500">
-                      Không có thông báo mới
-                    </p>
+                    <p className="text-center text-gray-500">Không có thông báo mới</p>
                   ) : selectedNotification ? (
-                    <div>
+                    <div className="bg-blue-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">
-                          {selectedNotification.notification}
-                        </h4>
+                        <h4 className="font-semibold text-blue-800 text-lg">{selectedNotification.notification}</h4>
                         <button
                           onClick={() => setSelectedNotification(null)}
                           className="text-gray-500 hover:text-gray-700"
@@ -289,13 +285,11 @@ export default function HeaderClient() {
                           <X className="h-5 w-5" />
                         </button>
                       </div>
-                      <p className="text mb-2">
-                        {selectedNotification.description}
-                      </p>
+                      <p className="text-lg mb-2 text-gray-600">{selectedNotification.description}</p>
                       {selectedNotification.status !== "Đã xem" && (
                         <button
                           onClick={() => markAsRead(selectedNotification.id)}
-                          className="text text-blue-500 hover:text-blue-700"
+                          className="text-sm text-blue-600 hover:text-blue-800"
                         >
                           Đánh dấu đã đọc
                         </button>
@@ -305,25 +299,19 @@ export default function HeaderClient() {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className="flex items-start space-x-4 cursor-pointer"
+                        className="flex items-start space-x-4 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition duration-300 ease-in-out"
                         onClick={() => handleNotificationClick(notification)}
                       >
                         <div
-                          className={`w-2 h-2 mt-2 rounded-full ${notification.status === "Đã xem"
-                            ? "bg-gray-300"
-                            : "bg-blue-500"
+                          className={`w-3 h-3 mt-2 rounded-full ${notification.status === "Đã xem" ? "bg-gray-300" : "bg-blue-500"
                             }`}
                         />
                         <div className="flex-1">
-                          <p
-                            className={`text font-medium ${notification.status === "Đã xem"
-                              ? "text-gray-600"
-                              : "text-gray-900"
-                              }`}
-                          >
+                          <p className={`text-lg font-medium ${notification.status === "Đã xem" ? "text-gray-600" : "text-blue-800"
+                            }`}>
                             {notification.notification}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xl text-gray-500">
                             {notification.description.substring(0, 50)}...
                           </p>
                         </div>
@@ -334,27 +322,28 @@ export default function HeaderClient() {
               </div>
             )}
           </div>
-          <button className="p-2 hover:bg-gray-100 rounded-full border">
-            <MessageCircle className="h-5 w-5 text-gray-600" />
+          <button className="hover:bg-blue-700 p-2 rounded-full transition duration-300 ease-in-out">
+            <MessageCircle className="h-6 w-6" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full border">
-            <BarChart2 className="h-5 w-5 text-gray-600" />
+          <button className="hover:bg-blue-700 p-2 rounded-full transition duration-300 ease-in-out">
+            <BarChart2 className="h-6 w-6" />
           </button>
           <button
-            className="p-2 hover:bg-gray-100 rounded-full border"
+            className="hover:bg-blue-700 p-2 rounded-full transition duration-300 ease-in-out"
             onClick={toggleFullscreen}
           >
             {isFullscreen ? (
-              <Minimize className="h-5 w-5 text-gray-600" />
+              <Minimize className="h-6 w-6" />
             ) : (
-              <Maximize className="h-5 w-5 text-gray-600" />
+              <Maximize className="h-6 w-6" />
             )}
           </button>
           <button
             onClick={handleLogout}
-            className="p-2 hover:bg-gray-100 rounded-full border flex items-center"
+            className="flex items-center space-x-2 bg-red-400 hover:bg-red-600 px-4 py-2 rounded-full transition duration-300 ease-in-out"
           >
-            <span className="mr-2 text-gray-600">Đăng xuất</span>
+            <LogOut className="h-5 w-5" />
+            <span className="text-sm font-medium">Đăng xuất</span>
           </button>
         </div>
       </header>

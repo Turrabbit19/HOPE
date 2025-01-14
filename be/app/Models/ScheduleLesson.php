@@ -15,4 +15,9 @@ class ScheduleLesson extends Model
         'study_date',
         'teacher_id'
     ];
+
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class);
+    }
 }

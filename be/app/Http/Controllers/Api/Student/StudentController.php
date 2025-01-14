@@ -14,6 +14,7 @@ use App\Models\StudentLesson;
 use App\Models\StudentMajor;
 use App\Models\StudentSchedule;
 use App\Models\StudyDay;
+use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
@@ -533,10 +534,13 @@ class   StudentController extends Controller
                     $currentDateTime = now();
                     $status = $this->getLessonStatus($studentSchedule->student, $lesson, $lessonDateTime, $currentDateTime);
 
+                    $teacher = Teacher::find($lesson->pivot->teacher_id);
+
                     return [
                         'name' => $lesson->name,
                         'description' => $lesson->description,
                         'date' => Carbon::parse($lesson->pivot->study_date)->format('d/m/Y'),
+                        'teacher_name' => $teacher->user->name,
                         'status' => $status,
                     ];
                 });
@@ -545,7 +549,6 @@ class   StudentController extends Controller
                     'id' => $schedule->id,
                     'subject_name' => $schedule->subject->name,
                     'classroom_code' => $classroom->code,
-                    'teacher_name' => $schedule->teacher->user->name,
                     'shift_name' => $schedule->shift->name,
                     'room_name' => $schedule->room->name ?? "Null",
                     'link' => $schedule->link ?? "Null",
@@ -566,7 +569,6 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Schedule', 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function getSubMajors()
     {

@@ -581,62 +581,62 @@ export default function DashboardActions() {
 
         {showPopup && selectedSchedule && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl transform transition-all animate-scale-in">
+            <div className="bg-white rounded-xl max-w-5xl w-full shadow-2xl transform transition-all animate-scale-in">
               <div className="p-8">
-                <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center">
-                  <Calendar className="h-8 w-8 mr-3 text-blue-500" size={24} />
-                  Chi tiết lịch học
-                </h2>
-                <div className="space-y-4 text-2xl">
-                  <p className="flex items-center text-gray-700">
-                    <User className="h-6 w-6 mr-3 text-gray-500" size={24} />
-                    <span className="font-semibold mr-2">Giảng viên:</span>
+                <Alert
+                  message="Thông tin chi tiết lịch học"
+                  type="success"
+                  showIcon
+                  className="mb-6"
+                />
+                <Descriptions
+                  bordered
+                  column={1}
+                  size="small"
+                  labelStyle={{
+                    width: "30%",
+                    fontWeight: "bold",
+                  }}
+                  contentStyle={{ width: "70%" }}
+                >
+                  <Descriptions.Item label="Giảng viên">
                     {selectedSchedule.lesson.teacher_name}
-                  </p>
-                  <p className="flex items-center text-gray-700">
-                    <Book className="h-6 w-6 mr-3 text-gray-500" size={24} />
-                    <span className="font-semibold mr-2">Môn học:</span>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Môn học">
                     {selectedSchedule.subject_name}
-                  </p>
-                  <p className="flex items-center text-gray-700">
-                    <Clock className="h-6 w-6 mr-3 text-gray-500" size={24} />
-                    <span className="font-semibold mr-2">Ca học:</span>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Ca học">
                     {selectedSchedule.shift_name}
-                  </p>
-                  <p className="flex items-center text-gray-700">
-                    <Book className="h-6 w-6 mr-3 text-gray-500" size={24} />
-                    <span className="font-semibold mr-2">Tiết học:</span>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Tiết học">
                     {selectedSchedule.lesson.name}
-                  </p>
-                  <p className="flex items-center text-gray-700">
-                    <Book className="h-6 w-6 mr-3 text-gray-500" size={24} />
-                    <span className="font-semibold mr-2">Nội dung:</span>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Nội dung">
                     {selectedSchedule.lesson.description}
-                  </p>
-                  <p className="flex items-center text-gray-700">
-                    <Calendar
-                      className="h-6 w-6 mr-3 text-gray-500"
-                      size={24}
-                    />
-                    <span className="font-semibold mr-2">Ngày:</span>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Ngày">
                     {selectedSchedule.lesson.date}
-                  </p>
-                  <p
-                    className={`flex items-center ${getStatusColor(
-                      selectedSchedule.lesson.status
-                    )}`}
-                  >
-                    <Clock className="h-6 w-6 mr-3" size={24} />
-                    <span className="font-semibold mr-2">Trạng thái:</span>
-                    {selectedSchedule.lesson.status}
-                  </p>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Trạng thái">
+                    {/* Giữ logic getStatusColor, chỉ hiển thị status kèm màu */}
+                    <span
+                      className={`${getStatusColor(
+                        selectedSchedule.lesson.status
+                      )} ml-2`}
+                    >
+                      {selectedSchedule.lesson.status}
+                    </span>
+                  </Descriptions.Item>
+
+                  {/* Kiểm tra nếu link !== "NULL" thì mới hiển thị */}
                   {selectedSchedule.link !== "NULL" && (
-                    <p className="flex items-center text-gray-700">
-                      <LinkIcon
-                        className="h-6 w-6 mr-3 text-gray-500"
-                        size={24}
-                      />
-                      <span className="font-semibold mr-2">Link:</span>
+                    <Descriptions.Item label="Link">
                       <a
                         href={selectedSchedule.link}
                         className="text-blue-500 hover:underline"
@@ -645,10 +645,12 @@ export default function DashboardActions() {
                       >
                         {selectedSchedule.link}
                       </a>
-                    </p>
+                    </Descriptions.Item>
                   )}
-                </div>
+                </Descriptions>
               </div>
+
+              {/* Footer button đóng popup */}
               <div className="bg-gray-50 px-6 py-4 sm:px-8 sm:flex sm:flex-row-reverse rounded-b-xl">
                 <button
                   onClick={closePopup}

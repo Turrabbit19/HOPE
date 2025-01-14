@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Models\StudentClassroom;
 use App\Models\StudentSchedule;
 use App\Models\Subject;
+use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -208,43 +209,43 @@ class ApiScheduleController extends Controller
         $teacherCode = $request->input('teacher_code');
 
         try {
-            $schedules = Schedule::with([
+            $schedulesQuery = Schedule::with([
                 'lessons' => function ($query) use ($date) {
                     $query->wherePivot('study_date', $date);
                 },
                 'shift',
                 'teacher',
                 'classroom',
-                'subject'
+                'subject',
             ]);
 
             if ($teacherCode) {
-                $schedules->whereHas('teacher', function ($query) use ($teacherCode) {
+                $schedulesQuery->whereHas('teacher', function ($query) use ($teacherCode) {
                     $query->where('teacher_code', 'like', "%$teacherCode%");
                 });
             }
 
-            $schedules = $schedules->get();
+            $schedules = $schedulesQuery->get();
 
-            $filteredSchedules = $schedules->filter(function ($schedule) {
-                return $schedule->lessons->isNotEmpty();
-            });
+            $filteredSchedules = $schedules->filter(fn($schedule) => $schedule->lessons->isNotEmpty());
 
             $now = Carbon::now();
 
             $data = $filteredSchedules->map(function ($schedule) use ($now, $date) {
                 $shift = $schedule->shift;
-                $studyDates = $schedule->lessons->pluck('pivot.study_date');
+                $lessons = $schedule->lessons;
 
                 $status = 'Chưa tới';
-
-                foreach ($studyDates as $studyDate) {
-                    $studyDate = Carbon::parse($studyDate);
+                foreach ($lessons as $lesson) {
+                    $studyDate = Carbon::parse($lesson->pivot->study_date);
 
                     if ($now->isSameDay($studyDate)) {
-                        if ($now->lt($shift->start_time)) {
+                        if ($now->lt(Carbon::parse($shift->start_time))) {
                             $status = 'Chưa tới';
-                        } elseif ($now->gte($shift->start_time) && $now->lte($shift->end_time)) {
+                        } elseif ($now->between(
+                            Carbon::parse($shift->start_time),
+                            Carbon::parse($shift->end_time)
+                        )) {
                             $status = 'Đang trong thời gian';
                         } else {
                             $status = 'Đã xong';
@@ -253,12 +254,15 @@ class ApiScheduleController extends Controller
                     }
                 }
 
+                $teacherId = $lessons->first()->pivot->teacher_id ?? null;
+                $teacherCode = $teacherId ? Teacher::find($teacherId)?->teacher_code : 'Trống';
+
                 return [
                     'room_id' => $schedule->room_id,
                     'shift_id' => $schedule->shift_id,
-                    'teacher' => $schedule->teacher->teacher_code,
-                    'class' => $schedule->classroom->code,
-                    'subject' => $schedule->subject->code,
+                    'teacher' => $teacherCode,
+                    'class' => $schedule->classroom->code ?? 'Trống',
+                    'subject' => $schedule->subject->code ?? 'Trống',
                     'status' => $status,
                 ];
             });
@@ -271,6 +275,7 @@ class ApiScheduleController extends Controller
             ], 500);
         }
     }
+
     private function calculateEndDateLogic($startDate, $subjectId, $daysOfWeek)
     {
         $subject = Subject::findOrFail($subjectId);

@@ -26,22 +26,34 @@ class ApiRoomController extends Controller
             if ($cachedData) {
                 $data = json_decode($cachedData, true);
             } else {
-                $rooms = Room::all();
-
                 $date = Carbon::today()->toDateString();
+                $currentTime = Carbon::now();
 
-                $schedules = Schedule::with('lessons')
+                $rooms = $room === "all"
+                    ? Room::all()
+                    : Room::where('name', 'like', "%$room%")->get();
+
+                $schedules = Schedule::with(['lessons', 'shift'])
                     ->whereHas('lessons', function ($query) use ($date) {
-                        $query->where('schedule_lessons.study_date', $date);
+                        $query->where('study_date', $date);
                     })
                     ->get();
 
-                $data = $rooms->map(function ($room) use ($schedules) {
-                    $roomSchedules = $schedules->filter(function ($schedule) use ($room) {
-                        return $schedule->room_id == $room->id;
+                $data = $rooms->map(function ($room) use ($schedules, $currentTime) {
+                    $roomSchedules = $schedules->filter(function ($schedule) use ($room, $currentTime) {
+                        if ($schedule->room_id != $room->id) {
+                            return false;
+                        }
+
+                        $shift = $schedule->shift;
+                        if ($shift && $currentTime->between($shift->start_time, $shift->end_time)) {
+                            return true;
+                        }
+
+                        return false;
                     });
 
-                    $status = $roomSchedules->isEmpty() ? 'Đang trống' : 'Đang sử dụng';
+                    $status = $roomSchedules->isNotEmpty() ? 'Đang sử dụng' : 'Đang trống';
 
                     return [
                         'id' => $room->id,
@@ -55,10 +67,12 @@ class ApiRoomController extends Controller
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Không thể truy vấn tới bảng Rooms',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
-
 
     public function getAvailableRooms(Request $request)
     {

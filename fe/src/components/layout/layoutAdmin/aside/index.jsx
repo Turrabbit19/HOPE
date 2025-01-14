@@ -265,7 +265,7 @@ const AsideAdmin = () => {
         {notifications.list && notifications.list.length > 0 ? (
           notifications.list.map((item, index) => (
             <div style={{ textAlign: "left" }} key={index}>
-              {item.old_date ? (
+              {item.date ? (
                 <>
                   <p>
                     <strong>Người yêu cầu:</strong> {item.requester_name}
@@ -274,11 +274,7 @@ const AsideAdmin = () => {
                     <strong>Môn học:</strong> {item.subject_name}
                   </p>
                   <p>
-                    <strong>Ngày cũ:</strong> {item.old_date}
-                  </p>
-                  <p>
-                    <strong>Ngày mới:</strong>{" "}
-                    {item.new_date || "Không có thông tin"}
+                    <strong>Ngày cụ thể:</strong> {item.date}
                   </p>
                   <p>
                     <strong>Thời gian yêu cầu:</strong>{" "}

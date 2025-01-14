@@ -11,6 +11,7 @@ import {
     X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Alert, Descriptions } from "antd";
 
 const TeacherTimetable = () => {
     const [currentWeek, setCurrentWeek] = useState(() => new Date());
@@ -522,94 +523,76 @@ const TeacherTimetable = () => {
 
             {/* Popup Modal */}
             {showPopup && selectedSchedule && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="w-full max-w-7xl h-[50%] mx-4 bg-white rounded-xl shadow-lg">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-blue-500 to-indigo-500">
-                            <h2 className="text-2xl font-semibold text-white flex items-center space-x-3">
-                                <Info className="w-7 h-7" />
-                                <span>Chi tiết lịch dạy </span>
-                            </h2>
-                            <button
-                                onClick={closePopup}
-                                className="text-white hover:text-gray-200 transition-colors duration-150"
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-white rounded-xl max-w-5xl w-full shadow-2xl transform transition-all animate-scale-in">
+                        <div className="p-8">
+                            <Alert
+                                message="Thông tin chi tiết lịch dạy học giảng viên"
+                                type="success"
+                                showIcon
+                                className="mb-6"
+                            />
+                            <Descriptions
+                                bordered
+                                column={1}
+                                size="small"
+                                labelStyle={{
+                                    width: "30%",
+                                    fontWeight: "bold",
+                                }}
+                                contentStyle={{ width: "70%" }}
                             >
-                                <X className="w-7 h-7" />
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div className="px-6 py-5 text-gray-800 space-y-4">
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
-                                <Book className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">
-                                        Môn học:
-                                    </span>{" "}
+                                <Descriptions.Item label="Môn học">
                                     {selectedSchedule.subject_name}
-                                </span>
-                            </div>
+                                </Descriptions.Item>
 
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
-                                <Clock className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">
-                                        Ca học:
-                                    </span>{" "}
+                                <Descriptions.Item label="Ca học">
                                     {selectedSchedule.shift_name}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
-                                <MapPin className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">
-                                        Phòng học:
-                                    </span>{" "}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Phòng học">
                                     {selectedSchedule.room_name}
-                                </span>
-                            </div>
+                                </Descriptions.Item>
 
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
-                                <Book className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">
-                                        Tiết học:
-                                    </span>{" "}
+                                <Descriptions.Item label="Tiết học">
                                     {selectedSchedule.lesson?.name}
-                                </span>
-                            </div>
+                                </Descriptions.Item>
 
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
-                                <Info className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">
-                                        Nội dung:
-                                    </span>{" "}
+                                <Descriptions.Item label="Nội dung">
                                     {selectedSchedule.lesson?.description}
-                                </span>
-                            </div>
+                                </Descriptions.Item>
 
-                            <div className="flex items-center mt-6 text-2xl space-x-3">
-                                <Calendar className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">Ngày:</span>{" "}
+                                <Descriptions.Item label="Ngày">
                                     {selectedSchedule.lesson?.date}
-                                </span>
-                            </div>
+                                </Descriptions.Item>
 
-                            <div className="flex items-center  text-2xl space-x-3">
-                                <Info className="w-6 h-6 text-blue-500" />
-                                <span>
-                                    <span className="font-semibold">
-                                        Trạng thái:
-                                    </span>{" "}
-                                    {selectedSchedule.lesson?.status}
-                                </span>
-                            </div>
+                                <Descriptions.Item label="Trạng thái">
+                                    {/* Giữ logic getStatusColor, chỉ hiển thị status kèm màu */}
+                                    <span
+                                        className={`${getStatusColor(
+                                            selectedSchedule.lesson.status
+                                        )} ml-2`}
+                                    >
+                                        {selectedSchedule.lesson?.status}
+                                    </span>
+                                </Descriptions.Item>
+
+                                {/* Kiểm tra nếu link !== "NULL" thì mới hiển thị */}
+                                {selectedSchedule.link !== "NULL" && (
+                                    <Descriptions.Item label="Link">
+                                        <a
+                                            href={selectedSchedule.link}
+                                            className="text-blue-500 hover:underline"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {selectedSchedule.link}
+                                        </a>
+                                    </Descriptions.Item>
+                                )}
+                            </Descriptions>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer button đóng popup */}
                         <div className="flex justify-end mb-5 px-6 py-4 border-t border-gray-200 space-x-4">
                             {selectedSchedule.lesson?.status === "Chưa tới" && (
                                 <button

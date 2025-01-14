@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom"; // Thay thế Link bằng NavLink
-import { Modal, Button, message } from "antd";
+import { Modal, Button, message, Alert, Descriptions } from "antd";
 import instance from "../../../../config/axios";
 
 const AsideTeacher = () => {
@@ -196,34 +196,60 @@ const AsideTeacher = () => {
             </div>
 
             <Modal
-                title="Thông báo đổi lịch"
+                title={
+                    <div style={{ textAlign: "center", margin: 0 }}>
+                        <h2 style={{ marginBottom: 4 }}>Thông báo đổi lịch</h2>
+                        <p
+                            style={{
+                                margin: 0,
+                                fontSize: "14px",
+                                color: "#666",
+                            }}
+                        >
+                            Thông tin chi tiết về lịch học mới
+                        </p>
+                    </div>
+                }
                 visible={isModalVisible}
                 onOk={handleSubmit}
                 okText="Chấp nhận"
                 onCancel={handleCloseModal}
+                centered
             >
                 {notifications ? (
-                    <div>
-                        <p>
-                            <strong>Phòng:</strong> {notifications.room_name}
-                        </p>
-                        <p>
-                            <strong>Ca học:</strong> {notifications.shift_name}
-                        </p>
-                        <p>
-                            <strong>Môn học:</strong>{" "}
-                            {notifications.subject_name}
-                        </p>
-                        <p>
-                            <strong>Ngày:</strong> {notifications.date}
-                        </p>
-                        <p>
-                            <strong>Người yêu cầu:</strong>{" "}
-                            {notifications.requester_name}
-                        </p>
+                    <div style={{ marginTop: 16 }}>
+                        <Alert
+                            message="Bạn có một yêu cầu thay đổi lịch học!"
+                            type="warning"
+                            showIcon
+                            style={{ marginBottom: 16 }}
+                        />
+                        <Descriptions
+                            bordered
+                            column={1}
+                            size="small"
+                            labelStyle={{ width: "30%", fontWeight: "bold" }}
+                            contentStyle={{ width: "80%" }}
+                        >
+                            <Descriptions.Item label="Phòng">
+                                {notifications.room_name}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Ca học">
+                                {notifications.shift_name}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Môn học">
+                                {notifications.subject_name}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Ngày">
+                                {notifications.date}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Người yêu cầu">
+                                {notifications.requester_name}
+                            </Descriptions.Item>
+                        </Descriptions>
                     </div>
                 ) : (
-                    <p>Không có thông tin.</p>
+                    <Empty description="Không có thông tin." />
                 )}
             </Modal>
         </aside>

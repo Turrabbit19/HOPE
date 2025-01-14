@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { User } from 'lucide-react';
+import { User } from "lucide-react";
 // Utility Components
 function LoadingSpinner() {
   return (
@@ -108,8 +108,9 @@ function StudentProfile() {
           {
             icon: "M4 6h16M4 10h16M4 14h16M4 18h16",
             label: "Kì",
-            value: `${student.current_semester || "N/A"} - ${student.semester_name || "N/A"
-              }`,
+            value: `${student.current_semester || "N/A"} - ${
+              student.semester_name || "N/A"
+            }`,
           },
           {
             icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4",
@@ -176,9 +177,7 @@ function StudentProfile() {
           </div>
         ))}
       </div>
-
     </div>
-
   );
 }
 
@@ -361,31 +360,60 @@ function ClassroomList() {
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg">
-      <h3 className="text-3xl font-semibold mb-6 text-gray-800">Lớp Học Đang Tham Gia</h3>
+      <h3 className="text-3xl font-semibold mb-6 text-gray-800">
+        Lớp Học Đang Tham Gia
+      </h3>
       <ul className="space-y-6">
         {classroomsData.map((classroom) => (
           <li
             key={classroom.id}
             className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-103"
           >
-            <h4 className="font-semibold text-2xl text-gray-800 mb-2">{classroom.subject_name}</h4>
-            <p className="text-xl text-gray-700">Lớp: <span className="text-gray-900 font-semibold">{classroom.classroom}</span></p>
-            <p className="text-xl text-gray-700">Phòng: <span className="text-gray-900 font-semibold">{classroom.room_name}</span></p>
-            <p className="text-xl text-gray-700">Thời gian: <span className="text-gray-900 font-semibold">{classroom.shift_name}</span></p>
-            <p className="text-xl text-gray-700">Ngày học: <span className="text-gray-900 font-semibold">{classroom.days_of_week.join(", ")}</span></p>
-            <p className="text-xl text-gray-700">Thời gian: <span className="text-gray-900 font-semibold">{classroom.start_date} - {classroom.end_date}</span></p>
-            <p className="mt-2 text-xl text-gray-600">{classroom.schedule_status}</p>
+            <h4 className="font-semibold text-2xl text-gray-800 mb-2">
+              {classroom.subject_name}
+            </h4>
+            <p className="text-xl text-gray-700">
+              Lớp:{" "}
+              <span className="text-gray-900 font-semibold">
+                {classroom.classroom}
+              </span>
+            </p>
+            <p className="text-xl text-gray-700">
+              Phòng:{" "}
+              <span className="text-gray-900 font-semibold">
+                {classroom.room_name}
+              </span>
+            </p>
+            <p className="text-xl text-gray-700">
+              Thời gian:{" "}
+              <span className="text-gray-900 font-semibold">
+                {classroom.shift_name}
+              </span>
+            </p>
+            <p className="text-xl text-gray-700">
+              Ngày học:{" "}
+              <span className="text-gray-900 font-semibold">
+                {classroom.days_of_week.join(", ")}
+              </span>
+            </p>
+            <p className="text-xl text-gray-700">
+              Thời gian:{" "}
+              <span className="text-gray-900 font-semibold">
+                {classroom.start_date} - {classroom.end_date}
+              </span>
+            </p>
+            <p className="mt-2 text-xl text-gray-600">
+              {classroom.schedule_status}
+            </p>
           </li>
         ))}
       </ul>
     </div>
-
-
-  )
+  );
 }
 
 export default function CombinedDashboard() {
-  const [activeTab, setActiveTab] = useState("Thông tin");
+  const [activeTab, setActiveTab] = useState("Hôm nay");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white">
@@ -406,13 +434,18 @@ export default function CombinedDashboard() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-4 px-6 text-lg font-medium transition-colors duration-200 ${activeTab === tab
-                      ? "bg-gray-100 text-black"
-                      : "text-gray-600 hover:bg-gray-200"
-                      }`}
+                    className={`py-4 px-6 text-lg font-medium transition-colors duration-200 ${
+                      activeTab === tab
+                        ? "bg-gray-100 text-black"
+                        : "text-gray-600 hover:bg-gray-200"
+                    }`}
                   >
-                    {tab === "Hôm nay" && <i className="fas fa-calendar-day mr-2"></i>}
-                    {tab === "Các lớp hiện tại" && <i className="fas fa-chalkboard-teacher mr-2"></i>}
+                    {tab === "Hôm nay" && (
+                      <i className="fas fa-calendar-day mr-2"></i>
+                    )}
+                    {tab === "Các lớp hiện tại" && (
+                      <i className="fas fa-chalkboard-teacher mr-2"></i>
+                    )}
                     {tab}
                   </button>
                 ))}
@@ -425,10 +458,8 @@ export default function CombinedDashboard() {
               {activeTab === "Các lớp hiện tại" && <ClassroomList />}
             </div>
           </div>
-
         </div>
       </div>
     </div>
-
   );
 }

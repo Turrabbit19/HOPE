@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Tabs, Table, Space, Button, Avatar, Input } from "antd";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { Tabs, Table, Space, Button, Avatar, Input, Spin } from "antd";
 import { ArrowLeftOutlined, SearchOutlined } from "@ant-design/icons";
 import instance from "../../../../config/axios";
 
@@ -15,37 +15,63 @@ const CourseDetail = () => {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50);
   const [totalStudents, setTotalStudents] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const location = useLocation();
+
+  const courseData = location.state?.course;
+  const [courseName, setCourseName] = useState(""); // Khai báo state cho tên khóa học
+
   useEffect(() => {
-    if (courseId) {
-      const courseData = {
+    // Kiểm tra thông tin `courseData` trước khi sử dụng.
+    if (courseId && courseData) {
+      const newCourseData = {
         id: courseId,
-        name: `Khóa ${courseId}`,
+        name: `Khóa ${courseData.name}`, // Sử dụng `courseData.name` thay vì `course.name`
       };
-      setCourse(courseData);
+
+      setCourseName(courseData.name); // Cập nhật tên khóa học vào state
+      setCourse(newCourseData); // Cập nhật thông tin khóa học
       fetchSemesters();
       fetchDepartments();
     } else {
       setCourse({ name: "Khóa không xác định" });
     }
-  }, [courseId]);
+  }, [courseId, courseData]); // Đảm bảo biến `courseData` đã được truyền vào đúng.
 
   const fetchSemesters = async () => {
-    const semesters = await instance.get(`admin/course/${courseId}/semesters`);
-    setSemesters(semesters.data.semesters);
+    setLoading(true);
+    try {
+      const semesters = await instance.get(
+        `admin/course/${courseId}/semesters`
+      );
+      setSemesters(semesters.data.semesters);
+    } catch (error) {
+      console.error("Lỗi khi lấy kỳ học:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchDepartments = async () => {
-    const majors = await instance.get(`admin/course/${courseId}/majors`);
-    setDepartments(majors.data.majors);
+    setLoading(true);
+    try {
+      const majors = await instance.get(`admin/course/${courseId}/majors`);
+      setDepartments(majors.data.majors);
+    } catch (error) {
+      console.error("Lỗi khi lấy ngành học:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchStudentsByDepartment = async (departmentId, page = 1) => {
+    setLoading(true);
     try {
       const response = await instance.get(
         `admin/${courseId}/${departmentId}/students`,
@@ -56,14 +82,15 @@ const CourseDetail = () => {
           },
         }
       );
-      console.log(response.data);
       const { data, total } = response.data;
-      console.log(data);
       setTotalStudents(total);
       setStudents(data);
       setFilteredStudents(data);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách sinh viên:", error);
+      alert("Có lỗi khi tải dữ liệu sinh viên.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,7 +99,6 @@ const CourseDetail = () => {
   };
 
   const handleDepartmentClick = (department) => {
-    console.log(department);
     setSelectedDepartment(department);
     fetchStudentsByDepartment(department.id, 1);
   };
@@ -86,16 +112,20 @@ const CourseDetail = () => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
 
+    // Lọc sinh viên từ danh sách gốc
     const filtered = students.filter(
       (student) =>
         student.name.toLowerCase().includes(value) ||
         student.studentCode.toLowerCase().includes(value)
     );
     setFilteredStudents(filtered);
+
+    // Điều chỉnh phân trang lại nếu cần
+    setCurrentPage(1); // Reset trang lại nếu tìm kiếm lại từ đầu
   };
 
   const semesterColumns = [
-    { title: "Tên Kỳ Học", dataIndex: "name", key: "name" },
+    { title: "Tên Kỳ Học", dataIndex: "name", key: "courseName" },
     {
       title: "Ngày Bắt Đầu",
       dataIndex: "start_date",
@@ -105,7 +135,6 @@ const CourseDetail = () => {
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const year = date.getFullYear();
-
         return `${day}/${month}/${year}`;
       },
     },
@@ -118,7 +147,6 @@ const CourseDetail = () => {
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const year = date.getFullYear();
-
         return `${day}/${month}/${year}`;
       },
     },
@@ -192,7 +220,8 @@ const CourseDetail = () => {
   );
 
   return (
-    <div className="mx-auto px-4 py-8">
+    <div className="mx-auto px-4 py-8 max-w-screen">
+      {/* Phần quay lại */}
       <Space align="center" style={{ cursor: "pointer" }} onClick={handleBack}>
         <div
           style={{
@@ -207,43 +236,62 @@ const CourseDetail = () => {
           <ArrowLeftOutlined style={{ fontSize: "16px", color: "#1890ff" }} />
         </div>
       </Space>
+
+      {/* Tên khóa học */}
       {course && (
         <>
           <h1
             className="text-[#7017E2] text-center"
             style={{
-              fontSize: "28px",
+              fontSize: "26px",
               fontWeight: "bold",
-              marginTop: "20px",
+              textTransform: "capitalize",
             }}
           >
-            Quản Lý Khóa Học: {course.name}
+            {courseName || "Khóa không xác định"}
           </h1>
-          <Tabs defaultActiveKey="1" style={{ marginTop: "20px" }}>
+
+          {/* Các tab */}
+          <Tabs
+            defaultActiveKey="1"
+            style={{ marginTop: "20px", textAlign: "center" }}
+          >
             <TabPane tab="Kỳ Học" key="1">
-              {renderSemesters()}
+              {loading ? <Spin size="large" /> : renderSemesters()}
             </TabPane>
             <TabPane tab="Ngành Học" key="2">
-              {renderDepartments()}
+              {loading ? <Spin size="large" /> : renderDepartments()}
             </TabPane>
           </Tabs>
         </>
       )}
 
+      {/* Danh sách sinh viên */}
       {selectedDepartment && (
         <div style={{ marginTop: "40px" }}>
           <h2 style={{ fontSize: "24px", fontWeight: "bold" }} className="mb-6">
-            Danh Sách Sinh Viên Ngành :{" "}
+            Danh Sách Sinh Viên Ngành:{" "}
             <span className="text-[#7017E2]">{selectedDepartment.name}</span>
           </h2>
+
+          {/* Tìm kiếm sinh viên */}
           <Input
             placeholder="Tìm kiếm theo tên hoặc mã sinh viên"
             prefix={<SearchOutlined />}
             value={searchTerm}
             onChange={handleSearch}
-            style={{ marginBottom: "20px", width: "100%" }}
+            style={{
+              marginBottom: "20px",
+              width: "100%",
+              borderRadius: "8px",
+              paddingLeft: "20px",
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+            }}
           />
+
+          {/* Table danh sách sinh viên */}
           <Table
+            loading={loading}
             dataSource={filteredStudents}
             columns={studentColumns}
             rowKey="id"
@@ -252,6 +300,11 @@ const CourseDetail = () => {
               pageSize,
               total: totalStudents,
               onChange: handlePageChange,
+              showSizeChanger: false,
+            }}
+            style={{
+              borderRadius: "8px",
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
             }}
           />
         </div>

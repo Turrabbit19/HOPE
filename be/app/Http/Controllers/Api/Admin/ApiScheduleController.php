@@ -272,9 +272,6 @@ class ApiScheduleController extends Controller
             ], 500);
         }
     }
-
-
-
     private function calculateEndDateLogic($startDate, $subjectId, $daysOfWeek)
     {
         $subject = Subject::findOrFail($subjectId);

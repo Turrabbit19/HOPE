@@ -12,42 +12,51 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
-// use Illuminate\Support\Facades\Redis;
 
 class ApiSubjectController extends Controller
 {
-
-
     public function index(Request $request)
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $cacheKey = "subjects_per_page_{$perPage}";
+            $page = $request->input('page', 1);
+            $cacheKey = "subjects_per_page_{$perPage}_page_{$page}";
 
-            $subjects = Cache::get($cacheKey);
+            $subjects = Redis::get($cacheKey);
 
             if (!$subjects) {
                 $subjects = Subject::paginate($perPage);
-
-                Cache::put($cacheKey, $subjects, now()->addMinutes(30));
+                Redis::set($cacheKey, json_encode($subjects), 'EX', 1800);
+            } else {
+                $subjectsArray = json_decode($subjects, true);
+                // Tái tạo lại đối tượng LengthAwarePaginator từ dữ liệu lấy ra từ Redis
+                $subjects = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $subjectsArray['data'],
+                    $subjectsArray['total'],
+                    $subjectsArray['per_page'],
+                    $subjectsArray['current_page'],
+                    ['path' => url()->current()]
+                );
             }
 
-            $data = collect($subjects->items())->map(function ($subject) {
+            $data = $subjects->items(); // Lúc này bạn có thể gọi items() trên paginator
+
+            $mappedData = collect($data)->map(function ($subject) {
                 return [
-                    'id' => $subject->id,
-                    'code' => $subject->code,
-                    'name' => $subject->name,
-                    'description' => $subject->description,
-                    'credit' => $subject->credit,
-                    'order' => $subject->order,
-                    'max_students' => $subject->max_students,
-                    'form' => $subject->form ? "Trực tuyến" : "Trực tiếp",
-                    'status' => $subject->status ? 'Đang hoạt động' : 'Tạm dừng',
+                    'id' => $subject['id'],
+                    'code' => $subject['code'],
+                    'name' => $subject['name'],
+                    'description' => $subject['description'],
+                    'credit' => $subject['credit'],
+                    'order' => $subject['order'],
+                    'max_students' => $subject['max_students'],
+                    'form' => $subject['form'] ? "Trực tuyến" : "Trực tiếp",
+                    'status' => $subject['status'] ? 'Đang hoạt động' : 'Tạm dừng',
                 ];
             });
 
             return response()->json([
-                'data' => $data,
+                'data' => $mappedData,
                 'pagination' => [
                     'total' => $subjects->total(),
                     'per_page' => $subjects->perPage(),
@@ -59,7 +68,6 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Subjects', 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function getAll()
     {
@@ -249,7 +257,6 @@ class ApiSubjectController extends Controller
             if (isset($data['sub_major'])) {
                 $subject->majors()->sync([$data['sub_major']]);
             }
-            // Redis::del('syllabus');
             $this->clearSubjectsCache();
 
             return response()->json(['data' => $subject, 'message' => 'Tạo mới thành công'], 201);
@@ -424,13 +431,21 @@ class ApiSubjectController extends Controller
     public function getAllLessons(string $id)
     {
         try {
-            $lessons = Lesson::where('subject_id', $id)->get();
+            $cacheKey = "lessons_subject_{$id}";
+            $lessons = Redis::get($cacheKey);
 
-            $data = $lessons->map(function ($lesson) {
+            if (!$lessons) {
+                $lessons = Lesson::where('subject_id', $id)->get();
+                Redis::set($cacheKey, json_encode($lessons), 'EX', 1800);
+            } else {
+                $lessons = json_decode($lessons, true);
+            }
+
+            $data = collect($lessons)->map(function ($lesson) {
                 return [
-                    'id' => $lesson->id,
-                    'name' => $lesson->name,
-                    'description' => $lesson->description,
+                    'id' => $lesson['id'],
+                    'name' => $lesson['name'],
+                    'description' => $lesson['description'],
                 ];
             });
 
@@ -441,18 +456,12 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Lessons', 'message' => $e->getMessage()], 500);
         }
     }
+
     public function addLessons(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
             '*.name' => 'required|string|max:50',
             '*.description' => 'required|string',
-        ], [
-            '*.name.required' => 'Tên bài học là bắt buộc.',
-            '*.name.string' => 'Tên bài học phải là chuỗi ký tự.',
-            '*.name.max' => 'Tên bài học không được vượt quá 50 ký tự.',
-
-            '*.description.required' => 'Mô tả bài học là bắt buộc.',
-            '*.description.string' => 'Mô tả bài học phải là chuỗi ký tự.',
         ]);
 
         if ($validator->fails()) {
@@ -473,7 +482,8 @@ class ApiSubjectController extends Controller
             }
 
             $subject->lessons()->saveMany($lessons);
-            $this->clearLessonsCache();
+
+            $this->clearLessonsCache($id);
 
             return response()->json(['message' => 'Thêm bài học thành công.', 'data' => $lessons], 201);
         } catch (ModelNotFoundException $e) {
@@ -483,17 +493,31 @@ class ApiSubjectController extends Controller
         }
     }
 
+    private function clearLessonsCache($subjectId)
+    {
+        $cacheKey = "lessons_subject_{$subjectId}";
+        Redis::del($cacheKey);
+    }
+
     public function getAllClassrooms(string $id)
     {
         try {
-            $classrooms = Classroom::where('subject_id', $id)->get();
+            $cacheKey = "classrooms_subject_{$id}";
+            $classrooms = Redis::get($cacheKey);
 
-            $data = $classrooms->map(function ($classroom) {
+            if (!$classrooms) {
+                $classrooms = Classroom::where('subject_id', $id)->get();
+                Redis::set($cacheKey, json_encode($classrooms), 'EX', 1800);
+            } else {
+                $classrooms = json_decode($classrooms, true);
+            }
+
+            $data = collect($classrooms)->map(function ($classroom) {
                 return [
-                    'id' => $classroom->id,
-                    'code' => $classroom->code,
-                    'max_students' => $classroom->subject->max_students,
-                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                    'id' => $classroom['id'],
+                    'code' => $classroom['code'],
+                    'max_students' => $classroom['max_students'],
+                    'status' => $classroom['status'] ? "Đang hoạt động" : "Tạm dừng",
                 ];
             });
 
@@ -504,23 +528,13 @@ class ApiSubjectController extends Controller
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
+
     public function addClassrooms(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
             '*.code' => 'required|string|max:10|unique:classrooms,code',
             '*.max_students' => 'required|integer|min:1',
             '*.status' => 'boolean',
-        ], [
-            '*.code.required' => 'Mã lớp học là bắt buộc.',
-            '*.code.string' => 'Mã lớp học phải là chuỗi ký tự.',
-            '*.code.max' => 'Mã lớp học không được vượt quá 10 ký tự.',
-            '*.code.unique' => 'Mã lớp học này đã tồn tại trong hệ thống.',
-
-            '*.max_students.required' => 'Số lượng học sinh là bắt buộc.',
-            '*.max_students.integer' => 'Số lượng học sinh phải là một số nguyên.',
-            '*.max_students.min' => 'Số lượng học sinh phải lớn hơn hoặc bằng 1.',
-
-            '*.status.boolean' => 'Trạng thái phải là giá trị true hoặc false.',
         ]);
 
         if ($validator->fails()) {
@@ -541,33 +555,30 @@ class ApiSubjectController extends Controller
             }
 
             $subject->classrooms()->saveMany($classrooms);
-            $this->clearClassroomsCache();
+
+            $this->clearClassroomsCache($id);
 
             return response()->json(['data' => $classrooms, 'message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
     }
-    private function clearLessonsCache()
+
+    private function clearClassroomsCache($subjectId)
     {
-        $keys = Redis::keys('lessons_*');
-        foreach ($keys as $key) {
-            Redis::del($key);
-        }
+        $cacheKey = "classrooms_subject_{$subjectId}";
+        Redis::del($cacheKey);
     }
 
-    private function clearClassroomsCache()
+    private function clearSubjectsCache($perPage = 10)
     {
-        $keys = Redis::keys('classrooms_index_page_*');
-        foreach ($keys as $key) {
-            Redis::del($key);
-        }
-    }
-    private function clearSubjectsCache()
-    {
-        $keys = Redis::keys('subjects_*');
-        foreach ($keys as $key) {
-            Redis::del($key);
+        Redis::del('subjects_all');
+
+        $totalItems = Subject::count();
+        $totalPages = ceil($totalItems / $perPage);
+
+        for ($page = 1; $page <= $totalPages; $page++) {
+            Redis::del("subjects_per_page_{$perPage}_page_{$page}");
         }
     }
 }

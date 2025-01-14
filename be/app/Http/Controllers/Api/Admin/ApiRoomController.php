@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Room;
+use App\Models\Schedule;
 use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -14,37 +15,52 @@ use Illuminate\Support\Facades\Validator;
 class ApiRoomController extends Controller
 {
     public function index(Request $request)
-{
-    try {
-        $room = $request->input('room', 'all');
-        $cacheKey = $room === "all" ? 'rooms_all' : "rooms_search_{$room}";
-        $cacheTTL = 10368000;
+    {
+        try {
+            $room = $request->input('room', 'all');
+            $cacheKey = $room === "all" ? 'rooms_all' : "rooms_search_{$room}";
+            $cacheTTL = 10368000;
 
-        $cachedData = Redis::get($cacheKey);
+            // Kiểm tra dữ liệu trong cache
+            $cachedData = Redis::get($cacheKey);
 
-        if ($cachedData) {
-            $data = json_decode($cachedData, true);
-        } else {
-            $rooms = Room::when($room !== "all", function ($query) use ($room) {
-                $query->where('name', 'like', "{$room}%");
-            })->get();
+            if ($cachedData) {
+                $data = json_decode($cachedData, true);
+            } else {
+                // Nếu không có cache, lấy dữ liệu từ cơ sở dữ liệu
+                $rooms = Room::all();
 
-            $data = $rooms->map(function ($room) {
-                return [
-                    'id' => $room->id,
-                    'name' => $room->name,
-                    'status' => $room->status ? "Đang trống" : "Đang hoạt động",
-                ];
-            });
+                $date = Carbon::today()->toDateString();
 
-            Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+                $schedules = Schedule::with('lessons')
+                    ->whereHas('lessons', function ($query) use ($date) {
+                        $query->where('schedule_lessons.study_date', $date);  // Sử dụng bảng pivot đúng cách
+                    })
+                    ->get();
+
+                $data = $rooms->map(function ($room) use ($schedules) {
+                    $roomSchedules = $schedules->filter(function ($schedule) use ($room) {
+                        return $schedule->room_id == $room->id;
+                    });
+
+                    $status = $roomSchedules->isEmpty() ? 'Đang trống' : 'Đang sử dụng';
+
+                    return [
+                        'id' => $room->id,
+                        'name' => $room->name,
+                        'status' => $status,
+                    ];
+                });
+
+                // Lưu kết quả vào Redis
+                Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+            }
+
+            return response()->json(['data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
         }
-
-        return response()->json(['data' => $data], 200);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Không thể truy vấn tới bảng Rooms', 'message' => $e->getMessage()], 500);
     }
-}
 
 
     public function getAvailableRooms(Request $request)
@@ -60,28 +76,16 @@ class ApiRoomController extends Controller
                 return response()->json(['error' => 'Không tìm thấy ca học'], 404);
             }
 
-            $rooms = Room::whereDoesntHave('schedules', function ($query) use ($shiftId, $start_date, $end_date, $days) {
-                $query->where('shift_id', $shiftId)
-                    ->where(function ($q) use ($start_date, $end_date) {
-                        $q->whereBetween('start_date', [$start_date, $end_date])
-                            ->orWhereBetween('end_date', [$start_date, $end_date])
-                            ->orWhere([
-                                ['start_date', '<=', $start_date],
-                                ['end_date', '>=', $end_date]
-                            ]);
-                    });
-                if (!empty($days)) {
-                    $query->whereHas('days', fn($q) => $q->whereIn('day_id', $days));
-                }
-            })->get(['id', 'name']);
+            $cacheKey = "available_rooms_shift_{$shiftId}_{$start_date}_{$end_date}";
 
-            $availableRooms = [];
+            $cachedData = Redis::get($cacheKey);
 
-            foreach ($rooms as $room) {
-                $hasScheduled = $room->schedules()
-                    ->where('shift_id', $shiftId)
-                    ->where(function ($query) use ($start_date, $end_date, $days) {
-                        $query->where(function ($q) use ($start_date, $end_date) {
+            if ($cachedData) {
+                $availableRooms = json_decode($cachedData, true);
+            } else {
+                $rooms = Room::whereDoesntHave('schedules', function ($query) use ($shiftId, $start_date, $end_date, $days) {
+                    $query->where('shift_id', $shiftId)
+                        ->where(function ($q) use ($start_date, $end_date) {
                             $q->whereBetween('start_date', [$start_date, $end_date])
                                 ->orWhereBetween('end_date', [$start_date, $end_date])
                                 ->orWhere([
@@ -89,19 +93,40 @@ class ApiRoomController extends Controller
                                     ['end_date', '>=', $end_date]
                                 ]);
                         });
-                        if (!empty($days)) {
-                            $query->whereHas('days', fn($dayQuery) => $dayQuery->whereIn('day_id', $days));
-                        }
-                    })
-                    ->exists();
+                    if (!empty($days)) {
+                        $query->whereHas('days', fn($q) => $q->whereIn('day_id', $days));
+                    }
+                })->get(['id', 'name']);
 
+                $availableRooms = [];
 
-                if (!$hasScheduled) {
-                    $availableRooms[] = [
-                        'id' => $room->id,
-                        'name' => $room->name,
-                    ];
+                foreach ($rooms as $room) {
+                    $hasScheduled = $room->schedules()
+                        ->where('shift_id', $shiftId)
+                        ->where(function ($query) use ($start_date, $end_date, $days) {
+                            $query->where(function ($q) use ($start_date, $end_date) {
+                                $q->whereBetween('start_date', [$start_date, $end_date])
+                                    ->orWhereBetween('end_date', [$start_date, $end_date])
+                                    ->orWhere([
+                                        ['start_date', '<=', $start_date],
+                                        ['end_date', '>=', $end_date]
+                                    ]);
+                            });
+                            if (!empty($days)) {
+                                $query->whereHas('days', fn($dayQuery) => $dayQuery->whereIn('day_id', $days));
+                            }
+                        })
+                        ->exists();
+
+                    if (!$hasScheduled) {
+                        $availableRooms[] = [
+                            'id' => $room->id,
+                            'name' => $room->name,
+                        ];
+                    }
                 }
+
+                Redis::setex($cacheKey, 3600, json_encode($availableRooms));
             }
 
             return response()->json(['data' => $availableRooms], 200);
@@ -109,7 +134,6 @@ class ApiRoomController extends Controller
             return response()->json(['error' => 'Không thể lấy danh sách phòng trống', 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function store(Request $request)
     {
@@ -197,23 +221,7 @@ class ApiRoomController extends Controller
         }
     }
     private function updateRoomsCache()
-{
-    $cacheTTL = 10368000;
-
-    $allRoomsKey = 'rooms_all';
-    Redis::del($allRoomsKey);
-
-    $rooms = Room::all();
-
-    $data = $rooms->map(function ($room) {
-        return [
-            'id' => $room->id,
-            'name' => $room->name,
-            'status' => $room->status ? "Đang trống" : "Đang hoạt động",
-        ];
-    });
-
-    Redis::setex($allRoomsKey, $cacheTTL, json_encode($data));
-}
-
+    {
+        Redis::del('rooms_all');
+    }
 }

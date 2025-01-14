@@ -228,5 +228,4 @@ class ApiCourseController extends Controller
         $cacheKey = 'courses_index';
         Redis::del($cacheKey);
     }
-
 }

@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
+
 class ApiLessonController extends Controller
 {
     public function index()
     {
         try {
             $cacheKey = 'lessons_index_' . request('page', 1);
-            $cacheTTL = 3600;
+            $cacheTTL = 300;
 
             $cachedData = Redis::get($cacheKey);
 
@@ -58,7 +59,7 @@ class ApiLessonController extends Controller
     {
         try {
             $cacheKey = 'lessons_all';
-            $cacheTTL = 3600;
+            $cacheTTL = 300;
 
             $cachedData = Redis::get($cacheKey);
 
@@ -196,5 +197,4 @@ class ApiLessonController extends Controller
             Redis::del($key);
         }
     }
-
 }

@@ -107,7 +107,6 @@ class ApiSemesterController extends Controller
                     'last_page' => $semesters->lastPage(),
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Semesters',
@@ -349,6 +348,7 @@ class ApiSemesterController extends Controller
         try {
             $semester = Semester::withTrashed()->findOrFail($id);
             $semester->restore();
+            $this->updateSemestersCache();
 
             return response()->json(['message' => 'Xóa mềm thành công'], 200);
         } catch (ModelNotFoundException $e) {
@@ -359,12 +359,9 @@ class ApiSemesterController extends Controller
     }
     private function updateSemestersCache()
     {
-
         $keys = Redis::keys('semesters_*');
         foreach ($keys as $key) {
             Redis::del($key);
         }
     }
-
-
 }

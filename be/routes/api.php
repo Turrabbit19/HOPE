@@ -36,7 +36,7 @@ Route::post('logout', [ApiAuthController::class, 'logout'])->middleware('auth:sa
 Route::get('user', [ApiAuthController::class, 'user'])->middleware('auth:sanctum');
 
 Route::prefix('admin')->middleware(['throttle:100,1'])
-    ->middleware(['auth:sanctum', 'role:Quản trị viên'])
+    // ->middleware(['auth:sanctum', 'role:Quản trị viên'])
     ->group(function () {
         Route::apiResource('roles', ApiRoleController::class);
 

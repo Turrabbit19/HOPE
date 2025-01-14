@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from "react";
 import {
-    Button,
-    Popconfirm,
-    Modal,
-    Form,
-    Input,
-    DatePicker,
-    Select,
-    Space,
-    Pagination,
-    Row,
-    Col,
-    message,
-    notification,
+  Button,
+  Popconfirm,
+  Modal,
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  Space,
+  Pagination,
+  Row,
+  Col,
+  message,
+  notification,
 } from "antd";
 import {
-    ArrowLeftOutlined,
-    EditOutlined,
-    PlusOutlined,
+  ArrowLeftOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import moment from "moment";
@@ -27,366 +27,354 @@ import instance from "../../../config/axios";
 const { Option } = Select;
 
 const ListRooms = () => {
-    const [rooms, setRooms] = useState([]);
-    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-    const [editingRoom, setEditingRoom] = useState(null);
-    const [update, setUpdate] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [form] = Form.useForm();
-    const [initialValues, setInitialValues] = useState();
+  const [rooms, setRooms] = useState([]);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [update, setUpdate] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+  const [initialValues, setInitialValues] = useState();
 
-    const navigate = useNavigate();
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
+  const navigate = useNavigate();
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-    // Search state
-    const [searchTerm, setSearchTerm] = useState("");
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        (async () => {
-            try {
-                setLoading(true);
-                const { data } = await instance.get(`/admin/rooms`);
-                setRooms(data.data);
-                console.log(data.data);
-            } catch (error) {
-                if (error.response && error.response.data) {
-                    message.error(
-                        error.response.data.message ||
-                            "Có lỗi xảy ra, vui lòng thử lại!"
-                    );
-                } else {
-                    message.error("Lỗi kết nối, vui lòng kiểm tra lại!");
-                }
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, []);
-
-    const showEditModal = (room) => {
-        setIsAddModalVisible(true);
-        setUpdate(true);
-        form.setFieldsValue({
-            name: room.name,
-            status: room.status,
-        });
-        setInitialValues(room.id);
-    };
-
-    const showAddModal = () => {
-        setEditingRoom(null);
-        form.resetFields();
-        setIsAddModalVisible(true);
-        setUpdate(false);
-    };
-
-    const onHandleDelete = async (id) => {
-        try {
-            setLoading(true);
-            await instance.delete(`admin/rooms/${id}`);
-            setRooms(rooms.filter((item) => item.id !== id));
-
-            // Hiển thị thông báo xóa thành công
-            message.success(
-                <span>
-                    Xóa mềm thành công,{" "}
-                    <button onClick={() => undoRooms(id)} className="underline">
-                        Hoàn tác
-                    </button>
-                </span>,
-                5 // Hiển thị trong 5 giây
-            );
-        } catch (error) {
-            console.log(error.message);
-            // Hiển thị thông báo xóa thất bại
-            message.error("Xóa thất bại!");
-        } finally {
-            setLoading(false);
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const { data } = await instance.get(`/admin/rooms`);
+        setRooms(data.data);
+        console.log(data.data);
+      } catch (error) {
+        if (error.response && error.response.data) {
+          message.error(
+            error.response.data.message || "Có lỗi xảy ra, vui lòng thử lại!"
+          );
+        } else {
+          message.error("Lỗi kết nối, vui lòng kiểm tra lại!");
         }
-    };
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-    const onHandleSubmit = async (values) => {
-        console.log(values);
-        try {
-            setLoading(true);
-            const response = await instance.post(`admin/rooms`, values);
-            const newRoom = response.data.data;
+  const showEditModal = (room) => {
+    setIsAddModalVisible(true);
+    setUpdate(true);
+    form.setFieldsValue({
+      name: room.name,
+      status: room.status,
+    });
+    setInitialValues(room.id);
+  };
 
-            notification.success({
-                message: "Thành công",
-                description: "Phòng học đã được tạo mới thành công!",
-                duration: 3,
-            });
+  const showAddModal = () => {
+    setEditingRoom(null);
+    form.resetFields();
+    setIsAddModalVisible(true);
+    setUpdate(false);
+  };
 
-            setRooms([...rooms, newRoom]);
-            handleModalCancel();
-            form.resetFields();
-        } catch (error) {
-            setLoading(false);
-            if (error.response && error.response.status === 400) {
-                const errors = error.response.data.errors;
-                for (let field in errors) {
-                    notification.error({
-                        message: `Lỗi ${field}`,
-                        description: errors[field].join(", "),
-                        duration: 3,
-                    });
-                }
-            } else if (error.response && error.response.status === 500) {
-                notification.error({
-                    message: "Tạo mới thất bại",
-                    description:
-                        "Có lỗi xảy ra khi tạo mới phòng học, vui lòng thử lại sau.",
-                    duration: 3,
-                });
-            } else {
-                notification.error({
-                    message: "Lỗi kết nối",
-                    description: "Vui lòng kiểm tra lại kết nối và thử lại.",
-                    duration: 3,
-                });
-            }
-        }
-    };
+  const onHandleDelete = async (id) => {
+    try {
+      setLoading(true);
+      await instance.delete(`admin/rooms/${id}`);
+      setRooms(rooms.filter((item) => item.id !== id));
 
-    const onHandleUpdate = async (values) => {
-        console.log(initialValues);
-        console.log(values);
-        try {
-            setLoading(true);
-            await instance.put(`/admin/rooms/${initialValues}`, values);
-
-            setRooms((prevRooms) =>
-                prevRooms.map((item) =>
-                    item.id === initialValues ? { ...item, ...values } : item
-                )
-            );
-
-            // Hiển thị thông báo cập nhật thành công
-            message.success("Cập nhật phòng học thành công");
-            handleModalCancel();
-        } catch (error) {
-            console.log(error.message);
-            // Hiển thị thông báo cập nhật thất bại
-            message.error("Cập nhật thất bại");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleModalCancel = () => {
-        setIsEditModalVisible(false);
-        setIsAddModalVisible(false);
-    };
-
-    if (loading) {
-        return <Loading />;
+      // Hiển thị thông báo xóa thành công
+      message.success(
+        <span>
+          Xóa mềm thành công,{" "}
+          <button onClick={() => undoRooms(id)} className="underline">
+            Hoàn tác
+          </button>
+        </span>,
+        5 // Hiển thị trong 5 giây
+      );
+    } catch (error) {
+      console.log(error.message);
+      // Hiển thị thông báo xóa thất bại
+      message.error("Xóa thất bại!");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Filter rooms based on search term
-    const filteredRooms = rooms.filter((room) =>
-        room.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const onHandleSubmit = async (values) => {
+    console.log(values);
+    try {
+      setLoading(true);
+      const response = await instance.post(`admin/rooms`, values);
+      const newRoom = response.data.data;
 
-    // Determine which rooms to display based on pagination
-    const paginatedRooms = filteredRooms.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
-    const handleBack = () => {
-        navigate("/admin");
-    };
+      notification.success({
+        message: "Thành công",
+        description: "Phòng học đã được tạo mới thành công!",
+        duration: 3,
+      });
 
-    return (
-        <div className="test__list">
-            <div className="col-12">
-                <div className="p-6 bg-white shadow-md rounded-lg">
-                    <Space
-                        align="center"
-                        style={{ cursor: "pointer" }}
-                        onClick={handleBack}
-                    >
-                        <div
-                            style={{
-                                border: "1.5px solid #1890ff",
-                                borderRadius: "50%",
-                                padding: "6px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <ArrowLeftOutlined
-                                style={{
-                                    fontSize: "16px",
-                                    color: "#1890ff",
-                                }}
-                            />
-                        </div>
-                    </Space>
-                    <h1 className="text-4xl font-bold text-center text-[#7017E2]">
-                        Quản Lý Phòng Học
-                    </h1>
-                    <div className="justify-end flex">
-                        <div>
-                            <Input.Search
-                                placeholder="Tìm kiếm phòng học..."
-                                style={{ width: 300 }}
-                                allowClear
-                                value={searchTerm}
-                                onChange={(e) => {
-                                    setSearchTerm(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                            />
-                        </div>
-                    </div>
+      setRooms([...rooms, newRoom]);
+      handleModalCancel();
+      form.resetFields();
+    } catch (error) {
+      setLoading(false);
+      if (error.response && error.response.status === 400) {
+        const errors = error.response.data.errors;
+        for (let field in errors) {
+          notification.error({
+            message: `Lỗi ${field}`,
+            description: errors[field].join(", "),
+            duration: 3,
+          });
+        }
+      } else if (error.response && error.response.status === 500) {
+        notification.error({
+          message: "Tạo mới thất bại",
+          description:
+            "Có lỗi xảy ra khi tạo mới phòng học, vui lòng thử lại sau.",
+          duration: 3,
+        });
+      } else {
+        notification.error({
+          message: "Lỗi kết nối",
+          description: "Vui lòng kiểm tra lại kết nối và thử lại.",
+          duration: 3,
+        });
+      }
+    }
+  };
 
-                    <div className="flex justify-between items-center mt-6">
-                        <Button
-                            onClick={showAddModal}
-                            className="btn btn--outline text-[#7017E2]"
-                        >
-                            <PlusOutlined />
-                            Tạo mới
-                        </Button>
+  const onHandleUpdate = async (values) => {
+    console.log(initialValues);
+    console.log(values);
+    try {
+      setLoading(true);
+      await instance.put(`/admin/rooms/${initialValues}`, values);
 
-                        <span className="font-bold text-[14px] text-[#000]">
-                            {filteredRooms.length} phòng học
-                        </span>
-                    </div>
-                </div>
+      setRooms((prevRooms) =>
+        prevRooms.map((item) =>
+          item.id === initialValues ? { ...item, ...values } : item
+        )
+      );
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-5">
-                    {paginatedRooms.length > 0 ? (
-                        paginatedRooms.map((room) => (
-                            <div className="col" key={room.id}>
-                                <div className="teaching__card">
-                                    <div className="teaching__card-top">
-                                        <h2 className="teaching_card-title flex items-center gap-2 text-[#1167B4] font-bold text-[16px]">
-                                            <img
-                                                src="/assets/svg/share.svg"
-                                                alt=""
-                                            />
-                                            Tên phòng học:{" "}
-                                            <p className="text-red-300 uppercase ml-2 font-bold">
-                                                {room.name}
-                                            </p>
-                                        </h2>
-                                    </div>
+      // Hiển thị thông báo cập nhật thành công
+      message.success("Cập nhật phòng học thành công");
+      handleModalCancel();
+    } catch (error) {
+      console.log(error.message);
+      // Hiển thị thông báo cập nhật thất bại
+      message.error("Cập nhật thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                                    <div className="teaching__card-body">
-                                        <div className="mt-6 flex flex-col gap-8 pb-6">
-                                            {/* Bỏ phần trạng thái */}
-                                        </div>
-                                    </div>
+  const handleModalCancel = () => {
+    setIsEditModalVisible(false);
+    setIsAddModalVisible(false);
+  };
 
-                                    <div className="teaching__card-bottom">
-                                        <Popconfirm
-                                            title={`Bạn có chắc muốn xóa phòng ${room.name} này chứ ??`}
-                                            onConfirm={() =>
-                                                onHandleDelete(room.id)
-                                            }
-                                            okText="Có"
-                                            cancelText="Không"
-                                        >
-                                            <button className="text-[#FF5252] font-bold flex items-center gap-2 justify-center">
-                                                <img
-                                                    src="/assets/svg/remove.svg"
-                                                    alt="remove"
-                                                />
-                                                Xóa khỏi Danh Sách
-                                            </button>
-                                        </Popconfirm>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="col-12">
-                            <div className="text-center">
-                                Không tìm thấy phòng học nào!
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+  if (loading) {
+    return <Loading />;
+  }
 
-            {/* Pagination Component */}
-            {filteredRooms.length > pageSize && (
-                <Pagination
-                    className="mt-12"
-                    align="center"
-                    current={currentPage}
-                    pageSize={pageSize}
-                    total={filteredRooms.length}
-                    onChange={(page) => setCurrentPage(page)}
-                    showSizeChanger={false}
-                />
-            )}
-            <Modal
-                title={
-                    editingRoom
-                        ? "Sửa Thông Tin Phòng Học"
-                        : "Thêm Mới Phòng Học"
-                }
-                open={isEditModalVisible || isAddModalVisible}
-                onCancel={handleModalCancel}
-                footer={null}
-                centered
-                width={600}
+  // Filter rooms based on search term
+  const filteredRooms = rooms.filter((room) =>
+    (room.name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Determine which rooms to display based on pagination
+  const paginatedRooms = filteredRooms.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+  const handleBack = () => {
+    navigate("/admin");
+  };
+
+  return (
+    <div className="test__list">
+      <div className="col-12">
+        <div className="p-6 bg-white shadow-md rounded-lg">
+          <Space
+            align="center"
+            style={{ cursor: "pointer" }}
+            onClick={handleBack}
+          >
+            <div
+              style={{
+                border: "1.5px solid #1890ff",
+                borderRadius: "50%",
+                padding: "6px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={update ? onHandleUpdate : onHandleSubmit}
-                    style={{ padding: "0 20px" }}
-                >
-                    <Form.Item
-                        label="Tên Phòng Học"
-                        name="name"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Vui lòng nhập tên phòng học!",
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Nhập tên phòng học" />
-                    </Form.Item>
+              <ArrowLeftOutlined
+                style={{
+                  fontSize: "16px",
+                  color: "#1890ff",
+                }}
+              />
+            </div>
+          </Space>
+          <h1 className="text-4xl font-bold text-center text-[#7017E2]">
+            Quản Lý Phòng Học
+          </h1>
+          <div className="justify-end flex">
+            <div>
+              <Input.Search
+                placeholder="Tìm kiếm phòng học..."
+                style={{ width: 300 }}
+                allowClear
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
 
-                    <Form.Item label="Trạng thái" name="status" rules={[]}>
-                        <Select
-                            defaultValue="Đang sử dụng"
-                            placeholder="Chọn trạng thái"
-                            options={[
-                                {
-                                    value: "Đang sử dụng",
-                                    label: "Đang sử dụng",
-                                },
-                                {
-                                    value: "Đang trống",
-                                    label: "Đang trống",
-                                },
-                            ]}
-                        />
-                    </Form.Item>
+          <div className="flex justify-between items-center mt-6">
+            <Button
+              onClick={showAddModal}
+              className="btn btn--outline text-[#7017E2]"
+            >
+              <PlusOutlined />
+              Tạo mới
+            </Button>
 
-                    <Form.Item>
-                        <Space>
-                            <Button onClick={handleModalCancel}>Hủy</Button>
-                            <Button type="primary" htmlType="submit">
-                                {update ? "Cập nhật" : "Tạo mới"}
-                            </Button>
-                        </Space>
-                    </Form.Item>
-                </Form>
-            </Modal>
+            <span className="font-bold text-[14px] text-[#000]">
+              {filteredRooms.length} phòng học
+            </span>
+          </div>
         </div>
-    );
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mt-8">
+          {paginatedRooms.length > 0 ? (
+            paginatedRooms.map((room) => (
+              <div className="col" key={room.id}>
+                <div className="teaching__card bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-2xl shadow-md hover:shadow-2xl transition-shadow duration-300 ease-in-out border-2 border-transparent hover:border-blue-300">
+                  {/* Card Top */}
+                  <div className="teaching__card-top mb-4">
+                    <h2 className="teaching_card-title flex items-center justify-center gap-2 text-blue-800 font-extrabold text-xl tracking-tight">
+                      <img
+                        src="/assets/svg/share.svg"
+                        alt="Icon"
+                        className="h-6 w-6 text-blue-700"
+                      />
+                      <span className="bg-clip-text text-2xl text-transparent bg-gradient-to-r from-blue-600 to-blue-500">
+                        Tên phòng học:
+                      </span>
+                      <p className="text-red-500 uppercase font-semibold text-2xl">
+                        {room.name}
+                      </p>
+                    </h2>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="teaching__card-body mb-4">
+                    <div className="text-2xl text-center text-gray-700">
+                      <span
+                        className={`${
+                          room.status === "Đang sử dụng"
+                            ? "text-green-600 font-semibold"
+                            : "text-red-600 font-semibold"
+                        }`}
+                      >
+                        {room.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom (Delete Button) */}
+                  <div className="teaching__card-bottom flex justify-center mt-4">
+                    <Popconfirm
+                      title={`Bạn có chắc muốn xóa phòng ${room.name} này không?`}
+                      onConfirm={() => onHandleDelete(room.id)}
+                      okText="Có"
+                      cancelText="Không"
+                      placement="bottom"
+                    >
+                      <button className="text-red-500 font-bold flex items-center gap-2 justify-center hover:text-red-600 hover:scale-105 transition-all duration-200">
+                        <span>Xóa khỏi Danh Sách</span>
+                      </button>
+                    </Popconfirm>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-12">
+              <div className="text-center text-xl font-semibold text-gray-500">
+                Không tìm thấy phòng học nào!
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Pagination Component */}
+      {filteredRooms.length > pageSize && (
+        <Pagination
+          className="mt-12"
+          align="center"
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredRooms.length}
+          onChange={(page) => setCurrentPage(page)}
+          showSizeChanger={false}
+        />
+      )}
+      <Modal
+        title={editingRoom ? "Sửa Thông Tin Phòng Học" : "Thêm Mới Phòng Học"}
+        style={{ textAlign: "center" }}
+        open={isEditModalVisible || isAddModalVisible}
+        onCancel={handleModalCancel}
+        footer={null}
+        centered
+        width={600}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={update ? onHandleUpdate : onHandleSubmit}
+          style={{ padding: "0 20px" }}
+        >
+          <Form.Item
+            label="Tên Phòng Học"
+            name="name"
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng nhập tên phòng học!",
+              },
+            ]}
+          >
+            <Input placeholder="Nhập tên phòng học" />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button onClick={handleModalCancel}>Hủy</Button>
+              <Button type="primary" htmlType="submit">
+                {update ? "Cập nhật" : "Tạo mới"}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
 };
 
 export default ListRooms;

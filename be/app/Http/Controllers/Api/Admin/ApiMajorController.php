@@ -9,7 +9,6 @@ use App\Models\MajorSubject;
 use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
@@ -373,9 +372,9 @@ class ApiMajorController extends Controller
     private function clearMajorsCache()
     {
         Redis::del([
-            'majors_main_majors', // cache for main majors
-            'majors_all',          // cache for all majors
-            'majors_all_sub_majors' // cache for all sub-majors
+            'majors_main_majors',
+            'majors_all',
+            'majors_all_sub_majors'
         ]);
     }
 }

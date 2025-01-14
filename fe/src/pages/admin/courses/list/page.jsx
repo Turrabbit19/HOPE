@@ -211,9 +211,9 @@ const ListCourse = () => {
     return <Loading />;
   }
   return (
-    <div className="row row-cols-2 g-3">
+    <div className="row row-cols-2">
       <div className="col-12">
-        <div className="p-6 bg-white shadow-md rounded-lg">
+        <div className="p-4 bg-white shadow-md rounded-lg">
           <Space
             align="center"
             style={{ cursor: "pointer" }}
@@ -266,8 +266,8 @@ const ListCourse = () => {
             </Button>
 
             {/* Hiển thị số lượng khóa học */}
-            <span className="font-semibold text-lg text-gray-700">
-              {filteredCourses.length} khóa học
+            <span className="font-bold text-2xl text-gray-700">
+              {filteredCourses.length} khóa sinh viên
             </span>
           </div>
         </div>
@@ -331,6 +331,7 @@ const ListCourse = () => {
                   <div className="teaching__card-bottom flex justify-between">
                     <Link
                       to={`${course.id}/detail`}
+                      state={{ course }}
                       className="flex items-center gap-3 text-[#1167B4] font-bold"
                     >
                       <img src="/assets/svg/setting.svg" alt="setting" />

@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class StatisticsController extends Controller
@@ -20,27 +21,28 @@ class StatisticsController extends Controller
     {
         try {
             $year = $request->input('year');
+            $cacheKey = 'student_statistics_' . ($year ?? 'all');
 
-            $query = Student::select('course_id')
-                ->groupBy('course_id');
+            $result = Cache::remember($cacheKey, 600, function () use ($year) {
+                $query = Student::select('course_id')->groupBy('course_id');
 
-            if ($year) {
-                $query->whereHas('course', function ($query) use ($year) {
-                    $query->where(function ($query) use ($year) {
-                        $query->whereYear('start_date', '<=', $year)
-                            ->whereYear('end_date', '>=', $year);
+                if ($year) {
+                    $query->whereHas('course', function ($query) use ($year) {
+                        $query->where(function ($query) use ($year) {
+                            $query->whereYear('start_date', '<=', $year)
+                                ->whereYear('end_date', '>=', $year);
+                        });
                     });
+                }
+
+                $statistics = $query->get();
+
+                return $statistics->mapWithKeys(function ($stat) {
+                    $courseName = Course::find($stat->course_id)->name;
+                    $studentCount = Student::where('course_id', $stat->course_id)->count();
+
+                    return [$stat->course_id => ['course_name' => $courseName, 'student_count' => $studentCount]];
                 });
-            }
-
-
-            $statistics = $query->get();
-
-            $result = $statistics->mapWithKeys(function ($stat) {
-                $courseName = Course::find($stat->course_id)->name;
-                $studentCount = Student::where('course_id', $stat->course_id)->count();
-
-                return [$stat->course_id => ['course_name' => $courseName, 'student_count' => $studentCount]];
             });
 
             return response()->json($result);
@@ -53,44 +55,46 @@ class StatisticsController extends Controller
     {
         try {
             $year = $request->input('year');
+            $cacheKey = 'count_statistics_' . ($year ?? 'all');
 
-            $studentQuery = Student::query();
+            // Kiểm tra cache
+            $result = Cache::remember($cacheKey, 600, function () use ($year) {
+                $studentQuery = Student::query();
+                $courseCount = Course::count();
+                $majorCount = Major::where('main', 1)->where('status', 1)->count();
 
-            $courseCount = Course::count();
+                if ($year) {
+                    $studentQuery->whereHas('course', function ($query) use ($year) {
+                        $query->where(function ($query) use ($year) {
+                            $query->whereYear('start_date', '<=', $year)
+                                ->whereYear('end_date', '>=', $year);
+                        });
+                    });
 
-            $majorCount = Major::where('main', 1)->where('status', 1)->count();
-
-            if ($year) {
-                $studentQuery->whereHas('course', function ($query) use ($year) {
-                    $query->where(function ($query) use ($year) {
+                    $courseCount = Course::where(function ($query) use ($year) {
                         $query->whereYear('start_date', '<=', $year)
                             ->whereYear('end_date', '>=', $year);
-                    });
-                });
+                    })->count();
 
-                $courseCount = Course::where(function ($query) use ($year) {
-                    $query->whereYear('start_date', '<=', $year)
-                        ->whereYear('end_date', '>=', $year);
-                })->count();
+                    $majorCount = Major::where(function ($query) use ($year) {
+                        $query->whereYear('created_at', '<=', $year);
+                    })->count();
+                }
 
-                $majorCount = Major::where(function ($query) use ($year) {
-                    $query->whereYear('created_at', '<=', $year);
-                })->count();
-            }
+                $studentCount = $studentQuery->where('status', 1)->count();
+                $teacherCount = Teacher::where('status', 1)->count();
+                $semesterCount = Semester::count();
 
-            $studentCount = $studentQuery->where('status', 1)->count();
+                return [
+                    'student_count' => $studentCount,
+                    'teacher_count' => $teacherCount,
+                    'course_count' => $courseCount,
+                    'major_count' => $majorCount,
+                    'semester_count' => $semesterCount,
+                ];
+            });
 
-            $teacherCount = Teacher::where('status', 1)->count();
-
-            $semesterCount = Semester::count();
-
-            return response()->json([
-                'student_count' => $studentCount,
-                'teacher_count' => $teacherCount,
-                'course_count' => $courseCount,
-                'major_count' => $majorCount,
-                'semester_count' => $semesterCount,
-            ]);
+            return response()->json($result);
         } catch (Exception $e) {
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
@@ -101,48 +105,51 @@ class StatisticsController extends Controller
         try {
             $year = $request->input('year');
             $semesterId = $request->input('semester_id');
+            $cacheKey = "student_count_by_major_in_course_{$id}_" . ($year ?? 'all') . '_' . ($semesterId ?? 'all');
 
-            $majorsWithCounts = Major::whereHas('students', function ($query) use ($id, $year, $semesterId) {
-                $query->where('course_id', $id);
+            $result = Cache::remember($cacheKey, 600, function () use ($id, $year, $semesterId) {
+                $majorsWithCounts = Major::whereHas('students', function ($query) use ($id, $year, $semesterId) {
+                    $query->where('course_id', $id);
 
-                if ($year) {
-                    $query->whereHas('course', function ($query) use ($year) {
-                        $query->whereYear('start_date', $year);
-                    });
-                }
-
-                if ($semesterId) {
-                    $query->whereHas('course', function ($query) use ($semesterId) {
-                        $query->where('semester_id', $semesterId);
-                    });
-                }
-            })
-                ->withCount([
-                    'students' => function ($query) use ($id, $year, $semesterId) {
-                        $query->where('course_id', $id);
-
-                        if ($year) {
-                            $query->whereHas('course', function ($query) use ($year) {
-                                $query->whereYear('start_date', $year);
-                            });
-                        }
-
-                        if ($semesterId) {
-                            $query->whereHas('course', function ($query) use ($semesterId) {
-                                $query->where('semester_id', $semesterId);
-                            });
-                        }
+                    if ($year) {
+                        $query->whereHas('course', function ($query) use ($year) {
+                            $query->whereYear('start_date', $year);
+                        });
                     }
-                ])
-                ->where('main', 1)
-                ->get();
 
-            $result = $majorsWithCounts->map(function ($major) {
-                return [
-                    'major_id' => $major->id,
-                    'major_name' => $major->name,
-                    'student_count' => $major->students_count,
-                ];
+                    if ($semesterId) {
+                        $query->whereHas('course', function ($query) use ($semesterId) {
+                            $query->where('semester_id', $semesterId);
+                        });
+                    }
+                })
+                    ->withCount([
+                        'students' => function ($query) use ($id, $year, $semesterId) {
+                            $query->where('course_id', $id);
+
+                            if ($year) {
+                                $query->whereHas('course', function ($query) use ($year) {
+                                    $query->whereYear('start_date', $year);
+                                });
+                            }
+
+                            if ($semesterId) {
+                                $query->whereHas('course', function ($query) use ($semesterId) {
+                                    $query->where('semester_id', $semesterId);
+                                });
+                            }
+                        }
+                    ])
+                    ->where('main', 1)
+                    ->get();
+
+                return $majorsWithCounts->map(function ($major) {
+                    return [
+                        'major_id' => $major->id,
+                        'major_name' => $major->name,
+                        'student_count' => $major->students_count,
+                    ];
+                });
             });
 
             return response()->json($result);

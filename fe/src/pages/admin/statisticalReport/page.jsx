@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CountUp from "react-countup";
 import { Bar } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
-import { Modal, Button, Select } from "antd";
+import { Modal, Button, Select, Spin } from "antd";
 
 import {
   Chart as ChartJS,
@@ -33,6 +33,8 @@ const StatisticalReport = () => {
     totalCourses: 0,
     maxStudentsCourse: null,
     minStudentsCourse: null,
+    maxStudentsCourseName: "", // Thêm trường lưu tên khóa học có số sinh viên tối đa
+    minStudentsCourseName: "", // Thêm trường lưu tên khóa học có số sinh viên tối thiểu
   });
   const [totalStats, setTotalStats] = useState({
     totalStudents: 0,
@@ -178,6 +180,27 @@ const StatisticalReport = () => {
           course_name: courseData.course_name,
           student_count: courseData.student_count,
         }));
+
+        const totalCourses = courses.length;
+
+        const maxCourse = courses.reduce(
+          (max, course) =>
+            course.student_count > max.student_count ? course : max,
+          { student_count: 0 }
+        );
+        const minCourse = courses.reduce(
+          (min, course) =>
+            course.student_count < min.student_count ? course : min,
+          { student_count: Number.MAX_SAFE_INTEGER }
+        );
+
+        setCourseStats({
+          totalCourses,
+          maxStudentsCourse: maxCourse.student_count,
+          minStudentsCourse: minCourse.student_count,
+          maxStudentsCourseName: maxCourse.course_name,
+          minStudentsCourseName: minCourse.course_name,
+        });
 
         setStudentByCourseData({
           labels: courses.map((course) => course.course_name),
@@ -346,26 +369,34 @@ const StatisticalReport = () => {
     ],
   };
 
-  const handleChartClick = async (elements) => {
-    if (!elements.length) {
-      console.error("Không có phần tử nào được chọn.");
-      return;
+  const handleChartClick = async (event, elements) => {
+    try {
+      if (!elements.length) {
+        alert("Vui lòng chọn một khóa học.");
+        return;
+      }
+
+      const { index } = elements[0];
+      const courseIds = studentByCourseData?.datasets[0]?.course_ids;
+
+      if (!courseIds || !courseIds[index]) {
+        alert("Không tìm thấy thông tin khóa học.");
+        return;
+      }
+
+      const courseId = courseIds[index];
+      console.log("Selected Course ID:", courseId);
+
+      setSelectedCourseId(courseId);
+      setIsLoading(true);
+
+      await fetchMajorsByCourse(courseId);
+      setIsLoading(false);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Đã có lỗi xảy ra:", error);
+      alert("Có lỗi xảy ra khi lấy dữ liệu. Vui lòng thử lại.");
     }
-
-    const { index } = elements[0];
-    const courseIds = studentByCourseData?.datasets[0]?.course_ids;
-
-    if (!courseIds || !courseIds[index]) {
-      console.error("Không tìm thấy course_id tại index:", index);
-      return;
-    }
-
-    const courseId = courseIds[index];
-    console.log("Selected Course ID:", courseId);
-
-    setSelectedCourseId(courseId);
-    await fetchMajorsByCourse(courseId);
-    setIsModalOpen(true);
   };
 
   return (
@@ -471,7 +502,7 @@ const StatisticalReport = () => {
           <label className="font-semibold text-gray-800 mr-2">Chọn Năm:</label>
           <Select
             value={selectedYear}
-            onChange={(value) => setSelectedYear(value)} // Lưu lại năm người dùng chọn
+            onChange={(value) => setSelectedYear(value)}
             className="w-48 border-gray-300"
             placeholder="Chọn năm"
             allowClear
@@ -493,7 +524,7 @@ const StatisticalReport = () => {
             className="w-48 border-gray-300"
             placeholder="Chọn kỳ"
           >
-            <Option value="all">Tất cả</Option>
+            <Option value="all">Tất cả</Option> {/* Tùy chọn "Tất cả" */}
             {terms.map((term) => (
               <Option key={term.id} value={term.id}>
                 {term.name}
@@ -545,7 +576,7 @@ const StatisticalReport = () => {
                       beginAtZero: true,
                     },
                   },
-                  onClick: handleChartClick,
+                  onClick: handleChartClick, // Sử dụng hàm onClick mới
                 }}
               />
             </div>
@@ -555,45 +586,32 @@ const StatisticalReport = () => {
 
           {/* Modal hiển thị thống kê chuyên ngành */}
           <Modal
-            title={`Thống kê Sinh Viên theo Ngành học`}
+            title={`Thông tin ngành học`}
             open={isModalOpen}
             onCancel={() => setIsModalOpen(false)}
-            footer={null}
-            className="modal-custom"
-            width={600}
-            style={{
-              zIndex: 1050,
-              opacity: isModalOpen ? 1 : 0,
-              transition: "opacity 0.3s ease-in-out",
-            }}
+            footer={[
+              <Button key="back" onClick={() => setIsModalOpen(false)}>
+                Đóng
+              </Button>,
+            ]}
           >
-            {isLoading ? (
-              <div className="flex justify-center items-center py-5">
-                <div className="spinner-border text-blue-500 w-12 h-12 animate-spin"></div>
-              </div>
-            ) : subMajorStats.length > 0 ? (
-              <ul className="list-disc ml-5 space-y-2">
-                {subMajorStats.map((major) => (
-                  <li key={major.id} className="text-gray-700">
-                    <span className="font-medium">{major.name}:</span>{" "}
-                    {major.students_count} sinh viên
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center text-gray-500 text-sm">
-                Chưa có dữ liệu ngành học
-              </p>
-            )}
-
-            <Button
-              type="primary"
-              onClick={() => setIsModalOpen(false)} // Đóng modal khi bấm nút
-              className="mt-6 w-full py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200"
-              loading={isLoading}
-            >
-              Đóng
-            </Button>
+            <div>
+              {isLoading ? (
+                <Spin size="large" tip="Đang tải..." />
+              ) : (
+                <ul>
+                  {subMajorStats.length > 0 ? (
+                    subMajorStats.map((item, index) => (
+                      <li key={index}>
+                        {item.name}: {item.students_count} sinh viên
+                      </li>
+                    ))
+                  ) : (
+                    <p>Không có dữ liệu ngành học.</p>
+                  )}
+                </ul>
+              )}
+            </div>
           </Modal>
         </div>
 
@@ -611,16 +629,16 @@ const StatisticalReport = () => {
               Khóa đông nhất
             </h4>
             <p className="text-gray-800">
-              {courseStats.maxStudentsCourse?.course_name} (
-              {courseStats.maxStudentsCourse?.student_count} sinh viên)
+              {courseStats.maxStudentsCourseName} {""}(
+              {courseStats.maxStudentsCourse} sinh viên)
             </p>
           </div>
 
           <div className="bg-red-100 shadow-sm p-5 rounded-lg">
             <h4 className="text-2xl font-bold text-red-600">Khóa ít nhất</h4>
             <p className="text-gray-800">
-              {courseStats.minStudentsCourse?.course_name} (
-              {courseStats.minStudentsCourse?.student_count} sinh viên)
+              {courseStats.minStudentsCourseName}(
+              {courseStats.minStudentsCourse} sinh viên)
             </p>
           </div>
         </div>

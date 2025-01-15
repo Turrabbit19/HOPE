@@ -263,7 +263,6 @@ class ApiScheduleController extends Controller
                 ];
             });
 
-
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
             return response()->json([

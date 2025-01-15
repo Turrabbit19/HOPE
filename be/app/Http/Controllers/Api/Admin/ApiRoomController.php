@@ -19,22 +19,20 @@ class ApiRoomController extends Controller
         try {
             $room = $request->input('room', 'all');
             $cacheKey = $room === "all" ? 'rooms_all' : "rooms_search_{$room}";
-            $cacheTTL = 10368000;
+            $cacheTTL = 300;
 
-            // Kiểm tra dữ liệu trong cache
             $cachedData = Redis::get($cacheKey);
 
             if ($cachedData) {
                 $data = json_decode($cachedData, true);
             } else {
-                // Nếu không có cache, lấy dữ liệu từ cơ sở dữ liệu
                 $rooms = Room::all();
 
                 $date = Carbon::today()->toDateString();
 
                 $schedules = Schedule::with('lessons')
                     ->whereHas('lessons', function ($query) use ($date) {
-                        $query->where('schedule_lessons.study_date', $date);  // Sử dụng bảng pivot đúng cách
+                        $query->where('schedule_lessons.study_date', $date);
                     })
                     ->get();
 
@@ -52,7 +50,6 @@ class ApiRoomController extends Controller
                     ];
                 });
 
-                // Lưu kết quả vào Redis
                 Redis::setex($cacheKey, $cacheTTL, json_encode($data));
             }
 

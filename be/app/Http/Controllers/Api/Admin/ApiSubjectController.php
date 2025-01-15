@@ -26,10 +26,9 @@ class ApiSubjectController extends Controller
 
             if (!$subjects) {
                 $subjects = Subject::paginate($perPage);
-                Redis::set($cacheKey, json_encode($subjects), 'EX', 1800);
+                Redis::set($cacheKey, json_encode($subjects), 'EX', 300);
             } else {
                 $subjectsArray = json_decode($subjects, true);
-                // Tái tạo lại đối tượng LengthAwarePaginator từ dữ liệu lấy ra từ Redis
                 $subjects = new \Illuminate\Pagination\LengthAwarePaginator(
                     $subjectsArray['data'],
                     $subjectsArray['total'],
@@ -39,7 +38,7 @@ class ApiSubjectController extends Controller
                 );
             }
 
-            $data = $subjects->items(); // Lúc này bạn có thể gọi items() trên paginator
+            $data = $subjects->items();
 
             $mappedData = collect($data)->map(function ($subject) {
                 return [
@@ -79,7 +78,7 @@ class ApiSubjectController extends Controller
             if (!$subjects) {
                 $subjects = Subject::all();
 
-                Redis::set($cacheKey, json_encode($subjects), 'EX', 1800);
+                Redis::set($cacheKey, json_encode($subjects), 'EX', 300);
             } else {
                 $subjects = json_decode($subjects, true);
             }

@@ -21,7 +21,7 @@ class ApiTeacherController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 9);
+            $perPage = $request->input('per_page', 10);
             $cacheKey = "teachers_per_page_{$perPage}";
 
             $cachedData = Redis::get($cacheKey);
@@ -69,7 +69,6 @@ class ApiTeacherController extends Controller
                     'last_page' => $teachers->lastPage(),
                 ],
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }
@@ -118,7 +117,6 @@ class ApiTeacherController extends Controller
             Redis::setex($cacheKey, now()->addMinutes(60)->diffInSeconds(now()), json_encode(['teachers' => $data]));
 
             return response()->json(['teachers' => $data]);
-
         } catch (\Exception $e) {
             return response()->json(['error' => 'Không thể truy vấn tới bảng Teachers', 'message' => $e->getMessage()], 500);
         }

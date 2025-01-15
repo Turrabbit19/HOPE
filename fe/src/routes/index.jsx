@@ -364,7 +364,6 @@ const Router = createBrowserRouter([
         ),
       },
 
-      // giao diện list môn học
       {
         path: "list-subject",
         element: (

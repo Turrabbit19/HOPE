@@ -16,7 +16,7 @@ class ApiLessonController extends Controller
     {
         try {
             $cacheKey = 'lessons_index_' . request('page', 1);
-            $cacheTTL = 300;
+            $cacheTTL = 3600;
 
             $cachedData = Redis::get($cacheKey);
 
@@ -59,7 +59,7 @@ class ApiLessonController extends Controller
     {
         try {
             $cacheKey = 'lessons_all';
-            $cacheTTL = 300;
+            $cacheTTL = 3600;
 
             $cachedData = Redis::get($cacheKey);
 

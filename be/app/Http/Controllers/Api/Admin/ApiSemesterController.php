@@ -196,7 +196,6 @@ class ApiSemesterController extends Controller
         try {
             $data = $validator->validated();
 
-            // Kiểm tra học kỳ gần nhất và so sánh end_date với ngày hiện tại
             $latestSemester = Semester::orderBy('end_date', 'desc')->first();
 
             if ($latestSemester && Carbon::now()->lte($latestSemester->end_date)) {
@@ -205,10 +204,8 @@ class ApiSemesterController extends Controller
                 ], 400);
             }
 
-            // Tạo mới học kỳ
             $semester = Semester::create($data);
 
-            // Lấy các khóa học đang hoạt động trong khoảng thời gian này
             $activeCourses = Course::where(function ($query) use ($data) {
                 $query->where('start_date', '<=', $data['end_date'])
                     ->where('end_date', '>=', $data['start_date']);
@@ -222,14 +219,11 @@ class ApiSemesterController extends Controller
 
                     $newOrder = min($currentMaxOrder + 1, $maxOrder);
 
-                    // Gắn khóa học vào học kỳ mới với order
                     $semester->courses()->attach($course->id, ['order' => $newOrder]);
 
-                    // Cập nhật current_semester cho tất cả sinh viên
                     $students = $course->students()->get();
 
                     $students->each(function ($student) use ($newOrder) {
-                        // Cập nhật giá trị current_semester
                         $student->update(['current_semester' => $newOrder]);
                     });
                 });

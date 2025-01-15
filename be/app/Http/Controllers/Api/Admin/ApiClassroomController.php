@@ -9,6 +9,7 @@ use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,41 +18,26 @@ class ApiClassroomController extends Controller
     public function index()
     {
         try {
-            // Thiết lập số bản ghi trên mỗi trang và TTL cho cache
-            $perPage = 10; // 10 bản ghi mỗi trang
-            $cacheTTL = 300; // 300 giây (5 phút) cho thời gian lưu trữ cache
-            $cacheKey = 'classrooms_index_page_' . request()->get('page', 1); // Khóa cho trang phân trang
+            $perPage = 10;
+            $cacheTTL = 300;
+            $cacheKey = 'classrooms_index_page_' . request()->get('page', 1);
 
-            // Kiểm tra nếu dữ liệu đã có trong Redis
             $cachedData = Redis::get($cacheKey);
-
             if ($cachedData) {
-                // Trả dữ liệu từ cache nếu có
                 return response()->json(json_decode($cachedData, true), 200);
             }
 
-            // Truy vấn học kỳ mới nhất
             $latestSemester = Semester::orderBy('end_date', 'desc')->first();
-            $schedules = [];
+            $schedules = $latestSemester ? Schedule::where('semester_id', $latestSemester->id)->pluck('classroom_id')->toArray() : [];
 
-            if ($latestSemester) {
-                // Lấy các lớp học đang có lịch học trong học kỳ này
-                $schedules = Schedule::where('semester_id', $latestSemester->id)
-                    ->pluck('classroom_id')->toArray();
-            }
+            $orderCondition = empty($schedules) ? "1" : "CASE WHEN id IN (" . implode(',', $schedules) . ") THEN 0 ELSE 1 END";
 
-            // Truy vấn các lớp học và kèm theo thông tin môn học
-            $classroomsQuery = Classroom::with('subject');
-            $classroomsQuery->orderByRaw("CASE WHEN id IN (" . implode(',', $schedules) . ") THEN 0 ELSE 1 END");
+            $classrooms = Classroom::with('subject')
+                ->orderByRaw($orderCondition)
+                ->paginate($perPage);
 
-            // Lấy dữ liệu lớp học phân trang
-            $classrooms = $classroomsQuery->paginate($perPage);
-
-            // Chuyển dữ liệu lớp học theo dạng mong muốn
             $classrooms->getCollection()->transform(function ($classroom) use ($schedules) {
-                // Kiểm tra xem lớp học có lịch học không
                 $scheduleExists = in_array($classroom->id, $schedules);
-
                 return [
                     'id' => $classroom->id,
                     'subject_name' => $classroom->subject->name,
@@ -62,7 +48,6 @@ class ApiClassroomController extends Controller
                 ];
             });
 
-            // Dữ liệu trả về cùng thông tin phân trang
             $responseData = [
                 'data' => $classrooms->items(),
                 'pagination' => [
@@ -73,12 +58,10 @@ class ApiClassroomController extends Controller
                 ]
             ];
 
-            // Lưu dữ liệu vào Redis trước khi trả về
             Redis::setex($cacheKey, $cacheTTL, json_encode($responseData));
 
             return response()->json($responseData, 200);
         } catch (\Exception $e) {
-            // Nếu có lỗi trong quá trình truy vấn hoặc xử lý, trả về lỗi
             return response()->json(['error' => 'Không thể truy vấn tới bảng Classrooms', 'message' => $e->getMessage()], 500);
         }
     }
@@ -90,24 +73,23 @@ class ApiClassroomController extends Controller
             $cacheTTL = 300;
 
             $cachedData = Redis::get($cacheKey);
-
             if ($cachedData) {
-                $data = json_decode($cachedData, true);
-            } else {
-                $classrooms = Classroom::with('subject')->get();
-
-                $data = $classrooms->map(function ($classroom) {
-                    return [
-                        'id' => $classroom->id,
-                        'subject_name' => $classroom->subject->name,
-                        'code' => $classroom->code,
-                        'max_students' => $classroom->max_students,
-                        'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-                    ];
-                });
-
-                Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+                return response()->json(['data' => json_decode($cachedData, true)], 200);
             }
+
+            $classrooms = Classroom::with('subject')->get();
+
+            $data = $classrooms->map(function ($classroom) {
+                return [
+                    'id' => $classroom->id,
+                    'subject_name' => $classroom->subject->name,
+                    'code' => $classroom->code,
+                    'max_students' => $classroom->max_students,
+                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                ];
+            });
+
+            Redis::setex($cacheKey, $cacheTTL, json_encode($data));
 
             return response()->json(['data' => $data], 200);
         } catch (\Exception $e) {
@@ -115,25 +97,18 @@ class ApiClassroomController extends Controller
         }
     }
 
-
     public function getClassroomsWithoutSchedule($subjectId)
     {
         try {
             $today = Carbon::today();
 
             $classrooms = Classroom::where('subject_id', $subjectId)
-                ->whereDoesntHave('schedules', function ($query) use ($subjectId) {
-                    $query->where('subject_id', $subjectId);
-                })
-                ->orWhereHas('schedules', function ($query) use ($subjectId, $today) {
-                    $query->where('subject_id', $subjectId)
-                        ->where('end_date', '<', $today);
+                ->whereDoesntHave('schedules', function ($query) use ($today) {
+                    $query->where('end_date', '>=', $today);
                 })
                 ->get();
 
-            return response()->json([
-                'classrooms' => $classrooms
-            ], 200);
+            return response()->json(['classrooms' => $classrooms], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
         }
@@ -163,20 +138,14 @@ class ApiClassroomController extends Controller
         }
 
         try {
-            $data = $validator->validated();
-            $classroom = Classroom::create($data);
+            DB::transaction(function () use ($request) {
+                $data = $request->validated();
+                $classroom = Classroom::create($data);
 
-            $data = [
-                'id' => $classroom->id,
-                'subject_id' => $classroom->subject->id,
-                'subject_name' => $classroom->subject->name,
-                'code' => $classroom->code,
-                'max_students' => $classroom->max_students,
-                'status' => $classroom->status,
-            ];
-            $this->updateClassroomsCache();
-            $this->clearClassroomsCache();
-            return response()->json(['data' => $data, 'message' => 'Tạo mới thành công'], 201);
+                $this->updateClassroomsCache();
+            });
+
+            return response()->json(['message' => 'Tạo mới thành công'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Tạo mới thất bại', 'message' => $e->getMessage()], 500);
         }
@@ -186,14 +155,15 @@ class ApiClassroomController extends Controller
     {
         try {
             $classroom = Classroom::with('subject')->findOrFail($id);
-            $data = [
-                'subject_name' => $classroom->subject->name,
-                'code' => $classroom->code,
-                'max_students' => $classroom->max_students,
-                'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-            ];
 
-            return response()->json(['data' => $data], 200);
+            return response()->json([
+                'data' => [
+                    'subject_name' => $classroom->subject->name,
+                    'code' => $classroom->code,
+                    'max_students' => $classroom->max_students,
+                    'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
+                ]
+            ], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
         } catch (\Exception $e) {
@@ -220,19 +190,21 @@ class ApiClassroomController extends Controller
             'status.boolean' => 'Trạng thái phải là giá trị true hoặc false.',
         ]);
 
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
         try {
-            $classroom = Classroom::findOrFail($id);
+            DB::transaction(function () use ($request, $id) {
+                $classroom = Classroom::findOrFail($id);
 
-            $data = $validator->validated();
-            $classroom->update($data);
-            $this->updateClassroomsCache();
-            $this->clearClassroomsCache();
-            return response()->json(['data' => $classroom, 'message' => 'Cập nhật thành công'], 200);
+                $data = $request->validated();
+                $classroom->update($data);
+
+                $this->updateClassroomsCache();
+            });
+
+            return response()->json(['message' => 'Cập nhật thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
         } catch (\Exception $e) {
@@ -243,40 +215,34 @@ class ApiClassroomController extends Controller
     public function destroy(string $id)
     {
         try {
-            $classroom = Classroom::findOrFail($id);
-            $classroom->delete();
-            $this->updateClassroomsCache();
-            $this->clearClassroomsCache();
-            return response()->json(['message' => 'Xóa mềm thành công'], 200);
+            DB::transaction(function () use ($id) {
+                $classroom = Classroom::with('schedules')->findOrFail($id);
+
+                if ($classroom->schedules()->exists()) {
+                    throw new \Exception('Không thể xóa lớp học vì vẫn còn lịch học liên kết.');
+                }
+
+                $classroom->delete();
+                $this->updateClassroomsCache();
+            });
+
+            return response()->json(['message' => 'Xóa lớp học thành công'], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy lớp học với ID: ' . $id], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Xóa thất bại', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Không thể xóa lớp học.', 'message' => $e->getMessage()], 500);
         }
     }
+
     private function updateClassroomsCache()
     {
-        $cacheKey = 'classrooms_all';
-        $cacheTTL = 300;
-
-        $classrooms = Classroom::with('subject')->get();
-
-        $data = $classrooms->map(function ($classroom) {
-            return [
-                'id' => $classroom->id,
-                'subject_name' => $classroom->subject->name,
-                'code' => $classroom->code,
-                'max_students' => $classroom->max_students,
-                'status' => $classroom->status ? "Đang hoạt động" : "Tạm dừng",
-            ];
-        });
-
-        Redis::setex($cacheKey, $cacheTTL, json_encode($data));
+        Redis::del('classrooms_all');
+        $this->clearPaginatedCache('classrooms_index_page_');
     }
 
-    private function clearClassroomsCache()
+    private function clearPaginatedCache(string $prefix)
     {
-        $keys = Redis::keys('classrooms_index_page_*');
+        $keys = Redis::keys($prefix . '*');
         foreach ($keys as $key) {
             Redis::del($key);
         }

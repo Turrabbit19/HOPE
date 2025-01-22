@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Bell, X, AlertCircle, RefreshCw, Check } from 'lucide-react';
 
-// Utility function to strip HTML tags
 const stripHtml = (html) => {
     const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
@@ -19,7 +18,6 @@ function LoadingSpinner() {
       </div>
     )
   }
-// Popup Component
 function Popup({ notification, onClose, onMarkAsRead }) {
     useEffect(() => {
         if (notification.status !== "Đã xem") {

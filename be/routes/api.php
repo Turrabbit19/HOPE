@@ -201,4 +201,6 @@ Route::middleware(['throttle:100,1'])->middleware(['auth:sanctum', 'role:Giảng
         Route::get('schedule/{scheduleId}/students', [TeacherController::class, 'getDetailsClassroom']);
         Route::get('schedule/{scheduleId}/{lesson_id}/students', [TeacherController::class, 'getDetailClassroom']);
         Route::post('attendance/{schedule_id}/{lesson_id}/mark', [TeacherController::class, 'markAttendance']);
+
+        Route::get('get-sub-schedules', [TeacherController::class, 'getSubSchedules']);
     });

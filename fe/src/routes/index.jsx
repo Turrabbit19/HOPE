@@ -81,6 +81,7 @@ import TuitionFee from "../pages/admin/tuition-fee/page";
 import Guard from "./guard";
 import TestNew from "../pages/admin/schedule/table/page";
 import EditScheduleComponent from "../pages/teacher/editSchedule/page";
+import SubSchedulePage from "../pages/teacher/subSchedule/page";
 
 const Router = createBrowserRouter([
   {
@@ -511,6 +512,10 @@ const Router = createBrowserRouter([
       {
         path: "edit-schedule",
         element: <EditScheduleComponent />,
+      },
+      {
+        path: "sub-schedules",
+        element: <SubSchedulePage />,
       },
     ],
   },

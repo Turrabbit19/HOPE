@@ -298,8 +298,6 @@ class   StudentController extends Controller
         try {
             $student = Student::where('user_id', $user->id)->firstOrFail();
 
-            $currentDateTime = Carbon::now();
-
             $semester = CourseSemester::where('course_id', $student->course_id)
                 ->where('order', $student->current_semester)
                 ->firstOrFail();
@@ -312,13 +310,14 @@ class   StudentController extends Controller
                     $query->whereIn('classroom_id', $classroomIds)
                         ->where('semester_id', $semester->semester->id);
                 })
-                ->with('schedule.days', 'schedule.shift', 'schedule.room', 'schedule.classroom', 'schedule.subject')
+                ->with(['schedule.days', 'schedule.shift', 'schedule.room', 'schedule.classroom', 'schedule.subject'])
                 ->get();
 
             if ($schedules->isEmpty()) {
                 return response()->json(['message' => 'Sinh viên không có lịch học nào.'], 200);
             }
 
+            $currentDateTime = Carbon::now();
             $carbonDayOfWeek = $currentDateTime->dayOfWeek;
             $currentDayOfWeek = $carbonDayOfWeek === 0 ? 1 : $carbonDayOfWeek + 1;
 
@@ -327,37 +326,7 @@ class   StudentController extends Controller
                 $maxStudents = $schedule->schedule->classroom->max_students;
                 $minStudents = (int)($maxStudents * 0.7);
 
-                if ($studentsCount < $minStudents) {
-                    $status = "Đang chờ xếp lớp";
-                } else {
-                    $status = null;
-
-                    $scheduleStartDate = Carbon::parse($schedule->start_date);
-                    $scheduleEndDate = Carbon::parse($schedule->end_date);
-
-                    if ($currentDateTime < $scheduleStartDate) {
-                        $status = "Chưa tới thời gian bắt đầu lịch";
-                    } elseif ($currentDateTime > $scheduleEndDate) {
-                        $status = "Đã kết thúc lịch";
-                    } else {
-                        $todayHasSchedule = $schedule->schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
-
-                        if ($todayHasSchedule) {
-                            $shiftStart = Carbon::parse($schedule->schedule->shift->start_time);
-                            $shiftEnd = Carbon::parse($schedule->schedule->shift->end_time);
-
-                            if ($currentDateTime < $shiftStart) {
-                                $status = "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
-                            } elseif ($currentDateTime > $shiftEnd) {
-                                $status = "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
-                            } else {
-                                $status = "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
-                            }
-                        } else {
-                            $status = "Không có lịch hôm nay";
-                        }
-                    }
-                }
+                $status = $this->getScheduleStatus($schedule, $currentDateTime, $currentDayOfWeek, $minStudents);
 
                 return [
                     'id' => $schedule->id,
@@ -380,6 +349,42 @@ class   StudentController extends Controller
             return response()->json(['error' => 'Có lỗi xảy ra', 'message' => $e->getMessage()], 500);
         }
     }
+
+    protected function getScheduleStatus($schedule, $currentDateTime, $currentDayOfWeek, $minStudents)
+    {
+        $studentsCount = $schedule->schedule->classroom->students->count();
+        $maxStudents = $schedule->schedule->classroom->max_students;
+
+        if ($studentsCount < (int)($maxStudents * 0.7)) {
+            return "Đang chờ xếp lớp";
+        }
+
+        $scheduleStartDate = Carbon::parse($schedule->schedule->start_date);
+        $scheduleEndDate = Carbon::parse($schedule->schedule->end_date);
+
+        if ($currentDateTime < $scheduleStartDate) {
+            return "Chưa tới thời gian bắt đầu lịch";
+        } elseif ($currentDateTime > $scheduleEndDate) {
+            return "Đã kết thúc lịch";
+        } else {
+            $todayHasSchedule = $schedule->schedule->days->contains(fn($day) => $day->id === $currentDayOfWeek);
+            if ($todayHasSchedule) {
+                $shiftStart = Carbon::parse($schedule->schedule->shift->start_time);
+                $shiftEnd = Carbon::parse($schedule->schedule->shift->end_time);
+
+                if ($currentDateTime < $shiftStart) {
+                    return "Sắp tới (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                } elseif ($currentDateTime > $shiftEnd) {
+                    return "Đã hoàn thành (Kết thúc lúc: " . $shiftEnd->format('H:i') . ")";
+                } else {
+                    return "Đang diễn ra (Bắt đầu lúc: " . $shiftStart->format('H:i') . ")";
+                }
+            } else {
+                return "Không có lịch hôm nay";
+            }
+        }
+    }
+
 
     public function getTimetable()
     {
@@ -456,7 +461,7 @@ class   StudentController extends Controller
     private function getLessonStatus($student, $lesson, $lessonDateTime, $currentDateTime)
     {
         if ($currentDateTime < $lessonDateTime) {
-            return "Chưa rõ";
+            return "Chưa học";
         } else {
             $studentLesson = StudentLesson::where('student_id', $student->id)
                 ->where('lesson_id', $lesson->pivot->lesson_id)

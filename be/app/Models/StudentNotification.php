@@ -15,11 +15,13 @@ class StudentNotification extends Model
         'status'
     ];
 
-    public function student() {
+    public function student()
+    {
         return $this->belongsTo(Student::class);
     }
 
-    public function notification() {
+    public function notification()
+    {
         return $this->belongsTo(Notification::class);
     }
 }

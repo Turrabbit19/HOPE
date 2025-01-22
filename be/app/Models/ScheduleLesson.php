@@ -16,6 +16,16 @@ class ScheduleLesson extends Model
         'teacher_id'
     ];
 
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
+    }
+
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);

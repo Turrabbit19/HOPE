@@ -11,6 +11,7 @@ use App\Models\StudentLesson;
 use App\Models\Teacher;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -468,65 +469,127 @@ class TeacherController extends Controller
         try {
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
 
-            $scheduleInfor = Schedule::where('teacher_id', $teacher->id)
-                ->where('id', $scheduleId)
-                ->with('shift')
-                ->firstOrFail();
-
-            $currentDateTime = now();
-            $lesson = ScheduleLesson::where('schedule_id', $scheduleId)
+            $substituteSchedule = ScheduleLesson::with('schedule', 'lesson')  // Load quan hệ 'schedule' và 'lesson'
+                ->where('schedule_id', $scheduleId)
                 ->where('lesson_id', $lessonId)
+                ->whereHas('schedule', function ($query) use ($teacher) {
+                    // Kiểm tra trong bảng schedule nếu teacher_id khác với giảng viên đang đăng nhập
+                    $query->where('teacher_id', '!=', $teacher->id);
+                })
                 ->firstOrFail();
 
-            $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time);
-            $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
 
-            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
+            if ($substituteSchedule) {
+                // Nếu là lớp dạy thay, tiếp tục xử lý điểm danh cho lớp thay thế
+                $scheduleInfor = $substituteSchedule->schedule;  // Sử dụng lịch dạy thay
+                $lesson = $substituteSchedule;  // Lớp học này chính là lớp dạy thay để điểm danh
 
-            if ($currentDateTime < $lessonStartTime) {
-                return response()->json(['message' => 'Chưa đến giờ học.'], 400);
+                // Logic để tính giờ học và so sánh thời gian
+                $currentDateTime = now();
+                $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time);
+                $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
+                $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
+
+                if ($currentDateTime < $lessonStartTime) {
+                    return response()->json(['message' => 'Chưa đến giờ học.'], 400);
+                }
+
+                // Lấy danh sách sinh viên trong lớp
+                $classroomId = $scheduleInfor->classroom->id;
+                $listStudents = StudentClassroom::where('classroom_id', $classroomId)
+                    ->where('study_start', '<=', now())
+                    ->where('study_end', '>=', now())
+                    ->get();
+
+                if ($listStudents->isEmpty()) {
+                    return response()->json(['message' => 'Hiện chưa có học sinh nào trong lớp này'], 200);
+                }
+
+                // Trả về dữ liệu sinh viên với trạng thái điểm danh
+                $data = [
+                    'lesson_id' => $lesson->lesson_id,
+                    'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
+                    'ListStudents' => $listStudents->map(function ($ls) use ($lessonId) {
+                        $studentId = $ls->student->id;
+
+                        // Lấy thông tin điểm danh của sinh viên
+                        $attendance = StudentLesson::where('student_id', $studentId)
+                            ->where('lesson_id', $lessonId)
+                            ->first();
+
+                        $status = $attendance && $attendance->status == 1 ? 'Có mặt' : 'Vắng';
+
+                        return [
+                            'student_id' => $studentId,
+                            'student_avatar' => $ls->student->user->avatar,
+                            'student_code' => $ls->student->student_code,
+                            'student_name' => $ls->student->user->name,
+                            'status' => $status,
+                        ];
+                    }),
+                ];
+
+                return response()->json($data, 200);
+            } else {
+                $scheduleInfor = Schedule::where('teacher_id', $teacher->id)
+                    ->where('id', $scheduleId)
+                    ->with('shift')
+                    ->firstOrFail();
+
+                $lesson = ScheduleLesson::where('schedule_id', $scheduleId)
+                    ->where('lesson_id', $lessonId)
+                    ->firstOrFail();
+
+                // Tiếp tục xử lý điểm danh cho lớp học chính như thông thường
+                $currentDateTime = now();
+                $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time);
+                $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
+                $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
+
+                if ($currentDateTime < $lessonStartTime) {
+                    return response()->json(['message' => 'Chưa đến giờ học.'], 400);
+                }
+
+                // Lấy danh sách sinh viên trong lớp học
+                $classroomId = $scheduleInfor->classroom->id;
+                $listStudents = StudentClassroom::where('classroom_id', $classroomId)
+                    ->where('study_start', '<=', now())
+                    ->where('study_end', '>=', now())
+                    ->get();
+
+                if ($listStudents->isEmpty()) {
+                    return response()->json(['message' => 'Hiện chưa có học sinh nào trong lớp này'], 200);
+                }
+
+                // Trả về dữ liệu điểm danh cho lớp học chính
+                $data = [
+                    'lesson_id' => $lesson->lesson_id,
+                    'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
+                    'ListStudents' => $listStudents->map(function ($ls) use ($lessonId) {
+                        $studentId = $ls->student->id;
+
+                        // Lấy thông tin điểm danh của sinh viên
+                        $attendance = StudentLesson::where('student_id', $studentId)
+                            ->where('lesson_id', $lessonId)
+                            ->first();
+
+                        $status = $attendance && $attendance->status == 1 ? 'Có mặt' : 'Vắng';
+
+                        return [
+                            'student_id' => $studentId,
+                            'student_avatar' => $ls->student->user->avatar,
+                            'student_code' => $ls->student->student_code,
+                            'student_name' => $ls->student->user->name,
+                            'status' => $status,
+                        ];
+                    }),
+                ];
             }
-
-            $classroomId = $scheduleInfor->classroom->id;
-            $listStudents = StudentClassroom::where('classroom_id', $classroomId)
-                ->where('study_start', '<=', now())
-                ->where('study_end', '>=', now())
-                ->get();
-
-            if ($listStudents->isEmpty()) {
-                return response()->json(['message' => 'Hiện chưa có học sinh nào trong lớp này'], 200);
-            }
-
-            $data = [
-                'lesson_id' => $lesson->lesson_id,
-                'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
-                'ListStudents' => $listStudents->map(function ($ls) use ($lessonId) {
-                    $studentId = $ls->student->id;
-
-                    $attendance = StudentLesson::where('student_id', $studentId)
-                        ->where('lesson_id', $lessonId)
-                        ->first();
-
-                    if ($attendance && $attendance->status == 1) {
-                        $status = 'Có mặt';
-                    } else {
-                        $status = 'Vắng';
-                    }
-
-                    return [
-                        'student_id' => $studentId,
-                        'student_avatar' => $ls->student->user->avatar,
-                        'student_code' => $ls->student->student_code,
-                        'student_name' => $ls->student->user->name,
-                        'status' => $status,
-                    ];
-                }),
-            ];
 
             return response()->json($data, 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Không tìm thấy thông tin cho giảng viên đã đăng nhập.'], 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'error' => 'Không thể truy vấn tới bảng Teachers',
                 'message' => $e->getMessage()
@@ -534,13 +597,16 @@ class TeacherController extends Controller
         }
     }
 
+
     public function markAttendance(Request $request, $schedule_id, $lesson_id)
     {
         $user = Auth::user();
 
         try {
+            // Lấy thông tin giảng viên từ user hiện tại
             $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
 
+            // Validate dữ liệu đầu vào của điểm danh
             $data = $request->validate([
                 'attendance' => 'required|array',
                 'attendance.*.student_id' => 'required|exists:students,id',
@@ -549,36 +615,71 @@ class TeacherController extends Controller
 
             $attendanceData = $data['attendance'];
 
-            $schedule = Schedule::where('teacher_id', $teacher->id)
-                ->where('id', $schedule_id)
-                ->firstOrFail();
-
-            $lesson = ScheduleLesson::where('schedule_id', $schedule_id)
+            // Kiểm tra lớp có phải lớp dạy thay không
+            $substituteSchedule = ScheduleLesson::with('schedule', 'lesson')  // Load quan hệ 'schedule' và 'lesson'
+                ->where('schedule_id', $schedule_id)
                 ->where('lesson_id', $lesson_id)
-                ->firstOrFail();
+                ->whereHas('schedule', function ($query) use ($teacher) {
+                    $query->where('teacher_id', '!=', $teacher->id);  // Kiểm tra giảng viên dạy thay
+                })
+                ->first();
 
+            // Nếu là lớp dạy thay, lấy thông tin lịch dạy thay
+            if ($substituteSchedule) {
+                $scheduleInfor = $substituteSchedule->schedule; // Sử dụng thông tin lớp học dạy thay
+                $lesson = $substituteSchedule; // Thông tin lớp học (lesson)
+
+            } else {  // Nếu là lớp chính, lấy thông tin bình thường
+                $scheduleInfor = Schedule::where('teacher_id', $teacher->id)
+                    ->where('id', $schedule_id)
+                    ->with('shift')
+                    ->firstOrFail();
+
+                $lesson = ScheduleLesson::where('schedule_id', $schedule_id)
+                    ->where('lesson_id', $lesson_id)
+                    ->firstOrFail();
+            }
+
+            // Kiểm tra thời gian điểm danh
             $currentDateTime = now();
-            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($schedule->shift->start_time);
-            $lessonEndTime = $lessonStartTime->copy()->addMinutes(120);
+            $shiftStartTime = Carbon::parse($scheduleInfor->shift->start_time);
+            $shiftEndTime = Carbon::parse($scheduleInfor->shift->end_time);
+            $lessonStartTime = Carbon::parse($lesson->study_date)->setTimeFrom($shiftStartTime);
 
-            if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonEndTime) {
+            if ($currentDateTime < $lessonStartTime || $currentDateTime > $lessonStartTime->copy()->addMinutes(60)) {
                 return response()->json(['message' => 'Chỉ có thể điểm danh trong 60 phút đầu buổi học.'], 400);
             }
 
             DB::beginTransaction();
 
+            // Lấy danh sách sinh viên trong lớp
+            $classroomId = $scheduleInfor->classroom->id;
+            $listStudents = StudentClassroom::where('classroom_id', $classroomId)
+                ->where('study_start', '<=', now())
+                ->where('study_end', '>=', now())
+                ->get();
+
+            // Nếu không có sinh viên trong lớp
+            if ($listStudents->isEmpty()) {
+                return response()->json(['message' => 'Hiện chưa có học sinh nào trong lớp này'], 200);
+            }
+
+            // Tiến hành điểm danh cho sinh viên trong lớp
             foreach ($attendanceData as $attendance) {
                 $studentId = $attendance['student_id'];
                 $status = $attendance['status'];
 
+                // Kiểm tra sinh viên đã có điểm danh hay chưa
                 $studentLesson = StudentLesson::where('student_id', $studentId)
                     ->where('lesson_id', $lesson_id)
                     ->first();
 
                 if ($studentLesson) {
+                    // Nếu có, cập nhật trạng thái điểm danh
                     $studentLesson->status = $status;
                     $studentLesson->save();
                 } elseif ($status == 1) {
+                    // Nếu chưa, tạo mới bản điểm danh
                     StudentLesson::create([
                         'student_id' => $studentId,
                         'lesson_id' => $lesson_id,
@@ -600,6 +701,7 @@ class TeacherController extends Controller
             ], 500);
         }
     }
+
 
     public function getTeacher(Request $request)
     {
@@ -710,10 +812,8 @@ class TeacherController extends Controller
             $currentTime = now()->format('Y-m-d H:i');
             $redisKey = "schedule_change_{$teacher->id}";
 
-            // Xóa khóa Redis cũ
             Redis::del($redisKey);
 
-            // Kiểm tra ngày trong request và parse nó
             $dateInput = $request->input('date');
             $date = null;
 
@@ -750,6 +850,62 @@ class TeacherController extends Controller
         } catch (\Throwable $th) {
             // Xử lý lỗi
             return response()->json(['message' => 'Error', 'error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function getSubSchedules()
+    {
+        try {
+            $user = Auth::user();
+
+            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
+
+            $subSchedules = ScheduleLesson::with([
+                'schedule',
+                'lesson',
+                'schedule.subject',
+                'schedule.classroom',
+                'schedule.room',
+                'schedule.shift',
+            ])
+                ->where('teacher_id', $teacher->id)
+                ->whereDoesntHave('schedule', function ($query) use ($teacher) {
+                    $query->where('teacher_id', $teacher->id);
+                })
+                ->select('id', 'schedule_id', 'lesson_id', 'study_date')
+                ->orderBy('study_date', 'asc')
+                ->get();
+
+            if ($subSchedules->isEmpty()) {
+                return response()->json(['message' => 'Không có lịch dạy bù nào'], 200);
+            }
+
+            $formattedData = $subSchedules->map(function ($lesson) {
+                return [
+                    'id' => $lesson->id,
+                    'lesson_id' => $lesson->lesson->id,
+                    'schedule_id' => $lesson->schedule->id,
+                    'lesson_name' => $lesson->lesson->name,
+                    'lesson_description' => $lesson->lesson->description,
+                    'study_date' => Carbon::parse($lesson->study_date)->format('d/m/Y'),
+                    'subject_name' => $lesson->schedule->subject->name,
+                    'classroom' => $lesson->schedule->classroom->code,
+                    'room' => $lesson->schedule->room->name,
+                    'shift' => $lesson->schedule->shift->name,
+                ];
+            });
+
+            return response()->json(['data' => $formattedData], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Không tìm thấy thông tin giảng viên, lịch dạy hoặc môn học. Vui lòng kiểm tra lại thông tin.',
+                'message' => $e->getMessage()
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Đã xảy ra lỗi khi truy xuất danh sách lịch dạy bù.',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 

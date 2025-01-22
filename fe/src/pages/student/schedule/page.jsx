@@ -323,6 +323,8 @@ export default function DashboardActions() {
         return "bg-green-100 text-green-800";
       case "Vắng":
         return "bg-red-100 text-red-800";
+      case "Chưa học":
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -461,11 +463,11 @@ export default function DashboardActions() {
                         {shift}
                       </div>
                       {schedule && lesson ? (
-                        <div className="mt-10">
-                          <h4 className="text-xl font-medium text-gray-800">
+                        <div className="mt-10 text-center">
+                          <h4 className="text-2xl font-bold text-gray-800">
                             {schedule.subject_name}
                           </h4>
-                          <p className="text-lg text-gray-600 mt-1">
+                          <p className="text-xl font-semibold text-gray-600 mt-1">
                             {schedule.room_name}
                           </p>
                           <button
